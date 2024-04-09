@@ -6,8 +6,3 @@
   
   	python Platform.py
 
-Requirements:
-
-	python版本为3.11
- 
- 	无第三方库
