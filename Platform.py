@@ -1,5 +1,5 @@
 import asyncio
-from socialplatform.platform import Platform 
+from social_platform.platform import Platform 
 
 if __name__ == "__main__":
     platform = Platform()

@@ -13,7 +13,7 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 from .base import BaseAgent
 from .chat_agent import ChatAgent
-from .naiveAgent import NaiveAgent
+from ...social_agent.naiveAgent import NaiveAgent
 
 
 __all__ = [

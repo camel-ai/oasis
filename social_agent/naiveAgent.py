@@ -1,6 +1,7 @@
 import asyncio
 import json
 import queue
+from camel.agents import ChatAgent
 
 class NaiveAgent():
     def __init__(self, id, delay):
@@ -13,6 +14,7 @@ class NaiveAgent():
         self.outputflag = False
         self.inputqueue = queue.Queue()
         self.outputqueue = queue.Queue()
+        self.brain = ChatAgent()
     
     async def _arun(self):
         while True:
