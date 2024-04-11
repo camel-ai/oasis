@@ -1,6 +1,6 @@
 import asyncio
 from agent_manager.AgentManager import AgentManager
-from thread_manager.ThreadManager import ThreadManager
+from controller.ThreadManager import ThreadManager
 
 async def main():
     agentmanager = AgentManager()
