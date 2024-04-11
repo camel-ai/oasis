@@ -1,7 +1,7 @@
 import asyncio
 import json
 import queue
-from camel.agents import ChatAgent
+from camel import ChatAgent
 
 class NaiveAgent():
     def __init__(self, id, delay):
