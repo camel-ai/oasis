@@ -1,4 +1,6 @@
-from social_agent import NaiveAgent
+import sqlite3
+from social_agent.agent import Agent
+from generator.create_database import get_db_path
 
 def timedelay(amount):
     import random
@@ -16,8 +18,13 @@ class AgentManager:
     def creat(self, amount=1000):
         self.amount = amount
         self.delays = timedelay(self.amount)
-        for i in range(self.amount):
-            agent = NaiveAgent(i, self.delays[i])
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM user")
+        users = cursor.fetchall()
+        for user_id, user_name, name, bio, created_at, num_followings, num_followers in users:
+            agent = Agent(user_id, self.delays[int(user_id)%7])
             self.add_agent(agent)
 
     def add_agent(self, agent):

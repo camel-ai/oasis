@@ -1,0 +1,15 @@
+from enum import Enum
+
+
+class ActionType(Enum):
+    EXIT = "exit"
+    SEARCH_USER = "search_user"
+    SEARCH_TWEET = "search_tweet"
+    CREATE_TWEET = "create_tweet"
+    LIKE = "like"
+    UNLIKE = "unlike"
+    FOLLOW = "follow"
+    UNFOLLOW = "unfollow"
+    MUTE = "mute"
+    UNMUTE = "unmute"
+    TREND = "trend"
