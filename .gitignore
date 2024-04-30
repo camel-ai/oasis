@@ -1,3 +1,7 @@
+
+**/.DS_Store
+
+
 ##### Python.gitignore #####
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -132,6 +136,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+camel_venv/
 
 # Spyder project settings
 .spyderproject
