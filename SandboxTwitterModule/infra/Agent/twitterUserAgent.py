@@ -99,19 +99,22 @@ class TwitterUserAgent:
 
 
 
+
     async def perform_random_action(self):
         """根据 agent 的个性和情境随机选择行为"""
-        activities = ['tweet_random', 'follow_random_user', 'unfollow_random_user']
-        probabilities = [0.0, 0.5, 0.5]  # 默认行为概率
+        activities = ['tweet_random', 'follow_random_user', 'unfollow_random_user', 'choose_tweet_to_like']
+        probabilities = [0.25, 0.25, 0.25, 0.25]  # 添加点赞行为的概率
 
         # 调整概率以反映代理的活跃度
         if self.profile['other_info']['activity_level'] == 'High':
-            probabilities = [0.0, 0.5, 0.5]
+            probabilities = [0.25, 0.25, 0.25, 0.25]  # 对于活跃用户，均等分配概率
         elif self.profile['other_info']['activity_level'] == 'Low':
-            probabilities = [0.0, 0.5, 0.5]
+            probabilities = [0.15, 0.25, 0.25, 0.35]  # 对于不太活跃的用户，增加点赞的概率，减少发推的概率
         
         chosen_activity = random.choices(activities, weights=probabilities, k=1)[0]
-        await getattr(self, chosen_activity)()
+        await getattr(self, chosen_activity)()  # 调用选择的方法
+
+
 
 
 
@@ -204,6 +207,38 @@ class TwitterUserAgent:
 
 
 
+    async def choose_tweet_to_like(self):
+        """获取所有可点赞的推文"""
+        if self.user_id is None:
+            await self.setup_user_id(self.real_name)
+
+        tweets = await self.api.fetch_tweets_by_user(self.user_id)
+        if tweets:
+            await self.like_random_tweet(tweets)
+        else:
+            print(f"No tweets available to like for {self.real_name}.")
+
+    async def like_random_tweet(self, tweets):
+        """从获取的推文中随机选择一条进行点赞"""
+        tweet_to_like = random.choice(tweets) if tweets else None
+        await self.like_tweet(tweet_to_like)
+
+    async def like_tweet(self, tweet):
+        """点赞指定的推文"""
+        if tweet:
+            result = await self.api.like_tweet(self.user_id, tweet.tweet_id)
+            print(f"Like operation for {self.real_name}: {result['message']}")
+        else:
+            print("No tweet provided for liking operation.")
+
+
+
+
+
+
+
+
+
 
 
 
@@ -232,11 +267,6 @@ class TwitterUserAgent:
 
 
     '''
-    async def like_tweet(self):
-        """Like a tweet, assuming tweet IDs are known or tracked elsewhere."""
-        tweet_id = random.randint(1, 100)
-        result = await self.api.like_tweet(self.agent_id, tweet_id)
-        print("Liked a tweet" if result['status'] == 'success' else "Failed to like a tweet")
     
     async def retweet(self):
         """Retweet a tweet."""

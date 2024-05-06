@@ -11,12 +11,13 @@ class AgentsGenerator:
         for node_id, node_data in G.nodes(data=True):
             agent = node_data['agent']
             agent.profile['other_info']['mbti'] = random.choice(["INTJ", "ENTP", "INFJ", "ENFP"])
-            agent.profile['other_info']['activity_level'] = random.choice(["High", "Medium", "Low"])
+            # agent.profile['other_info']['activity_level'] = random.choice(["High", "Medium", "Low"])
             # 添加随机的关注关系
             self.create_following_relations(G, count)
         return G
 
     def create_following_relations(self, G, count):
+        return
         for node in G.nodes():
             num_following = random.randint(1, max(1, count // 10))  # 假设最多关注10%的其他用户
             followings = random.sample(list(G.nodes()), num_following)

@@ -128,6 +128,20 @@ class TwitterAPI:
 
 
 
+    async def like_tweet(self, user_id, tweet_id):
+        """异步点赞推文"""
+        try:
+            return await asyncio.get_event_loop().run_in_executor(None, self.db.like_tweet, user_id, tweet_id)
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}
+
+
+
+
+
+
+
+
 
 
 
@@ -146,16 +160,6 @@ class TwitterAPI:
 
 
 '''
-
-    async def like_tweet(self, user_id, tweet_id):
-        result = await self.db.add_tweet_like(tweet_id)
-        if result:
-            return {'status': 'success'}
-        else:
-            return {'status': 'error', 'message': 'Failed to like tweet'}
-
-
-
 
     async def retweet(self, user_id, original_tweet_id):
         original_tweet = await self.db.get_tweet(original_tweet_id)

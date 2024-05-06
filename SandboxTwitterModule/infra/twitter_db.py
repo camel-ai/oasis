@@ -352,6 +352,24 @@ class TwitterDB:
 
 
 
+    def like_tweet(self, user_id, tweet_id):
+        """点赞一个推文，并记录操作"""
+        session = self.Session()
+        try:
+            tweet = session.query(Tweet).filter(Tweet.tweet_id == tweet_id).one()
+            tweet.likes += 1  # Increment likes
+            session.commit()
+
+            trace_info = f'[like_tweet] User (id={user_id}) liked tweet (id={tweet_id}) at {datetime.now()}'
+            self.add_trace(user_id, 'like', trace_info)
+
+            return {'status': 'success', 'message': 'Tweet liked successfully'}
+        except SQLAlchemyError as e:
+            session.rollback()
+            return {'status': 'error', 'message': str(e)}
+        finally:
+            session.close()
+
 
 
 
