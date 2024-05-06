@@ -36,13 +36,18 @@ class SandboxTwitter:
         self.update_agents_db()  
 
         print("SandboxTwitter 实例已创建。")
-
+    
+    
+    @function_call_logger
+    def update_signal(self, new_signal):
+        self.signal = new_signal
+        print("-----[SandboxTwitter_udpate_signal:]Signal updated to:", self.signal)
+    
     @function_call_logger
     def update_agents_db(self):
         """更新所有 TwitterUserAgent 实例，设置 TwitterDB 实例和 TwitterAPI。"""
         for agent, node_id in self.AgentsGraph.get_agents():
-            agent.set_db(self.infra.db)  # 为每个代理设置数据库实例
-    
+            agent.set_db(self.infra.db)  # 为每个 tuAgent 设置数据库实例
 
     
     # to-do for run() 
@@ -58,28 +63,39 @@ class SandboxTwitter:
         asyncio.run(self.RunSimula())
 
         
-    @function_call_logger
-    def update_signal(self, new_signal):
-        self.signal = new_signal
-        print("-----[SandboxTwitter_udpate_signal:]Signal updated to:", self.signal)
+
 
 
 
 
     @function_call_logger
     async def RunSimula(self):
+        """运行模拟，处理每个 tu Agent的异步行为序列。"""
         tasks = []
-        for agent_data in self.AgentsGraph.get_agents():
-            agent = TwitterUserAgent(self.infra.api, agent_data['id'], agent_data['name'])
-            tasks.append(agent.signup("securepassword123")) # 注册
-            tasks.append(agent.login("securepassword123")) # 登陆
-            tasks.append(agent.perform_random_action()) # 执行随机动作
-            tasks.append(agent.refresh_home()) # 刷新主页
-            tasks.append(agent.logout()) # 登出
+        for node_id, node_data in self.AgentsGraph.graph.nodes(data=True):
+            agent = node_data['agent']
+            # 链接每个 tuAgent 的行为为一个完整的流程
+            tasks.append(self.run_agent_lifecycle(agent))
 
-        # 并发运行所有任务
+        # 并发运行所有 tuAgent 的行为序列
         await asyncio.gather(*tasks)
 
+    async def run_agent_lifecycle(self, agent):
+        """管理单个 tuAgent 的完整生命周期行为。"""
 
+        #  tuAgent 注册
+        await agent.signup("pw123")
 
+        #  tuAgent 登录
+        await agent.login("pw123", True, True)
+        
+        # 执行随机动作
+        for _ in range(10):
+            await agent.perform_random_action() 
+        
+        # 刷新主页内容
+        # await agent.refresh_home()
+        
+        #  tuAgent 登出
+        await agent.logout()
 

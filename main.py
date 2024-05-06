@@ -7,7 +7,7 @@ from SandboxTwitterModule.sandbox_twitter import SandboxTwitter as ST
 def main():
     # 实例化并启动 Twitter 沙盒
     my_twitter = ST()
-    # my_twitter.run()
+    my_twitter.run()
 
 
 if __name__ == '__main__':

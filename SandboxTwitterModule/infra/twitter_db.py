@@ -1,6 +1,7 @@
 # File: SandboxTwitterModule/infra/twitter_db.py
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, Table, JSON, func
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship, declarative_base
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, Table, JSON, func, Boolean
+from sqlalchemy import select, delete, insert, update
+from sqlalchemy.orm import scoped_session, sessionmaker, relationship, declarative_base, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.pool import NullPool
 import bcrypt
@@ -16,15 +17,27 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
-    username = Column(String, unique=True)
-    name = Column(String)
+    name = Column(String)  # name 就是 twitterUserAgent 的 real_name
     description = Column(Text)
     created_at = Column(DateTime)
     child_or_adult = Column(String)
-    password = Column(String)
+    password = Column(String)  # 存储加密后的密码
+    login_state = Column(Boolean, default=False)  # 新增字段表示登录状态，默认为False
     tweets = relationship('Tweet', back_populates='user')
     traces = relationship('Trace', back_populates='user')
     twitter_account = relationship('TwitterAccount', back_populates='user', uselist=False)
+
+class TwitterAccount(Base):
+    __tablename__ = 'twitter_account'
+    account_id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    username = Column(String, unique=True)  # 用户名从User表移至此处
+    following = Column(JSON)
+    followers = Column(JSON)
+    mute = Column(JSON)
+    block = Column(JSON)
+    home_timeline = Column(JSON)  # 新增字段，存储推文ID数组
+    user = relationship('User', back_populates='twitter_account')
 
 class Tweet(Base):
     __tablename__ = 'tweet'
@@ -51,21 +64,7 @@ class Recommendation(Base):
     tweet_ids = Column(JSON)
     user = relationship('User', backref='recommendation')
 
-class TwitterAccount(Base):
-    __tablename__ = 'twitter_account'
-    account_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('user.id'))
-    following = Column(JSON)
-    followers = Column(JSON)
-    mute = Column(JSON)
-    block = Column(JSON)
-    user = relationship('User', back_populates='twitter_account')
 
-# 多对多关系表
-user_connections = Table('user_connections', Base.metadata,
-    Column('follower_id', Integer, ForeignKey('user.id'), primary_key=True),
-    Column('followed_id', Integer, ForeignKey('user.id'), primary_key=True)
-)
 
 # TwitterDB 类定义
 class TwitterDB:
@@ -92,36 +91,6 @@ class TwitterDB:
         self.Session.remove()
 
 
-
-    # for tem !!!
-    def get_user_by_username(self, username):
-        """根据用户名查询用户信息"""
-        session = self.Session()
-        try:
-            user = session.query(User).filter(User.username == username).first()
-            return user
-        except SQLAlchemyError as e:
-            logging.error(f"Database error while retrieving user by username: {e}")
-            raise
-        finally:
-            session.close()
-
-
-    def insert_user(self, username, name, description, created_at, child_or_adult, password):
-        session = self.Session()
-        try:
-            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-            user = User(username=username, name=name, description=description, created_at=created_at, child_or_adult=child_or_adult, password=hashed_password)
-            session.add(user)
-            session.commit()
-            return user.id
-        except SQLAlchemyError as e:
-            session.rollback()
-            logging.error(f"Database error: {e}")
-            raise
-        finally:
-            session.close()
-
     def get_all_users(self):
         session = self.Session()
         try:
@@ -133,7 +102,284 @@ class TwitterDB:
         finally:
             session.close()
 
-    def delete_user(self, user_id):
+    def user_exists(self, user_id):
+        session = self.Session()
+        try:
+            user = session.query(User).filter(User.id == user_id).one_or_none()
+            return user is not None
+        finally:
+            session.close()
+
+
+    def update_user_login_state(self, user_id, is_online):
+        """Update the user's login state in the database."""
+        session = self.Session()
+        try:
+            user = session.query(User).filter(User.id == user_id).one()
+            user.login_state = is_online
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+
+
+    def get_user_by_id(self, user_id):
+        with self.Session() as session:
+            try:
+                # 使用 joinedload (Eager Loading) 预加载关联的 TwitterAccount，以防止在对象脱离 Session (Session) 后遇到懒加载 (Lazy Loading) 的问题
+                user = session.query(User).filter(User.id == user_id).options(joinedload(User.twitter_account)).one_or_none()
+                return user
+            except SQLAlchemyError as e:
+                # 处理可能的SQLAlchemy错误
+                logging.error(f"[db.py get_user_by_id] Database error while retrieving user by ID: {e}")
+                session.rollback()
+                raise
+
+
+    def get_user_by_real_name(self, real_name):
+        """根据 用户的真实姓名 查询用户信息。如果用户存在，返回用户对象；否则返回None。"""
+        session = self.Session()
+        try:
+            user = session.query(User).filter(User.name == real_name).first()
+            return user
+        except SQLAlchemyError as e:
+            logging.error(f"Database error while retrieving user by real name: {e}")
+            raise
+        finally:
+            session.close()
+
+
+    def get_user_by_username(self, username):
+        """根据 用户名 查询用户信息。如果用户存在，返回用户对象；否则返回None。"""
+        session = self.Session()
+        try:
+            account = session.query(TwitterAccount).filter(TwitterAccount.username == username).first()
+            return account.user if account else None # 请注意这里返回的是 user 对象，而不是 account 对象
+        except SQLAlchemyError as e:
+            logging.error(f"Database error while retrieving user by username: {e}")
+            raise
+        finally:
+            session.close()
+
+
+    def account_exists_by_username(self, username):
+        """检查用户名是否存在于TwitterAccount表中"""
+        session = self.Session()
+        try:
+            account = session.query(TwitterAccount).filter(TwitterAccount.username == username).first()
+            return account is not None # 请注意这里返回的是 account 对象，而不是 account_id
+        except SQLAlchemyError as e:
+            logging.error(f"Database error while checking username: {e}")
+            raise
+        finally:
+            session.close()
+
+
+    def insert_user(self, username, name, description, created_at, child_or_adult, password):
+        session = self.Session()
+        try:
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+            user = User(name=name, description=description, created_at=created_at, child_or_adult=child_or_adult, password=hashed_password)
+            session.add(user)
+            session.commit()
+            account = TwitterAccount(user_id=user.id, username=username)
+            session.add(account)
+            session.commit()
+            return user.id
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"Error during user insertion: {e}")
+            return None
+        finally:
+            session.close()
+
+
+
+    def add_trace(self, user_id, action, info):
+        """记录用户的行为追踪信息"""
+        session = self.Session()
+        try:
+            trace = Trace(user_id=user_id, action=action, info=info, time=datetime.now())
+            session.add(trace)
+            session.commit()
+            return trace.trace_id
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"Database error while adding trace: {e}")
+            raise
+        finally:
+            session.close()
+
+
+
+
+
+    def add_tweet(self, user_id, content):
+        session = self.Session()
+        try:
+            tweet = Tweet(user_id=user_id, content=content, time=datetime.now())
+            session.add(tweet)
+            session.flush()  # Ensure tweet_id is created
+            trace_info = f'[tweet] User (id={user_id}) tweeted: {content} at {datetime.now()}'
+            self.add_trace(user_id, 'tweet', trace_info)
+            session.commit()
+            return {'status': 'success', 'message': 'Tweet added and traced successfully', 'tweet_id': tweet.tweet_id}
+        except Exception as e:
+            session.rollback()
+            return {'status': 'error', 'message': str(e)}
+        finally:
+            session.close()
+
+
+    def get_tweets_by_user_id(self, user_id):
+        session = self.Session()
+        try:
+            # 查询特定用户的所有推文，并按时间降序排列
+            tweets = session.query(Tweet).filter(Tweet.user_id == user_id).order_by(Tweet.time.desc()).all()
+            return tweets
+        except Exception as e:
+            print(f"Error retrieving tweets for user {user_id}: {str(e)}")
+            return []
+        finally:
+            session.close()
+
+
+    def get_user_id_by_real_name(self, real_name):
+        session = self.Session()
+        try:
+            user = session.query(User).filter(User.name == real_name).one()
+            return user.id
+        except Exception as e:
+            session.rollback()
+            print("Failed to fetch user ID by real name:", str(e))
+            return None
+        finally:
+            session.close()
+
+
+    def follow_user(self, follower_id, followee_id):
+        session = self.Session()
+        try:
+            print(f"[db.py follow_user] Attempting to follow: follower_id={follower_id}, followee_id={followee_id}")
+            follower_account = session.query(TwitterAccount).filter_by(user_id=follower_id).one_or_none()
+            followee_account = session.query(TwitterAccount).filter_by(user_id=followee_id).one_or_none()
+
+            if follower_account and followee_account:
+                if followee_id not in json.loads(follower_account.following or '[]'):
+                    following_list = json.loads(follower_account.following or '[]')
+                    following_list.append(followee_id)
+                    follower_account.following = json.dumps(following_list)
+
+                    followers_list = json.loads(followee_account.followers or '[]')
+                    followers_list.append(follower_id)
+                    followee_account.followers = json.dumps(followers_list)
+                    trace_info = f'[follow] User (id={follower_id}) followed user (id={followee_id}) at {datetime.now()}'
+                    self.add_trace(follower_id, 'follow', trace_info)
+
+                    session.commit()
+                    print(f"[db.py follow_user] Follow relationship[User(id={follower_id})->User(id={followee_id})] successfully created")
+
+                    return {'status': 'success', 'message': 'User followed successfully'}
+                return {'status': 'error', 'message': 'Already following this user'}
+            return {'status': 'error', 'message': 'Invalid follower_id or followee_id'}
+        except Exception as e:
+            session.rollback()
+            print("[db.py follow_user] Error occurred:", str(e))
+            return {'status': 'error', 'message': str(e)}
+        finally:
+            session.close()
+
+
+
+
+    def unfollow_user(self, follower_id, followee_id):
+        session = self.Session()
+        try:
+            follower_account = session.query(TwitterAccount).filter_by(user_id=follower_id).one_or_none()
+            followee_account = session.query(TwitterAccount).filter_by(user_id=followee_id).one_or_none()
+
+            if follower_account and followee_account:
+                if followee_id in json.loads(follower_account.following or '[]'):
+                    following_list = json.loads(follower_account.following or '[]')
+                    following_list.remove(followee_id)
+                    follower_account.following = json.dumps(following_list)
+
+                    followers_list = json.loads(followee_account.followers or '[]')
+                    followers_list.remove(follower_id)
+                    followee_account.followers = json.dumps(followers_list)
+
+                    trace_info = f'[unfollow] User (id={follower_id}) unfollowed user (id={followee_id}) at {datetime.now()}'
+                    self.add_trace(follower_id, 'unfollow', trace_info)
+
+                    session.commit()
+                    print(f"[db.py unfollow_user] Follow relationship[User(id={follower_id})->User(id={followee_id})] successfully unfollowed")
+
+                    return {'status': 'success', 'message': 'User unfollowed successfully'}
+                return {'status': 'error', 'message': 'Not following this user'}
+            return {'status': 'error', 'message': 'Invalid follower_id or followee_id'}
+        except Exception as e:
+            session.rollback()
+            print("[db.py unfollow_user] Error occurred:", str(e))
+            return {'status': 'error', 'message': str(e)}
+        finally:
+            session.close()
+
+
+    def get_following_ids(self, user_id):
+        session = self.Session()
+        try:
+            user_account = session.query(TwitterAccount).filter_by(user_id=user_id).one_or_none()
+            if user_account:
+                print(f"User account found for user_id {user_id}, following: {user_account.following}")
+            else:
+                print(f"No user account found for user_id {user_id}")
+
+            if user_account and user_account.following:
+                following_ids = json.loads(user_account.following)
+                print(f"Following IDs for user_id {user_id}: {following_ids}")
+                return following_ids
+            else:
+                print(f"No following data or invalid JSON for user_id {user_id}")
+            return []
+        except Exception as e:
+            print(f"[db.py get_following_ids] Database error while fetching following IDs for user {user_id}: {e}")
+            return []
+        finally:
+            session.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''
+
+
+    # for tem !!!
+
+    def delete_user(self, user_id): # by_id
         session = self.Session()
         try:
             user = session.query(User).filter(User.id == user_id).one()
@@ -145,6 +391,21 @@ class TwitterDB:
             raise
         finally:
             session.close()
+
+    def delete_user_by_username(self, username): # by_username
+        session = self.Session()
+        try:
+            user = session.query(User).filter(User.username == username).one_or_none()
+            if user:
+                session.delete(user)
+                session.commit()
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"Database error during user deletion: {e}")
+            raise
+        finally:
+            session.close()
+
 
     def update_user(self, user_id, update_fields):
         session = self.Session()
@@ -191,22 +452,6 @@ class TwitterDB:
             session.close()
 
 
-
-    def create_tweet(self, user_id, content):
-        """ 创建新推文 """
-        session = self.Session()
-        try:
-            tweet = Tweet(user_id=user_id, content=content, time=datetime.now())
-            session.add(tweet)
-            session.commit()
-            return tweet.tweet_id
-        except SQLAlchemyError as e:
-            session.rollback()
-            logging.error(f"Database error while creating tweet: {e}")
-            raise
-        finally:
-            session.close()
-
     def update_tweet(self, tweet_id, new_content):
         """ 更新推文内容 """
         session = self.Session()
@@ -250,17 +495,6 @@ class TwitterDB:
         finally:
             session.close()
 
-    def get_tweets_by_user(self, user_id):
-        """ 获取特定用户的所有推文 """
-        session = self.Session()
-        try:
-            tweets = session.query(Tweet).filter(Tweet.user_id == user_id).all()
-            return tweets
-        except SQLAlchemyError as e:
-            logging.error(f"Database error while retrieving tweets for user {user_id}: {e}")
-            raise
-        finally:
-            session.close()
 
     def count_tweets(self):
         """ 统计系统中的总推文数 """
@@ -274,201 +508,6 @@ class TwitterDB:
         finally:
             session.close()
 
-
-
-    def add_recommendation(self, user_id, tweet_ids):
-        """ 添加推荐 """
-        session = self.Session()
-        try:
-            recommendation = Recommendation(user_id=user_id, tweet_ids=json.dumps(tweet_ids))
-            session.add(recommendation)
-            session.commit()
-            return recommendation.rec_id
-        except SQLAlchemyError as e:
-            session.rollback()
-            logging.error(f"Database error while adding recommendation: {e}")
-            raise
-        finally:
-            session.close()
-
-    def update_recommendation(self, rec_id, new_tweet_ids):
-        """ 更新推荐内容 """
-        session = self.Session()
-        try:
-            recommendation = session.query(Recommendation).filter(Recommendation.rec_id == rec_id).one()
-            recommendation.tweet_ids = json.dumps(new_tweet_ids)
-            session.commit()
-        except SQLAlchemyError as e:
-            session.rollback()
-            logging.error(f"Database error while updating recommendation: {e}")
-            raise
-        finally:
-            session.close()
-
-    def get_recommendation_by_user(self, user_id):
-        """ 获取特定用户的推荐 """
-        session = self.Session()
-        try:
-            recommendation = session.query(Recommendation).filter(Recommendation.user_id == user_id).one()
-            return json.loads(recommendation.tweet_ids)
-        except SQLAlchemyError as e:
-            logging.error(f"Database error while retrieving recommendation for user {user_id}: {e}")
-            raise
-        finally:
-            session.close()
-
-    def delete_recommendation(self, rec_id):
-        """ 删除指定的推荐 """
-        session = self.Session()
-        try:
-            recommendation = session.query(Recommendation).filter(Recommendation.rec_id == rec_id).one()
-            session.delete(recommendation)
-            session.commit()
-        except SQLAlchemyError as e:
-            session.rollback()
-            logging.error(f"Database error while deleting recommendation: {e}")
-            raise
-        finally:
-            session.close()
-
-    def get_all_recommendations(self):
-        """ 获取所有推荐 """
-        session = self.Session()
-        try:
-            recommendations = session.query(Recommendation).all()
-            return [(rec.user_id, json.loads(rec.tweet_ids)) for rec in recommendations]
-        except SQLAlchemyError as e:
-            logging.error(f"Database error while retrieving all recommendations: {e}")
-            raise
-        finally:
-            session.close()
-
-    def filter_recommendations(self, conditions):
-        """ 根据特定条件过滤推荐 """
-        session = self.Session()
-        try:
-            query = session.query(Recommendation)
-            for attr, value in conditions.items():
-                if hasattr(Recommendation, attr):
-                    query = query.filter(getattr(Recommendation, attr) == value)
-            recommendations = query.all()
-            return recommendations
-        except SQLAlchemyError as e:
-            logging.error(f"Database error while filtering recommendations: {e}")
-            raise
-        finally:
-            session.close()
-
-    def add_bulk_recommendations(self, recommendations):
-        """ 批量添加推荐 """
-        session = self.Session()
-        try:
-            for recommendation in recommendations:
-                rec = Recommendation(user_id=recommendation['user_id'], tweet_ids=json.dumps(recommendation['tweet_ids']))
-                session.add(rec)
-            session.commit()
-        except SQLAlchemyError as e:
-            session.rollback()
-            logging.error(f"Database error while adding bulk recommendations: {e}")
-            raise
-        finally:
-            session.close()
-
-    def get_recommendation_details(self, rec_id):
-        """ 获取推荐详细信息，包括关联的推文内容 """
-        session = self.Session()
-        try:
-            recommendation = session.query(Recommendation).filter(Recommendation.rec_id == rec_id).one()
-            tweet_ids = json.loads(recommendation.tweet_ids)
-            tweets = session.query(Tweet).filter(Tweet.tweet_id.in_(tweet_ids)).all()
-            return {'recommendation_id': rec_id, 'tweets': tweets}
-        except SQLAlchemyError as e:
-            logging.error(f"Database error while retrieving recommendation details: {e}")
-            raise
-        finally:
-            session.close()
-
-    def update_real_time_recommendation(self, user_id, new_tweet_ids):
-        """ 实时更新用户的推荐列表 """
-        session = self.Session()
-        try:
-            recommendation = session.query(Recommendation).filter(Recommendation.user_id == user_id).one()
-            current_tweet_ids = json.loads(recommendation.tweet_ids)
-            updated_tweet_ids = list(set(current_tweet_ids + new_tweet_ids))  # 合并列表并去重
-            recommendation.tweet_ids = json.dumps(updated_tweet_ids)
-            session.commit()
-        except SQLAlchemyError as e:
-            session.rollback()
-            logging.error(f"Database error while updating real-time recommendation: {e}")
-            raise
-        finally:
-            session.close()
-
-    def evaluate_recommendation_effectiveness(self, rec_id):
-        """评估指定推荐的效果，基于用户互动（如点赞、评论等）"""
-        session = self.Session()
-        try:
-            recommendation = session.query(Recommendation).filter(Recommendation.rec_id == rec_id).one()
-            tweet_ids = json.loads(recommendation.tweet_ids)  # 这是一个列表
-            tweets = session.query(Tweet).filter(Tweet.tweet_id.in_(tweet_ids)).all()  # 使用 .in_() 来处理列表
-            total_interactions = sum(tweet.likes for tweet in tweets)  # 以点赞数作为互动指标
-            return total_interactions
-        except SQLAlchemyError as e:
-            logging.error(f"Database error while evaluating recommendation effectiveness: {e}")
-            raise
-        finally:
-            session.close()
-
-    def record_recommendation_history(self, rec_id, user_id, interaction_details):
-        """ 记录用户对推荐的反应，例如点击、喜欢或评论 """
-        session = self.Session()
-        try:
-            history_entry = Trace(user_id=user_id, action='recommendation_interaction', info=json.dumps({
-                'rec_id': rec_id,
-                'interactions': interaction_details
-            }), time=datetime.now())
-            session.add(history_entry)
-            session.commit()
-        except SQLAlchemyError as e:
-            session.rollback()
-            logging.error(f"Database error while recording recommendation history: {e}")
-            raise
-        finally:
-            session.close()
-
-    def evaluate_complex_recommendation_effectiveness(self, user_id):
-        """ 基于多种互动数据评估推荐效果，包括点击、喜欢和评论 """
-        session = self.Session()
-        try:
-            interactions = session.query(Trace).filter(Trace.user_id == user_id, Trace.action == 'recommendation_interaction').all()
-            total_interactions = 0
-            for interaction in interactions:
-                details = json.loads(interaction.info)
-                for key, value in details['interactions'].items():
-                    total_interactions += value  # 假设每种互动都等价地增加一个点
-            return total_interactions
-        except SQLAlchemyError as e:
-            logging.error(f"Database error while evaluating complex recommendation effectiveness: {e}")
-            raise
-        finally:
-            session.close()
-
-
-
-    def add_trace(self, user_id, action, info):
-        """ 添加用户的行为追踪信息 """
-        session = self.Session()
-        try:
-            trace = Trace(user_id=user_id, action=action, info=info, time=datetime.now())
-            session.add(trace)
-            session.commit()
-            return trace.trace_id
-        except SQLAlchemyError as e:
-            session.rollback()
-            logging.error(f"Database error while adding trace: {e}")
-            raise
-        finally:
-            session.close()
 
     def get_traces_by_user(self, user_id):
         """ 获取特定用户的所有追踪信息 """
@@ -516,5 +555,30 @@ class TwitterDB:
             raise
         finally:
             session.close()
+
+
+    def refresh_home_timeline(self, user_id):
+        """刷新指定用户的首页时间线"""
+        session = self.Session()
+        try:
+            # 获取用户的当前推荐
+            recommendation = session.query(Recommendation).filter(Recommendation.user_id == user_id).one_or_none()
+            if recommendation:
+                # 更新 twitterAccount table 中的 home_timeline 字段
+                twitter_account = session.query(TwitterAccount).filter(TwitterAccount.user_id == user_id).one()
+                twitter_account.home_timeline = json.dumps(recommendation.tweet_ids)
+                session.commit()
+                return {'status': 'success', 'message': 'Home timeline updated'}
+            return {'status': 'error', 'message': 'No recommendations found'}
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"Database error while refreshing home timeline: {e}")
+            raise
+        finally:
+            session.close()
+
+
+'''
+
 
 

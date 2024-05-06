@@ -1,6 +1,7 @@
 # File: SandboxTwitterModule/infra/agents_graph.py
 import networkx as nx
 import matplotlib.pyplot as plt
+import os, sys
 
 from .agents_generator import AgentsGenerator as AgentsGen
 from .Agent.twitterUserAgent import TwitterUserAgent as tuAgent
@@ -32,12 +33,22 @@ class homoAgentsGraph:
     # 获取 AgentsGraph 中 agent 的个数
     @function_call_logger
     def get_agent_count(self):
+        agent_count_str = input("Please input agent_count: ")
         try:
-            agent_count = int(input("Please input agent_count: "))
+            agent_count = int(agent_count_str)
+            if agent_count <= 0:
+                raise ValueError("Agent count must be a positive integer.")
+                sys.exit("[Force_exit by <STM/infra/agents_graph.py>, AgentCountInputError_1]")
             return agent_count
         except ValueError:
             print('Input error, please enter a valid integer.')
+            sys.exit("[Force_exit by <STM/infra/agents_graph.py>, AgentCountInputError_2]")
             return -1
+        except KeyboardInterrupt:
+            print('\nOperation interrupted by user.')
+            sys.exit("[Force_exit by <STM/infra/agents_graph.py>, AgentCountInputError_3]")
+            return -1
+
 
     # 初始化一个同构图并添加 agent_count 个 tuAgent
     @function_call_logger
