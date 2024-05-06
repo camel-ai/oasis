@@ -14,7 +14,7 @@ import logging
 import sys
 from SandboxTwitterModule.sandbox_twitter import SandboxTwitter as ST
 
-N_agent_cnt = 10
+N_agent_cnt = 1000
 
 @pytest.fixture(scope="module")
 def db():
