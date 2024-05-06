@@ -21,7 +21,6 @@ jobs:
 
     - name: Install dependencies
       run: |
-        cd 20240416/
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
