@@ -28,4 +28,3 @@ python main.py                # Run the program
 ```bash
 python showDB.py  # Display the database content, including Users, Accounts, Tweets, Traces, Rec
 ```
-```
