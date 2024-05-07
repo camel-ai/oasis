@@ -1,17 +1,31 @@
-# pipeline
+# Pipeline
 
-## quickstart
+## Quickstart
 
-python -m venv venv_name(for me it's camel_ss) 
+### Step 1: Create and Activate a Virtual Environment
+For macOS:
+```bash
+python -m venv camel_ss       # Create virtual environment
+source camel_ss/bin/activate  # Activate virtual environment
+```
 
-source camel_ss/bin/activate
+### Step 2: Install Necessary Packages
 
-pip install --upgrade pip
+```bash
+pip install --upgrade pip     # Upgrade pip
+pip install -r requirements.txt # Install packages from requirements file
+```
 
-pip install -r requirements.txt
+### Step 3: Run the Main Program
 
-python main.py 
+```bash
+python main.py                # Run the program
+# You will be prompted to input 'AgentCount' which is the size of the AI-Society/Sandbox
+```
 
-enter AgentCount(the size of the AI-Society/Sandbox)
+### Step 4: Show Results from the Database
 
-python showDB.py(to show the DB, including Users, Accounts, Tweets, Traces, Rec)
+```bash
+python showDB.py  # Display the database content, including Users, Accounts, Tweets, Traces, Rec
+```
+```
