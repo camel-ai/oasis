@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from SandboxTwitterModule.infra.twitter_db import TwitterDB, TwitterAccount
 
-class TestTwitterAccountRelationships(unittest.TestCase):
+class test_twitterAccount_Relationships(unittest.TestCase):
     def setUp(self):
         # Create database connection
         engine = create_engine('sqlite:///twitter_simulation.db')
