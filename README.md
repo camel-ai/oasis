@@ -28,3 +28,10 @@ python main.py                # Run the program
 ```bash
 python showDB.py  # Display the database content, including Users, Accounts, Tweets, Traces, Rec
 ```
+
+
+## to-do
+
+- [ ] waiting for the origin info-server features to PR&Merge 
+- [ ] Agent Generator 
+- [ ] Agent running 
