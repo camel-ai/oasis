@@ -39,4 +39,6 @@ python showDB.py  # Display the database content, including Users, Accounts, Twe
 
 ## pytest
 
+```
 pytest test\test_infra
+```
