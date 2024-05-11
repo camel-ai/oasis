@@ -35,3 +35,8 @@ python showDB.py  # Display the database content, including Users, Accounts, Twe
 - [ ] waiting for the origin info-server features to PR&Merge 
 - [ ] Agent Generator 
 - [ ] Agent running 
+
+
+## pytest
+
+pytest test\test_infra
