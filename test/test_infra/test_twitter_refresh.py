@@ -1,7 +1,4 @@
-'''
-测试通过：trend 函数
-'''
-
+# File: test_twitter_refresh.py
 import os
 import pytest
 import sqlite3

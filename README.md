@@ -23,20 +23,26 @@ python main.py                # Run the program
 # You will be prompted to input 'AgentCount' which is the size of the AI-Society/Sandbox
 ```
 
-### Step 4: Show Results from the Database
-
-```bash
-python showDB.py  # Display the database content, including Users, Accounts, Tweets, Traces, Rec
-```
-
 
 ## to-do
 
-- [ ] waiting for the origin info-server features to PR&Merge 
+- [x] waiting for the origin info-server features to PR&Merge 
 - [ ] Agent Generator 
 - [ ] Agent running 
 
 
 ## pytest
 
+<<<<<<< HEAD
 pytest test\test_infra
+=======
+For win:
+```bash
+pytest test\test_infra  
+```
+
+For Mac OS X:
+```bash
+pytest
+```
+>>>>>>> c4bedce75bb9ab6f97abe3e6526a43fab6b513e5

@@ -1,7 +1,4 @@
-'''
-测试通过：create_tweet, like, unlike 函数
-'''
-
+# File: test_twitter_tweet.py
 import os
 import sqlite3
 

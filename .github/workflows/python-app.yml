@@ -2,9 +2,9 @@ name: Python application CI
 
 on:
   push:
-    branches: [main] # 只有在 main 分支推送时触发
+    branches: [personal_konisberg]  # 添加 personal_konisberg 分支
   pull_request:
-    branches: [main] # 只有在 main 分支的拉取请求时触发
+    branches: [personal_konisberg]  # 添加 personal_konisberg 分支
 
 jobs:
   build:
@@ -26,9 +26,13 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest 
+        pytest
 
-    #- name: Deploy
+    # - name: Deploy
+    #  run: |
+    #    python main.py
+
+    # - name: Deploy
     #  run: |
     #    # 在这里可以添加部署步骤，如部署到服务器或者云服务商等
     
