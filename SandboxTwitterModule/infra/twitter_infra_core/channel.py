@@ -2,37 +2,60 @@ import asyncio
 import uuid
 
 
+class AsyncSafeDict:
+    def __init__(self):
+        self.dict = {}
+        self.lock = asyncio.Lock()
+
+    async def put(self, key, value):
+        async with self.lock:
+            self.dict[key] = value
+
+    async def get(self, key, default=None):
+        async with self.lock:
+            return self.dict.get(key, default)
+
+    async def pop(self, key, default=None):
+        async with self.lock:
+            return self.dict.pop(key, default)
+
+    async def keys(self):
+        async with self.lock:
+            return list(self.dict.keys())
+
+
 class Twitter_Channel:
     def __init__(self):
-        # 初始化两个消息队列
         self.receive_queue = asyncio.Queue()  # 用于存储接收的消息
-        self.send_queue = asyncio.Queue()     # 用于存储要发送的消息
+        self.send_dict = AsyncSafeDict()      # 使用异步安全字典存储要发送的消息
 
     async def receive_from(self):
-        # 从接收队列中获取一个消息并返回
         message = await self.receive_queue.get()
         return message
 
     async def send_to(self, message):
-        # 将消息添加到发送队列中
+        # message_id 是消息的第一个元素
+        message_id = message[0]
         print(message)
-        await self.send_queue.put(message)
+        await self.send_dict.put(message_id, message)
 
     async def write_to_receive_queue(self, action_info):
-        # 生成唯一的message_id
         message_id = str(uuid.uuid4())
-        # 向receive_queue写入消息
         await self.receive_queue.put((message_id, action_info))
         return message_id
 
     async def read_from_send_queue(self, message_id):
-        # 循环检查send_queue以寻找特定message_id的消息
+        timeout = 5.0
+        start_time = asyncio.get_event_loop().time()
+
         while True:
-            if not self.send_queue.empty():
-                current_message = await self.send_queue.get()
-                if current_message[0] == message_id:
-                    return current_message
-                else:
-                    # 如果不是所需的message_id，将消息放回队列（可能需要更优雅的处理方式）
-                    await self.send_queue.put(current_message)
-            await asyncio.sleep(0.1)  # 简单的防止紧密循环，实际应用中可能需要更复杂的逻辑
+            if asyncio.get_event_loop().time() - start_time > timeout:
+                raise TimeoutError(f"Message with ID {message_id} not found "
+                                   f"within {timeout} seconds.")
+
+            # 尝试获取消息
+            message = await self.send_dict.pop(message_id, None)
+            if message:
+                return message  # 返回找到的消息
+
+            await asyncio.sleep(0.01)  # 暂时挂起，避免紧密循环

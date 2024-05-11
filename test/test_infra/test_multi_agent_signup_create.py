@@ -23,7 +23,7 @@ def setup_twitter():
 
 @pytest.mark.asyncio
 async def test_agents_tweeting(setup_twitter):
-    N = 5  # 代理（用户）数量
+    N = 50  # 代理（用户）数量
     M = 3  # 每个用户要发送的推文数量
 
     agents = []
@@ -42,7 +42,7 @@ async def test_agents_tweeting(setup_twitter):
     # 发送推文
     for agent in agents:
         for _ in range(M):
-            await agent.action_create_tweet(f"hello world from {agent.agent_id}")
+            await agent.action_create_tweet(f"hello from {agent.agent_id}")
             await asyncio.sleep(random.uniform(0, 0.1))
 
     await channel.write_to_receive_queue((None, None, "exit"))

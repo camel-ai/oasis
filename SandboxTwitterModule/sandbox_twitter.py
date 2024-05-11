@@ -52,8 +52,8 @@ class SandboxTwitter:
         test_agent = TwitterUserAgent(1, 'Alice', self.channel)
         await test_agent.action_sign_up("alice0101", "Alice", "A girl.")
         await test_agent.action_create_tweet("hello world")
-        # 发送退出信号以优雅地结束running方法
 
+        # 发送退出信号以结束running方法
         await self.channel.write_to_receive_queue((None, None, "exit"))
 
         await task
