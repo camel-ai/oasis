@@ -40,7 +40,7 @@ class Twitter:
 
     async def running(self, channel: Any):
         while True:
-            data = await channel.receive_from("Agent Group")
+            message_id, data = await channel.receive_from("Agent Group")
             agent_id, message, action = data
 
             action = ActionType(action)
@@ -53,7 +53,7 @@ class Twitter:
             elif action == ActionType.SIGNUP:
                 result = await self.signup(agent_id=agent_id,
                                            user_message=message)
-                await channel.send_to("Agent Group", (agent_id, result))
+                await channel.send_to("Agent Group", (message_id, agent_id, result))
 
             elif action == ActionType.REFRESH:
                 result = await self.refresh(agent_id=agent_id)
