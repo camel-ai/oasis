@@ -2,9 +2,13 @@ name: Python application CI
 
 on:
   push:
-    branches: [main] # 只有在 main 分支推送时触发
+    branches: |
+      - main
+      - personal_konisberg  # 添加 personal_konisberg 分支
   pull_request:
-    branches: [main] # 只有在 main 分支的拉取请求时触发
+    branches: |
+      - main
+      - personal_konisberg  # 添加 personal_konisberg 分支
 
 jobs:
   build:
