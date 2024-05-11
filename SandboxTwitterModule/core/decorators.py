@@ -2,16 +2,19 @@
 import os
 import inspect
 
+
 def function_call_logger(func):
     """
-    A decorator that logs the call and return of the function, 
-    showing the relative or absolute path of the source file where the function is called.
-    
+    A decorator that logs the call and return of the function,
+    showing the relative or absolute path of the source file where the
+    function is called.
+
     Args:
         func (Callable): The function to be decorated.
-        
+
     Returns:
-        Callable: The wrapper function that adds logging to the original function.
+        Callable: The wrapper function that adds logging to the original
+            function.
     """
     def log_message(phase, filename):
         """ Helper function to print log messages. """
@@ -19,7 +22,8 @@ def function_call_logger(func):
             path = os.path.relpath(filename, os.getcwd())
         else:
             path = os.path.basename(filename)
-        print(f"=====[func_call_logger:]源文件 [{path}] 中的函数 [{func.__name__}] {phase}=====")
+        print(f"=====[func_call_logger:]源文件 [{path}] 中的函数 [{func.__name__}] "
+              f"{phase}=====")
 
     def wrapper(*args, **kwargs):
         caller_filename = inspect.stack()[1].filename
