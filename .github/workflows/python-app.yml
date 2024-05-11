@@ -3,12 +3,12 @@ name: Python application CI
 on:
   push:
     branches: |
-      - main
-      - personal_konisberg  # 添加 personal_konisberg 分支
+      - [main]
+      - [personal_konisberg]  # 添加 personal_konisberg 分支
   pull_request:
     branches: |
-      - main
-      - personal_konisberg  # 添加 personal_konisberg 分支
+      - [main]
+      - [personal_konisberg]  # 添加 personal_konisberg 分支
 
 jobs:
   build:
@@ -32,9 +32,9 @@ jobs:
       run: |
         pytest
 
-    - name: Deploy
-      run: |
-        python main.py
+    # - name: Deploy
+    #  run: |
+    #    python main.py
 
     # - name: Deploy
     #  run: |
