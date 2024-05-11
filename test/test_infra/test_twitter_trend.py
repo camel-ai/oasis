@@ -16,6 +16,31 @@ parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
 
 
+class MockChannel:
+
+    def __init__(self):
+        self.call_count = 0
+        self.messages = []  # 用于存储发送的消息
+
+    async def receive_from(self):
+        # 第一次调用返回搜索用户的指令
+        if self.call_count == 0:
+            self.call_count += 1
+            return ('id_', (1, None, "trend"))
+        else:
+            return ('id_', (None, None, "exit"))
+
+    async def send_to(self, message):
+        self.messages.append(message)  # 存储消息以便后续断言
+        # 对搜索用户的结果进行断言
+        if self.call_count == 1:
+            # 验证搜索成功且找到至少一个匹配用户
+            assert message[2]["success"] is True, "Trend should be successful"
+            assert message[2]["tweets"][0]["content"] == "Tweet 6"
+            assert message[2]["tweets"][1]["content"] == "Tweet 5"
+            assert message[2]["tweets"][2]["content"] == "Tweet 4"
+
+
 # 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
 def setup_twitter():
@@ -27,40 +52,15 @@ def setup_twitter():
     db_path = test_db_filepath
 
     # 初始化Twitter实例
-    twitter_instance = Twitter(db_path)
+    mock_channel = MockChannel()
+    twitter_instance = Twitter(db_path, mock_channel)
     return twitter_instance
-
-
-class MockChannel:
-
-    def __init__(self):
-        self.call_count = 0
-        self.messages = []  # 用于存储发送的消息
-
-    async def receive_from(self, group):
-        # 第一次调用返回搜索用户的指令
-        if self.call_count == 0:
-            self.call_count += 1
-            return 1, None, "trend"
-        else:
-            return None, None, "exit"
-
-    async def send_to(self, group, message):
-        self.messages.append(message)  # 存储消息以便后续断言
-        # 对搜索用户的结果进行断言
-        if self.call_count == 1:
-            # 验证搜索成功且找到至少一个匹配用户
-            assert message[1]["success"] is True, "Trend should be successful"
-            assert message[1]["tweets"][0]["content"] == "Tweet 6"
-            assert message[1]["tweets"][1]["content"] == "Tweet 5"
-            assert message[1]["tweets"][2]["content"] == "Tweet 4"
 
 
 @pytest.mark.asyncio
 async def test_search_user(setup_twitter):
     try:
         twitter = setup_twitter
-        mock_channel = MockChannel()
 
         # 在测试开始之前，将1个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
@@ -93,7 +93,7 @@ async def test_search_user(setup_twitter):
         )
         conn.commit()
 
-        await twitter.running(mock_channel)
+        await twitter.running()
 
         # 验证跟踪表(trace)是否正确记录了操作
         cursor.execute("SELECT * FROM trace WHERE action='trend'")

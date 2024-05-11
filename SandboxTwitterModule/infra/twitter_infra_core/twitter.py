@@ -10,10 +10,11 @@ from .typing import ActionType
 
 class Twitter:
 
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str, channel: Any):
         create_db(db_path)
         self.db = sqlite3.connect(db_path, check_same_thread=False)
         self.db_cursor = self.db.cursor()
+        self.channel = channel
 
         # twitter内部推荐系统refresh一次返回的推文数量
         self.refresh_tweet_count = 5
@@ -38,9 +39,9 @@ class Twitter:
             self.db.commit()
         return self.db_cursor
 
-    async def running(self, channel: Any):
+    async def running(self):
         while True:
-            message_id, data = await channel.receive_from("Agent Group")
+            message_id, data = await self.channel.receive_from()
             agent_id, message, action = data
 
             action = ActionType(action)
@@ -53,58 +54,56 @@ class Twitter:
             elif action == ActionType.SIGNUP:
                 result = await self.signup(agent_id=agent_id,
                                            user_message=message)
-                await channel.send_to("Agent Group",
-                                      (message_id, agent_id, result))
+                await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.REFRESH:
                 result = await self.refresh(agent_id=agent_id)
-                await channel.send_to("Agent Group", (agent_id, result))
+                await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.CREATE_TWEET:
                 result = await self.create_tweet(agent_id=agent_id,
                                                  content=message)
-                await channel.send_to("Agent Group",
-                                      (message_id, agent_id, result))
+                await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.LIKE:
                 result = await self.like(agent_id=agent_id, tweet_id=message)
-                await channel.send_to("Agent Group", (agent_id, result))
+                await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.UNLIKE:
                 result = await self.unlike(agent_id=agent_id, tweet_id=message)
-                await channel.send_to("Agent Group", (agent_id, result))
+                await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.SEARCH_TWEET:
                 result = await self.search_tweets(agent_id=agent_id,
                                                   query=message)
-                await channel.send_to("Agent Group", (agent_id, result))
+                await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.SEARCH_USER:
                 result = await self.search_user(agent_id=agent_id,
                                                 query=message)
-                await channel.send_to("Agent Group", (agent_id, result))
+                await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.FOLLOW:
                 result = await self.follow(agent_id=agent_id,
                                            followee_id=message)
-                await channel.send_to("Agent Group", (agent_id, result))
+                await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.UNFOLLOW:
                 result = await self.unfollow(agent_id=agent_id,
                                              followee_id=message)
-                await channel.send_to("Agent Group", (agent_id, result))
+                await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.MUTE:
                 result = await self.mute(agent_id=agent_id, mutee_id=message)
-                await channel.send_to("Agent Group", (agent_id, result))
+                await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.UNMUTE:
                 result = await self.unmute(agent_id=agent_id, mutee_id=message)
-                await channel.send_to("Agent Group", (agent_id, result))
+                await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.TREND:
                 result = await self.trend(agent_id=agent_id)
-                await channel.send_to("Agent Group", (agent_id, result))
+                await self.channel.send_to((message_id, agent_id, result))
 
             else:
                 raise ValueError(f"Action {action} is not supported")

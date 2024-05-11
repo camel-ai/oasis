@@ -1,11 +1,5 @@
 # File: SandboxTwitterModule/infra/Agent/twitterUserAgent.py
-import networkx as nx
-import random
-import asyncio
-import logging
-
 from SandboxTwitterModule.infra import ActionType
-from SandboxTwitterModule.infra import Twitter
 
 
 class TwitterUserAgent:
@@ -26,16 +20,28 @@ class TwitterUserAgent:
 
     async def _perform_action(self, message, action_type):
         """根据传入的action_type和message执行action, 并得到返回值"""
-        message_id = await self.channel.write_to_receive_queue((self.agent_id, message, action_type))
+        message_id = await self.channel.write_to_receive_queue(
+            (self.agent_id, message, action_type))
 
         response = await self.channel.read_from_send_queue(message_id)
         # 发送一个动作到Twitter实例并等待响应
         print(f"Received response: {response}")
+        return response[2]
 
     async def action_sign_up(self, user_name, name, bio):
-        '''加上给camel生成openai schema的信息'''
+        '''
+        加上给camel生成openai schema的信息
+        输出example:
+        {'success': True, 'user_id': 2}
+        '''
         user_message = (user_name, name, bio)
-        return await self._perform_action(user_message, ActionType.SIGNUP.value)
+        return await self._perform_action(
+            user_message, ActionType.SIGNUP.value)
 
     async def action_create_tweet(self, content):
-        return await self._perform_action(content, ActionType.CREATE_TWEET.value)
+        '''加上给camel生成openai schema的信息
+        输出example:
+        {'success': True, 'tweet_id': 50}
+        '''
+        return await self._perform_action(
+            content, ActionType.CREATE_TWEET.value)

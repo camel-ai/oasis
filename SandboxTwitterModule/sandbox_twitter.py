@@ -28,8 +28,8 @@ class SandboxTwitter:
             'mock_twitter.db'
         )
 
-        self.infra = Twitter(self.mock_twitter_file_path)
         self.channel = Twitter_Channel()
+        self.infra = Twitter(self.mock_twitter_file_path, self.channel)
 
         print("mock twitter info server 实例已创建。")
         print("SandboxTwitter 实例已创建。")
@@ -38,7 +38,7 @@ class SandboxTwitter:
     async def run(self):
         print("Starting simulation...")
         # 启动twitter.running在后台执行
-        task = asyncio.create_task(self.infra.running(self.channel))
+        task = asyncio.create_task(self.infra.running())
 
         # # 发送一个动作到Twitter实例并等待响应
         # message_id = await self.channel.write_to_receive_queue((1, ("alice0101", "Alice", "A girl."), "sign_up"))

@@ -14,6 +14,64 @@ parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
 
 
+class MockChannel:
+
+    def __init__(self):
+        self.call_count = 0
+        self.messages = []  # 用于存储发送的消息
+
+    async def receive_from(self):
+        # 第一次调用返回关注操作的指令
+        if self.call_count == 0:
+            self.call_count += 1
+            return ('id_', (1, 2, "follow"))  # 假设用户1关注用户2
+        if self.call_count == 1:
+            self.call_count += 1
+            return ('id_', (1, 3, "follow"))  # 假设用户1关注用户3
+        if self.call_count == 2:
+            self.call_count += 1
+            return ('id_', (1, 3, "unfollow"))  # 假设用户1取消关注用户3
+        if self.call_count == 3:
+            self.call_count += 1
+            return ('id_', (2, 1, "mute"))  # 假设用户2禁言用户1
+        if self.call_count == 4:
+            self.call_count += 1
+            return ('id_', (2, 3, "mute"))  # 假设用户2禁言用户3
+        if self.call_count == 5:
+            self.call_count += 1
+            return ('id_', (2, 3, "unmute"))  # 假设用户2取消禁言用户3
+        # 返回退出指令
+        else:
+            return ('id_', (None, None, "exit"))
+
+    async def send_to(self, message):
+        self.messages.append(message)  # 存储消息以便后续断言
+        if self.call_count == 1:
+            # 对关注操作的成功消息进行断言
+            assert message[2]["success"] is True
+            assert "follow_id" in message[2]
+        if self.call_count == 2:
+            # 对关注操作的成功消息进行断言
+            assert message[2]["success"] is True
+            assert "follow_id" in message[2]
+        if self.call_count == 3:
+            # 对取消关注操作的成功消息进行断言
+            assert message[2]["success"] is True
+            assert "follow_id" in message[2]
+        if self.call_count == 4:
+            # 对禁言操作的成功消息进行断言
+            assert message[2]["success"] is True
+            assert "mute_id" in message[2]
+        if self.call_count == 5:
+            # 对禁言操作的成功消息进行断言
+            assert message[2]["success"] is True
+            assert "mute_id" in message[2]
+        if self.call_count == 6:
+            # 对取消禁言操作的成功消息进行断言
+            assert message[2]["success"] is True
+            assert "mute_id" in message[2]
+
+
 # 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
 def setup_twitter():
@@ -25,73 +83,15 @@ def setup_twitter():
     db_path = test_db_filepath
 
     # 初始化Twitter实例
-    twitter_instance = Twitter(db_path)
+    mock_channel = MockChannel()
+    twitter_instance = Twitter(db_path, mock_channel)
     return twitter_instance
-
-
-class MockChannelFollow:
-
-    def __init__(self):
-        self.call_count = 0
-        self.messages = []  # 用于存储发送的消息
-
-    async def receive_from(self, group):
-        # 第一次调用返回关注操作的指令
-        if self.call_count == 0:
-            self.call_count += 1
-            return 1, 2, "follow"  # 假设用户1关注用户2
-        if self.call_count == 1:
-            self.call_count += 1
-            return 1, 3, "follow"  # 假设用户1关注用户3
-        if self.call_count == 2:
-            self.call_count += 1
-            return 1, 3, "unfollow"  # 假设用户1取消关注用户3
-        if self.call_count == 3:
-            self.call_count += 1
-            return 2, 1, "mute"  # 假设用户2禁言用户1
-        if self.call_count == 4:
-            self.call_count += 1
-            return 2, 3, "mute"  # 假设用户2禁言用户3
-        if self.call_count == 5:
-            self.call_count += 1
-            return 2, 3, "unmute"  # 假设用户2取消禁言用户3
-        # 返回退出指令
-        else:
-            return None, None, "exit"
-
-    async def send_to(self, group, message):
-        self.messages.append(message)  # 存储消息以便后续断言
-        if self.call_count == 1:
-            # 对关注操作的成功消息进行断言
-            assert message[1]["success"] is True
-            assert "follow_id" in message[1]
-        if self.call_count == 2:
-            # 对关注操作的成功消息进行断言
-            assert message[1]["success"] is True
-            assert "follow_id" in message[1]
-        if self.call_count == 3:
-            # 对取消关注操作的成功消息进行断言
-            assert message[1]["success"] is True
-            assert "follow_id" in message[1]
-        if self.call_count == 4:
-            # 对禁言操作的成功消息进行断言
-            assert message[1]["success"] is True
-            assert "mute_id" in message[1]
-        if self.call_count == 5:
-            # 对禁言操作的成功消息进行断言
-            assert message[1]["success"] is True
-            assert "mute_id" in message[1]
-        if self.call_count == 6:
-            # 对取消禁言操作的成功消息进行断言
-            assert message[1]["success"] is True
-            assert "mute_id" in message[1]
 
 
 @pytest.mark.asyncio
 async def test_follow_user(setup_twitter):
     try:
         twitter = setup_twitter
-        mock_channel = MockChannelFollow()
 
         # 在测试开始之前，将3个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
@@ -116,7 +116,7 @@ async def test_follow_user(setup_twitter):
         )
         conn.commit()
 
-        await twitter.running(mock_channel)
+        await twitter.running()
 
         # 验证数据库中是否正确插入了数据
 

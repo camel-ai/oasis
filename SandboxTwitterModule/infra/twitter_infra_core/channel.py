@@ -8,12 +8,12 @@ class Twitter_Channel:
         self.receive_queue = asyncio.Queue()  # 用于存储接收的消息
         self.send_queue = asyncio.Queue()     # 用于存储要发送的消息
 
-    async def receive_from(self, group):
+    async def receive_from(self):
         # 从接收队列中获取一个消息并返回
         message = await self.receive_queue.get()
         return message
 
-    async def send_to(self, group, message):
+    async def send_to(self, message):
         # 将消息添加到发送队列中
         print(message)
         await self.send_queue.put(message)

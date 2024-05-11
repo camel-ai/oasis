@@ -10,18 +10,6 @@ parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
-@pytest.fixture
-def setup_twitter():
-    # 测试前确保test.db不存在
-    if os.path.exists(test_db_filepath):
-        os.remove(test_db_filepath)
-
-    # 初始化Twitter实例
-    twitter_instance = Twitter(test_db_filepath)
-    return twitter_instance
-
-
 class MockChannel:
     def __init__(self, user_actions):
         """
@@ -32,15 +20,15 @@ class MockChannel:
         self.messages = []  # 用于存储发送的消息
         self.action_index = 0  # Track the current action
 
-    async def receive_from(self, group):
+    async def receive_from(self):
         if self.action_index < len(self.user_actions):
             action = self.user_actions[self.action_index]
             self.action_index += 1
-            return action
+            return ('id_', action)
         else:
-            return None, None, "exit"
+            return ('id_', (None, None, "exit"))
 
-    async def send_to(self, group, message):
+    async def send_to(self, message):
         self.messages.append(message)  # 存储消息以便后续断言
 
 
@@ -73,6 +61,13 @@ def generate_user_actions(n_users, tweets_per_user):
 
     return actions
 
+# 定义一个fixture来初始化数据库和Twitter实例
+@pytest.fixture
+def setup_twitter():
+    # 测试前确保test.db不存在
+    if os.path.exists(test_db_filepath):
+        os.remove(test_db_filepath)
+
 
 @pytest.mark.asyncio
 async def test_signup_and_create_tweet(setup_twitter,
@@ -81,13 +76,13 @@ async def test_signup_and_create_tweet(setup_twitter,
         # 为了简化模拟，假设n_users是3的倍数
         assert n_users % 3 == 0, "n_users should be a multiple of 3."
 
-        twitter = setup_twitter
-
         # Generate user actions based on n_users and tweets_per_user
         user_actions = generate_user_actions(n_users, tweets_per_user)
-        mock_channel = MockChannel(user_actions)
 
-        await twitter.running(mock_channel)
+        mock_channel = MockChannel(user_actions)
+        twitter_instance = Twitter(test_db_filepath, mock_channel)
+
+        await twitter_instance.running()
 
         # 验证数据库中是否正确插入了数据
         conn = sqlite3.connect(test_db_filepath)
