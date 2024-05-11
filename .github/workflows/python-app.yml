@@ -2,10 +2,8 @@ name: Python application CI
 
 on:
   push:
-    branches: [main]  # 添加 main 分支
     branches: [personal_konisberg]  # 添加 personal_konisberg 分支
   pull_request:
-    branches: [main]  # 添加 main 分支
     branches: [personal_konisberg]  # 添加 personal_konisberg 分支
 
 jobs:
