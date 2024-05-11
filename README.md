@@ -39,6 +39,12 @@ python showDB.py  # Display the database content, including Users, Accounts, Twe
 
 ## pytest
 
+For win:
+```bash
+pytest test\test_infra  
 ```
-pytest test\test_infra
+
+For Mac OS X:
+```bash
+pytest
 ```
