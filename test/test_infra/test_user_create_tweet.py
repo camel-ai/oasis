@@ -1,7 +1,4 @@
-'''
-测试通过：_check_agent_userid, _not_signup_error_message, sign_up, create_tweet 函数
-'''
-
+# File: test_user_create_tweet.py
 import os
 import sqlite3
 

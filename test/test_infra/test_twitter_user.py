@@ -1,6 +1,4 @@
-'''
-测试通过：follow, unfollow, mute, unmute 函数
-'''
+# File: test_twitter_user.py
 import os
 import sqlite3
 

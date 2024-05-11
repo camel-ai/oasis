@@ -1,7 +1,4 @@
-'''
-测试通过：search_tweet, search_user 函数
-'''
-
+# File: test_twitter_search.py
 import os
 import sqlite3
 

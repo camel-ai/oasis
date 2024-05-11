@@ -1,7 +1,4 @@
-'''
-测试通过：_check_agent_userid, sign_up函数
-'''
-
+# File: test_user_signup.py
 import os
 import sqlite3
 

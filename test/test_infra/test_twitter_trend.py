@@ -1,7 +1,4 @@
-'''
-测试通过：trend 函数
-'''
-
+# File: test_twitter_trend.py
 import os
 import sqlite3
 from datetime import datetime, timedelta
