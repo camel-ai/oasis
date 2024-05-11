@@ -53,7 +53,8 @@ class Twitter:
             elif action == ActionType.SIGNUP:
                 result = await self.signup(agent_id=agent_id,
                                            user_message=message)
-                await channel.send_to("Agent Group", (message_id, agent_id, result))
+                await channel.send_to("Agent Group",
+                                      (message_id, agent_id, result))
 
             elif action == ActionType.REFRESH:
                 result = await self.refresh(agent_id=agent_id)
@@ -62,7 +63,8 @@ class Twitter:
             elif action == ActionType.CREATE_TWEET:
                 result = await self.create_tweet(agent_id=agent_id,
                                                  content=message)
-                await channel.send_to("Agent Group", (agent_id, result))
+                await channel.send_to("Agent Group",
+                                      (message_id, agent_id, result))
 
             elif action == ActionType.LIKE:
                 result = await self.like(agent_id=agent_id, tweet_id=message)

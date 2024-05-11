@@ -4,7 +4,7 @@ import asyncio
 
 
 from SandboxTwitterModule.infra.agents_graph import homoAgentsGraph
-from SandboxTwitterModule.infra import twitterUserAgent
+from SandboxTwitterModule.infra import TwitterUserAgent
 from SandboxTwitterModule.infra import Twitter
 from SandboxTwitterModule.infra import ActionType
 from SandboxTwitterModule.infra import Twitter_Channel
@@ -37,26 +37,27 @@ class SandboxTwitter:
     @function_call_logger
     async def run(self):
         print("Starting simulation...")
-
         # 启动twitter.running在后台执行
         task = asyncio.create_task(self.infra.running(self.channel))
 
-        # 发送一个动作到Twitter实例并等待响应
-        message_id = await self.channel.write_to_receive_queue((1, ("alice0101", "Alice", "A girl."), "sign_up"))
+        # # 发送一个动作到Twitter实例并等待响应
+        # message_id = await self.channel.write_to_receive_queue((1, ("alice0101", "Alice", "A girl."), "sign_up"))
 
-        response = await self.channel.read_from_send_queue(message_id)
-        await self.channel.write_to_receive_queue((None, None, "exit"))
-        # 发送一个动作到Twitter实例并等待响应
+        # response = await self.channel.read_from_send_queue(message_id)
+        # await self.channel.write_to_receive_queue((None, None, "exit"))
+        # # 发送一个动作到Twitter实例并等待响应
 
-        print(f"Received response: {response}")
+        # print(f"Received response: {response}")
 
+        test_agent = TwitterUserAgent(1, 'Alice', self.channel)
+        await test_agent.action_sign_up("alice0101", "Alice", "A girl.")
+        await test_agent.action_create_tweet("hello world")
         # 发送退出信号以优雅地结束running方法
-        await self.channel.send_to(
-            "Agent Group", ("agent1", None, ActionType.EXIT))
+
+        await self.channel.write_to_receive_queue((None, None, "exit"))
+
         await task
 
-        # test_agent = twitterUserAgent(1, 'Alice')
-        # test_agent.perform_action()
         # 现在取出的agent还不是TwitterUserAgent实例，以下暂时为伪代码
         '''
         agent = self.AgentsGraph.get_agents()
