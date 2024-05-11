@@ -26,9 +26,13 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest 
+        pytest
 
-    #- name: Deploy
+    - name: Deploy
+      run: |
+        python main.py
+
+    # - name: Deploy
     #  run: |
     #    # 在这里可以添加部署步骤，如部署到服务器或者云服务商等
     
