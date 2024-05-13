@@ -33,9 +33,6 @@ python main.py                # Run the program
 
 ## pytest
 
-<<<<<<< HEAD
-pytest test\test_infra
-=======
 For win:
 ```bash
 pytest test\test_infra  
@@ -45,4 +42,3 @@ For Mac OS X:
 ```bash
 pytest
 ```
->>>>>>> c4bedce75bb9ab6f97abe3e6526a43fab6b513e5
