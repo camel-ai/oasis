@@ -16,6 +16,9 @@ class AgentsGenerator:
             self.create_following_relations(G, count)
         return G
 
+
+# 现在先不管 agents 的 real-world interaction
+'''
     def create_following_relations(self, G, count):
         return
         for node in G.nodes():
@@ -24,3 +27,4 @@ class AgentsGenerator:
             followings = [f for f in followings if f != node]  # 确保不自关注
             for target in followings:
                 G.add_edge(node, target)
+'''
