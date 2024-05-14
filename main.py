@@ -1,14 +1,14 @@
 
 import asyncio
-import sys
-import threading
+import os
+
 from social_agent.agents_generator import generate_agents
 from twitter.channel import Twitter_Channel
 from twitter.twitter import Twitter
 
+async def running():
+    test_db_filepath = "./db/test.db"
 
-async def main():
-    test_db_filepath = "./test.db"
     channel = Twitter_Channel()
     infra = Twitter(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())
@@ -22,5 +22,7 @@ async def main():
     await task
 
 
-if __name__ == '__main__':
-    asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(running())
+
+

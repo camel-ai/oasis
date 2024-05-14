@@ -1,4 +1,3 @@
-
 import ast
 import random
 import networkx as nx
@@ -48,7 +47,8 @@ async def generate_agents(agent_info_path, twitter_channel):
         await agent.action_sign_up(
             agent_info['username'][i], 
             agent_info['name'][i], 
-            agent_info['description'][i],
+            agent_info['description'][i]
+
         )
             
         # Add user relationships if any

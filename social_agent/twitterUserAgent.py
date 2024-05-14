@@ -3,6 +3,7 @@ import json
 import os
 import time
 
+
 from colorama import Fore
 
 from camel.configs import FunctionCallingConfig
@@ -13,20 +14,20 @@ from camel.memories.context_creators.score_based import ScoreBasedContextCreator
 from camel.messages import BaseMessage
 from camel.models import ModelFactory, BaseModelBackend
 from camel.types import ModelType, OpenAIBackendRole
-
 from twitter.channel import Twitter_Channel
+
 from twitter.typing import ActionType
 
 
 class TwitterUserAgent:
+
     def __init__(self, agent_id, real_name, description, profile, channel, model_type=ModelType.GPT_3_5_TURBO):
         self.user_id = None
         self.agent_id = agent_id
         self.real_name = real_name
-
         self.description = description
-
         self.profile = profile
+
         self.channel = channel
 
         # tweet follow unfollow like unlike
@@ -118,7 +119,9 @@ class TwitterUserAgent:
             Example of a successful return:
             {'success': True, 'user_id': 2}
         """
+
         print(f"Agent {self.agent_id} is signing up with user_name: {user_name}, name: {name}, bio: {bio}")
+
         user_message = (user_name, name, bio)
         return await self._perform_action(
             user_message, ActionType.SIGNUP.value)
