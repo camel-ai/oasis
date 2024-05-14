@@ -12,7 +12,7 @@ class TwitterUserAgent:
         self.profile = {
             'nodes': [],  # Relationships with other agents
             'edges': [],  # Relationship details
-            'other_info': {'mbti': None, 'activity_level': 'Medium'},
+            'other_info': {'mbti': None, 'activity_level': 'Medium', "user_profile": None},
         }
         self.memory = {'system_one': [], 'system_two': []}
         self.home_content = []
