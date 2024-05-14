@@ -16,6 +16,7 @@ from camel.models import ModelFactory, BaseModelBackend
 from camel.types import ModelType, OpenAIBackendRole
 from twitter.channel import Twitter_Channel
 
+from twitter.twitter import Twitter
 from twitter.typing import ActionType
 
 
