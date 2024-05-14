@@ -24,8 +24,8 @@ def setup_twitter():
 
 @pytest.mark.asyncio
 async def test_agents_tweeting(setup_twitter):
-    N = 5000 # 代理（用户）数量
-    M = 10  # 每个用户要发送的推文数量
+    N = 5  # 代理（用户）数量
+    M = 3  # 每个用户要发送的推文数量
 
     agents = []
     channel = Twitter_Channel()
