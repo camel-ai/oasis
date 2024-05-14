@@ -45,12 +45,9 @@ class Twitter:
         asyncio.run(self.running())
 
     async def running(self):
-        print("Twitter is running...")
         while True:
-            print("Twitter running...")
             message_id, data = await self.channel.receive_from()
             agent_id, message, action = data
-            print(f"Received message: {message} from agent {agent_id}")
             action = ActionType(action)
 
             if action == ActionType.EXIT:
@@ -137,7 +134,6 @@ class Twitter:
 
     # 注册
     async def signup(self, agent_id, user_message):
-        print("signup")
         # 允许重名，user_id是主键
         user_name, name, bio = user_message
         current_time = datetime.now()

@@ -38,6 +38,7 @@ async def generate_agents(agent_info_path, twitter_channel):
         agent = TwitterUserAgent(
             i, 
             agent_info['username'][i], 
+            agent_info['description'][i],
             profile,
             twitter_channel
         )
@@ -47,7 +48,7 @@ async def generate_agents(agent_info_path, twitter_channel):
         await agent.action_sign_up(
             agent_info['username'][i], 
             agent_info['name'][i], 
-            agent_info['description']
+            agent_info['description'][i],
         )
             
         # Add user relationships if any

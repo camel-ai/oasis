@@ -32,19 +32,16 @@ class Twitter_Channel:
 
     async def receive_from(self):
         message = await self.receive_queue.get()
-        print('receive_from', message)
         return message
 
     async def send_to(self, message):
         # message_id 是消息的第一个元素
         message_id = message[0]
-        print(message)
         await self.send_dict.put(message_id, message)
 
     async def write_to_receive_queue(self, action_info):
         message_id = str(uuid.uuid4())
         await self.receive_queue.put((message_id, action_info))
-        print('write_to_receive_queue', self.receive_queue.qsize())
         return message_id
 
     async def read_from_send_queue(self, message_id):
