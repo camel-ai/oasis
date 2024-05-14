@@ -32,7 +32,7 @@ python main.py                # Run the program
 ## to-do
 
 - [x] waiting for the origin info-server features to PR&Merge 
-- [ ] Agent Generator 
+- [x] Agent Generator 
 - [ ] Agent running 
 
 
