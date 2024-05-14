@@ -1,5 +1,3 @@
-# Pipeline
-
 ## Quickstart
 
 ### Step 1: Create and Activate a Virtual Environment
@@ -20,11 +18,4 @@ pip install -r requirements.txt # Install packages from requirements file
 
 ```bash
 python main.py                # Run the program
-# You will be prompted to input 'AgentCount' which is the size of the AI-Society/Sandbox
-```
-
-### Step 4: Show Results from the Database
-
-```bash
-python showDB.py  # Display the database content, including Users, Accounts, Tweets, Traces, Rec
 ```
