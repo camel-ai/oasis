@@ -1,4 +1,4 @@
-# File: SandboxTwitterModule/twitter_infra_core/twitter.py
+
 from __future__ import annotations
 
 import asyncio
@@ -134,7 +134,7 @@ class Twitter:
 
     # 注册
     async def signup(self, agent_id, user_message):
-        print(f'signup: \n{agent_id}\n{user_message}' )
+
         # 允许重名，user_id是主键
         user_name, name, bio = user_message
         current_time = datetime.now()
@@ -168,6 +168,7 @@ class Twitter:
                 trace_insert_query,
                 (user_id, current_time, ActionType.SIGNUP.value,
                  str(action_info)), commit=True)
+
             return {"success": True, "user_id": user_id}
 
         except Exception as e:

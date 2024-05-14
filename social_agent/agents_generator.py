@@ -1,5 +1,6 @@
 import ast
 import random
+import networkx as nx
 import pandas as pd
 
 from .twitterUserAgent import TwitterUserAgent
@@ -36,8 +37,8 @@ async def generate_agents(agent_info_path, twitter_channel):
         agent = TwitterUserAgent(
             i, 
             agent_info['username'][i], 
-            profile,
             agent_info['description'][i],
+            profile,
             twitter_channel
         )
             
@@ -47,6 +48,7 @@ async def generate_agents(agent_info_path, twitter_channel):
             agent_info['username'][i], 
             agent_info['name'][i], 
             agent_info['description'][i]
+
         )
             
         # Add user relationships if any

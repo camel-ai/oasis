@@ -1,4 +1,8 @@
+import asyncio
 import json
+import os
+import time
+
 
 from colorama import Fore
 
@@ -10,17 +14,20 @@ from camel.memories.context_creators.score_based import ScoreBasedContextCreator
 from camel.messages import BaseMessage
 from camel.models import ModelFactory, BaseModelBackend
 from camel.types import ModelType, OpenAIBackendRole
+from twitter.channel import Twitter_Channel
 
 from twitter.typing import ActionType
 
 
 class TwitterUserAgent:
-    def __init__(self, agent_id, real_name, profile, description, channel, model_type=ModelType.GPT_3_5_TURBO):
+
+    def __init__(self, agent_id, real_name, description, profile, channel, model_type=ModelType.GPT_3_5_TURBO):
         self.user_id = None
         self.agent_id = agent_id
         self.real_name = real_name
-        self.profile = profile
         self.description = description
+        self.profile = profile
+
         self.channel = channel
 
         # tweet follow unfollow like unlike
@@ -112,6 +119,9 @@ class TwitterUserAgent:
             Example of a successful return:
             {'success': True, 'user_id': 2}
         """
+
+        print(f"Agent {self.agent_id} is signing up with user_name: {user_name}, name: {name}, bio: {bio}")
+
         user_message = (user_name, name, bio)
         return await self._perform_action(
             user_message, ActionType.SIGNUP.value)
@@ -425,34 +435,30 @@ class TwitterUserAgent:
             None, ActionType.TREND.value)
 
 
-# async def running():
-#     os.environ["OPENAI_API_KEY"] = ""
+async def running():
 
-#     from SandboxTwitterModule.infra import Twitter_Channel
+    test_db_filepath = "./test.db"
 
-#     test_db_filepath = "./test.db"
+    channel = Twitter_Channel()
+    infra = Twitter(test_db_filepath, channel)
+    task = asyncio.create_task(infra.running())
 
-#     channel = Twitter_Channel()
-#     infra = Twitter(test_db_filepath, channel)
-#     task = asyncio.create_task(infra.running())
+    agent = TwitterUserAgent(1, "Alice", channel)
+    await agent.action_sign_up("Alice", "Alice", "Alice is a girl.")
+    await agent.action_create_tweet("I have a dream. Can you share your dream with me?")
 
-#     agent = TwitterUserAgent(1, "Alice", channel)
-#     await agent.action_sign_up("Alice", "Alice", "Alice is a girl.")
-#     await agent.action_create_tweet("I have a dream. Can you share your dream with me?")
-
-#     agent2 = TwitterUserAgent(2, "Bob", channel, "You love singing and you want to be a singer. You like creating "
-#                                                  "tweets about music.")
-#     await agent2.action_sign_up("Bob", "Bob", "BoB")
-#     await agent2.perform_action_by_llm()
-#     time.sleep(10)
-#     await agent2.perform_action_by_llm()
-#     time.sleep(10)
-#     await agent2.perform_action_by_llm()
-#     time.sleep(10)
-#     await channel.write_to_receive_queue((None, None, "exit"))
-#     await task
+    agent2 = TwitterUserAgent(2, "Bob", channel, "You love singing and you want to be a singer. You like creating "
+                                                 "tweets about music.")
+    await agent2.action_sign_up("Bob", "Bob", "BoB")
+    await agent2.perform_action_by_llm()
+    time.sleep(10)
+    await agent2.perform_action_by_llm()
+    time.sleep(10)
+    await agent2.perform_action_by_llm()
+    time.sleep(10)
+    await channel.write_to_receive_queue((None, None, "exit"))
+    await task
 
 
-# if __name__ == "__main__":
-#     asyncio.run(running())
-
+if __name__ == "__main__":
+    asyncio.run(running())
