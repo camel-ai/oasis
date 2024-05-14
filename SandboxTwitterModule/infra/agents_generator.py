@@ -107,17 +107,6 @@ class AgentsGenerator:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
     # def generate_agents(self, G, count):
     #     for node_id, node_data in G.nodes(data=True):
     #         agent = node_data['agent']
