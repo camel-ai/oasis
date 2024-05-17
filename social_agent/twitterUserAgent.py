@@ -59,7 +59,7 @@ class TwitterUserAgent:
         self.home_content = []
 
     async def perform_action_by_llm(self):
-        # 1. get 5 random tweets
+        # 1. get 5 tweets from followees
         tweets = await self.action_refresh()
 
         print(Fore.LIGHTBLUE_EX + f"Agent {self.agent_id} fetched tweets after refreshing: {tweets}" + Fore.RESET)

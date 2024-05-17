@@ -182,15 +182,32 @@ class Twitter:
                 return self._not_signup_error_message(agent_id)
 
             # 更新SQL查询，以便随机选择self.refresh_tweet_count条tweets
+            '''
             sql_query = (
                 "SELECT tweet_id, user_id, content, created_at, num_likes "
                 "FROM tweet "
                 "ORDER BY RANDOM() "
                 "LIMIT ?")
+
             self._execute_db_command(
                 sql_query,
                 (self.refresh_tweet_count,),
                 commit=True)
+            '''
+            # 更改SQL查询，令refresh得到的 tweet 是这个用户关注的人的 tweet，排序按照推特的点赞数
+            sql_query = (
+                "SELECT tweet.tweet_id, tweet.user_id, tweet.content, tweet.created_at, tweet.num_likes "
+                "FROM tweet "
+                "JOIN follow ON tweet.user_id = follow.followee_id "
+                "WHERE follow.follower_id = ? "
+                "ORDER BY tweet.num_likes DESC "
+                "LIMIT ?"
+            )
+            self._execute_db_command(
+                sql_query,
+                (user_id, self.refresh_tweet_count,),
+                commit=True)
+
             results = self.db_cursor.fetchall()
             if not results:
                 return {
