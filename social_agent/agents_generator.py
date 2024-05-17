@@ -18,7 +18,7 @@ async def generate_agents(agent_info_path, twitter_channel):
         dict: A dictionary of agent IDs mapped to their respective agent class instances.
     """
     mbti_types = ["INTJ", "ENTP", "INFJ", "ENFP"]
-    activities = ["High", "Medium", "Low"] 
+    # activities = ["High", "Medium", "Low"] 
     agent_info = pd.read_csv(agent_info_path)
     agents_dict = {}
     for i in range(len(agent_info)):
@@ -32,7 +32,8 @@ async def generate_agents(agent_info_path, twitter_channel):
         # Randomly assign an MBTI type (temporary, subject to change)
         profile['other_info']['mbti'] = random.choice(mbti_types)
         # Randomly assign an activity level (temporary, subject to change)
-        profile['other_info']['activity_level'] = random.choice(activities)
+        profile['other_info']['activity_level'] = ast.literal_eval(agent_info["activity_level"][i])
+        profile['other_info']['activity_level_frequency'] = ast.literal_eval(agent_info["activity_level_frequency"][i])
             
         agent = TwitterUserAgent(
             i, 
@@ -55,7 +56,9 @@ async def generate_agents(agent_info_path, twitter_channel):
         if agent_info['following_agentid_list'][i] != "0":
             following_id_list = ast.literal_eval(agent_info['following_agentid_list'][i])
             for _agent_id in following_id_list:
-                await agent.action_follow(_agent_id)
+                # await agent.action_follow(_agent_id)
+                # 在action_follow的函数中传进的参数是userid, 但是这里传入了agent_id，所以导致最终关注关系不对
+                await agent.action_follow(_agent_id + 1)  
 
         if len(agent_info['previous_tweets']) != 0:
             previous_tweets = ast.literal_eval(agent_info['previous_tweets'][i])
