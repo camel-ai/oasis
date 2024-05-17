@@ -432,3 +432,8 @@ datasets_test/
 evaluation_data/
 camel_data/
 /data
+time_data/
+
+# check_time_feature in misinformation spreading
+check_time_feature/
+
