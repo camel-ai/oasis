@@ -9,7 +9,7 @@ from SandboxTwitterModule.infra.agents_generator import AgentsGenerator
 
 
 
-agent_info_path = "../../data/user_all_id.csv"
+agent_info_path = "./test/test_data/user_all_id.csv"
 agent_generator = AgentsGenerator(agent_info_path)
 agent_dict = agent_generator.generate_agents()
 print(agent_dict)
