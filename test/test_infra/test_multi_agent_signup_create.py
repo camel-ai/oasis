@@ -1,8 +1,4 @@
-<<<<<<< Updated upstream
-# File: test_multi_agent_signup_create.py
-=======
 # File: ./test/test_infra/test_multi_agent_signup_create.py
->>>>>>> Stashed changes
 import asyncio
 import random
 import pytest
