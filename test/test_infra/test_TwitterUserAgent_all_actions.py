@@ -30,11 +30,11 @@ async def test_agents_tweeting(setup_twitter):
 
     # 创建并注册用户
     for i in range(3):
-        user_message = ("username" + str(i),
-                        "name" + str(i), "No descrption.")
-        agent = TwitterUserAgent(i, user_message, channel)
-        return_message = await agent.action_sign_up(
-            f"user{i}0101", f"User{i}", "A bio.")
+        real_name = "name" + str(i)
+        description = "No description."
+        profile = {"some_key": "some_value"}  # 根据实际需要配置profile
+        agent = TwitterUserAgent(i, real_name, description, profile, channel)
+        return_message = await agent.action_sign_up(f"user{i}0101", f"User{i}", "A bio.")
         assert return_message["success"] is True
         agents.append(agent)
 
