@@ -32,7 +32,7 @@ python main.py                # Run the program
 
 For win:
 ```bash
-pytest test\test_infra  
+pytest test
 ```
 
 For Mac OS X:
