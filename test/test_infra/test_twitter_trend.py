@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 # File: test_twitter_trend.py
+=======
+# File: ./test/test_infra/test_twitter_trend.py
+>>>>>>> Stashed changes
 import os
 import sqlite3
 from datetime import datetime, timedelta

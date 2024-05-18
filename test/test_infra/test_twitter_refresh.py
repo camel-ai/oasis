@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 # File: test_twitter_refresh.py
+=======
+# File: ./test/test_infra/test_twitter_refresh.py
+>>>>>>> Stashed changes
 import os
 import pytest
 import sqlite3

@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 # File: test_user_signup.py
+=======
+# File: ./test/test_infra/test_user_signup.py
+>>>>>>> Stashed changes
 import os
 import sqlite3
 

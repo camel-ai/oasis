@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 # File: test_user_create_tweet.py
+=======
+# File: ./test/test_infra/test_user_create_tweet.py
+>>>>>>> Stashed changes
 import os
 import sqlite3
 
