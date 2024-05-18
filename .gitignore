@@ -2,6 +2,9 @@
 **/.DS_Store
 
 
+## data
+*.db
+
 
 ##### Python.gitignore #####
 # Byte-compiled / optimized / DLL files
