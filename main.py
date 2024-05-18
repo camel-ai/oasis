@@ -1,13 +1,11 @@
-import networkx as nx
 import asyncio
-import os
-import matplotlib.pyplot as plt
 from social_agent.agents_generator import generate_agents
 from twitter.channel import Twitter_Channel
 from twitter.twitter import Twitter
 
+
 async def running():
-    test_db_filepath = "./db/test.db"
+    test_db_filepath = "./data/mock_twitter.db"
 
     channel = Twitter_Channel()
     infra = Twitter(test_db_filepath, channel)
