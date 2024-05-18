@@ -1,7 +1,7 @@
 # File: ./test/test_agent/test_action_docstring.py
 
 from camel.functions import OpenAIFunction
-from SandboxTwitterModule.infra import TwitterUserAgent
+from social_agent.twitterUserAgent import TwitterUserAgent
 from typing import List
 
 

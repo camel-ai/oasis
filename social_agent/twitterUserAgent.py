@@ -1,24 +1,93 @@
-# File: SandboxTwitterModule/infra/Agent/twitterUserAgent.py
-from SandboxTwitterModule.infra import ActionType
+# File: social_agent/twitterUserAgent.py
+import asyncio
+import json
+import os
+import time
+
+
+from colorama import Fore
+
+from camel.configs import FunctionCallingConfig
 from camel.functions import OpenAIFunction
-from typing import List
+from camel.memories import ChatHistoryMemory, MemoryRecord
+
+from camel.memories.context_creators.score_based import ScoreBasedContextCreator
+from camel.messages import BaseMessage
+from camel.models import ModelFactory, BaseModelBackend
+from camel.types import ModelType, OpenAIBackendRole
+from twitter.channel import Twitter_Channel
+
+from twitter.twitter import Twitter
+from twitter.typing import ActionType
 
 
 class TwitterUserAgent:
-    def __init__(self, agent_id, real_name, channel):
-        self.db = None
-        self.api = None
+
+    def __init__(self, agent_id, real_name, description, profile, channel, model_type=ModelType.GPT_3_5_TURBO):
         self.user_id = None
         self.agent_id = agent_id
         self.real_name = real_name
-        self.profile = {
-            'nodes': [],  # Relationships with other agents
-            'edges': [],  # Relationship details
-            'other_info': {'mbti': None, 'activity_level': 'Medium', "user_profile": None},
-        }
-        self.memory = {'system_one': [], 'system_two': []}
-        self.home_content = []
+        self.description = description
+        self.profile = profile
+
         self.channel = channel
+
+        # tweet follow unfollow like unlike
+        function_list = [OpenAIFunction(func) for func in
+                         [self.action_create_tweet, self.action_follow, self.action_unfollow, self.action_like,
+                          self.action_unlike, self.action_search_tweets, self.action_search_user, self.action_trend,
+                          self.action_refresh, self.action_mute, self.action_unmute]]
+        assistant_model_config = FunctionCallingConfig.from_openai_function_list(
+            function_list=function_list,
+            kwargs=dict(temperature=0.0),
+        )
+        self.model_backend: BaseModelBackend = ModelFactory.create(
+            model_type, assistant_model_config.__dict__)
+        self.model_token_limit = self.model_backend.token_limit
+        context_creator = ScoreBasedContextCreator(
+            self.model_backend.token_counter,
+            self.model_token_limit,
+        )
+        self.memory = ChatHistoryMemory(
+            context_creator, window_size=3)
+        self.system_message = BaseMessage.make_assistant_message(
+            role_name="User",
+            content=f"You are a twitter user agent named {self.real_name}. Your profile is: {self.description}\n. choose your action next step in the following list: create_tweet, follow user, unfollow user, like tweet, unlike tweet, search tweets, search user, trend, refresh, mute, unmute."
+        )
+        system_record = MemoryRecord(self.system_message,
+                                     OpenAIBackendRole.SYSTEM)
+        self.memory.write_record(system_record)
+        self.home_content = []
+
+    async def perform_action_by_llm(self):
+        # 1. get 5 random tweets
+        tweets = await self.action_refresh()
+
+        print(Fore.LIGHTBLUE_EX + f"Agent {self.agent_id} fetched tweets after refreshing: {tweets}" + Fore.RESET)
+        # 2. get context form memory
+        user_msg = BaseMessage.make_user_message(
+            role_name="User",
+            content="After refreshing, you see some tweets, you want to perform some actions based on these tweets: " + str(tweets),
+        )
+
+        self.memory.write_record(MemoryRecord(user_msg, OpenAIBackendRole.USER))
+
+        openai_messages, num_tokens = self.memory.get_context()
+
+        print(Fore.LIGHTCYAN_EX + f"Agent {self.agent_id} got context from memory: {openai_messages}" + Fore.RESET)
+
+        # Obtain the model's response
+        response = self.model_backend.run(openai_messages)
+
+        # 3. use llm to choose action
+        print(Fore.RED + "Response: " + str(response.choices[0].message) + Fore.RESET)
+
+        # 4. perform action
+        if response.choices[0].message.function_call:
+            name = response.choices[0].message.function_call.name
+            args = json.loads(response.choices[0].message.function_call.arguments)
+            print(f"Agent {self.agent_id} is performing action: {name} with args: {args}")
+            await getattr(self, name)(**args)
 
     async def _perform_action(self, message, action_type):
         """根据传入的action_type和message执行action, 并得到返回值"""
@@ -27,11 +96,11 @@ class TwitterUserAgent:
 
         response = await self.channel.read_from_send_queue(message_id)
         # 发送一个动作到Twitter实例并等待响应
-        print(f"Received response: {response[2]}")
+        print(f"{action_type}\tReceived response: {response[2]}")
         return response[2]
 
     async def action_sign_up(self, user_name: str, name: str, bio: str):
-        r"""Signs up a new user with the provided user name, name, and bio.
+        r"""Signs up a new user with the provided username, name, and bio.
 
         This method prepares a user message comprising the user's details and
         invokes an asynchronous action to perform the sign-up process. On
@@ -52,6 +121,9 @@ class TwitterUserAgent:
             Example of a successful return:
             {'success': True, 'user_id': 2}
         """
+
+        print(f"Agent {self.agent_id} is signing up with user_name: {user_name}, name: {name}, bio: {bio}")
+
         user_message = (user_name, name, bio)
         return await self._perform_action(
             user_message, ActionType.SIGNUP.value)
@@ -365,6 +437,30 @@ class TwitterUserAgent:
             None, ActionType.TREND.value)
 
 
-ACTION_FUNCS: List[OpenAIFunction] = [
-    OpenAIFunction(func) for func in [TwitterUserAgent.action_sign_up]
-]
+async def running():
+
+    test_db_filepath = "./test.db"
+
+    channel = Twitter_Channel()
+    infra = Twitter(test_db_filepath, channel)
+    task = asyncio.create_task(infra.running())
+
+    agent = TwitterUserAgent(1, "Alice", channel)
+    await agent.action_sign_up("Alice", "Alice", "Alice is a girl.")
+    await agent.action_create_tweet("I have a dream. Can you share your dream with me?")
+
+    agent2 = TwitterUserAgent(2, "Bob", channel, "You love singing and you want to be a singer. You like creating "
+                                                 "tweets about music.")
+    await agent2.action_sign_up("Bob", "Bob", "BoB")
+    await agent2.perform_action_by_llm()
+    time.sleep(10)
+    await agent2.perform_action_by_llm()
+    time.sleep(10)
+    await agent2.perform_action_by_llm()
+    time.sleep(10)
+    await channel.write_to_receive_queue((None, None, "exit"))
+    await task
+
+
+if __name__ == "__main__":
+    asyncio.run(running())

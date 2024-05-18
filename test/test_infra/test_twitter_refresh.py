@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 
 import os.path as osp
-from SandboxTwitterModule.infra import Twitter  # 确保从你的模块中导入Twitter类
+from twitter.twitter import Twitter  # 确保从你的模块中导入Twitter类
 
 
 parent_folder = osp.dirname(osp.abspath(__file__))

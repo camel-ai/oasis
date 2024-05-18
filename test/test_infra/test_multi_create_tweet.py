@@ -4,7 +4,7 @@ import sqlite3
 import pytest
 
 import os.path as osp
-from SandboxTwitterModule.infra import Twitter  # 确保从你的模块中导入Twitter类
+from twitter.twitter import Twitter  # 确保从你的模块中导入Twitter类
 from test.show_db import print_db_contents
 
 parent_folder = osp.dirname(osp.abspath(__file__))

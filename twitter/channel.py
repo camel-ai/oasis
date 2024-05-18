@@ -1,4 +1,4 @@
-# File: SandboxTwitterModule/twitter_infra_core/channel.py
+
 import asyncio
 import uuid
 
@@ -37,7 +37,6 @@ class Twitter_Channel:
     async def send_to(self, message):
         # message_id 是消息的第一个元素
         message_id = message[0]
-        print(message)
         await self.send_dict.put(message_id, message)
 
     async def write_to_receive_queue(self, action_info):
@@ -46,17 +45,12 @@ class Twitter_Channel:
         return message_id
 
     async def read_from_send_queue(self, message_id):
-        timeout = 5.0
-        start_time = asyncio.get_event_loop().time()
 
         while True:
-            if asyncio.get_event_loop().time() - start_time > timeout:
-                raise TimeoutError(f"Message with ID {message_id} not found "
-                                   f"within {timeout} seconds.")
-
-            # 尝试获取消息
-            message = await self.send_dict.pop(message_id, None)
-            if message:
-                return message  # 返回找到的消息
+            if message_id in await self.send_dict.keys():
+                # 尝试获取消息
+                message = await self.send_dict.pop(message_id, None)
+                if message:
+                    return message  # 返回找到的消息
 
             await asyncio.sleep(0.01)  # 暂时挂起，避免紧密循环

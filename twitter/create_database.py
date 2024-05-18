@@ -5,7 +5,7 @@ import os
 import os.path as osp
 import sqlite3
 
-SCHEMA_DIR = "schema"
+SCHEMA_DIR = "twitter/schema"
 DB_DIR = "db"
 DB_NAME = "twitter.db"
 

@@ -6,7 +6,7 @@ import sqlite3
 
 import pytest
 
-from SandboxTwitterModule.infra import create_db
+from twitter.create_database import create_db
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 db_filepath = osp.join(parent_folder, "mock_twitter.db")

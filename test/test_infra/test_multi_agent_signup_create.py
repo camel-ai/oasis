@@ -6,9 +6,9 @@ import os
 import sqlite3
 
 import os.path as osp
-from SandboxTwitterModule.infra import TwitterUserAgent
-from SandboxTwitterModule.infra import Twitter
-from SandboxTwitterModule.infra import Twitter_Channel
+from social_agent.twitterUserAgent import TwitterUserAgent
+from twitter.twitter import Twitter
+from twitter.channel import Twitter_Channel
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -34,9 +34,10 @@ async def test_agents_tweeting(setup_twitter):
 
     # 创建并注册用户
     for i in range(N):
-        user_message = ("username" + str(i),
-                        "name" + str(i), "No descrption.")
-        agent = TwitterUserAgent(i, user_message, channel)
+        real_name = "name" + str(i)
+        description = "No description."
+        profile = {"some_key": "some_value"}  # 根据实际需要配置profile
+        agent = TwitterUserAgent(i, real_name, description, profile, channel)
         await agent.action_sign_up(f"user{i}0101", f"User{i}", "A bio.")
         agents.append(agent)
 
