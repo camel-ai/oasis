@@ -43,40 +43,51 @@ async def test_agents_tweeting(setup_twitter):
         for _ in range(4):
             return_message = await agent.action_create_tweet(
                 f"hello from {agent.agent_id}")
+            await asyncio.sleep(random.uniform(0, 0.1))
             assert return_message["success"] is True
 
     # 看推荐系统返回tweet
     action_agent = agents[2]
     return_message = await action_agent.action_refresh()
     assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
 
     return_message = await action_agent.action_like(1)
     assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
 
     return_message = await action_agent.action_unlike(1)
     assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
 
     return_message = await action_agent.action_search_tweets('hello')
     assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
 
     return_message = await action_agent.action_search_user('2')
     assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
 
     return_message = await action_agent.action_follow(1)
     assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
 
     return_message = await action_agent.action_unfollow(1)
     assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
 
     return_message = await action_agent.action_mute(1)
     assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
 
     return_message = await action_agent.action_unmute(1)
     assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
 
     # 看最热tweet
     return_message = await action_agent.action_trend()
     assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
 
     await channel.write_to_receive_queue((None, None, "exit"))
     await task
