@@ -2,9 +2,9 @@ name: Python application CI
 
 on:
   push:
-    branches: [currentStableVersion] # 只有在 currentStableVersion 分支推送时触发
+    branches: [personal_ziyi] # 只有在 personal_ziyi 分支推送时触发
   pull_request:
-    branches: [currentStableVersion] # 只有在 currentStableVersion 分支的拉取请求时触发
+    branches: [personal_ziyi] # 只有在 personal_ziyi 分支的拉取请求时触发
 
 jobs:
   build:
