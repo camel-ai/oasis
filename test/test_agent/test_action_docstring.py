@@ -1,8 +1,5 @@
-<<<<<<< Updated upstream
-=======
 # File: ./test/test_agent/test_action_docstring.py
 
->>>>>>> Stashed changes
 from camel.functions import OpenAIFunction
 from SandboxTwitterModule.infra import TwitterUserAgent
 from typing import List
