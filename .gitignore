@@ -2,10 +2,6 @@
 **/.DS_Store
 
 
-## simula-db
-twitter_simulation.db
-*.db
-
 
 ##### Python.gitignore #####
 # Byte-compiled / optimized / DLL files
@@ -427,8 +423,3 @@ tags
 # Camel
 logs/
 
-# Data
-datasets_test/
-evaluation_data/
-camel_data/
-/data

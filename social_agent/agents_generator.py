@@ -3,6 +3,8 @@ import random
 import networkx as nx
 import pandas as pd
 
+from social_agent.agent_graph import homoAgentsGraph
+
 from .twitterUserAgent import TwitterUserAgent
 
 
@@ -20,7 +22,8 @@ async def generate_agents(agent_info_path, twitter_channel):
     mbti_types = ["INTJ", "ENTP", "INFJ", "ENFP"]
     activities = ["High", "Medium", "Low"] 
     agent_info = pd.read_csv(agent_info_path)
-    agents_dict = {}
+
+    agent_graph = homoAgentsGraph()
     for i in range(len(agent_info)):
         # Instantiate an agent
         profile = {'nodes': [],  # Relationships with other agents
@@ -42,8 +45,11 @@ async def generate_agents(agent_info_path, twitter_channel):
             twitter_channel
         )
             
+        # Add agent to the agent graph
+        await agent_graph.add_agent(agent)
+
         # Sign up agent and add their information to the database
-        print(f"Signing up agent {agent_info['username'][i]}...")
+        # print(f"Signing up agent {agent_info['username'][i]}...")
         await agent.action_sign_up(
             agent_info['username'][i], 
             agent_info['name'][i], 
@@ -56,12 +62,11 @@ async def generate_agents(agent_info_path, twitter_channel):
             following_id_list = ast.literal_eval(agent_info['following_agentid_list'][i])
             for _agent_id in following_id_list:
                 await agent.action_follow(_agent_id)
+                await agent_graph.add_edge(i, _agent_id)
 
         if len(agent_info['previous_tweets']) != 0:
             previous_tweets = ast.literal_eval(agent_info['previous_tweets'][i])
             for tweet in previous_tweets:
                 await agent.action_create_tweet(tweet)
 
-        agents_dict[i] = agent
-
-    return agents_dict
+    return agent_graph
