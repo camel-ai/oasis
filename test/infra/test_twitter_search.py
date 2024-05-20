@@ -1,4 +1,4 @@
-# File: ./test/test_infra/test_twitter_search.py
+# File: ./test/infra/test_twitter_search.py
 import os
 import sqlite3
 

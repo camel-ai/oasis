@@ -1,13 +1,15 @@
-# File: ./test/test_infra/test_TwitterUserAgent_all_actions.py
+# File: ./test/infra/test_twitter_user_agent_all_actions.py
 import asyncio
-import random
-import pytest
 import os
-
 import os.path as osp
-from social_agent.twitterUserAgent import TwitterUserAgent
-from twitter.twitter import Twitter
+import random
+
+import pytest
+
+from social_agent.agent import TwitterUserAgent
 from twitter.channel import Twitter_Channel
+from twitter.config import UserInfo
+from twitter.twitter import Twitter
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -33,59 +35,64 @@ async def test_agents_tweeting(setup_twitter):
         real_name = "name" + str(i)
         description = "No description."
         profile = {"some_key": "some_value"}  # 根据实际需要配置profile
-        agent = TwitterUserAgent(i, real_name, description, profile, channel)
-        return_message = await agent.action_sign_up(f"user{i}0101", f"User{i}", "A bio.")
+        user_info = UserInfo(name=real_name,
+                             description=description,
+                             profile=profile)
+        agent = TwitterUserAgent(i, user_info, channel)
+        return_message = await agent.twitter_action.action_sign_up(
+            f"user{i}0101", f"User{i}", "A bio.")
         assert return_message["success"] is True
         agents.append(agent)
 
     # 发送推文
     for agent in agents:
         for _ in range(4):
-            return_message = await agent.action_create_tweet(
+            return_message = await agent.twitter_action.action_create_tweet(
                 f"hello from {agent.agent_id}")
             await asyncio.sleep(random.uniform(0, 0.1))
             assert return_message["success"] is True
 
     # 看推荐系统返回tweet
     action_agent = agents[2]
-    return_message = await action_agent.action_refresh()
+    return_message = await action_agent.twitter_action.action_refresh()
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.action_like(1)
+    return_message = await action_agent.twitter_action.action_like(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.action_unlike(1)
+    return_message = await action_agent.twitter_action.action_unlike(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.action_search_tweets('hello')
+    return_message = await action_agent.twitter_action.action_search_tweets(
+        'hello')
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.action_search_user('2')
+    return_message = await action_agent.twitter_action.action_search_user('2')
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.action_follow(1)
+    return_message = await action_agent.twitter_action.action_follow(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.action_unfollow(1)
+    return_message = await action_agent.twitter_action.action_unfollow(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.action_mute(1)
+    return_message = await action_agent.twitter_action.action_mute(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.action_unmute(1)
+    return_message = await action_agent.twitter_action.action_unmute(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
     # 看最热tweet
-    return_message = await action_agent.action_trend()
+    return_message = await action_agent.twitter_action.action_trend()
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 

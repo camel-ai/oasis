@@ -1,4 +1,4 @@
-# File: ./test/test_infra/test_create_database.py
+# File: ./test/infra/test_create_database.py
 import datetime
 import os
 import os.path as osp

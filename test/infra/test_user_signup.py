@@ -1,4 +1,4 @@
-# File: ./test/test_infra/test_user_signup.py
+# File: ./test/infra/test_user_signup.py
 import os
 import sqlite3
 
