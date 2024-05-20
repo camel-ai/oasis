@@ -6,7 +6,8 @@ import sqlite3
 from datetime import datetime, timedelta
 from typing import Any
 
-from .create_database import create_db
+from .database import create_db, fetch_table_from_db, fetch_rec_table_as_matrix
+from .recsys import rec_sys_random
 from .typing import ActionType
 
 
@@ -20,6 +21,8 @@ class Twitter:
 
         # twitter内部推荐系统refresh一次返回的推文数量
         self.refresh_tweet_count = 5
+        # rec table(buffer)中每个用户的最大tweet数量
+        self.max_rec_tweet_len = 50
 
         # twitter内部定义的热搜规则参数
         self.trend_num_days = 7
@@ -40,7 +43,7 @@ class Twitter:
         if commit:
             self.db.commit()
         return self.db_cursor
-    
+
     def run(self):
         asyncio.run(self.running())
 
@@ -54,6 +57,9 @@ class Twitter:
                 self.db_cursor.close()
                 self.db.close()
                 break
+
+            elif action == ActionType.UPDATE_REC:
+                await self.update_rec_table()
 
             elif action == ActionType.SIGNUP:
                 result = await self.signup(agent_id=agent_id,
@@ -112,7 +118,6 @@ class Twitter:
             else:
                 raise ValueError(f"Action {action} is not supported")
 
-
     def _check_agent_userid(self, agent_id):
         try:
             user_query = (
@@ -134,7 +139,6 @@ class Twitter:
 
     # 注册
     async def signup(self, agent_id, user_message):
-
         # 允许重名，user_id是主键
         user_name, name, bio = user_message
         current_time = datetime.now()
@@ -175,6 +179,7 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def refresh(self, agent_id: int):
+        # output不变，执行内容是从rec table取特定id的tweet
         current_time = datetime.now()
         try:
             user_id = self._check_agent_userid(agent_id)
@@ -218,6 +223,26 @@ class Twitter:
             return {"success": True, "tweets": tweets}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    async def update_rec_table(self):
+        # Recsys(trace/user/tweet table), 结果是刷新了rec table
+        user_table = fetch_table_from_db(self.db_cursor, 'user')
+        tweet_table = fetch_table_from_db(self.db_cursor, 'tweet')
+        trace_table = fetch_table_from_db(self.db_cursor, 'trace')
+        rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
+
+        new_rec_matrix = rec_sys_random(
+            user_table, tweet_table, trace_table, rec_matrix,
+            self.max_rec_tweet_len)
+
+        for user_id in range(1, len(new_rec_matrix)):
+            for tweet_id in new_rec_matrix[user_id]:
+                sql_query = (
+                    "INSERT INTO rec (user_id, tweet_id) VALUES (?, ?)")
+                self._execute_db_command(
+                    sql_query,
+                    (user_id, tweet_id),
+                    commit=True)
 
     async def create_tweet(self, agent_id: int, content: str):
         current_time = datetime.now()
