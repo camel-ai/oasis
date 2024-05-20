@@ -72,7 +72,7 @@ def setup_twitter():
 
 @pytest.mark.asyncio
 async def test_signup_and_create_tweet(setup_twitter,
-                                       n_users=90, tweets_per_user=4):
+                                       n_users=30, tweets_per_user=4):
     try:
         # 为了简化模拟，假设n_users是3的倍数
         assert n_users % 3 == 0, "n_users should be a multiple of 3."

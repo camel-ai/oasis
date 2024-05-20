@@ -1,7 +1,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import sqlite3
 import random
 from datetime import datetime, timedelta
@@ -19,6 +18,11 @@ class Twitter:
         self.db = sqlite3.connect(db_path, check_same_thread=False)
         self.db_cursor = self.db.cursor()
         self.channel = channel
+
+        # channel传进的操作数量
+        self.ope_cnt = 0
+        # 推荐系统缓存更新的时间间隔（以传进来的操作数为单位）
+        self.rec_update_time = 20
 
         # twitter内部推荐系统refresh一次返回的推文数量
         self.refresh_tweet_count = 5
@@ -45,14 +49,20 @@ class Twitter:
             self.db.commit()
         return self.db_cursor
 
-    def run(self):
-        asyncio.run(self.running())
-
     async def running(self):
         while True:
             message_id, data = await self.channel.receive_from()
+            if message_id:
+                self.ope_cnt += 1
+                print(self.ope_cnt)
             agent_id, message, action = data
             action = ActionType(action)
+
+            if (self.ope_cnt % self.rec_update_time == 0 and
+                    action != ActionType.REFRESH):
+                print('update_rec_table!!!')
+                self.ope_cnt += 1
+                await self.update_rec_table()
 
             if action == ActionType.EXIT:
                 self.db_cursor.close()
@@ -69,6 +79,7 @@ class Twitter:
 
             elif action == ActionType.REFRESH:
                 result = await self.refresh(agent_id=agent_id)
+                print(result)
                 await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.CREATE_TWEET:
@@ -244,9 +255,13 @@ class Twitter:
         new_rec_matrix = rec_sys_random(
             user_table, tweet_table, trace_table, rec_matrix,
             self.max_rec_tweet_len)
-
+        # 构建SQL语句以删除rec表中的所有记录
+        sql_query = "DELETE FROM rec"
+        # 使用封装好的_execute_db_command函数执行SQL语句
+        self._execute_db_command(sql_query, commit=True)
         for user_id in range(1, len(new_rec_matrix)):
             for tweet_id in new_rec_matrix[user_id]:
+                print(tweet_id)
                 sql_query = (
                     "INSERT INTO rec (user_id, tweet_id) VALUES (?, ?)")
                 self._execute_db_command(
