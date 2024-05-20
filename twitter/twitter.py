@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import sqlite3
+import random
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -186,22 +187,31 @@ class Twitter:
             if not user_id:
                 return self._not_signup_error_message(agent_id)
 
-            # 更新SQL查询，以便随机选择self.refresh_tweet_count条tweets
-            sql_query = (
-                "SELECT tweet_id, user_id, content, created_at, num_likes "
-                "FROM tweet "
-                "ORDER BY RANDOM() "
-                "LIMIT ?")
-            self._execute_db_command(
-                sql_query,
-                (self.refresh_tweet_count,),
-                commit=True)
+            # 从rec表中获取指定user_id的所有tweet_id
+            rec_query = "SELECT tweet_id FROM rec WHERE user_id = ?"
+            self._execute_db_command(rec_query, (user_id,))
+            rec_results = self.db_cursor.fetchall()
+
+            tweet_ids = [row[0] for row in rec_results]
+            selected_tweet_ids = tweet_ids
+
+            # 如果tweet_id数量 >= self.refresh_tweet_count，则随机选择指定数量的tweet_id
+            if len(tweet_ids) >= self.refresh_tweet_count:
+                selected_tweet_ids = random.sample(
+                    tweet_ids, self.refresh_tweet_count)
+
+            # 根据选定的tweet_id从tweet表中获取tweet详情
+            placeholders = ', '.join('?' for _ in selected_tweet_ids)
+            # 构造SQL查询字符串
+            tweet_query = (
+                f"SELECT tweet_id, user_id, content, created_at, num_likes "
+                f"FROM tweet WHERE tweet_id IN ({placeholders})"
+            )
+            self._execute_db_command(tweet_query, selected_tweet_ids)
             results = self.db_cursor.fetchall()
             if not results:
-                return {
-                    "success": False,
-                    "message": "No tweets found."
-                }
+                return {"success": False, "message": "No tweets found."}
+
             # 记录操作到trace表
             action_info = {}
             trace_insert_query = (

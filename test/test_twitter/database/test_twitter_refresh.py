@@ -2,7 +2,9 @@
 import os
 import pytest
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime
+from test.show_db import print_db_contents
+from twitter.typing import ActionType
 
 
 import os.path as osp
@@ -22,19 +24,29 @@ class MockChannel:
         # 第一次调用返回搜索用户的指令
         if self.call_count == 0:
             self.call_count += 1
-            return ('id_', (1, None, "trend"))
+            return ('id_', (None, None, ActionType.UPDATE_REC))
+        if self.call_count == 1:
+            self.call_count += 1
+            return ('id_', (1, None, ActionType.REFRESH))
         else:
-            return ('id_', (None, None, "exit"))
+            return ('id_', (None, None, ActionType.EXIT))
 
     async def send_to(self, message):
         self.messages.append(message)  # 存储消息以便后续断言
         # 对搜索用户的结果进行断言
-        if self.call_count == 1:
+        if self.call_count == 2:
             # 验证搜索成功且找到至少一个匹配用户
+            print_db_contents(test_db_filepath)
             assert message[2]["success"] is True, "Trend should be successful"
-            assert message[2]["tweets"][0]["content"] == "Tweet 6"
-            assert message[2]["tweets"][1]["content"] == "Tweet 5"
-            assert message[2]["tweets"][2]["content"] == "Tweet 4"
+            assert len(message[2]["tweets"]) == 5
+
+            # 然后检查 'tweets' 列表中的每个条目
+            for tweet in message[2].get('tweets', []):
+                assert tweet.get('tweet_id') is not None
+                assert tweet.get('user_id') is not None
+                assert tweet.get('content') is not None
+                assert tweet.get('created_at') is not None
+                assert tweet.get('num_likes') is not None
 
 
 # 定义一个fixture来初始化数据库和Twitter实例
@@ -53,7 +65,7 @@ def setup_twitter():
 
 
 @pytest.mark.asyncio
-async def test_search_user(setup_twitter):
+async def test_refresh(setup_twitter):
     try:
         twitter = setup_twitter
 
@@ -72,26 +84,23 @@ async def test_search_user(setup_twitter):
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
 
-        today = datetime.now()
-        # 生成从今天开始往前数10天的时间戳列表
-        tweets_info = [
-            (1, f'Tweet {9-i}',
-             (today - timedelta(days=9 - i)).strftime('%Y-%m-%d %H:%M:%S.%f'),
-             9-i)
-            for i in range(10)
-        ]
+        # 在测试开始之前，将60条推文用户插入到tweet表中
+        for i in range(1, 61):  # 生成60条tweet
+            user_id = i % 3 + 1  # 循环使用用户ID 1, 2, 3
+            content = f"Tweet content for tweet {i}"  # 简单生成不同的内容
+            created_at = datetime.now()
 
-        cursor.executemany(
-            "INSERT INTO tweet (user_id, content, created_at, num_likes) "
-            "VALUES (?, ?, ?, ?)",
-            tweets_info
-        )
+            cursor.execute(
+                ("INSERT INTO tweet "
+                 "(user_id, content, created_at, num_likes) "
+                 "VALUES (?, ?, ?, ?)"),
+                (user_id, content, created_at, 0)
+            )
         conn.commit()
-
+        print_db_contents(test_db_filepath)
         await twitter.running()
-
         # 验证跟踪表(trace)是否正确记录了操作
-        cursor.execute("SELECT * FROM trace WHERE action='trend'")
+        cursor.execute("SELECT * FROM trace WHERE action='refresh'")
         assert cursor.fetchone() is not None, "trend action not traced"
 
     finally:
