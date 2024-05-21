@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from .database import create_db, fetch_rec_table_as_matrix, fetch_table_from_db
-from .recsys import rec_sys_random
+from .recsys import rec_sys_random, rec_sys_personalized
 from .typing import ActionType
 
 
@@ -27,6 +27,8 @@ class Twitter:
         self.refresh_tweet_count = 5
         # rec table(buffer)中每个用户的最大tweet数量
         self.max_rec_tweet_len = 50
+        # rec prob between random and personalized
+        self.rec_prob = 0.7
 
         # twitter内部定义的热搜规则参数
         self.trend_num_days = 7
@@ -244,9 +246,17 @@ class Twitter:
         tweet_table = fetch_table_from_db(self.db_cursor, 'tweet')
         trace_table = fetch_table_from_db(self.db_cursor, 'trace')
         rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
-
-        new_rec_matrix = rec_sys_random(user_table, tweet_table, trace_table,
-                                        rec_matrix, self.max_rec_tweet_len)
+        # 更新rec tablerec_sys_random
+        random_number = random.random()
+        if random_number < 1 - self.rec_prob:
+            print(f'Random update rec table')
+            new_rec_matrix = rec_sys_random(user_table, tweet_table, trace_table,
+                                            rec_matrix, self.max_rec_tweet_len)
+        else:
+            print(f'Personalized update rec table')
+            new_rec_matrix = rec_sys_personalized(user_table, tweet_table,
+                                                    trace_table, rec_matrix,
+                                                    self.max_rec_tweet_len)
         # 构建SQL语句以删除rec表中的所有记录
         sql_query = "DELETE FROM rec"
         # 使用封装好的_execute_db_command函数执行SQL语句
