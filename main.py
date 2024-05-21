@@ -3,6 +3,7 @@ import asyncio
 from social_agent.agents_generator import generate_agents
 from twitter.channel import Twitter_Channel
 from twitter.twitter import Twitter
+from twitter.typing import ActionType
 
 
 async def running():
@@ -13,11 +14,12 @@ async def running():
     task = asyncio.create_task(infra.running())
 
     agent_graph = await generate_agents("./data/user_all_id.csv", channel)
+
     for node_id, node_data in agent_graph.get_agents():
         agent = node_data['agent']
         await agent.perform_action_by_llm()
 
-    await channel.write_to_receive_queue((None, None, "exit"))
+    await channel.write_to_receive_queue((None, None, ActionType.EXIT))
     await task
 
 
