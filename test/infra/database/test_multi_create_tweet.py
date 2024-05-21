@@ -1,17 +1,19 @@
-# File: ./test/test_infra/test_multi_create_tweet.py
+# File: ./test/infra/test_multi_create_tweet.py
 import os
+import os.path as osp
 import sqlite3
+from test.show_db import print_db_contents
+
 import pytest
 
-import os.path as osp
 from twitter.twitter import Twitter  # 确保从你的模块中导入Twitter类
-from test.show_db import print_db_contents
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
 
 
 class MockChannel:
+
     def __init__(self, user_actions):
         """
         user_actions: A list of tuples representing actions.
@@ -44,8 +46,8 @@ def generate_user_actions(n_users, tweets_per_user):
 
     for user_id in range(1, n_users + 1):
         # Add sign up action for each user
-        user_message = ("username" + str(user_id),
-                        "name" + str(user_id), "No descrption.")
+        user_message = ("username" + str(user_id), "name" + str(user_id),
+                        "No descrption.")
         actions.append((user_id, user_message, "sign_up"))
 
         if user_id <= users_per_group:
@@ -62,6 +64,7 @@ def generate_user_actions(n_users, tweets_per_user):
 
     return actions
 
+
 # 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
 def setup_twitter():
@@ -72,7 +75,8 @@ def setup_twitter():
 
 @pytest.mark.asyncio
 async def test_signup_and_create_tweet(setup_twitter,
-                                       n_users=30, tweets_per_user=4):
+                                       n_users=30,
+                                       tweets_per_user=4):
     try:
         # 为了简化模拟，假设n_users是3的倍数
         assert n_users % 3 == 0, "n_users should be a multiple of 3."

@@ -1,12 +1,11 @@
-# File: ./test/test_infra/test_user_signup.py
+# File: ./test/infra/test_user_signup.py
 import os
+import os.path as osp
 import sqlite3
 
 import pytest
 
-import os.path as osp
 from twitter.twitter import Twitter  # 确保从你的模块中导入Twitter类
-
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -48,8 +47,7 @@ class MockChannel:
             assert message[2]["success"] is False
             assert "error" in message[2]
             assert message[2]["error"] == (
-                "Agent 1 have already signed up with user id: 1"
-            )
+                "Agent 1 have already signed up with user id: 1")
 
 
 # 定义一个fixture来初始化数据库和Twitter实例

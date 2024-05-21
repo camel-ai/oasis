@@ -1,21 +1,21 @@
-# File: ./test/test_infra/test_twitter_refresh.py
+# File: ./test/infra/test_twitter_refresh.py
 import os
-import pytest
+import os.path as osp
 import sqlite3
 from datetime import datetime
 from test.show_db import print_db_contents
-from twitter.typing import ActionType
 
+import pytest
 
-import os.path as osp
 from twitter.twitter import Twitter  # 确保从你的模块中导入Twitter类
-
+from twitter.typing import ActionType
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
 
 
 class MockChannel:
+
     def __init__(self):
         self.call_count = 0
         self.messages = []  # 用于存储发送的消息
@@ -75,9 +75,7 @@ async def test_refresh(setup_twitter):
         cursor.execute(
             ("INSERT INTO user "
              "(user_id, agent_id, user_name, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"),
-            (1, 1, "user1", 0, 0)
-        )
+             "VALUES (?, ?, ?, ?, ?)"), (1, 1, "user1", 0, 0))
         conn.commit()
 
         # 在测试开始之前，将tweet插入到tweet表中
@@ -90,12 +88,10 @@ async def test_refresh(setup_twitter):
             content = f"Tweet content for tweet {i}"  # 简单生成不同的内容
             created_at = datetime.now()
 
-            cursor.execute(
-                ("INSERT INTO tweet "
-                 "(user_id, content, created_at, num_likes) "
-                 "VALUES (?, ?, ?, ?)"),
-                (user_id, content, created_at, 0)
-            )
+            cursor.execute(("INSERT INTO tweet "
+                            "(user_id, content, created_at, num_likes) "
+                            "VALUES (?, ?, ?, ?)"),
+                           (user_id, content, created_at, 0))
         conn.commit()
         print_db_contents(test_db_filepath)
         await twitter.running()

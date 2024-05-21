@@ -1,4 +1,4 @@
-# File: ./test/test_infra/test_create_database.py
+# File: ./test/infra/test_create_database.py
 import datetime
 import os
 import os.path as osp
@@ -6,11 +6,8 @@ import sqlite3
 
 import pytest
 
-from twitter.database import (
-    create_db,
-    fetch_table_from_db,
-    fetch_rec_table_as_matrix
-)
+from twitter.database import (create_db, fetch_rec_table_as_matrix,
+                              fetch_table_from_db)
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 db_filepath = osp.join(parent_folder, "test.db")
@@ -32,8 +29,8 @@ def test_user_operations():
     cursor.execute(
         ("INSERT INTO user (agent_id, user_name, name, bio, created_at, "
          "num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?)"),
-        (2, 'testuser', 'Test User', 'A test user', '2024-04-21 22:02:42',
-         0, 0))
+        (2, 'testuser', 'Test User', 'A test user', '2024-04-21 22:02:42', 0,
+         0))
     conn.commit()
 
     # Assert the user was inserted correctly
@@ -65,28 +62,25 @@ def test_user_operations():
          0, 0))
     conn.commit()
 
-    expected_result = [
-        {
-            'user_id': 1,
-            'agent_id': 2,
-            'user_name': 'testuser',
-            'name': 'Updated User',
-            'bio': 'A test user',
-            'created_at': '2024-04-21 22:02:42',
-            'num_followings': 0,
-            'num_followers': 0
-        },
-        {
-            'user_id': 2,
-            'agent_id': 1,
-            'user_name': 'testuser_2',
-            'name': 'Test User_2',
-            'bio': 'Another user',
-            'created_at': '2024-05-21 22:02:42',
-            'num_followings': 0,
-            'num_followers': 0
-        }
-    ]
+    expected_result = [{
+        'user_id': 1,
+        'agent_id': 2,
+        'user_name': 'testuser',
+        'name': 'Updated User',
+        'bio': 'A test user',
+        'created_at': '2024-04-21 22:02:42',
+        'num_followings': 0,
+        'num_followers': 0
+    }, {
+        'user_id': 2,
+        'agent_id': 1,
+        'user_name': 'testuser_2',
+        'name': 'Test User_2',
+        'bio': 'Another user',
+        'created_at': '2024-05-21 22:02:42',
+        'num_followings': 0,
+        'num_followers': 0
+    }]
 
     actual_result = fetch_table_from_db(cursor, 'user')
 
@@ -133,15 +127,13 @@ def test_tweet_operations():
                    ('Updated tweet', 'This is a test tweet'))
     conn.commit()
 
-    expected_result = [
-        {
-            'tweet_id': 1,
-            'user_id': 1,
-            'content': 'Updated tweet',
-            'created_at': '2024-04-21 22:02:42',
-            'num_likes': 0,
-        }
-    ]
+    expected_result = [{
+        'tweet_id': 1,
+        'user_id': 1,
+        'content': 'Updated tweet',
+        'created_at': '2024-04-21 22:02:42',
+        'num_likes': 0,
+    }]
     actual_result = fetch_table_from_db(cursor, 'tweet')
 
     # 使用assert语句进行比较
@@ -262,14 +254,12 @@ def test_trace_operations():
     assert trace[2] == 'test_action'
     assert trace[3] == 'test_info'
 
-    expected_result = [
-        {
-            'user_id': 1,
-            'created_at': created_at,
-            'action': 'test_action',
-            'info': 'test_info',
-        }
-    ]
+    expected_result = [{
+        'user_id': 1,
+        'created_at': created_at,
+        'action': 'test_action',
+        'info': 'test_info',
+    }]
 
     actual_result = fetch_table_from_db(cursor, 'trace')
     assert actual_result == expected_result
@@ -289,14 +279,11 @@ def test_rec_operations():
     cursor = conn.cursor()
     # Insert a trace
     cursor.execute(("INSERT INTO rec (user_id, tweet_id) "
-                    "VALUES (?, ?)"),
-                   (2, 2))
+                    "VALUES (?, ?)"), (2, 2))
     cursor.execute(("INSERT INTO rec (user_id, tweet_id) "
-                    "VALUES (?, ?)"),
-                   (2, 3))
+                    "VALUES (?, ?)"), (2, 3))
     cursor.execute(("INSERT INTO rec (user_id, tweet_id) "
-                    "VALUES (?, ?)"),
-                   (1, 3))
+                    "VALUES (?, ?)"), (1, 3))
     conn.commit()
 
     # Assert the rec was inserted correctly

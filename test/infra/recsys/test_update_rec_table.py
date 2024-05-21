@@ -1,16 +1,16 @@
 import asyncio
-import os.path as osp
 import os
-import sqlite3
+import os.path as osp
 import random
+import sqlite3
+from datetime import datetime
+from test.show_db import print_db_contents
+
 import pytest
 
-from datetime import datetime
 from twitter.channel import Twitter_Channel
 from twitter.twitter import Twitter
 from twitter.typing import ActionType
-from test.show_db import print_db_contents
-
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -32,24 +32,15 @@ async def test_update_rec_table(setup_db):
         # 在测试开始之前，将3个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
-        cursor.execute(
-            ("INSERT INTO user "
-                "(agent_id, user_name, num_followings, num_followers) "
-                "VALUES (?, ?, ?, ?)"),
-            (1, "user1", 0, 0)
-        )
-        cursor.execute(
-            ("INSERT INTO user "
-                "(agent_id, user_name, num_followings, num_followers) "
-                "VALUES (?, ?, ?, ?)"),
-            (2, "user2", 2, 4)
-        )
-        cursor.execute(
-            ("INSERT INTO user "
-                "(agent_id, user_name, num_followings, num_followers) "
-                "VALUES (?, ?, ?, ?)"),
-            (3, "user3", 3, 5)
-        )
+        cursor.execute(("INSERT INTO user "
+                        "(agent_id, user_name, num_followings, num_followers) "
+                        "VALUES (?, ?, ?, ?)"), (1, "user1", 0, 0))
+        cursor.execute(("INSERT INTO user "
+                        "(agent_id, user_name, num_followings, num_followers) "
+                        "VALUES (?, ?, ?, ?)"), (2, "user2", 2, 4))
+        cursor.execute(("INSERT INTO user "
+                        "(agent_id, user_name, num_followings, num_followers) "
+                        "VALUES (?, ?, ?, ?)"), (3, "user3", 3, 5))
         conn.commit()
 
         # 在测试开始之前，将60条推文用户插入到tweet表中
@@ -59,24 +50,20 @@ async def test_update_rec_table(setup_db):
             created_at = datetime.now()
             num_likes = random.randint(0, 100)  # 随机生成点赞数
 
-            cursor.execute(
-                ("INSERT INTO tweet "
-                 "(user_id, content, created_at, num_likes) "
-                 "VALUES (?, ?, ?, ?)"),
-                (user_id, content, created_at, num_likes)
-            )
+            cursor.execute(("INSERT INTO tweet "
+                            "(user_id, content, created_at, num_likes) "
+                            "VALUES (?, ?, ?, ?)"),
+                           (user_id, content, created_at, num_likes))
         conn.commit()
 
         task = asyncio.create_task(infra.running())
         await channel.write_to_receive_queue(
             (None, None, ActionType.UPDATE_REC))
-        await channel.write_to_receive_queue(
-            (None, None, ActionType.EXIT))
+        await channel.write_to_receive_queue((None, None, ActionType.EXIT))
         await task
 
         for i in range(1, 4):
-            cursor.execute(
-                "SELECT tweet_id FROM rec WHERE user_id = ?", (i,))
+            cursor.execute("SELECT tweet_id FROM rec WHERE user_id = ?", (i, ))
             tweets = cursor.fetchall()  # 获取所有记录
             assert len(tweets) == 50, f"User {user_id} doesn't have 50 tweets."
             tweet_ids = [tweet[0] for tweet in tweets]

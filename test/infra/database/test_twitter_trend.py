@@ -1,13 +1,12 @@
-# File: ./test/test_infra/test_twitter_trend.py
+# File: ./test/infra/test_twitter_trend.py
 import os
+import os.path as osp
 import sqlite3
 from datetime import datetime, timedelta
 
 import pytest
 
-import os.path as osp
 from twitter.twitter import Twitter  # 确保从你的模块中导入Twitter类
-
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -65,9 +64,7 @@ async def test_search_user(setup_twitter):
         cursor.execute(
             ("INSERT INTO user "
              "(user_id, agent_id, user_name, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"),
-            (1, 1, "user1", 0, 0)
-        )
+             "VALUES (?, ?, ?, ?, ?)"), (1, 1, "user1", 0, 0))
         conn.commit()
 
         # 在测试开始之前，将tweet插入到tweet表中
@@ -79,15 +76,12 @@ async def test_search_user(setup_twitter):
         tweets_info = [
             (1, f'Tweet {9-i}',
              (today - timedelta(days=9 - i)).strftime('%Y-%m-%d %H:%M:%S.%f'),
-             9-i)
-            for i in range(10)
+             9 - i) for i in range(10)
         ]
 
         cursor.executemany(
             "INSERT INTO tweet (user_id, content, created_at, num_likes) "
-            "VALUES (?, ?, ?, ?)",
-            tweets_info
-        )
+            "VALUES (?, ?, ?, ?)", tweets_info)
         conn.commit()
 
         await twitter.running()

@@ -11,8 +11,8 @@ def test_rec_sys_random_all_tweets():
     max_rec_tweet_len = 2  # 最大推荐长度设置为2
 
     expected = [None, ['1', '2'], ['1', '2']]
-    result = rec_sys_random(
-        user_table, tweet_table, trace_table, rec_matrix, max_rec_tweet_len)
+    result = rec_sys_random(user_table, tweet_table, trace_table, rec_matrix,
+                            max_rec_tweet_len)
     assert result == expected
 
 
@@ -24,8 +24,8 @@ def test_rec_sys_random_sample_tweets():
     rec_matrix = [[None], [], []]  # 假设有两个用户
     max_rec_tweet_len = 2  # 最大推荐长度设置为2
 
-    result = rec_sys_random(
-        user_table, tweet_table, trace_table, rec_matrix, max_rec_tweet_len)
+    result = rec_sys_random(user_table, tweet_table, trace_table, rec_matrix,
+                            max_rec_tweet_len)
     print(result)
     # 验证第一个元素是None
     assert result[0] is None
