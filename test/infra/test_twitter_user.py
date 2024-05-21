@@ -1,4 +1,4 @@
-# File: ./test/test_infra/test_twitter_user.py
+# File: ./test/infra/test_twitter_user.py
 import os
 import sqlite3
 

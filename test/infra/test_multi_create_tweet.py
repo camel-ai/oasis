@@ -1,4 +1,4 @@
-# File: ./test/test_infra/test_multi_create_tweet.py
+# File: ./test/infra/test_multi_create_tweet.py
 import os
 import sqlite3
 import pytest

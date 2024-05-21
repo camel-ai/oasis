@@ -1,6 +1,8 @@
 import networkx as nx
 
-class homoAgentsGraph:
+
+class AgentGraph:
+
     def __init__(self):
         self.graph = nx.DiGraph()
 
@@ -15,12 +17,12 @@ class homoAgentsGraph:
 
     def get_agent(self, agent_id):
         return self.graph.nodes[agent_id]['agent']
-    
+
     def get_agents(self):
         return self.graph.nodes.data()
-    
+
     def get_edges(self):
         return self.graph.edges.data()
-    
+
     def get_acount(self):
         return self.graph.number_of_nodes()

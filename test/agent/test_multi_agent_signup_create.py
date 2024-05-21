@@ -1,14 +1,16 @@
-# File: ./test/test_infra/test_multi_agent_signup_create.py
+# File: ./test/infra/test_multi_agent_signup_create.py
 import asyncio
-import random
-import pytest
 import os
+import os.path as osp
+import random
 import sqlite3
 
-import os.path as osp
-from social_agent.twitterUserAgent import TwitterUserAgent
-from twitter.twitter import Twitter
+import pytest
+
+from social_agent.agent import TwitterUserAgent
 from twitter.channel import Twitter_Channel
+from twitter.config import UserInfo
+from twitter.twitter import Twitter
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -37,14 +39,19 @@ async def test_agents_tweeting(setup_twitter):
         real_name = "name" + str(i)
         description = "No description."
         profile = {"some_key": "some_value"}  # 根据实际需要配置profile
-        agent = TwitterUserAgent(i, real_name, description, profile, channel)
-        await agent.action_sign_up(f"user{i}0101", f"User{i}", "A bio.")
+        user_info = UserInfo(name=real_name,
+                             description=description,
+                             profile=profile)
+        agent = TwitterUserAgent(i, user_info, channel)
+        await agent.twitter_action.action_sign_up(f"user{i}0101", f"User{i}",
+                                                  "A bio.")
         agents.append(agent)
 
     # 发送推文
     for agent in agents:
         for _ in range(M):
-            await agent.action_create_tweet(f"hello from {agent.agent_id}")
+            await agent.twitter_action.action_create_tweet(
+                f"hello from {agent.agent_id}")
             await asyncio.sleep(random.uniform(0, 0.1))
 
     await channel.write_to_receive_queue((None, None, "exit"))

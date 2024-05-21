@@ -1,4 +1,5 @@
 import asyncio
+
 from social_agent.agents_generator import generate_agents
 from twitter.channel import Twitter_Channel
 from twitter.twitter import Twitter
@@ -12,8 +13,6 @@ async def running():
     task = asyncio.create_task(infra.running())
 
     agent_graph = await generate_agents("./data/user_all_id.csv", channel)
-    # nx.draw_networkx(agent_graph.graph)
-    # plt.show()
     for node_id, node_data in agent_graph.get_agents():
         agent = node_data['agent']
         await agent.perform_action_by_llm()

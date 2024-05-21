@@ -1,10 +1,10 @@
-# File: ./test/test_infra/test_agent_generator.py
+# File: ./test/infra/test_agent_generator.py
 import asyncio
 import os.path as osp
+
 from social_agent.agents_generator import generate_agents
 from twitter.channel import Twitter_Channel
 from twitter.twitter import Twitter
-
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "mock_twitter.db")

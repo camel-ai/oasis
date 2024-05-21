@@ -1,9 +1,9 @@
-# File: ./test/test_infra/test_twitter_trend.py
+# File: ./test/infra/test_twitter_refresh.py
 import os
+import pytest
 import sqlite3
 from datetime import datetime, timedelta
 
-import pytest
 
 import os.path as osp
 from twitter.twitter import Twitter  # 确保从你的模块中导入Twitter类
@@ -14,7 +14,6 @@ test_db_filepath = osp.join(parent_folder, "test.db")
 
 
 class MockChannel:
-
     def __init__(self):
         self.call_count = 0
         self.messages = []  # 用于存储发送的消息
@@ -47,9 +46,8 @@ def setup_twitter():
 
     # 创建数据库和表
     db_path = test_db_filepath
-
-    # 初始化Twitter实例
     mock_channel = MockChannel()
+    # 初始化Twitter实例
     twitter_instance = Twitter(db_path, mock_channel)
     return twitter_instance
 
@@ -99,5 +97,5 @@ async def test_search_user(setup_twitter):
     finally:
         conn.close()
         # 清理
-        # if os.path.exists(test_db_filepath):
-        #     os.remove(test_db_filepath)
+        if os.path.exists(test_db_filepath):
+            os.remove(test_db_filepath)
