@@ -25,7 +25,7 @@ class AsyncSafeDict:
             return list(self.dict.keys())
 
 
-class Twitter_Channel:
+class TwitterChannel:
 
     def __init__(self):
         self.receive_queue = asyncio.Queue()  # 用于存储接收的消息

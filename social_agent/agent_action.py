@@ -1,14 +1,16 @@
+from __future__ import annotations
+
 from typing import Any
 
 from camel.functions import OpenAIFunction
 
-from twitter.channel import Twitter_Channel
+from twitter.channel import TwitterChannel
 from twitter.typing import ActionType
 
 
-class TwitterAction:
+class ActionSpace:
 
-    def __init__(self, agent_id: int, channel: Twitter_Channel):
+    def __init__(self, agent_id: int, channel: TwitterChannel):
         self.agent_id = agent_id
         self.channel = channel
 
