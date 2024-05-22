@@ -1,12 +1,12 @@
-
 from __future__ import annotations
 
-import asyncio
+import random
 import sqlite3
 from datetime import datetime, timedelta
 from typing import Any
 
-from .create_database import create_db
+from .database import create_db, fetch_rec_table_as_matrix, fetch_table_from_db
+from .recsys import rec_sys_random
 from .typing import ActionType
 
 
@@ -18,8 +18,15 @@ class Twitter:
         self.db_cursor = self.db.cursor()
         self.channel = channel
 
+        # channel传进的操作数量
+        self.ope_cnt = -1
+        # 推荐系统缓存更新的时间间隔（以传进来的操作数为单位）
+        self.rec_update_time = 20
+
         # twitter内部推荐系统refresh一次返回的推文数量
         self.refresh_tweet_count = 5
+        # rec table(buffer)中每个用户的最大tweet数量
+        self.max_rec_tweet_len = 50
 
         # twitter内部定义的热搜规则参数
         self.trend_num_days = 7
@@ -28,11 +35,10 @@ class Twitter:
     @staticmethod
     def _not_signup_error_message(agent_id):
         return {
-            "success": False,
-            "error": (
-                f"Agent {agent_id} have not signed up and have no "
-                f"user id."
-            )
+            "success":
+            False,
+            "error": (f"Agent {agent_id} have not signed up and have no "
+                      f"user id.")
         }
 
     def _execute_db_command(self, command, args=(), commit=False):
@@ -40,20 +46,28 @@ class Twitter:
         if commit:
             self.db.commit()
         return self.db_cursor
-    
-    def run(self):
-        asyncio.run(self.running())
 
     async def running(self):
         while True:
             message_id, data = await self.channel.receive_from()
+            if message_id:
+                self.ope_cnt += 1
             agent_id, message, action = data
             action = ActionType(action)
+
+            if (self.ope_cnt % self.rec_update_time == 0
+                    and action != ActionType.REFRESH):
+                print('Successfully update rec table.')
+                self.ope_cnt += 1
+                await self.update_rec_table()
 
             if action == ActionType.EXIT:
                 self.db_cursor.close()
                 self.db.close()
                 break
+
+            elif action == ActionType.UPDATE_REC:
+                await self.update_rec_table()
 
             elif action == ActionType.SIGNUP:
                 result = await self.signup(agent_id=agent_id,
@@ -112,14 +126,11 @@ class Twitter:
             else:
                 raise ValueError(f"Action {action} is not supported")
 
-
     def _check_agent_userid(self, agent_id):
         try:
-            user_query = (
-                "SELECT user_id FROM user WHERE agent_id = ?"
-            )
+            user_query = ("SELECT user_id FROM user WHERE agent_id = ?")
             # Assuming execute_db_query_async returns a list of query results
-            results = self._execute_db_command(user_query, (agent_id,))
+            results = self._execute_db_command(user_query, (agent_id, ))
             # Fetch the first row of the query result
             first_row = results.fetchone()
             if first_row:
@@ -134,7 +145,6 @@ class Twitter:
 
     # 注册
     async def signup(self, agent_id, user_message):
-
         # 允许重名，user_id是主键
         user_name, name, bio = user_message
         current_time = datetime.now()
@@ -142,22 +152,20 @@ class Twitter:
             if self._check_agent_userid(agent_id):
                 user_id = self._check_agent_userid(agent_id)
                 return {
-                    "success": False,
-                    "error": (
-                        f"Agent {agent_id} have already signed up with user "
-                        f"id: {user_id}"
-                    )
+                    "success":
+                    False,
+                    "error":
+                    (f"Agent {agent_id} have already signed up with user "
+                     f"id: {user_id}")
                 }
             # 插入用户记录
             user_insert_query = (
                 "INSERT INTO user (agent_id, user_name, name, bio, created_at,"
-                " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?)"
-            )
+                " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?)")
             self._execute_db_command(
                 user_insert_query,
                 (agent_id, user_name, name, bio, current_time, 0, 0),
-                commit=True
-            )
+                commit=True)
             user_id = self.db_cursor.lastrowid
             # 准备trace记录的信息
             action_info = {"name": name, "user_name": user_name, "bio": bio}
@@ -167,7 +175,8 @@ class Twitter:
             self._execute_db_command(
                 trace_insert_query,
                 (user_id, current_time, ActionType.SIGNUP.value,
-                 str(action_info)), commit=True)
+                 str(action_info)),
+                commit=True)
 
             return {"success": True, "user_id": user_id}
 
@@ -175,28 +184,37 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def refresh(self, agent_id: int):
+        # output不变，执行内容是从rec table取特定id的tweet
         current_time = datetime.now()
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
                 return self._not_signup_error_message(agent_id)
 
-            # 更新SQL查询，以便随机选择self.refresh_tweet_count条tweets
-            sql_query = (
-                "SELECT tweet_id, user_id, content, created_at, num_likes "
-                "FROM tweet "
-                "ORDER BY RANDOM() "
-                "LIMIT ?")
-            self._execute_db_command(
-                sql_query,
-                (self.refresh_tweet_count,),
-                commit=True)
+            # 从rec表中获取指定user_id的所有tweet_id
+            rec_query = "SELECT tweet_id FROM rec WHERE user_id = ?"
+            self._execute_db_command(rec_query, (user_id, ))
+            rec_results = self.db_cursor.fetchall()
+
+            tweet_ids = [row[0] for row in rec_results]
+            selected_tweet_ids = tweet_ids
+
+            # 如果tweet_id数量 >= self.refresh_tweet_count，则随机选择指定数量的tweet_id
+            if len(tweet_ids) >= self.refresh_tweet_count:
+                selected_tweet_ids = random.sample(tweet_ids,
+                                                   self.refresh_tweet_count)
+
+            # 根据选定的tweet_id从tweet表中获取tweet详情
+            placeholders = ', '.join('?' for _ in selected_tweet_ids)
+            # 构造SQL查询字符串
+            tweet_query = (
+                f"SELECT tweet_id, user_id, content, created_at, num_likes "
+                f"FROM tweet WHERE tweet_id IN ({placeholders})")
+            self._execute_db_command(tweet_query, selected_tweet_ids)
             results = self.db_cursor.fetchall()
             if not results:
-                return {
-                    "success": False,
-                    "message": "No tweets found."
-                }
+                return {"success": False, "message": "No tweets found."}
+
             # 记录操作到trace表
             action_info = {}
             trace_insert_query = (
@@ -205,7 +223,8 @@ class Twitter:
             self._execute_db_command(
                 trace_insert_query,
                 (user_id, current_time, ActionType.REFRESH.value,
-                 str(action_info)), commit=True)
+                 str(action_info)),
+                commit=True)
 
             # 将结果的每个元组转换为字典
             tweets = [{
@@ -218,6 +237,26 @@ class Twitter:
             return {"success": True, "tweets": tweets}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    async def update_rec_table(self):
+        # Recsys(trace/user/tweet table), 结果是刷新了rec table
+        user_table = fetch_table_from_db(self.db_cursor, 'user')
+        tweet_table = fetch_table_from_db(self.db_cursor, 'tweet')
+        trace_table = fetch_table_from_db(self.db_cursor, 'trace')
+        rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
+
+        new_rec_matrix = rec_sys_random(user_table, tweet_table, trace_table,
+                                        rec_matrix, self.max_rec_tweet_len)
+        # 构建SQL语句以删除rec表中的所有记录
+        sql_query = "DELETE FROM rec"
+        # 使用封装好的_execute_db_command函数执行SQL语句
+        self._execute_db_command(sql_query, commit=True)
+        for user_id in range(1, len(new_rec_matrix)):
+            for tweet_id in new_rec_matrix[user_id]:
+                sql_query = (
+                    "INSERT INTO rec (user_id, tweet_id) VALUES (?, ?)")
+                self._execute_db_command(sql_query, (user_id, tweet_id),
+                                         commit=True)
 
     async def create_tweet(self, agent_id: int, content: str):
         current_time = datetime.now()
@@ -242,7 +281,8 @@ class Twitter:
             self._execute_db_command(
                 trace_insert_query,
                 (user_id, current_time, ActionType.CREATE_TWEET.value,
-                 str(action_info)), commit=True)
+                 str(action_info)),
+                commit=True)
             return {"success": True, "tweet_id": tweet_id}
 
         except Exception as e:
@@ -286,10 +326,10 @@ class Twitter:
             trace_insert_query = (
                 "INSERT INTO trace (user_id, created_at, action, info) "
                 "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.LIKE.value,
-                 str(action_info)), commit=True)
+            self._execute_db_command(trace_insert_query,
+                                     (user_id, current_time,
+                                      ActionType.LIKE.value, str(action_info)),
+                                     commit=True)
             return {"success": True, "like_id": like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -343,7 +383,8 @@ class Twitter:
             self._execute_db_command(
                 trace_insert_query,
                 (user_id, current_time, ActionType.UNLIKE.value,
-                 str(action_info)), commit=True)
+                 str(action_info)),
+                commit=True)
             return {"success": True, "like_id": like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -386,7 +427,8 @@ class Twitter:
             self._execute_db_command(
                 trace_insert_query,
                 (user_id, current_time, ActionType.SEARCH_TWEET.value,
-                 str(action_info)), commit=True)
+                 str(action_info)),
+                commit=True)
 
             # 如果没有找到结果，返回一个指示失败的字典
             if not results:
@@ -421,9 +463,10 @@ class Twitter:
                 "WHERE user_name LIKE ? OR name LIKE ? OR bio LIKE ? OR "
                 "CAST(user_id AS TEXT) LIKE ?")
             # 改写为使用 execute_db_command 方法
-            self._execute_db_command(
-                sql_query, ('%' + query + '%', '%' + query + '%',
-                            '%' + query + '%', '%' + query + '%'), commit=True)
+            self._execute_db_command(sql_query,
+                                     ('%' + query + '%', '%' + query + '%',
+                                      '%' + query + '%', '%' + query + '%'),
+                                     commit=True)
             results = self.db_cursor.fetchall()
 
             # 记录操作到trace表
@@ -434,7 +477,8 @@ class Twitter:
             self._execute_db_command(
                 trace_insert_query,
                 (user_id, current_time, ActionType.SEARCH_USER.value,
-                 str(action_info)), commit=True)
+                 str(action_info)),
+                commit=True)
 
             # If no results found, return a dict with 'success' key as False:
             if not results:
@@ -480,9 +524,9 @@ class Twitter:
             follow_insert_query = (
                 "INSERT INTO follow (follower_id, followee_id, created_at) "
                 "VALUES (?, ?, ?)")
-            self._execute_db_command(
-                follow_insert_query, (user_id, followee_id, current_time),
-                commit=True)
+            self._execute_db_command(follow_insert_query,
+                                     (user_id, followee_id, current_time),
+                                     commit=True)
             follow_id = self.db_cursor.lastrowid  # 获取刚刚插入的关注记录的ID
 
             # 更新user表中的following字段
@@ -507,7 +551,8 @@ class Twitter:
             self._execute_db_command(
                 trace_insert_query,
                 (user_id, current_time, ActionType.FOLLOW.value,
-                 str(action_info)), commit=True)
+                 str(action_info)),
+                commit=True)
             return {"success": True, "follow_id": follow_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -521,11 +566,9 @@ class Twitter:
             # 检查是否存在关注记录，并获取其ID
             follow_check_query = (
                 "SELECT follow_id FROM follow WHERE follower_id = ? AND "
-                "followee_id = ?"
-            )
-            self._execute_db_command(
-                follow_check_query, (user_id, followee_id)
-            )
+                "followee_id = ?")
+            self._execute_db_command(follow_check_query,
+                                     (user_id, followee_id))
             follow_record = self.db_cursor.fetchone()
             if not follow_record:
                 return {
@@ -536,35 +579,33 @@ class Twitter:
 
             # 在follow表中删除记录
             follow_delete_query = "DELETE FROM follow WHERE follow_id = ?"
-            self._execute_db_command(follow_delete_query, (follow_id,),
+            self._execute_db_command(follow_delete_query, (follow_id, ),
                                      commit=True)
 
             # 更新user表中的following字段
             user_update_query1 = (
                 "UPDATE user SET num_followings = num_followings - 1 "
-                "WHERE user_id = ?"
-            )
-            self._execute_db_command(user_update_query1, (user_id,),
+                "WHERE user_id = ?")
+            self._execute_db_command(user_update_query1, (user_id, ),
                                      commit=True)
 
             # 更新user表中的follower字段
             user_update_query2 = (
                 "UPDATE user SET num_followers = num_followers - 1 "
-                "WHERE user_id = ?"
-            )
-            self._execute_db_command(user_update_query2, (followee_id,),
+                "WHERE user_id = ?")
+            self._execute_db_command(user_update_query2, (followee_id, ),
                                      commit=True)
 
             # 记录操作到trace表
             action_info = {"followee_id": followee_id}
             trace_insert_query = (
                 "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)"
-            )
+                "VALUES (?, ?, ?, ?)")
             self._execute_db_command(
                 trace_insert_query,
                 (user_id, current_time, ActionType.UNFOLLOW.value,
-                 str(action_info)), commit=True)
+                 str(action_info)),
+                commit=True)
             return {
                 "success": True,
                 "follow_id": follow_id  # 返回被删除的关注记录ID
@@ -602,10 +643,10 @@ class Twitter:
             trace_insert_query = (
                 "INSERT INTO trace (user_id, created_at, action, info) "
                 "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.MUTE.value,
-                 str(action_info)), commit=True)
+            self._execute_db_command(trace_insert_query,
+                                     (user_id, current_time,
+                                      ActionType.MUTE.value, str(action_info)),
+                                     commit=True)
             return {"success": True, "mute_id": mute_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -618,39 +659,30 @@ class Twitter:
                 return self._not_signup_error_message(agent_id)
             # 检查是否存在指定的禁言记录，并获取mute_id
             mute_check_query = (
-                "SELECT mute_id FROM mute WHERE muter_id = ? AND mutee_id = ?"
-            )
+                "SELECT mute_id FROM mute WHERE muter_id = ? AND mutee_id = ?")
             self._execute_db_command(mute_check_query, (user_id, mutee_id))
             mute_record = self.db_cursor.fetchone()
             if not mute_record:
                 # 如果不存在禁言记录
-                return {
-                    "success": False,
-                    "error": "No mute record exists."
-                }
+                return {"success": False, "error": "No mute record exists."}
             mute_id = mute_record[0]
 
             # 从mute表中删除指定的禁言记录
-            mute_delete_query = (
-                "DELETE FROM mute WHERE mute_id = ?"
-            )
-            self._execute_db_command(mute_delete_query, (mute_id,),
+            mute_delete_query = ("DELETE FROM mute WHERE mute_id = ?")
+            self._execute_db_command(mute_delete_query, (mute_id, ),
                                      commit=True)
 
             # 记录解除禁言操作到trace表
             action_info = {"mutee_id": mutee_id}
             trace_insert_query = (
                 "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)"
-            )
+                "VALUES (?, ?, ?, ?)")
             self._execute_db_command(
                 trace_insert_query,
                 (user_id, current_time, ActionType.UNMUTE.value,
-                 str(action_info)), commit=True)
-            return {
-                "success": True,
-                "mute_id": mute_id
-            }
+                 str(action_info)),
+                commit=True)
+            return {"success": True, "mute_id": mute_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -675,11 +707,8 @@ class Twitter:
                 LIMIT ?
             """
             # 执行数据库查询
-            self._execute_db_command(
-                sql_query,
-                (start_time, self.trend_top_k),
-                commit=True
-            )
+            self._execute_db_command(sql_query, (start_time, self.trend_top_k),
+                                     commit=True)
             results = self.db_cursor.fetchall()
 
             # 如果没有找到结果，返回一个指示失败的字典
@@ -701,11 +730,9 @@ class Twitter:
                 INSERT INTO trace (user_id, created_at, action, info)
                 VALUES (?, ?, ?, ?)
             """
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, "trend", None),
-                commit=True
-            )
+            self._execute_db_command(trace_insert_query,
+                                     (user_id, current_time, "trend", None),
+                                     commit=True)
             return {"success": True, "tweets": tweets}
         except Exception as e:
             return {"success": False, "error": str(e)}

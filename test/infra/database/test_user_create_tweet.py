@@ -1,12 +1,11 @@
 # File: ./test/infra/test_user_create_tweet.py
 import os
+import os.path as osp
 import sqlite3
 
 import pytest
 
-import os.path as osp
 from twitter.twitter import Twitter  # 确保从你的模块中导入Twitter类
-
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -52,8 +51,7 @@ class MockChannel:
         elif self.call_count == 4:
             assert message[2]["success"] is False
             assert message[2]["error"] == (
-                "Agent 3 have not signed up and have no user id."
-            )
+                "Agent 3 have not signed up and have no user id.")
 
 
 # 定义一个fixture来初始化数据库和Twitter实例

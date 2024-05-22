@@ -46,7 +46,6 @@ class TwitterChannel:
         return message_id
 
     async def read_from_send_queue(self, message_id):
-
         while True:
             if message_id in await self.send_dict.keys():
                 # 尝试获取消息

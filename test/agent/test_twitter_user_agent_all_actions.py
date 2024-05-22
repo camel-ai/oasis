@@ -10,6 +10,7 @@ from social_agent.agent import ActionSpace, TwitterUserAgent
 from twitter.channel import TwitterChannel
 from twitter.config import UserInfo
 from twitter.twitter import Twitter
+from twitter.typing import ActionType
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -52,6 +53,8 @@ async def test_agents_tweeting(setup_twitter):
                 f"hello from {agent.agent_id}")
             await asyncio.sleep(random.uniform(0, 0.1))
             assert return_message["success"] is True
+
+    await channel.write_to_receive_queue((None, None, ActionType.UPDATE_REC))
 
     # 看推荐系统返回tweet
     action_agent = agents[2]
@@ -97,5 +100,5 @@ async def test_agents_tweeting(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    await channel.write_to_receive_queue((None, None, "exit"))
+    await channel.write_to_receive_queue((None, None, ActionType.EXIT))
     await task

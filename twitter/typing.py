@@ -16,3 +16,4 @@ class ActionType(Enum):
     UNMUTE = "unmute"
     TREND = "trend"
     SIGNUP = "sign_up"
+    UPDATE_REC = "update_rec"
