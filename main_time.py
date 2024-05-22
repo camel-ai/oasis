@@ -35,7 +35,7 @@ async def running(num_timestep):
     infra = Twitter(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())
 
-    agents = await generate_agents("./data/test_relationship.csv", channel)
+    agents = await generate_agents("./data/user_all_id_time.csv", channel)
     
     # 一个time step对应simulation里面的12分钟，后续看情况改动
     '''

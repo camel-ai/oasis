@@ -38,7 +38,8 @@ async def generate_agents(agent_info_path, twitter_channel):
         # Randomly assign an MBTI type (temporary, subject to change)
         profile['other_info']['mbti'] = random.choice(mbti_types)
         # Randomly assign an activity level (temporary, subject to change)
-        profile['other_info']['activity_level'] = random.choice(activities)
+        profile['other_info']['activity_level'] = ast.literal_eval(agent_info["activity_level"][i])
+        profile['other_info']['activity_level_frequency'] = ast.literal_eval(agent_info["activity_level_frequency"][i])
 
         user_info = UserInfo(name=agent_info['username'][i],
                              description=agent_info['description'][i],
