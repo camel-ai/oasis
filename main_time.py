@@ -23,15 +23,21 @@ def rank_elements(lst):
     return ranks
 
 async def running(num_timestep):
+
+    os.environ["OPENAI_API_KEY"] = "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"
+
     test_db_filepath = "./db/test.db"
+
+    if os.path.exists("./db/test.db"):
+        os.remove(test_db_filepath)
 
     channel = Twitter_Channel()
     infra = Twitter(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())
 
-    agents = await generate_agents("./data/user_all_id.csv", channel)
+    agents = await generate_agents("./data/test_relationship.csv", channel)
     
-    # 一个time step对应simulation里面的一个小时，后续看情况改动
+    # 一个time step对应simulation里面的12分钟，后续看情况改动
     '''
     一个比较简单的思路为：为每种活跃状态设置一个对应阈值 比如  threshold_dict = {"off_line":0.0, "busy":0.3, "normal":0.6, "active":1} 
     simulation里每过去一个小时新产生一个[random.random() for _ in range(len(agents))] 的 0~1 的随机值列表
@@ -41,12 +47,12 @@ async def running(num_timestep):
     缺点就是目前的激活概率阈值比较简单, 就是靠初始化的数据得到的, 后续在running的时候没有其他变量的影响的话这种方法的可解释性就全部来自于初始化爬到的数据了.
     但是可以先靠这个实现一下
     '''
-    threshold_dict = {"off_line":0.0, "busy":0.3, "normal":0.6, "active":1} 
+    threshold_dict = {"off_line":0.1, "busy":0.3, "normal":0.6, "active":1} 
 
     # 暂时是取当前系统时间戳的小时作为起始时间，后需要做 谣言传播 的话需要将其设置为 source twitter 的 create 时间
     current_time = datetime.now()
     
-    start_hour = current_time.hour
+    start_hour = 1
     simulation_time_hour = start_hour
 
     # 根据开始时间所在小时得到每个agent此时的active level 对应的阈值
@@ -81,6 +87,7 @@ async def running(num_timestep):
                 # print(Fore.RED + f"agent{index}: I am active now" + Fore.RESET)
                 user_active_state_dict[index][int(simulation_time_hour%24)] += 1
                 await agent.perform_action_by_llm()
+                
             else:
                 print(Back.BLUE + f"agent{index}: I am {agent.profile['other_info']['activity_level'][int(simulation_time_hour%24)]} now, don't really feel like checking Twitter." + Back.RESET)
     
