@@ -1,9 +1,9 @@
-
 import asyncio
 import uuid
 
 
 class AsyncSafeDict:
+
     def __init__(self):
         self.dict = {}
         self.lock = asyncio.Lock()
@@ -25,10 +25,11 @@ class AsyncSafeDict:
             return list(self.dict.keys())
 
 
-class Twitter_Channel:
+class TwitterChannel:
+
     def __init__(self):
         self.receive_queue = asyncio.Queue()  # 用于存储接收的消息
-        self.send_dict = AsyncSafeDict()      # 使用异步安全字典存储要发送的消息
+        self.send_dict = AsyncSafeDict()  # 使用异步安全字典存储要发送的消息
 
     async def receive_from(self):
         message = await self.receive_queue.get()
