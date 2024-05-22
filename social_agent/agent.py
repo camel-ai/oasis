@@ -54,7 +54,7 @@ class TwitterUserAgent:
         user_msg = BaseMessage.make_user_message(
             role_name="User",
             content=(f"Choose to perform any twitter action based "
-                     f"on existing tweets: {tweets['tweets']}"))
+                     f"on existing tweets: {tweets['tweets']}, limit your action in retweet"))
 
         self.memory.write_record(MemoryRecord(user_msg,
                                               OpenAIBackendRole.USER))
