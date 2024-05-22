@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import networkx as nx
 
 from social_agent.agent import TwitterUserAgent
