@@ -12,7 +12,7 @@ import os
 
 
 async def running(num_timestep):
-    os.environ["OPENAI_API_KEY"] = "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"
+
     test_db_filepath = "./data/mock_twitter.db"
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
