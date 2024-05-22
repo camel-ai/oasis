@@ -1,12 +1,11 @@
 # File: ./test/infra/test_twitter_tweet.py
 import os
+import os.path as osp
 import sqlite3
 
 import pytest
 
-import os.path as osp
 from twitter.twitter import Twitter  # 确保从你的模块中导入Twitter类
-
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -82,15 +81,11 @@ async def test_create_like_unlike_tweet(setup_twitter):
         cursor.execute(
             ("INSERT INTO user "
              "(user_id, agent_id, user_name, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"),
-            (1, 1, "user1", 0, 0)
-        )
+             "VALUES (?, ?, ?, ?, ?)"), (1, 1, "user1", 0, 0))
         cursor.execute(
             ("INSERT INTO user "
              "(user_id, agent_id, user_name, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"),
-            (2, 2, "user2", 2, 4)
-        )
+             "VALUES (?, ?, ?, ?, ?)"), (2, 2, "user2", 2, 4))
         conn.commit()
 
         await twitter.running()

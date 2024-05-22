@@ -6,10 +6,11 @@ import sqlite3
 
 import pytest
 
-from twitter.create_database import create_db
+from twitter.database import (create_db, fetch_rec_table_as_matrix,
+                              fetch_table_from_db)
 
 parent_folder = osp.dirname(osp.abspath(__file__))
-db_filepath = osp.join(parent_folder, "mock_twitter.db")
+db_filepath = osp.join(parent_folder, "test.db")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -28,8 +29,8 @@ def test_user_operations():
     cursor.execute(
         ("INSERT INTO user (agent_id, user_name, name, bio, created_at, "
          "num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?)"),
-        (2, 'testuser', 'Test User', 'A test user', '2024-04-21 22:02:42',
-         0, 0))
+        (2, 'testuser', 'Test User', 'A test user', '2024-04-21 22:02:42', 0,
+         0))
     conn.commit()
 
     # Assert the user was inserted correctly
@@ -54,12 +55,50 @@ def test_user_operations():
     user = cursor.fetchone()
     assert user[3] == 'Updated User'
 
+    cursor.execute(
+        ("INSERT INTO user (agent_id, user_name, name, bio, created_at, "
+         "num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?)"),
+        (1, 'testuser_2', 'Test User_2', 'Another user', '2024-05-21 22:02:42',
+         0, 0))
+    conn.commit()
+
+    expected_result = [{
+        'user_id': 1,
+        'agent_id': 2,
+        'user_name': 'testuser',
+        'name': 'Updated User',
+        'bio': 'A test user',
+        'created_at': '2024-04-21 22:02:42',
+        'num_followings': 0,
+        'num_followers': 0
+    }, {
+        'user_id': 2,
+        'agent_id': 1,
+        'user_name': 'testuser_2',
+        'name': 'Test User_2',
+        'bio': 'Another user',
+        'created_at': '2024-05-21 22:02:42',
+        'num_followings': 0,
+        'num_followers': 0
+    }]
+
+    actual_result = fetch_table_from_db(cursor, 'user')
+
+    # 使用assert语句进行比较
+    assert actual_result == expected_result, "The fetched data does not match."
+
+    cursor.execute(
+        ("INSERT INTO user (agent_id, user_name, name, bio, created_at, "
+         "num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?)"),
+        (3, 'testuser_3', 'Test User_3', 'Third user', '2024-05-21 22:02:42',
+         0, 0))
+    conn.commit()
     # Delete the user
-    cursor.execute("DELETE FROM user WHERE user_name = 'testuser'")
+    cursor.execute("DELETE FROM user WHERE user_name = 'testuser_3'")
     conn.commit()
 
     # Assert the user was deleted correctly
-    cursor.execute("SELECT * FROM user WHERE user_name = 'testuser'")
+    cursor.execute("SELECT * FROM user WHERE user_name = 'testuser_3'")
     assert cursor.fetchone() is None
 
 
@@ -87,6 +126,18 @@ def test_tweet_operations():
     cursor.execute("UPDATE tweet SET content = ? WHERE content = ?",
                    ('Updated tweet', 'This is a test tweet'))
     conn.commit()
+
+    expected_result = [{
+        'tweet_id': 1,
+        'user_id': 1,
+        'content': 'Updated tweet',
+        'created_at': '2024-04-21 22:02:42',
+        'num_likes': 0,
+    }]
+    actual_result = fetch_table_from_db(cursor, 'tweet')
+
+    # 使用assert语句进行比较
+    assert actual_result == expected_result, "The fetched data does not match."
 
     # Assert the tweet was updated correctly
     cursor.execute("SELECT * FROM tweet WHERE content = 'Updated tweet'")
@@ -203,6 +254,15 @@ def test_trace_operations():
     assert trace[2] == 'test_action'
     assert trace[3] == 'test_info'
 
+    expected_result = [{
+        'user_id': 1,
+        'created_at': created_at,
+        'action': 'test_action',
+        'info': 'test_info',
+    }]
+
+    actual_result = fetch_table_from_db(cursor, 'trace')
+    assert actual_result == expected_result
     # Delete the trace
     cursor.execute("DELETE FROM trace WHERE user_id = 1 AND created_at = ?",
                    (created_at, ))
@@ -211,4 +271,41 @@ def test_trace_operations():
     # Assert the trace was deleted correctly
     cursor.execute("SELECT * FROM trace WHERE user_id = 1 AND created_at = ?",
                    (created_at, ))
+    assert cursor.fetchone() is None
+
+
+def test_rec_operations():
+    conn = sqlite3.connect(db_filepath)
+    cursor = conn.cursor()
+    # Insert a trace
+    cursor.execute(("INSERT INTO rec (user_id, tweet_id) "
+                    "VALUES (?, ?)"), (2, 2))
+    cursor.execute(("INSERT INTO rec (user_id, tweet_id) "
+                    "VALUES (?, ?)"), (2, 3))
+    cursor.execute(("INSERT INTO rec (user_id, tweet_id) "
+                    "VALUES (?, ?)"), (1, 3))
+    conn.commit()
+
+    # Assert the rec was inserted correctly
+    cursor.execute("SELECT * FROM rec WHERE user_id = ? AND tweet_id = ?",
+                   (2, 2))
+    record = cursor.fetchone()
+    assert record is not None
+    assert record[0] == 2
+    assert record[1] == 2
+
+    cursor.execute("SELECT * FROM rec WHERE user_id = ? AND tweet_id = ?",
+                   (2, 3))
+    record = cursor.fetchone()
+    assert record is not None
+    assert record[0] == 2
+    assert record[1] == 3
+
+    assert fetch_rec_table_as_matrix(cursor) == [None, [3], [2, 3]]
+    # Delete the rec
+    cursor.execute("DELETE FROM rec WHERE user_id = 2 AND tweet_id = 2")
+    conn.commit()
+
+    # Assert the rec was deleted correctly
+    cursor.execute("SELECT * FROM rec WHERE user_id = 2 AND tweet_id = 2")
     assert cursor.fetchone() is None

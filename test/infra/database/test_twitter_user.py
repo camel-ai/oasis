@@ -1,12 +1,11 @@
 # File: ./test/infra/test_twitter_user.py
 import os
+import os.path as osp
 import sqlite3
 
 import pytest
 
-import os.path as osp
 from twitter.twitter import Twitter  # 确保从你的模块中导入Twitter类
-
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -97,21 +96,15 @@ async def test_follow_user(setup_twitter):
         cursor.execute(
             ("INSERT INTO user "
              "(user_id, agent_id, user_name, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"),
-            (1, 1, "user1", 0, 0)
-        )
+             "VALUES (?, ?, ?, ?, ?)"), (1, 1, "user1", 0, 0))
         cursor.execute(
             ("INSERT INTO user "
              "(user_id, agent_id, user_name, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"),
-            (2, 2, "user2", 2, 4)
-        )
+             "VALUES (?, ?, ?, ?, ?)"), (2, 2, "user2", 2, 4))
         cursor.execute(
             ("INSERT INTO user "
              "(user_id, agent_id, user_name, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"),
-            (3, 3, "user3", 3, 5)
-        )
+             "VALUES (?, ?, ?, ?, ?)"), (3, 3, "user3", 3, 5))
         conn.commit()
 
         await twitter.running()
@@ -153,18 +146,14 @@ async def test_follow_user(setup_twitter):
         assert cursor.fetchone() is not None, "Unmute action not traced"
 
         # 验证user表的num_followings和num_followers是否正确更新
-        cursor.execute(
-            "SELECT num_followings FROM user WHERE user_id = ?",
-            (1,)
-        )
+        cursor.execute("SELECT num_followings FROM user WHERE user_id = ?",
+                       (1, ))
         result = cursor.fetchone()
-        assert result == (1,), "follow action not update user table"
-        cursor.execute(
-            "SELECT num_followers FROM user WHERE user_id = ?",
-            (3,)
-        )
+        assert result == (1, ), "follow action not update user table"
+        cursor.execute("SELECT num_followers FROM user WHERE user_id = ?",
+                       (3, ))
         result = cursor.fetchone()
-        assert result == (5,), "Unfollow action not update user table"
+        assert result == (5, ), "Unfollow action not update user table"
     finally:
         # 清理
         conn.close()

@@ -1,12 +1,11 @@
 # File: ./test/infra/test_twitter_search.py
 import os
+import os.path as osp
 import sqlite3
 
 import pytest
 
-import os.path as osp
 from twitter.twitter import Twitter  # 确保从你的模块中导入Twitter类
-
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
