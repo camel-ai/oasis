@@ -11,7 +11,7 @@ test_db_filepath = osp.join(parent_folder, "mock_twitter.db")
 
 
 async def running():
-    agent_info_path = "./test/test_data/user_all_id.csv"
+    agent_info_path = "./test/test_data/user_all_id_time.csv"
     channel = Twitter_Channel()
     infra = Twitter(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())

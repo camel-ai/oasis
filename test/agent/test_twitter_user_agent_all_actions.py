@@ -99,5 +99,10 @@ async def test_agents_tweeting(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
+    # retweet
+    return_message = await action_agent.twitter_action.action_retweet(1)
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
     await channel.write_to_receive_queue((None, None, ActionType.EXIT))
     await task
