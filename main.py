@@ -7,6 +7,7 @@ from twitter.channel import Twitter_Channel
 from twitter.twitter import Twitter
 
 async def running():
+    
     test_db_filepath = "./db/test.db"
 
     channel = Twitter_Channel()
