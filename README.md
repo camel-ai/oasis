@@ -1,6 +1,13 @@
+# Pipeline
+
 ## Quickstart
 
 ### Step 1: Create and Activate a Virtual Environment
+For win:
+```bash
+python -m venv camel_ss       # Create virtual environment
+camel_ss\Scripts\activate  # Activate virtual environment
+```
 For macOS:
 ```bash
 python -m venv camel_ss       # Create virtual environment
@@ -18,4 +25,17 @@ pip install -r requirements.txt # Install packages from requirements file
 
 ```bash
 python main.py                # Run the program
+# You will be prompted to input 'AgentCount' which is the size of the AI-Society/Sandbox
+```
+
+## pytest
+
+For win:
+```bash
+pytest test
+```
+
+For Mac OS X:
+```bash
+pytest
 ```

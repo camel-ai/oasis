@@ -17,3 +17,4 @@ class ActionType(Enum):
     TREND = "trend"
     SIGNUP = "sign_up"
     RETWEET = "retweet"
+    UPDATE_REC = "update_rec"

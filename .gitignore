@@ -2,8 +2,7 @@
 **/.DS_Store
 
 
-## simula-db
-twitter_simulation.db
+## data
 *.db
 
 

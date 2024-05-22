@@ -2,9 +2,9 @@ name: Python application CI
 
 on:
   push:
-    branches: [main] # 只有在 main 分支推送时触发
+    branches: [personal_ziyi] # 只有在 personal_ziyi 分支推送时触发
   pull_request:
-    branches: [main] # 只有在 main 分支的拉取请求时触发
+    branches: [personal_ziyi] # 只有在 personal_ziyi 分支的拉取请求时触发
 
 jobs:
   build:
@@ -25,6 +25,8 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run tests
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
         pytest 
 

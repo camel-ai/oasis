@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import os.path as osp
 import sqlite3
+from typing import List, Dict, Any
 
 SCHEMA_DIR = "twitter/schema"
 DB_DIR = "db"
@@ -15,8 +16,9 @@ FOLLOW_SCHEMA_SQL = "follow.sql"
 MUTE_SCHEMA_SQL = "mute.sql"
 LIKE_SCHEMA_SQL = "like.sql"
 TRACE_SCHEMA_SQL = "trace.sql"
+REC_SCHEMA_SQL = "rec.sql"
 
-TABLE_NAMES = {"user", "tweet", "follow", "mute", "like", "trace"}
+TABLE_NAMES = {"user", "tweet", "follow", "mute", "like", "trace", "rec"}
 
 
 def get_db_path() -> str:
@@ -84,6 +86,12 @@ def create_db(db_path: str | None = None):
             trace_sql_script = sql_file.read()
         cursor.executescript(trace_sql_script)
 
+        # Read and execute the trace table SQL script:
+        rec_sql_path = osp.join(schema_dir, REC_SCHEMA_SQL)
+        with open(rec_sql_path, 'r') as sql_file:
+            rec_sql_script = sql_file.read()
+        cursor.executescript(rec_sql_script)
+
         # Commit the changes:
         conn.commit()
 
@@ -138,6 +146,49 @@ def print_db_tables_summary():
 
     # Close the database connection
     conn.close()
+
+
+def fetch_table_from_db(
+        cursor: sqlite3.Cursor, table_name: str) -> List[Dict[str, Any]]:
+    cursor.execute(f"SELECT * FROM {table_name}")
+    columns = [description[0] for description in cursor.description]
+    data_dicts = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    return data_dicts
+
+
+def fetch_rec_table_as_matrix(cursor: sqlite3.Cursor) -> List[List[int]]:
+
+    # 首先，查询user表中的所有user_id, 假设从1开始，连续
+    cursor.execute("SELECT user_id FROM user ORDER BY user_id")
+    user_ids = [row[0] for row in cursor.fetchall()]
+
+    # 接着，查询rec表中的所有记录
+    cursor.execute(
+        "SELECT user_id, tweet_id FROM rec ORDER BY user_id, tweet_id")
+    rec_rows = cursor.fetchall()
+
+    # 初始化一个字典，为每个user_id分配一个空列表
+    user_tweets = {user_id: [] for user_id in user_ids}
+
+    # 使用查询到的rec表记录填充字典
+    for user_id, tweet_id in rec_rows:
+        if user_id in user_tweets:
+            user_tweets[user_id].append(tweet_id)
+    # 将字典转换为矩阵形式
+    matrix = [None] + [user_tweets[user_id] for user_id in user_ids]
+    return matrix
+
+
+def insert_matrix_into_rec_table(
+        cursor: sqlite3.Cursor, matrix: List[List[int]]) -> None:
+    # 遍历matrix，跳过索引0的占位符
+    for user_id, tweet_ids in enumerate(matrix[1:], start=1):
+        for tweet_id in tweet_ids:
+            # 对每个user_id和tweet_id的组合，插入到rec表中
+            cursor.execute(
+                "INSERT INTO rec (user_id, tweet_id) VALUES (?, ?)",
+                (user_id, tweet_id)
+            )
 
 
 if __name__ == "__main__":

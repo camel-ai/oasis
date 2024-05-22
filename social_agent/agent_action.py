@@ -1,101 +1,32 @@
-import asyncio
-import json
-import os
-import time
+from typing import Any
 
-
-from colorama import Fore
-
-from camel.configs import FunctionCallingConfig
 from camel.functions import OpenAIFunction
-from camel.memories import ChatHistoryMemory, MemoryRecord
 
-from camel.memories.context_creators.score_based import ScoreBasedContextCreator
-from camel.messages import BaseMessage
-from camel.models import ModelFactory, BaseModelBackend
-from camel.types import ModelType, OpenAIBackendRole
 from twitter.channel import Twitter_Channel
-
-from twitter.twitter import Twitter
 from twitter.typing import ActionType
 
 
-class TwitterUserAgent:
+class TwitterAction:
 
-    def __init__(self, agent_id, real_name, description, profile, channel, model_type=ModelType.GPT_3_5_TURBO):
-        self.user_id = None
+    def __init__(self, agent_id: int, channel: Twitter_Channel):
         self.agent_id = agent_id
-        self.real_name = real_name
-        self.description = description
-        self.profile = profile
-
         self.channel = channel
 
-        # tweet follow unfollow like unlike
-        function_list = [OpenAIFunction(func) for func in
-                         [self.action_create_tweet, self.action_follow, self.action_unfollow, self.action_like,
-                          self.action_unlike, self.action_search_tweets, self.action_search_user, self.action_trend,
-                          self.action_refresh, self.action_mute, self.action_unmute, self.action_retweet]]
-        assistant_model_config = FunctionCallingConfig.from_openai_function_list(
-            function_list=function_list,
-            kwargs=dict(temperature=0.0),
-        )
-        self.model_backend: BaseModelBackend = ModelFactory.create(
-            model_type, assistant_model_config.__dict__)
-        self.model_token_limit = self.model_backend.token_limit
-        context_creator = ScoreBasedContextCreator(
-            self.model_backend.token_counter,
-            self.model_token_limit,
-        )
-        self.memory = ChatHistoryMemory(
-            context_creator, window_size=3)
-        self.system_message = BaseMessage.make_assistant_message(
-            role_name="User",
-            content=f"You are a twitter user agent named {self.real_name}. Your profile is: {self.description}\n. choose your action next step in the following list : create_tweet, follow user, unfollow user, like tweet, unlike tweet, retweet, search_tweets, search_user, trend, refresh, mute, unmute." 
-        )
-        system_record = MemoryRecord(self.system_message,
-                                     OpenAIBackendRole.SYSTEM)
-        self.memory.write_record(system_record)
-        self.home_content = []
+    def get_openai_function_list(self) -> list[OpenAIFunction]:
+        return [
+            OpenAIFunction(func) for func in [
+                self.action_create_tweet, self.action_follow,
+                self.action_unfollow, self.action_like, self.action_unlike,
+                self.action_search_tweets, self.action_search_user,
+                self.action_trend, self.action_refresh, self.action_mute,
+                self.action_unmute
+            ]
+        ]
 
-    async def perform_action_by_llm(self):
-        # 1. get 5 tweets from followees
-        tweets = await self.action_refresh()
-
-        print(Fore.LIGHTBLUE_EX + f"Agent {self.agent_id} fetched tweets after refreshing: {tweets}" + Fore.RESET)
-        # 2. get context form memory
-        user_msg = BaseMessage.make_user_message(
-            role_name="User",
-            content="After refreshing, you see some tweets:" + str(tweets) + "you want to perform some actions that best reflects your current inclination based on the twitter content and your profile. do not limit your action into like tweet only",
-        )
-
-        self.memory.write_record(MemoryRecord(user_msg, OpenAIBackendRole.USER))
-
-        openai_messages, num_tokens = self.memory.get_context()
-
-        print(Fore.LIGHTCYAN_EX + f"Agent {self.agent_id} got context from memory: {openai_messages}" + Fore.RESET)
-
-        # Obtain the model's response
-        response = self.model_backend.run(openai_messages)
-
-        # 3. use llm to choose action
-        print(Fore.RED + "Response: " + str(response.choices[0].message) + Fore.RESET)
-
-        # 4. perform action
-        if response.choices[0].message.function_call:
-            name = response.choices[0].message.function_call.name
-            args = json.loads(response.choices[0].message.function_call.arguments)
-            print(f"Agent {self.agent_id} is performing action: {name} with args: {args}")
-            await getattr(self, name)(**args)
-
-    async def _perform_action(self, message, action_type):
-        """根据传入的action_type和message执行action, 并得到返回值"""
+    async def perform_action(self, message: Any, action_type: str):
         message_id = await self.channel.write_to_receive_queue(
             (self.agent_id, message, action_type))
-
         response = await self.channel.read_from_send_queue(message_id)
-        # 发送一个动作到Twitter实例并等待响应
-        print(f"{action_type}\tReceived response: {response[2]}")
         return response[2]
 
     async def action_sign_up(self, user_name: str, name: str, bio: str):
@@ -121,11 +52,10 @@ class TwitterUserAgent:
             {'success': True, 'user_id': 2}
         """
 
-        print(f"Agent {self.agent_id} is signing up with user_name: {user_name}, name: {name}, bio: {bio}")
-
+        print(f"Agent {self.agent_id} is signing up with "
+              f"user_name: {user_name}, name: {name}, bio: {bio}")
         user_message = (user_name, name, bio)
-        return await self._perform_action(
-            user_message, ActionType.SIGNUP.value)
+        return await self.perform_action(user_message, ActionType.SIGNUP.value)
 
     async def action_refresh(self):
         r"""Refreshes to get recommended tweets.
@@ -138,8 +68,8 @@ class TwitterUserAgent:
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
-                maps to a boolean indicating whether the refresh was
-                uccessful. The 'tweets' key maps to a list of dictionaries,
+                maps to a boolean indicating whether the refresh is
+                successful. The 'tweets' key maps to a list of dictionaries,
                 each representing a tweet with its details.
 
             Example of a successful return:
@@ -163,8 +93,7 @@ class TwitterUserAgent:
                 ]
             }
         """
-        return await self._perform_action(
-            None, ActionType.REFRESH.value)
+        return await self.perform_action(None, ActionType.REFRESH.value)
 
     async def action_create_tweet(self, content: str):
         r"""Creates a new tweet with the given content.
@@ -185,8 +114,8 @@ class TwitterUserAgent:
             Example of a successful return:
             {'success': True, 'tweet_id': 50}
         """
-        return await self._perform_action(
-            content, ActionType.CREATE_TWEET.value)
+        return await self.perform_action(content,
+                                         ActionType.CREATE_TWEET.value)
 
     async def action_like(self, tweet_id: int):
         r"""Creates a new like for a specified tweet.
@@ -212,8 +141,7 @@ class TwitterUserAgent:
             Attempting to like a tweet that the user has already liked will
             result in a failure.
         """
-        return await self._perform_action(
-            tweet_id, ActionType.LIKE.value)
+        return await self.perform_action(tweet_id, ActionType.LIKE.value)
 
     async def action_unlike(self, tweet_id: int):
         """Removes a like based on the tweet's ID.
@@ -236,8 +164,7 @@ class TwitterUserAgent:
             Attempting to remove a like for a tweet that the user has not
             previously liked will result in a failure.
         """
-        return await self._perform_action(
-            tweet_id, ActionType.UNLIKE.value)
+        return await self.perform_action(tweet_id, ActionType.UNLIKE.value)
 
     async def action_search_tweets(self, query: str):
         r"""searches tweets based on a given query.
@@ -245,7 +172,7 @@ class TwitterUserAgent:
         This method performs a search operation in the database for tweets
         that match the given query string. The search considers the
         tweet's content, tweet ID, and user ID. It returns a dictionary
-        indicating the operation's uccess and, if successful, a list of
+        indicating the operation's success and, if successful, a list of
         tweets that match the query.
 
         Args:
@@ -274,8 +201,7 @@ class TwitterUserAgent:
                 ]
             }
         """
-        return await self._perform_action(
-            query, ActionType.SEARCH_TWEET.value)
+        return await self.perform_action(query, ActionType.SEARCH_TWEET.value)
 
     async def action_search_user(self, query: str):
         r"""Searches users based on a given query.
@@ -314,11 +240,10 @@ class TwitterUserAgent:
                 ]
             }
         """
-        return await self._perform_action(
-            query, ActionType.SEARCH_USER.value)
+        return await self.perform_action(query, ActionType.SEARCH_USER.value)
 
     async def action_follow(self, followee_id: int):
-        r"""Follow a user.
+        r"""Follow a users.
 
         This method allows agent to follow another user (followee).
         It checks if the agent initiating the follow request has a
@@ -336,11 +261,10 @@ class TwitterUserAgent:
             Example of a successful return:
             {"success": True, "follow_id": 123}
         """
-        return await self._perform_action(
-            followee_id, ActionType.FOLLOW.value)
+        return await self.perform_action(followee_id, ActionType.FOLLOW.value)
 
     async def action_unfollow(self, followee_id: int):
-        r"""Unfollow a user.
+        r"""Unfollow a users.
 
         This method allows agent to unfollow another user (followee). It
         checks if the agent initiating the unfollow request has a
@@ -360,8 +284,8 @@ class TwitterUserAgent:
             Example of a successful return:
             {"success": True, "follow_id": 123}
         """
-        return await self._perform_action(
-            followee_id, ActionType.UNFOLLOW.value)
+        return await self.perform_action(followee_id,
+                                         ActionType.UNFOLLOW.value)
 
     async def action_mute(self, mutee_id: int):
         r"""Mutes a user.
@@ -380,8 +304,7 @@ class TwitterUserAgent:
             Example of a successful return:
             {"success": True, "mutee_id": 123}
         """
-        return await self._perform_action(
-            mutee_id, ActionType.MUTE.value)
+        return await self.perform_action(mutee_id, ActionType.MUTE.value)
 
     async def action_unmute(self, mutee_id: int):
         r"""Unmutes a user.
@@ -400,8 +323,7 @@ class TwitterUserAgent:
             Example of a successful return:
             {"success": True, "mutee_id": 123}
         """
-        return await self._perform_action(
-            mutee_id, ActionType.UNMUTE.value)
+        return await self.perform_action(mutee_id, ActionType.UNMUTE.value)
 
     async def action_trend(self):
         r"""Fetches the top trending tweets within a predefined time period.
@@ -432,64 +354,4 @@ class TwitterUserAgent:
             ]
         }
         """
-        return await self._perform_action(
-            None, ActionType.TREND.value)
-
-    async def action_retweet(self, tweet_id: int):
-        r"""Retweet a specified tweet.
-
-        This method invokes an asynchronous action to Retweet a specified 
-        tweet. It is identified by the given tweet ID. Upon successful
-        execution, it returns a dictionary indicating success and the ID of
-        the newly created retweet.
-
-        Args:
-            tweet_id (int): The ID of the tweet to be liked.
-
-        Returns:
-            dict: A dictionary with two key-value pairs. The 'success' key
-                maps to a boolean indicating whether the Retweet creation was
-                successful. The 'tweet_id' key maps to the integer ID of the
-                newly created retweet.
-
-            Example of a successful return:
-            {"success": True, "tweet_id": 123}
-
-        Note:
-            Attempting to retweet a tweet that the user has already retweet will
-            result in a failure.
-        """
-        return await self._perform_action(
-            tweet_id, ActionType.RETWEET.value)
-
-async def running():
-
-    test_db_filepath = "./test.db"
-
-    channel = Twitter_Channel()
-    infra = Twitter(test_db_filepath, channel)
-    task = asyncio.create_task(infra.running())
-
-    agent = TwitterUserAgent(1, "Alice", channel)
-    await agent.action_sign_up("Alice", "Alice", "Alice is a girl.")
-    await agent.action_create_tweet("I have a dream. Can you share your dream with me?")
-
-    agent2 = TwitterUserAgent(2, "Bob", channel, "You love singing and you want to be a singer. You like creating "
-                                                 "tweets about music.")
-    await agent2.action_sign_up("Bob", "Bob", "BoB")
-    await agent2.action_retweet(tweet_id=1)
-    '''
-    await agent2.perform_action_by_llm()
-    time.sleep(10)
-    await agent2.perform_action_by_llm()
-    time.sleep(10)
-    await agent2.perform_action_by_llm()
-    time.sleep(10)
-    '''
-
-
-    await channel.write_to_receive_queue((None, None, "exit"))
-    await task
-
-if __name__ == "__main__":
-    asyncio.run(running())
+        return await self.perform_action(None, ActionType.TREND.value)
