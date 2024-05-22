@@ -35,7 +35,7 @@ class TwitterUserAgent:
         function_list = [OpenAIFunction(func) for func in
                          [self.action_create_tweet, self.action_follow, self.action_unfollow, self.action_like,
                           self.action_unlike, self.action_search_tweets, self.action_search_user, self.action_trend,
-                          self.action_refresh, self.action_mute, self.action_unmute]]
+                          self.action_refresh, self.action_mute, self.action_unmute, self.action_retweet]]
         assistant_model_config = FunctionCallingConfig.from_openai_function_list(
             function_list=function_list,
             kwargs=dict(temperature=0.0),
@@ -51,7 +51,7 @@ class TwitterUserAgent:
             context_creator, window_size=3)
         self.system_message = BaseMessage.make_assistant_message(
             role_name="User",
-            content=f"You are a twitter user agent named {self.real_name}. Your profile is: {self.description}\n. choose your action next step in the following list: create_tweet, follow user, unfollow user, like tweet, unlike tweet, search tweets, search user, trend, refresh, mute, unmute."
+            content=f"You are a twitter user agent named {self.real_name}. Your profile is: {self.description}\n. choose your action next step in the following list : create_tweet, follow user, unfollow user, like tweet, unlike tweet, retweet, search_tweets, search_user, trend, refresh, mute, unmute." 
         )
         system_record = MemoryRecord(self.system_message,
                                      OpenAIBackendRole.SYSTEM)
@@ -66,7 +66,7 @@ class TwitterUserAgent:
         # 2. get context form memory
         user_msg = BaseMessage.make_user_message(
             role_name="User",
-            content="After refreshing, you see some tweets, you want to perform some actions based on these tweets: " + str(tweets),
+            content="After refreshing, you see some tweets:" + str(tweets) + "you want to perform some actions that best reflects your current inclination based on the twitter content and your profile. do not limit your action into like tweet only",
         )
 
         self.memory.write_record(MemoryRecord(user_msg, OpenAIBackendRole.USER))
@@ -318,7 +318,7 @@ class TwitterUserAgent:
             query, ActionType.SEARCH_USER.value)
 
     async def action_follow(self, followee_id: int):
-        r"""Follow a users.
+        r"""Follow a user.
 
         This method allows agent to follow another user (followee).
         It checks if the agent initiating the follow request has a
@@ -340,7 +340,7 @@ class TwitterUserAgent:
             followee_id, ActionType.FOLLOW.value)
 
     async def action_unfollow(self, followee_id: int):
-        r"""Unfollow a users.
+        r"""Unfollow a user.
 
         This method allows agent to unfollow another user (followee). It
         checks if the agent initiating the unfollow request has a
@@ -435,6 +435,32 @@ class TwitterUserAgent:
         return await self._perform_action(
             None, ActionType.TREND.value)
 
+    async def action_retweet(self, tweet_id: int):
+        r"""Retweet a specified tweet.
+
+        This method invokes an asynchronous action to Retweet a specified 
+        tweet. It is identified by the given tweet ID. Upon successful
+        execution, it returns a dictionary indicating success and the ID of
+        the newly created retweet.
+
+        Args:
+            tweet_id (int): The ID of the tweet to be liked.
+
+        Returns:
+            dict: A dictionary with two key-value pairs. The 'success' key
+                maps to a boolean indicating whether the Retweet creation was
+                successful. The 'tweet_id' key maps to the integer ID of the
+                newly created retweet.
+
+            Example of a successful return:
+            {"success": True, "tweet_id": 123}
+
+        Note:
+            Attempting to retweet a tweet that the user has already retweet will
+            result in a failure.
+        """
+        return await self._perform_action(
+            tweet_id, ActionType.RETWEET.value)
 
 async def running():
 
@@ -451,15 +477,19 @@ async def running():
     agent2 = TwitterUserAgent(2, "Bob", channel, "You love singing and you want to be a singer. You like creating "
                                                  "tweets about music.")
     await agent2.action_sign_up("Bob", "Bob", "BoB")
+    await agent2.action_retweet(tweet_id=1)
+    '''
     await agent2.perform_action_by_llm()
     time.sleep(10)
     await agent2.perform_action_by_llm()
     time.sleep(10)
     await agent2.perform_action_by_llm()
     time.sleep(10)
+    '''
+
+
     await channel.write_to_receive_queue((None, None, "exit"))
     await task
-
 
 if __name__ == "__main__":
     asyncio.run(running())
