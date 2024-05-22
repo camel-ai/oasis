@@ -8,7 +8,7 @@ from test.show_db import print_db_contents
 
 import pytest
 
-from twitter.channel import TwitterChannel
+from twitter.channel import Twitter_Channel
 from twitter.twitter import Twitter
 from twitter.typing import ActionType
 
@@ -27,7 +27,7 @@ def setup_db():
 @pytest.mark.asyncio
 async def test_update_rec_table(setup_db):
     try:
-        channel = TwitterChannel()
+        channel = Twitter_Channel()
         infra = Twitter(test_db_filepath, channel)
         # 在测试开始之前，将3个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)

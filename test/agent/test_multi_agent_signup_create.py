@@ -7,8 +7,8 @@ import sqlite3
 
 import pytest
 
-from social_agent.agent import ActionSpace, TwitterUserAgent
-from twitter.channel import TwitterChannel
+from social_agent.agent import TwitterUserAgent
+from twitter.channel import Twitter_Channel
 from twitter.config import UserInfo
 from twitter.twitter import Twitter
 
@@ -30,7 +30,7 @@ async def test_agents_tweeting(setup_twitter):
     M = 3  # 每个用户要发送的推文数量
 
     agents = []
-    channel = TwitterChannel()
+    channel = Twitter_Channel()
     infra = Twitter(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())
 
@@ -42,16 +42,15 @@ async def test_agents_tweeting(setup_twitter):
         user_info = UserInfo(name=real_name,
                              description=description,
                              profile=profile)
-        action_space = ActionSpace(i, channel)
-        agent = TwitterUserAgent(i, user_info, action_space, channel)
-        await agent.action_space.action_sign_up(f"user{i}0101", f"User{i}",
-                                                "A bio.")
+        agent = TwitterUserAgent(i, user_info, channel)
+        await agent.twitter_action.action_sign_up(f"user{i}0101", f"User{i}",
+                                                  "A bio.")
         agents.append(agent)
 
     # 发送推文
     for agent in agents:
         for _ in range(M):
-            await agent.action_space.action_create_tweet(
+            await agent.twitter_action.action_create_tweet(
                 f"hello from {agent.agent_id}")
             await asyncio.sleep(random.uniform(0, 0.1))
 
