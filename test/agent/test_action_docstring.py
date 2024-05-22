@@ -2,7 +2,7 @@ from typing import List
 
 from camel.functions import OpenAIFunction
 
-from social_agent.agent import ActionSpace
+from social_agent.agent import TwitterAction
 
 
 def test_transfer_to_openai_function():
@@ -10,18 +10,18 @@ def test_transfer_to_openai_function():
     # 即正确生成了openai schema，并可以被camel Chatagent调用。
     ACTION_FUNCS: List[OpenAIFunction] = [
         OpenAIFunction(func) for func in [
-            ActionSpace.action_sign_up,
-            ActionSpace.action_refresh,
-            ActionSpace.action_create_tweet,
-            ActionSpace.action_like,
-            ActionSpace.action_unlike,
-            ActionSpace.action_search_tweets,
-            ActionSpace.action_search_user,
-            ActionSpace.action_follow,
-            ActionSpace.action_unfollow,
-            ActionSpace.action_mute,
-            ActionSpace.action_unmute,
-            ActionSpace.action_trend,
+            TwitterAction.action_sign_up,
+            TwitterAction.action_refresh,
+            TwitterAction.action_create_tweet,
+            TwitterAction.action_like,
+            TwitterAction.action_unlike,
+            TwitterAction.action_search_tweets,
+            TwitterAction.action_search_user,
+            TwitterAction.action_follow,
+            TwitterAction.action_unfollow,
+            TwitterAction.action_mute,
+            TwitterAction.action_unmute,
+            TwitterAction.action_trend,
         ]
     ]
     assert ACTION_FUNCS is not None
