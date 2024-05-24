@@ -126,7 +126,7 @@ class TwitterAction:
         the newly created retweet.
 
         Args:
-            tweet_id (int): The ID of the tweet to be liked.
+            tweet_id (int): The ID of the tweet to be retweet.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
