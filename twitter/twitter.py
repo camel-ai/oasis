@@ -124,7 +124,8 @@ class Twitter:
                 await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.RETWEET:
-                result = await self.retweet(agent_id=agent_id, tweet_id=message)
+                result = await self.retweet(agent_id=agent_id,
+                                            tweet_id=message)
                 await self.channel.send_to((message_id, agent_id, result))
 
             else:
@@ -285,59 +286,61 @@ class Twitter:
             self._execute_db_command(
                 trace_insert_query,
                 (user_id, current_time, ActionType.CREATE_TWEET.value,
-                 str(action_info)), commit=True)
+                 str(action_info)),
+                commit=True)
             return {"success": True, "tweet_id": tweet_id}
 
         except Exception as e:
             return {"success": False, "error": str(e)}
-        
-    async def retweet(self, agent_id: int, tweet_id:int):
+
+    async def retweet(self, agent_id: int, tweet_id: int):
         current_time = datetime.now()
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
                 return self._not_signup_error_message(agent_id)
-            
+
             # 查询要转发的推特内容
             sql_query = (
                 "SELECT tweet_id, user_id, content, created_at, num_likes "
                 "FROM tweet "
                 "WHERE tweet_id = ? ")
             # 执行数据库查询
-            self._execute_db_command(
-                sql_query,
-                (tweet_id,),
-                commit=True)
+            self._execute_db_command(sql_query, (tweet_id, ), commit=True)
             results = self.db_cursor.fetchall()
             if not results:
                 return {"success": False, "error": "Tweet not found."}
-            
+
             orig_content = results[0][2]
             orig_like = results[0][-1]
             orig_user_id = results[0][1]
 
-            retweet_content = f"user{agent_id+1} retweet from user{str(orig_user_id)}. origianl_tweet: {orig_content}" # 转发的推特标识一下是从哪个user转的，方便判断
-            
+            # 转发的推特标识一下是从哪个user转的，方便判断
+            retweet_content = (
+                f"user{agent_id+1} retweet from user{str(orig_user_id)}. "
+                f"original_tweet: {orig_content}")
+
             # 确保此前未转发过
             retweet_check_query = (
                 "SELECT * FROM 'tweet' WHERE content LIKE ? ")
-            self._execute_db_command(retweet_check_query, (retweet_content,))
+            self._execute_db_command(retweet_check_query, (retweet_content, ))
             if self.db_cursor.fetchone():
                 # 已存在转发记录
                 return {
                     "success": False,
                     "error": "Retweet record already exists."
                 }
-            
+
             # 插入转推推文记录
             tweet_insert_query = (
                 "INSERT INTO tweet (user_id, content, created_at, num_likes) "
                 "VALUES (?, ?, ?, ?)")
 
-            self._execute_db_command(tweet_insert_query,
-                                     (user_id, retweet_content, current_time, orig_like),
-                                     commit=True)
-            
+            self._execute_db_command(
+                tweet_insert_query,
+                (user_id, retweet_content, current_time, orig_like),
+                commit=True)
+
             tweet_id = self.db_cursor.lastrowid
             # 准备trace记录的信息
             action_info = {"content": retweet_content, "tweet_id": tweet_id}
@@ -347,71 +350,9 @@ class Twitter:
             self._execute_db_command(
                 trace_insert_query,
                 (user_id, current_time, ActionType.RETWEET.value,
-                 str(action_info)), commit=True)
-            
-            return {"success": True, "tweet_id": tweet_id}
-
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-        
-    async def retweet(self, agent_id: int, tweet_id:int):
-        current_time = datetime.now()
-        try:
-            user_id = self._check_agent_userid(agent_id)
-            if not user_id:
-                return self._not_signup_error_message(agent_id)
-            
-            # 查询要转发的推特内容
-            sql_query = (
-                "SELECT tweet_id, user_id, content, created_at, num_likes "
-                "FROM tweet "
-                "WHERE tweet_id = ? ")
-            # 执行数据库查询
-            self._execute_db_command(
-                sql_query,
-                (tweet_id,),
+                 str(action_info)),
                 commit=True)
-            results = self.db_cursor.fetchall()
-            if not results:
-                return {"success": False, "error": "Tweet not found."}
-            
-            orig_content = results[0][2]
-            orig_like = results[0][-1]
-            orig_user_id = results[0][1]
 
-            retweet_content = f"user{agent_id+1} retweet from user{str(orig_user_id)}. origianl_tweet: {orig_content}" # 转发的推特标识一下是从哪个user转的，方便判断
-            
-            # 确保此前未转发过
-            retweet_check_query = (
-                "SELECT * FROM 'tweet' WHERE content LIKE ? ")
-            self._execute_db_command(retweet_check_query, (retweet_content,))
-            if self.db_cursor.fetchone():
-                # 已存在转发记录
-                return {
-                    "success": False,
-                    "error": "Retweet record already exists."
-                }
-            
-            # 插入转推推文记录
-            tweet_insert_query = (
-                "INSERT INTO tweet (user_id, content, created_at, num_likes) "
-                "VALUES (?, ?, ?, ?)")
-
-            self._execute_db_command(tweet_insert_query,
-                                     (user_id, retweet_content, current_time, orig_like),
-                                     commit=True)
-            
-            tweet_id = self.db_cursor.lastrowid
-            # 准备trace记录的信息
-            action_info = {"content": retweet_content, "tweet_id": tweet_id}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.RETWEET.value,
-                 str(action_info)), commit=True)
-            
             return {"success": True, "tweet_id": tweet_id}
 
         except Exception as e:

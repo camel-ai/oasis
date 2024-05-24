@@ -3,12 +3,16 @@
 ## Quickstart
 
 ### Step 1: Create and Activate a Virtual Environment
+
 For win:
+
 ```bash
 python -m venv camel_ss       # Create virtual environment
 camel_ss\Scripts\activate  # Activate virtual environment
 ```
+
 For macOS:
+
 ```bash
 python -m venv camel_ss       # Create virtual environment
 source camel_ss/bin/activate  # Activate virtual environment
@@ -31,11 +35,13 @@ python main.py                # Run the program
 ## pytest
 
 For win:
+
 ```bash
 pytest test
 ```
 
 For Mac OS X:
+
 ```bash
 pytest
 ```

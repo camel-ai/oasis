@@ -116,11 +116,11 @@ class TwitterAction:
         """
         return await self.perform_action(content,
                                          ActionType.CREATE_TWEET.value)
-    
+
     async def action_retweet(self, tweet_id: int):
         r"""Retweet a specified tweet.
 
-        This method invokes an asynchronous action to Retweet a specified 
+        This method invokes an asynchronous action to Retweet a specified
         tweet. It is identified by the given tweet ID. Upon successful
         execution, it returns a dictionary indicating success and the ID of
         the newly created retweet.
@@ -138,12 +138,10 @@ class TwitterAction:
             {"success": True, "tweet_id": 123}
 
         Note:
-            Attempting to retweet a tweet that the user has already retweet will
-            result in a failure.
+            Attempting to retweet a tweet that the user has already retweet
+            will result in a failure.
         """
-        return await self.perform_action(
-            tweet_id, ActionType.RETWEET.value)
-    
+        return await self.perform_action(tweet_id, ActionType.RETWEET.value)
 
     async def action_like(self, tweet_id: int):
         r"""Creates a new like for a specified tweet.

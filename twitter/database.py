@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 import os.path as osp
 import sqlite3
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 SCHEMA_DIR = "twitter/schema"
 DB_DIR = "db"
@@ -148,8 +148,8 @@ def print_db_tables_summary():
     conn.close()
 
 
-def fetch_table_from_db(
-        cursor: sqlite3.Cursor, table_name: str) -> List[Dict[str, Any]]:
+def fetch_table_from_db(cursor: sqlite3.Cursor,
+                        table_name: str) -> List[Dict[str, Any]]:
     cursor.execute(f"SELECT * FROM {table_name}")
     columns = [description[0] for description in cursor.description]
     data_dicts = [dict(zip(columns, row)) for row in cursor.fetchall()]
@@ -179,16 +179,14 @@ def fetch_rec_table_as_matrix(cursor: sqlite3.Cursor) -> List[List[int]]:
     return matrix
 
 
-def insert_matrix_into_rec_table(
-        cursor: sqlite3.Cursor, matrix: List[List[int]]) -> None:
+def insert_matrix_into_rec_table(cursor: sqlite3.Cursor,
+                                 matrix: List[List[int]]) -> None:
     # 遍历matrix，跳过索引0的占位符
     for user_id, tweet_ids in enumerate(matrix[1:], start=1):
         for tweet_id in tweet_ids:
             # 对每个user_id和tweet_id的组合，插入到rec表中
-            cursor.execute(
-                "INSERT INTO rec (user_id, tweet_id) VALUES (?, ?)",
-                (user_id, tweet_id)
-            )
+            cursor.execute("INSERT INTO rec (user_id, tweet_id) VALUES (?, ?)",
+                           (user_id, tweet_id))
 
 
 if __name__ == "__main__":
