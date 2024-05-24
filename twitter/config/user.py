@@ -15,8 +15,9 @@ class UserInfo:
             name_string = f"You are a twitter user with name {self.name}."
         else:
             name_string = "You are a twitter user without specifying a name."
-        if self.description is not None:
-            description_string = f"Your have profile: {self.description}."
+        if self.profile['other_info']['user_profile'] is not None:
+            user_profile = self.profile['other_info']['user_profile']
+            description_string = f"Your have profile: {user_profile}."
         else:
             description_string = "Your don't specify any profile."
         # Allowed actions except for the SIGN_UP
