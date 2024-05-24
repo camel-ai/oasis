@@ -20,7 +20,7 @@ async def running(num_timestep):
     infra = Twitter(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())
 
-    agent_graph = await generate_agents("./data/user_all_id_time.csv", channel)
+    agent_graph = await generate_agents("./data/user_all_id_orig.csv", channel)
     '''
     一个比较简单的思路为：
     为每种活跃状态设置一个对应阈值
