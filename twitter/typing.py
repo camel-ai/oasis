@@ -6,7 +6,7 @@ class ActionType(Enum):
     EXIT = "exit"
     REFRESH = "refresh"
     SEARCH_USER = "search_user"
-    SEARCH_TWEET = "search_tweet"
+    SEARCH_TWEET = "search_tweets"
     CREATE_TWEET = "create_tweet"
     LIKE = "like"
     UNLIKE = "unlike"

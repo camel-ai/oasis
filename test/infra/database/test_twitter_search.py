@@ -24,7 +24,7 @@ class MockChannel:
             return ('id_', (1, "bob", "search_user"))  # 假设搜索关键词为"bob"
         if self.call_count == 1:
             self.call_count += 1
-            return ('id_', (2, "Bob", "search_tweet"))  # 假设搜索关键词为"bob"
+            return ('id_', (2, "Bob", "search_tweets"))  # 假设搜索关键词为"bob"
         # 后续调用返回退出指令
         else:
             return ('id_', (None, None, "exit"))
