@@ -1,5 +1,8 @@
 import asyncio
+import os
+from datetime import datetime
 
+from clock.clock import clock
 from social_agent.agents_generator import generate_agents
 from twitter.channel import Twitter_Channel
 from twitter.twitter import Twitter
@@ -8,9 +11,19 @@ from twitter.typing import ActionType
 
 async def running():
     test_db_filepath = "./data/mock_twitter.db"
+    if os.path.exists(test_db_filepath):
+        os.remove(test_db_filepath)
+
+    # 将sandbox启动时间设为当前时刻
+    strat_time = datetime.now()
+    # 将sandbox时间放大系数设为60，即系统运行1秒相当于现实世界60秒
+    sandbox_clock = clock(K=60)
 
     channel = Twitter_Channel()
-    infra = Twitter(test_db_filepath, channel)
+
+    # 如果不传入start_time或sandbox_clock，默认start_time为实例化Twitter的时间，sandbox_clock的K=60
+    infra = Twitter(test_db_filepath, channel, sandbox_clock, strat_time)
+
     task = asyncio.create_task(infra.running())
 
     agent_graph = await generate_agents("./data/user_all_id.csv", channel)
