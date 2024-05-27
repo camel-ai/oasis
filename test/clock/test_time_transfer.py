@@ -16,8 +16,8 @@ def test_time_transfer():
     now_time_1 = datetime.strptime(now_date_string_1, date_format)
     now_time_2 = datetime.strptime(now_date_string_2, date_format)
 
-    adjest_time_1 = sandbox_clock.time_transfer(now_time_1, start_time)
-    adjest_time_2 = sandbox_clock.time_transfer(now_time_2, start_time)
+    adjust_time_1 = sandbox_clock.time_transfer(now_time_1, start_time)
+    adjust_time_2 = sandbox_clock.time_transfer(now_time_2, start_time)
 
     # K = 60时，增加1秒换算成增加1分钟
     expected_date_1 = datetime.strptime('2024-05-26 22:32:42.098815',
@@ -26,5 +26,5 @@ def test_time_transfer():
     expected_date_2 = datetime.strptime('2024-05-27 0:31:42.098815',
                                         date_format)
 
-    assert adjest_time_1 == expected_date_1
-    assert adjest_time_2 == expected_date_2
+    assert adjust_time_1 == expected_date_1
+    assert adjust_time_2 == expected_date_2
