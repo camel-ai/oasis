@@ -2,7 +2,8 @@ name: Python application CI
 
 "on":
   push:
-    branches: [main]      # 只有在 main 分支推送时触发
+    # branches: [main]      # 只有在 main 分支推送时触发
+    branches: [main, time_feature]
     # 可以改为对应的 [branch_name], 比如
     # branches: [main, YOUR_BRANCH_NAME]
   pull_request:
