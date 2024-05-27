@@ -306,7 +306,7 @@ class Twitter:
                 "FROM tweet "
                 "WHERE tweet_id = ? ")
             # 执行数据库查询
-            self._execute_db_command(sql_query, (tweet_id, ), commit=True)
+            self._execute_db_command(sql_query, (tweet_id, ))
             results = self.db_cursor.fetchall()
             if not results:
                 return {"success": False, "error": "Tweet not found."}
@@ -317,7 +317,7 @@ class Twitter:
 
             # 转发的推特标识一下是从哪个user转的，方便判断
             retweet_content = (
-                f"user{agent_id+1} retweet from user{str(orig_user_id)}. "
+                f"user{user_id} retweet from user{str(orig_user_id)}. "
                 f"original_tweet: {orig_content}")
 
             # 确保此前未转发过
@@ -343,7 +343,7 @@ class Twitter:
 
             tweet_id = self.db_cursor.lastrowid
             # 准备trace记录的信息
-            action_info = {"content": retweet_content, "tweet_id": tweet_id}
+            action_info = {"tweet_id": tweet_id}
             trace_insert_query = (
                 "INSERT INTO trace (user_id, created_at, action, info) "
                 "VALUES (?, ?, ?, ?)")

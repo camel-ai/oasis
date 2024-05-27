@@ -63,4 +63,4 @@ async def running(num_timestep):
 
 
 if __name__ == "__main__":
-    asyncio.run(running(num_timestep=5))
+    asyncio.run(running(num_timestep=3))

@@ -86,7 +86,7 @@ def create_db(db_path: str | None = None):
             trace_sql_script = sql_file.read()
         cursor.executescript(trace_sql_script)
 
-        # Read and execute the trace table SQL script:
+        # Read and execute the rec table SQL script:
         rec_sql_path = osp.join(schema_dir, REC_SCHEMA_SQL)
         with open(rec_sql_path, 'r') as sql_file:
             rec_sql_script = sql_file.read()
