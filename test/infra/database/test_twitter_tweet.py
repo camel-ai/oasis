@@ -112,9 +112,8 @@ async def test_create_retweet_like_unlike_tweet(setup_twitter):
         assert tweet[4] == 1  # num_likes
 
         retweet = tweets[1]
-        rt_content = """user2 retweet from user1.
-        original_tweet: This is a test tweet"""
-
+        rt_content = ("user2 retweet from user1. "
+                      "original_tweet: This is a test tweet")
         assert retweet[1] == 2  # 转发用户ID为2
         assert retweet[2] == rt_content
 
