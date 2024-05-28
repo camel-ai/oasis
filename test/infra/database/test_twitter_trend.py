@@ -2,7 +2,7 @@
 import os
 import os.path as osp
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pytest
 
@@ -71,7 +71,7 @@ async def test_search_user(setup_twitter):
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
 
-        today = datetime.now()
+        today = twitter.start_time
         # 生成从今天开始往前数10天的时间戳列表
         tweets_info = [
             (1, f'Tweet {9-i}',

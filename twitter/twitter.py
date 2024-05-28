@@ -5,6 +5,8 @@ import sqlite3
 from datetime import datetime, timedelta
 from typing import Any
 
+from clock.clock import clock
+
 from .database import create_db, fetch_rec_table_as_matrix, fetch_table_from_db
 from .recsys import rec_sys_random
 from .typing import ActionType
@@ -12,11 +14,22 @@ from .typing import ActionType
 
 class Twitter:
 
-    def __init__(self, db_path: str, channel: Any):
+    def __init__(self,
+                 db_path: str,
+                 channel: Any,
+                 sandbox_clock: clock = None,
+                 start_time: datetime = None):
+        # 未指定时钟时，默认twitter的时间放大系数为60
+        if sandbox_clock is None:
+            sandbox_clock = clock(60)
+        if start_time is None:
+            start_time = datetime.now()
         create_db(db_path)
         self.db = sqlite3.connect(db_path, check_same_thread=False)
         self.db_cursor = self.db.cursor()
         self.channel = channel
+        self.start_time = start_time
+        self.sandbox_clock = sandbox_clock
 
         # channel传进的操作数量
         self.ope_cnt = -1
@@ -152,7 +165,8 @@ class Twitter:
     async def signup(self, agent_id, user_message):
         # 允许重名，user_id是主键
         user_name, name, bio = user_message
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             if self._check_agent_userid(agent_id):
                 user_id = self._check_agent_userid(agent_id)
@@ -190,7 +204,8 @@ class Twitter:
 
     async def refresh(self, agent_id: int):
         # output不变，执行内容是从rec table取特定id的tweet
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -264,7 +279,8 @@ class Twitter:
                                          commit=True)
 
     async def create_tweet(self, agent_id: int, content: str):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -359,7 +375,8 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def like(self, agent_id: int, tweet_id: int):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -405,7 +422,8 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def unlike(self, agent_id: int, tweet_id: int):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -460,7 +478,8 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def search_tweets(self, agent_id: int, query: str):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -521,11 +540,12 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def search_user(self, agent_id: int, query: str):
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
                 return self._not_signup_error_message(agent_id)
-            current_time = datetime.now()
             sql_query = (
                 "SELECT user_id, user_name, name, bio, created_at, "
                 "num_followings, num_followers "
@@ -573,7 +593,8 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def follow(self, agent_id: int, followee_id: int):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -628,7 +649,8 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def unfollow(self, agent_id: int, followee_id: int):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -684,7 +706,8 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def mute(self, agent_id: int, mutee_id: int):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -722,7 +745,8 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def unmute(self, agent_id: int, mutee_id: int):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -760,11 +784,12 @@ class Twitter:
         """
         Get the top K trending tweets in the last num_days days.
         """
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
                 return self._not_signup_error_message(agent_id)
-            current_time = datetime.now()
             # 计算搜索的起始时间
             start_time = current_time - timedelta(days=self.trend_num_days)
 
