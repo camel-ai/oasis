@@ -38,7 +38,18 @@ async def test_agents_tweeting(setup_twitter):
     for i in range(N):
         real_name = "name" + str(i)
         description = "No description."
-        profile = {"some_key": "some_value"}  # 根据实际需要配置profile
+        # profile = {"some_key": "some_value"}  # 根据实际需要配置profile
+        profile = {
+            'nodes': [],  # Relationships with other agents
+            'edges': [],  # Relationship details
+            'other_info': {
+                "user_profile": "Nothing",
+                "mbti": "INTJ",
+                "activity_level": ["off_line"] * 24,
+                "activity_level_frequency": [3] * 24,
+                "active_threshold": [0.1] * 24
+            },
+        }
         user_info = UserInfo(name=real_name,
                              description=description,
                              profile=profile)

@@ -1,7 +1,7 @@
 # File: ./test/conftest.py
 
-import sys
 import os
+import sys
 
 # 将项目根目录添加到 sys.path
 root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
