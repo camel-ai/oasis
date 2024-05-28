@@ -22,6 +22,7 @@ def test_transfer_to_openai_function():
             TwitterAction.action_mute,
             TwitterAction.action_unmute,
             TwitterAction.action_trend,
+            TwitterAction.action_retweet,
         ]
     ]
     assert ACTION_FUNCS is not None

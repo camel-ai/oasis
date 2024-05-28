@@ -5,6 +5,8 @@ import sqlite3
 from datetime import datetime, timedelta
 from typing import Any
 
+from clock.clock import clock
+
 from .database import create_db, fetch_rec_table_as_matrix, fetch_table_from_db
 from .recsys import rec_sys_random, rec_sys_personalized, rec_sys_personalized_with_trace
 from .typing import ActionType
@@ -12,11 +14,22 @@ from .typing import ActionType
 
 class Twitter:
 
-    def __init__(self, db_path: str, channel: Any):
+    def __init__(self,
+                 db_path: str,
+                 channel: Any,
+                 sandbox_clock: clock = None,
+                 start_time: datetime = None):
+        # 未指定时钟时，默认twitter的时间放大系数为60
+        if sandbox_clock is None:
+            sandbox_clock = clock(60)
+        if start_time is None:
+            start_time = datetime.now()
         create_db(db_path)
         self.db = sqlite3.connect(db_path, check_same_thread=False)
         self.db_cursor = self.db.cursor()
         self.channel = channel
+        self.start_time = start_time
+        self.sandbox_clock = sandbox_clock
 
         # channel传进的操作数量
         self.ope_cnt = -1
@@ -125,6 +138,11 @@ class Twitter:
                 result = await self.trend(agent_id=agent_id)
                 await self.channel.send_to((message_id, agent_id, result))
 
+            elif action == ActionType.RETWEET:
+                result = await self.retweet(agent_id=agent_id,
+                                            tweet_id=message)
+                await self.channel.send_to((message_id, agent_id, result))
+
             else:
                 raise ValueError(f"Action {action} is not supported")
 
@@ -149,7 +167,8 @@ class Twitter:
     async def signup(self, agent_id, user_message):
         # 允许重名，user_id是主键
         user_name, name, bio = user_message
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             if self._check_agent_userid(agent_id):
                 user_id = self._check_agent_userid(agent_id)
@@ -187,7 +206,8 @@ class Twitter:
 
     async def refresh(self, agent_id: int):
         # output不变，执行内容是从rec table取特定id的tweet
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -264,7 +284,8 @@ class Twitter:
                                          commit=True)
 
     async def create_tweet(self, agent_id: int, content: str):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -293,8 +314,74 @@ class Twitter:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def like(self, agent_id: int, tweet_id: int):
+    async def retweet(self, agent_id: int, tweet_id: int):
         current_time = datetime.now()
+        try:
+            user_id = self._check_agent_userid(agent_id)
+            if not user_id:
+                return self._not_signup_error_message(agent_id)
+
+            # 查询要转发的推特内容
+            sql_query = (
+                "SELECT tweet_id, user_id, content, created_at, num_likes "
+                "FROM tweet "
+                "WHERE tweet_id = ? ")
+            # 执行数据库查询
+            self._execute_db_command(sql_query, (tweet_id, ))
+            results = self.db_cursor.fetchall()
+            if not results:
+                return {"success": False, "error": "Tweet not found."}
+
+            orig_content = results[0][2]
+            orig_like = results[0][-1]
+            orig_user_id = results[0][1]
+
+            # 转发的推特标识一下是从哪个user转的，方便判断
+            retweet_content = (
+                f"user{user_id} retweet from user{str(orig_user_id)}. "
+                f"original_tweet: {orig_content}")
+
+            # 确保此前未转发过
+            retweet_check_query = (
+                "SELECT * FROM 'tweet' WHERE content LIKE ? ")
+            self._execute_db_command(retweet_check_query, (retweet_content, ))
+            if self.db_cursor.fetchone():
+                # 已存在转发记录
+                return {
+                    "success": False,
+                    "error": "Retweet record already exists."
+                }
+
+            # 插入转推推文记录
+            tweet_insert_query = (
+                "INSERT INTO tweet (user_id, content, created_at, num_likes) "
+                "VALUES (?, ?, ?, ?)")
+
+            self._execute_db_command(
+                tweet_insert_query,
+                (user_id, retweet_content, current_time, orig_like),
+                commit=True)
+
+            tweet_id = self.db_cursor.lastrowid
+            # 准备trace记录的信息
+            action_info = {"tweet_id": tweet_id}
+            trace_insert_query = (
+                "INSERT INTO trace (user_id, created_at, action, info) "
+                "VALUES (?, ?, ?, ?)")
+            self._execute_db_command(
+                trace_insert_query,
+                (user_id, current_time, ActionType.RETWEET.value,
+                 str(action_info)),
+                commit=True)
+
+            return {"success": True, "tweet_id": tweet_id}
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def like(self, agent_id: int, tweet_id: int):
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -340,7 +427,8 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def unlike(self, agent_id: int, tweet_id: int):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -395,7 +483,8 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def search_tweets(self, agent_id: int, query: str):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -456,11 +545,12 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def search_user(self, agent_id: int, query: str):
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
                 return self._not_signup_error_message(agent_id)
-            current_time = datetime.now()
             sql_query = (
                 "SELECT user_id, user_name, name, bio, created_at, "
                 "num_followings, num_followers "
@@ -508,7 +598,8 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def follow(self, agent_id: int, followee_id: int):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -563,7 +654,8 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def unfollow(self, agent_id: int, followee_id: int):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -619,7 +711,8 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def mute(self, agent_id: int, mutee_id: int):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -657,7 +750,8 @@ class Twitter:
             return {"success": False, "error": str(e)}
 
     async def unmute(self, agent_id: int, mutee_id: int):
-        current_time = datetime.now()
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -695,11 +789,12 @@ class Twitter:
         """
         Get the top K trending tweets in the last num_days days.
         """
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
                 return self._not_signup_error_message(agent_id)
-            current_time = datetime.now()
             # 计算搜索的起始时间
             start_time = current_time - timedelta(days=self.trend_num_days)
 

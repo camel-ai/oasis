@@ -1,11 +1,11 @@
 '''注意需要在写入rec_matrix的时候判断是否超过max_rec_tweet_len'''
-from typing import List, Dict, Any
 import random
 import time
 from .typing import ActionType
 import numpy as np
 # init model
 from sentence_transformers import SentenceTransformer
+from typing import Any, Dict, List
 
 try:
     model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
@@ -13,13 +13,11 @@ except Exception as e:
     print(e)
     model = None
 
-def rec_sys_random(
-    user_table: List[Dict[str, Any]],
-    tweet_table: List[Dict[str, Any]],
-    trace_table: List[Dict[str, Any]],
-    rec_matrix: List[List],
-    max_rec_tweet_len: int
-) -> List[List]:
+def rec_sys_random(user_table: List[Dict[str,
+                                         Any]], tweet_table: List[Dict[str,
+                                                                       Any]],
+                   trace_table: List[Dict[str, Any]], rec_matrix: List[List],
+                   max_rec_tweet_len: int) -> List[List]:
     # 获取所有推文的ID
     tweet_ids = [tweet['tweet_id'] for tweet in tweet_table]
 
