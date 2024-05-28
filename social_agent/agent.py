@@ -53,7 +53,7 @@ class TwitterUserAgent:
         user_msg = BaseMessage.make_user_message(
             role_name="User",
             content=(
-                f"Please perform twitter actions after observing follower "
+                f"Please perform twitter actions after observing the twitter "
                 f"environments. Notice that don't limit your actions for "
                 f"example to just like the tweets. "
                 f"Here is your twitter environment: {env_prompt}"),
