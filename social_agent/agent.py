@@ -9,6 +9,7 @@ from camel.models import BaseModelBackend, ModelFactory
 from camel.types import ModelType, OpenAIBackendRole
 
 from social_agent.agent_action import TwitterAction
+from social_agent.agent_environment import TwitterEnvironment
 from twitter.channel import Twitter_Channel
 from twitter.config import UserInfo
 
@@ -25,9 +26,9 @@ class TwitterUserAgent:
         self.agent_id = agent_id
         self.user_info = user_info
         self.channel = channel
-        self.twitter_action = TwitterAction(agent_id, channel)
+        self.env = TwitterEnvironment(TwitterAction(agent_id, channel))
         model_config = FunctionCallingConfig.from_openai_function_list(
-            function_list=self.twitter_action.get_openai_function_list(),
+            function_list=self.env.twitter_action.get_openai_function_list(),
             kwargs=dict(temperature=0.0),
         )
         self.model_backend: BaseModelBackend = ModelFactory.create(
@@ -48,27 +49,18 @@ class TwitterUserAgent:
         self.home_content = []
 
     async def perform_action_by_llm(self):
-        # Get 5 random tweets:
-        tweets = await self.twitter_action.action_refresh()
-        # Get context form memory:
-        if tweets['success']:
-            user_msg = BaseMessage.make_user_message(
-                role_name="User",
-                content=(
-                    f"After refreshing, you see some tweets:{tweets['tweets']}"
-                    "you want to perform action"
-                    "that best reflects your current inclination"
-                    "Don't limit your actions to just 'like tweet'."))
-        # sometimes the recsys dose not get any tweet
-        else:
-            user_msg = BaseMessage.make_user_message(
-                role_name="User",
-                content=("After refreshing, you do not see any tweets"
-                         "stay quiet"))
+        env_prompt = await self.env.to_text_prompt()
+        user_msg = BaseMessage.make_user_message(
+            role_name="User",
+            content=(
+                f"Please perform twitter actions after observing follower "
+                f"environments. Notice that don't limit your actions for "
+                f"example to just like the tweets. "
+                f"Here is your twitter environment: {env_prompt}"),
+        )
 
         self.memory.write_record(MemoryRecord(user_msg,
                                               OpenAIBackendRole.USER))
-
         openai_messages, num_tokens = self.memory.get_context()
         response = self.model_backend.run(openai_messages)
 
@@ -79,4 +71,4 @@ class TwitterUserAgent:
                 response.choices[0].message.function_call.arguments)
             print(f"Agent {self.agent_id} is performing "
                   f"twitter action: {action_name} with args: {args}")
-            await getattr(self.twitter_action, action_name)(**args)
+            await getattr(self.env.twitter_action, action_name)(**args)
