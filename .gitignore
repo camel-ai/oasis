@@ -5,6 +5,8 @@
 ## data
 *.db
 
+## ipynb
+*.ipynb
 
 ##### Python.gitignore #####
 # Byte-compiled / optimized / DLL files
@@ -426,3 +428,14 @@ tags
 # Camel
 logs/
 
+# Data
+datasets_test/
+evaluation_data/
+camel_data/
+time_data/
+
+# check_time_feature in misinformation spreading
+check_time_feature/
+
+# prompt engineering
+prompt_engineering/

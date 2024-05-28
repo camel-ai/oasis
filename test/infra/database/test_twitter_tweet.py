@@ -32,6 +32,10 @@ class MockChannel:
         elif self.call_count == 3:
             self.call_count += 1
             return ('id_', (2, 1, "unlike"))
+        # 调用返回转推操作的指令
+        elif self.call_count == 4:
+            self.call_count += 1
+            return ('id_', (2, 1, "retweet"))
         # 返回退出指令
         else:
             return ('id_', (None, None, "exit"))
@@ -52,6 +56,10 @@ class MockChannel:
         elif self.call_count == 4:
             assert message[2]["success"] is True
             assert "like_id" in message[2]
+        elif self.call_count == 5:
+            # 对转推的成功消息进行断言
+            assert message[2]["success"] is True
+            assert "tweet_id" in message[2]
 
 
 # 定义一个fixture来初始化数据库和Twitter实例
@@ -71,7 +79,7 @@ def setup_twitter():
 
 
 @pytest.mark.asyncio
-async def test_create_like_unlike_tweet(setup_twitter):
+async def test_create_retweet_like_unlike_tweet(setup_twitter):
     try:
         twitter = setup_twitter
 
@@ -97,11 +105,17 @@ async def test_create_like_unlike_tweet(setup_twitter):
         # 验证推文表(tweet)是否正确插入了数据
         cursor.execute("SELECT * FROM tweet")
         tweets = cursor.fetchall()
-        assert len(tweets) == 1
+        assert len(tweets) == 2  # 一条test tweet，一条retweet
         tweet = tweets[0]
         assert tweet[1] == 1  # 假设用户ID是1
         assert tweet[2] == "This is a test tweet"
         assert tweet[4] == 1  # num_likes
+
+        retweet = tweets[1]
+        rt_content = ("user2 retweet from user1. "
+                      "original_tweet: This is a test tweet")
+        assert retweet[1] == 2  # 转发用户ID为2
+        assert retweet[2] == rt_content
 
         # 验证推文表(tweet)是否正确插入了数据
         cursor.execute("SELECT * FROM like")
@@ -111,6 +125,9 @@ async def test_create_like_unlike_tweet(setup_twitter):
         # 验证跟踪表(trace)是否正确记录了创建推文和点赞操作
         cursor.execute("SELECT * FROM trace WHERE action='create_tweet'")
         assert cursor.fetchone() is not None, "Create tweet action not traced"
+
+        cursor.execute("SELECT * FROM trace WHERE action='retweet'")
+        assert cursor.fetchone() is not None, "Retweet action not traced"
 
         cursor.execute("SELECT * FROM trace WHERE action='like'")
         results = cursor.fetchall()

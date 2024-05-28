@@ -51,10 +51,20 @@ class TwitterUserAgent:
         # Get 5 random tweets:
         tweets = await self.twitter_action.action_refresh()
         # Get context form memory:
-        user_msg = BaseMessage.make_user_message(
-            role_name="User",
-            content=(f"Choose to perform any twitter action based "
-                     f"on existing tweets: {tweets['tweets']}"))
+        if tweets['success']:
+            user_msg = BaseMessage.make_user_message(
+                role_name="User",
+                content=(
+                    f"After refreshing, you see some tweets:{tweets['tweets']}"
+                    "you want to perform action"
+                    "that best reflects your current inclination"
+                    "Don't limit your actions to just 'like tweet'."))
+        # sometimes the recsys dose not get any tweet
+        else:
+            user_msg = BaseMessage.make_user_message(
+                role_name="User",
+                content=("After refreshing, you do not see any tweets"
+                         "stay quiet"))
 
         self.memory.write_record(MemoryRecord(user_msg,
                                               OpenAIBackendRole.USER))
