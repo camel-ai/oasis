@@ -132,7 +132,6 @@ def rec_sys_personalized_with_trace(
 
     # 获取所有推文的ID
     tweet_ids = [tweet['tweet_id'] for tweet in tweet_table]
-
     if len(tweet_ids) <= max_rec_tweet_len:
         # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
         new_rec_matrix = [tweet_ids] * (len(rec_matrix) - 1)
@@ -150,7 +149,6 @@ def rec_sys_personalized_with_trace(
             # filter out like-trace and dislike-trace
             like_trace_contents = get_trace_contents(user_id, ActionType.LIKE.value, tweet_table, trace_table)
             dislike_trace_contents = get_trace_contents(user_id, ActionType.UNLIKE.value, tweet_table, trace_table)
-            print(f'like_trace_contents: {like_trace_contents}, dislike_trace_contents: {dislike_trace_contents}')
             # calculate similarity between user bio and tweet text
             tweet_scores = []
             for tweet_id, tweet_content in available_tweet_contents:
