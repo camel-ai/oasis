@@ -74,8 +74,8 @@ async def test_refresh(setup_twitter):
         cursor = conn.cursor()
         cursor.execute(
             ("INSERT INTO user "
-             "(user_id, agent_id, user_name, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"), (1, 1, "user1", 0, 0))
+             "(user_id, agent_id, user_name, bio,  num_followings, num_followers) "
+             "VALUES (?, ?, ?, ?, ? , ?)"), (1, 1, "user1", "This is test bio for user 1", 0, 0))
         conn.commit()
 
         # 在测试开始之前，将tweet插入到tweet表中
