@@ -61,9 +61,9 @@ async def generate_agents(agent_info_path, twitter_channel):
 
         # Sign up agent and add their information to the database
         # print(f"Signing up agent {agent_info['username'][i]}...")
-        await agent.twitter_action.action_sign_up(agent_info['username'][i],
-                                                  agent_info['name'][i],
-                                                  agent_info['description'][i])
+        await agent.env.twitter_action.action_sign_up(
+            agent_info['username'][i], agent_info['name'][i],
+            agent_info['description'][i])
 
         # Add user relationships if any
         if agent_info['following_agentid_list'][i] != "0":
@@ -72,13 +72,13 @@ async def generate_agents(agent_info_path, twitter_channel):
             for _agent_id in following_id_list:
                 # 这里action_follow接受的是user_id，不是agent id，所以会出现关注错误的问题
                 # 由于二者只差一个1，所以加个1就可以了
-                await agent.twitter_action.action_follow(_agent_id + 1)
+                await agent.env.twitter_action.action_follow(_agent_id + 1)
                 await agent_graph.add_edge(i, _agent_id)
 
         if len(agent_info['previous_tweets']) != 0:
             previous_tweets = ast.literal_eval(
                 agent_info['previous_tweets'][i])
             for tweet in previous_tweets:
-                await agent.twitter_action.action_create_tweet(tweet)
+                await agent.env.twitter_action.action_create_tweet(tweet)
 
     return agent_graph

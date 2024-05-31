@@ -24,5 +24,11 @@ class AgentGraph:
     def get_edges(self):
         return self.graph.edges.data()
 
+    def get_incoming_nodes(self):
+        return self.graph.in_edges()
+
+    def get_outgoing_nodes(self):
+        return self.graph.out_edges()
+
     def get_acount(self):
         return self.graph.number_of_nodes()
