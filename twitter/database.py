@@ -166,10 +166,8 @@ def fetch_rec_table_as_matrix(cursor: sqlite3.Cursor) -> List[List[int]]:
     cursor.execute(
         "SELECT user_id, tweet_id FROM rec ORDER BY user_id, tweet_id")
     rec_rows = cursor.fetchall()
-
     # 初始化一个字典，为每个user_id分配一个空列表
     user_tweets = {user_id: [] for user_id in user_ids}
-
     # 使用查询到的rec表记录填充字典
     for user_id, tweet_id in rec_rows:
         if user_id in user_tweets:

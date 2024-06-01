@@ -98,3 +98,4 @@ urllib3==2.2.1
 wcwidth==0.2.13
 wrapt==1.16.0
 pre-commit
+sentence_transformers
