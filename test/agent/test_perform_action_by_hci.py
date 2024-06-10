@@ -12,12 +12,18 @@ from twitter.twitter import Twitter
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "mock_twitter.db")
-if osp.exists(test_db_filepath):
-    os.remove(test_db_filepath)
+
+
+# 定义一个fixture来初始化数据库和Twitter实例
+@pytest.fixture
+def setup_twitter():
+    # 测试前确保test.db不存在
+    if os.path.exists(test_db_filepath):
+        os.remove(test_db_filepath)
 
 
 @pytest.mark.asyncio
-async def test_perform_action_by_hci(monkeypatch):
+async def test_perform_action_by_hci(monkeypatch, setup_twitter):
     channel = Twitter_Channel()
 
     infra = Twitter(test_db_filepath, channel, rec_update_time=1)
