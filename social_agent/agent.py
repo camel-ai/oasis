@@ -1,3 +1,4 @@
+import inspect
 import json
 
 from camel.configs import FunctionCallingConfig
@@ -72,3 +73,35 @@ class TwitterUserAgent:
             print(f"Agent {self.agent_id} is performing "
                   f"twitter action: {action_name} with args: {args}")
             await getattr(self.env.twitter_action, action_name)(**args)
+
+    async def perform_action_by_hci(self):
+        print('Please choose one function to perform:')
+        function_list = self.env.twitter_action.get_openai_function_list()
+        for i in range(len(function_list)):
+            print(f"{i}.", function_list[i].func.__name__[7:], end=', ')
+        print()
+
+        selection = int(input("Enter your choice: "))
+        if not 0 <= selection <= 11:
+            print("Invalid input. Please enter a number.")
+            return
+
+        func = function_list[selection].func
+
+        # 使用inspect获取函数的参数列表
+        params = inspect.signature(func).parameters
+        args = []
+        for param in params.values():
+            while True:
+                try:
+                    value = input(f"Enter value for {param.name}: ")
+                    # 假设所有参数都是整数，根据需要可以调整
+                    args.append(value)
+                    break  # 成功获取有效输入，跳出循环
+                except ValueError:
+                    print("Invalid input, please enter an integer.")
+
+        # 调用函数并传入用户输入的参数
+        result = await func(*args)
+        print(result)
+        return result
