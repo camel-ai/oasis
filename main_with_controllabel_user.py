@@ -31,7 +31,6 @@ async def running(num_timestep):
     task = asyncio.create_task(infra.running())
 
     agent_graph = await generate_agents("./data/user_all_id_time.csv", channel)
-
     '''
     一个比较简单的思路为：
     为每种活跃状态设置一个对应阈值
@@ -49,6 +48,8 @@ async def running(num_timestep):
     这种方法的可解释性就全部来自于初始化爬到的数据了.
     但是可以先靠这个实现一下
     '''
+    controllable_user =
+
     start_hour = 1  # 涉及到时间戳
     simulation_time_hour = start_hour  # 涉及到时间戳
 
@@ -58,7 +59,8 @@ async def running(num_timestep):
         # 这里的 0.2 就是指的 1个timestep对应12分钟， 涉及到时间戳
         simulation_time_hour = start_hour + 0.2 * timestep
 
-        for node_id, node_data in agent_graph.get_agents():
+        for _, node_data in agent_graph.get_agents():
+
             agent = node_data['agent']
             # 得到该agent激活概率
             agent_ac_prob = random.random()
