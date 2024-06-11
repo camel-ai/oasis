@@ -8,7 +8,7 @@ import sqlite3
 import pytest
 
 from social_agent.agent import TwitterUserAgent
-from twitter.channel import Twitter_Channel
+from twitter.channel import TwitterChannel
 from twitter.config import UserInfo
 from twitter.twitter import Twitter
 
@@ -30,7 +30,7 @@ async def test_agents_tweeting(setup_twitter):
     M = 3  # 每个用户要发送的推文数量
 
     agents = []
-    channel = Twitter_Channel()
+    channel = TwitterChannel()
     infra = Twitter(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())
 

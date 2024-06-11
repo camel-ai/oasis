@@ -8,7 +8,7 @@ from colorama import Back
 from clock.clock import clock
 from social_agent.agents_generator import (generate_agents,
                                            generate_controllable_agents)
-from twitter.channel import Twitter_Channel
+from twitter.channel import TwitterChannel
 from twitter.twitter import Twitter
 from twitter.typing import ActionType
 
@@ -24,7 +24,7 @@ async def running(num_timestep):
     # 将sandbox时间放大系数设为60，即系统运行1秒相当于现实世界60秒
     sandbox_clock = clock(K=60)
 
-    channel = Twitter_Channel()
+    channel = TwitterChannel()
 
     # 如果不传入start_time或sandbox_clock，默认start_time为实例化Twitter的时间，sandbox_clock的K=60
     infra = Twitter(test_db_filepath, channel, sandbox_clock, start_time)
