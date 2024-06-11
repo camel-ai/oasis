@@ -8,7 +8,7 @@ from typing import Any
 from clock.clock import clock
 
 from .database import create_db, fetch_rec_table_as_matrix, fetch_table_from_db
-from .recsys import rec_sys_random, rec_sys_personalized, rec_sys_personalized_with_trace
+from .recsys import rec_sys_personalized_with_trace
 from .typing import ActionType
 
 
@@ -18,7 +18,8 @@ class Twitter:
                  db_path: str,
                  channel: Any,
                  sandbox_clock: clock = None,
-                 start_time: datetime = None):
+                 start_time: datetime = None,
+                 rec_update_time: int = 20):
         # 未指定时钟时，默认twitter的时间放大系数为60
         if sandbox_clock is None:
             sandbox_clock = clock(60)
@@ -34,7 +35,7 @@ class Twitter:
         # channel传进的操作数量
         self.ope_cnt = -1
         # 推荐系统缓存更新的时间间隔（以传进来的操作数为单位）
-        self.rec_update_time = 20
+        self.rec_update_time = rec_update_time
 
         # twitter内部推荐系统refresh一次返回的推文数量
         self.refresh_tweet_count = 5
@@ -268,9 +269,8 @@ class Twitter:
         rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
 
         new_rec_matrix = rec_sys_personalized_with_trace(
-            user_table, tweet_table, trace_table,
-            rec_matrix, self.max_rec_tweet_len
-        )
+            user_table, tweet_table, trace_table, rec_matrix,
+            self.max_rec_tweet_len)
 
         # 构建SQL语句以删除rec表中的所有记录
         sql_query = "DELETE FROM rec"

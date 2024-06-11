@@ -6,7 +6,8 @@ from datetime import datetime
 from colorama import Back
 
 from clock.clock import clock
-from social_agent.agents_generator import generate_agents
+from social_agent.agents_generator import (generate_agents,
+                                           generate_controllable_agents)
 from twitter.channel import Twitter_Channel
 from twitter.twitter import Twitter
 from twitter.typing import ActionType
@@ -30,8 +31,11 @@ async def running(num_timestep):
 
     task = asyncio.create_task(infra.running())
 
-    agent_graph = await generate_agents("./data/user_all_id_time.csv", channel)
+    agent_graph, agent_user_id_mapping = await generate_controllable_agents(
+        channel, 1)
 
+    agent_graph = await generate_agents("./data/user_all_id_time.csv", channel,
+                                        agent_graph, agent_user_id_mapping)
     '''
     一个比较简单的思路为：
     为每种活跃状态设置一个对应阈值
@@ -49,6 +53,7 @@ async def running(num_timestep):
     这种方法的可解释性就全部来自于初始化爬到的数据了.
     但是可以先靠这个实现一下
     '''
+
     start_hour = 1  # 涉及到时间戳
     simulation_time_hour = start_hour  # 涉及到时间戳
 
@@ -58,16 +63,20 @@ async def running(num_timestep):
         # 这里的 0.2 就是指的 1个timestep对应12分钟， 涉及到时间戳
         simulation_time_hour = start_hour + 0.2 * timestep
 
-        for node_id, node_data in agent_graph.get_agents():
+        for _, node_data in agent_graph.get_agents():
+
             agent = node_data['agent']
-            # 得到该agent激活概率
-            agent_ac_prob = random.random()
-            # 得到该agent激活阈值
-            threshold = agent.user_info.profile['other_info'][
-                'active_threshold'][int(simulation_time_hour % 24)]
-            # 比较激活概率和阈值
-            if agent_ac_prob < threshold:
-                await agent.perform_action_by_llm()
+            if agent.user_info.is_controllable is False:
+                # 得到该agent激活概率
+                agent_ac_prob = random.random()
+                # 得到该agent激活阈值
+                threshold = agent.user_info.profile['other_info'][
+                    'active_threshold'][int(simulation_time_hour % 24)]
+                # 比较激活概率和阈值
+                if agent_ac_prob < threshold:
+                    await agent.perform_action_by_llm()
+            else:
+                await agent.perform_action_by_hci()
 
     await channel.write_to_receive_queue((None, None, ActionType.EXIT))
     await task
