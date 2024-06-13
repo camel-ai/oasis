@@ -15,10 +15,13 @@ TWEET_SCHEMA_SQL = "tweet.sql"
 FOLLOW_SCHEMA_SQL = "follow.sql"
 MUTE_SCHEMA_SQL = "mute.sql"
 LIKE_SCHEMA_SQL = "like.sql"
+DISLIKE_SCHEMA_SQL = "dislike.sql"
 TRACE_SCHEMA_SQL = "trace.sql"
 REC_SCHEMA_SQL = "rec.sql"
 
-TABLE_NAMES = {"user", "tweet", "follow", "mute", "like", "trace", "rec"}
+TABLE_NAMES = {
+    "user", "tweet", "follow", "mute", "like", "dislike", "trace", "rec"
+}
 
 
 def get_db_path() -> str:
@@ -79,6 +82,12 @@ def create_db(db_path: str | None = None):
         with open(like_sql_path, 'r') as sql_file:
             like_sql_script = sql_file.read()
         cursor.executescript(like_sql_script)
+
+        # Read and execute the like table SQL script:
+        like_sql_path = osp.join(schema_dir, DISLIKE_SCHEMA_SQL)
+        with open(like_sql_path, 'r') as sql_file:
+            dislike_sql_script = sql_file.read()
+        cursor.executescript(dislike_sql_script)
 
         # Read and execute the trace table SQL script:
         trace_sql_path = osp.join(schema_dir, TRACE_SCHEMA_SQL)

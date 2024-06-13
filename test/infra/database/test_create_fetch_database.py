@@ -107,9 +107,9 @@ def test_tweet_operations():
     cursor = conn.cursor()
     # Insert a tweet:
     cursor.execute(
-        ("INSERT INTO tweet (user_id, content, created_at, num_likes) "
-         "VALUES (?, ?, ?, ?)"),
-        (1, 'This is a test tweet', '2024-04-21 22:02:42', 0))
+        ("INSERT INTO tweet (user_id, content, created_at, num_likes, "
+         "num_dislikes) VALUES (?, ?, ?, ?, ?)"),
+        (1, 'This is a test tweet', '2024-04-21 22:02:42', 0, 1))
     conn.commit()
 
     # Assert the tweet was inserted correctly
@@ -121,6 +121,7 @@ def test_tweet_operations():
     assert tweet[2] == 'This is a test tweet'
     assert tweet[3] == '2024-04-21 22:02:42'
     assert tweet[4] == 0
+    assert tweet[5] == 1
 
     # Update the tweet
     cursor.execute("UPDATE tweet SET content = ? WHERE content = ?",
@@ -133,6 +134,7 @@ def test_tweet_operations():
         'content': 'Updated tweet',
         'created_at': '2024-04-21 22:02:42',
         'num_likes': 0,
+        'num_dislikes': 1,
     }]
     actual_result = fetch_table_from_db(cursor, 'tweet')
 
@@ -227,6 +229,32 @@ def test_like_operations():
 
     # Delete the like relation
     cursor.execute("DELETE FROM like WHERE user_id = 1 AND tweet_id = 2")
+    conn.commit()
+
+    # Assert the like relation was deleted correctly
+    cursor.execute("SELECT * FROM like WHERE user_id = 1 AND tweet_id = 2")
+    assert cursor.fetchone() is None
+
+
+def test_dislike_operations():
+    conn = sqlite3.connect(db_filepath)
+    cursor = conn.cursor()
+    # Insert a like relation
+    cursor.execute(
+        "INSERT INTO dislike (user_id, tweet_id, created_at) VALUES (?, ?, ?)",
+        (1, 2, '2024-04-21 22:02:42'))
+    conn.commit()
+
+    # Assert the like relation was inserted correctly
+    cursor.execute("SELECT * FROM dislike WHERE user_id = 1 AND tweet_id = 2")
+    dislike = cursor.fetchone()
+    assert dislike is not None
+    assert dislike[1] == 1
+    assert dislike[2] == 2
+    assert dislike[3] == '2024-04-21 22:02:42'
+
+    # Delete the like relation
+    cursor.execute("DELETE FROM dislike WHERE user_id = 1 AND tweet_id = 2")
     conn.commit()
 
     # Assert the like relation was deleted correctly

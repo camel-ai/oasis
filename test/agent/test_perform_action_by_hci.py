@@ -11,7 +11,7 @@ from twitter.config import UserInfo
 from twitter.twitter import Twitter
 
 parent_folder = osp.dirname(osp.abspath(__file__))
-test_db_filepath = osp.join(parent_folder, "mock_twitter.db")
+test_db_filepath = osp.join(parent_folder, "test.db")
 
 
 # 定义一个fixture来初始化数据库和Twitter实例
@@ -38,12 +38,12 @@ async def test_perform_action_by_hci(monkeypatch, setup_twitter):
 
     user_info = UserInfo(profile={'other_info': {'user_profile': 'None'}})
     operated_agent = TwitterUserAgent(1, user_info, channel)
-    await operated_agent.env.twitter_action.action_sign_up(
-        "user0101", "User", "A bio.")
+    await operated_agent.env.twitter_action.sign_up("user0101", "User",
+                                                    "A bio.")
 
     param_lst = [
-        'hello world', '2', '2', '1', '1', 'hello', 'user', None, None, '2',
-        '2', '1'
+        'hello world', '2', '2', '1', '1', '1', '1', 'hello', 'user', None,
+        None, '2', '2', '1'
     ]
 
     for i in range(12):

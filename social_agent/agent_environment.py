@@ -28,7 +28,7 @@ class TwitterEnvironment(Environment):
         self.twitter_action = twitter_action
 
     async def get_tweets_env(self) -> str:
-        tweets = await self.twitter_action.action_refresh()
+        tweets = await self.twitter_action.refresh()
         # TODO: Replace tweets json format string to other formats
         if tweets["success"]:
             tweets_env = json.dumps(tweets["tweets"], indent=4)

@@ -32,8 +32,17 @@ class MockChannel:
         elif self.call_count == 3:
             self.call_count += 1
             return ('id_', (2, 1, "unlike"))
-        # 调用返回转推操作的指令
         elif self.call_count == 4:
+            self.call_count += 1
+            return ('id_', (1, 1, "dislike"))
+        elif self.call_count == 5:
+            self.call_count += 1
+            return ('id_', (2, 1, "dislike"))
+        elif self.call_count == 6:
+            self.call_count += 1
+            return ('id_', (2, 1, "undo_dislike"))
+        # 调用返回转推操作的指令
+        elif self.call_count == 7:
             self.call_count += 1
             return ('id_', (2, 1, "retweet"))
         # 返回退出指令
@@ -57,6 +66,16 @@ class MockChannel:
             assert message[2]["success"] is True
             assert "like_id" in message[2]
         elif self.call_count == 5:
+            # 对点赞操作的成功消息进行断言
+            assert message[2]["success"] is True
+            assert "dislike_id" in message[2]
+        elif self.call_count == 6:
+            assert message[2]["success"] is True
+            assert "dislike_id" in message[2]
+        elif self.call_count == 7:
+            assert message[2]["success"] is True
+            assert "dislike_id" in message[2]
+        elif self.call_count == 8:
             # 对转推的成功消息进行断言
             assert message[2]["success"] is True
             assert "tweet_id" in message[2]
@@ -110,6 +129,7 @@ async def test_create_retweet_like_unlike_tweet(setup_twitter):
         assert tweet[1] == 1  # 假设用户ID是1
         assert tweet[2] == "This is a test tweet"
         assert tweet[4] == 1  # num_likes
+        assert tweet[5] == 1  # num_dislikes
 
         retweet = tweets[1]
         rt_content = ("user2 retweet from user1. "
@@ -117,10 +137,15 @@ async def test_create_retweet_like_unlike_tweet(setup_twitter):
         assert retweet[1] == 2  # 转发用户ID为2
         assert retweet[2] == rt_content
 
-        # 验证推文表(tweet)是否正确插入了数据
+        # 验证like表是否正确插入了数据
         cursor.execute("SELECT * FROM like")
         likes = cursor.fetchall()
         assert len(likes) == 1
+
+        # 验证dislike表是否正确插入了数据
+        cursor.execute("SELECT * FROM dislike")
+        dislikes = cursor.fetchall()
+        assert len(dislikes) == 1
 
         # 验证跟踪表(trace)是否正确记录了创建推文和点赞操作
         cursor.execute("SELECT * FROM trace WHERE action='create_tweet'")
@@ -140,8 +165,23 @@ async def test_create_retweet_like_unlike_tweet(setup_twitter):
         assert results[0][0] == 2  # `user_id`
         assert results[0][-1] == "{'tweet_id': 1, 'like_id': 2}"
 
+        cursor.execute("SELECT * FROM trace WHERE action='dislike'")
+        results = cursor.fetchall()
+        assert results is not None, "Dislike tweet action not traced"
+        assert len(results) == 2
+
+        cursor.execute("SELECT * FROM trace WHERE action='undo_dislike'")
+        results = cursor.fetchall()
+        assert results is not None, "Undo dislike tweet action not traced"
+        assert results[0][0] == 2  # `user_id`
+        assert results[0][-1] == "{'tweet_id': 1, 'dislike_id': 2}"
+
         # 验证点赞表(like)是否正确插入了数据
         cursor.execute("SELECT * FROM like WHERE tweet_id=1 AND user_id=1")
+        assert cursor.fetchone() is not None, "Like record not found"
+
+        # 验证点踩表(dislike)是否正确插入了数据
+        cursor.execute("SELECT * FROM dislike WHERE tweet_id=1 AND user_id=1")
         assert cursor.fetchone() is not None, "Like record not found"
 
     finally:

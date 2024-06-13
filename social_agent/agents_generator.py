@@ -10,9 +10,10 @@ from twitter.config import UserInfo
 from .agent import TwitterUserAgent
 
 
-async def generate_agents(
-        agent_info_path, twitter_channel, agent_graph=AgentGraph(),
-        agent_user_id_mapping: Dict[int, int] = {}):
+async def generate_agents(agent_info_path,
+                          twitter_channel,
+                          agent_graph=AgentGraph(),
+                          agent_user_id_mapping: Dict[int, int] = {}):
     """Generates and returns a dictionary of agents from the agent
     information CSV file. Each agent is added to the database and
     their respective profiles are updated.
@@ -61,19 +62,19 @@ async def generate_agents(
                              profile=profile)
 
         # controllable的agent_id全都在llm agent的agent_id的前面
-        agent = TwitterUserAgent(
-            i+control_user_num, user_info, twitter_channel)
+        agent = TwitterUserAgent(i + control_user_num, user_info,
+                                 twitter_channel)
 
         # Add agent to the agent graph
         await agent_graph.add_agent(agent)
 
         # Sign up agent and add their information to the database
         # print(f"Signing up agent {agent_info['username'][i]}...")
-        response = await agent.env.twitter_action.action_sign_up(
+        response = await agent.env.twitter_action.sign_up(
             agent_info['username'][i], agent_info['name'][i],
             agent_info['description'][i])
         user_id = response['user_id']
-        agent_user_id_mapping[i+control_user_num] = user_id
+        agent_user_id_mapping[i + control_user_num] = user_id
 
     for i in range(len(agent_info)):
         agent = agent_graph.get_agent(i)
@@ -84,21 +85,20 @@ async def generate_agents(
             for _agent_id in following_id_list:
                 # 这里action_follow接受的是user_id，不是agent id，所以会出现关注错误的问题
                 # 由于二者只差一个1，所以加个1就可以了
-                user_id = agent_user_id_mapping[_agent_id+control_user_num]
-                await agent.env.twitter_action.action_follow(user_id)
-                await agent_graph.add_edge(
-                    agent.agent_id, _agent_id+control_user_num)
+                user_id = agent_user_id_mapping[_agent_id + control_user_num]
+                await agent.env.twitter_action.follow(user_id)
+                await agent_graph.add_edge(agent.agent_id,
+                                           _agent_id + control_user_num)
             for _control_agent_id in range(control_user_num):
                 user_id = agent_user_id_mapping[_control_agent_id]
-                await agent.env.twitter_action.action_follow(user_id)
-                await agent_graph.add_edge(
-                    agent.agent_id, _control_agent_id)
+                await agent.env.twitter_action.follow(user_id)
+                await agent_graph.add_edge(agent.agent_id, _control_agent_id)
 
         if len(agent_info['previous_tweets']) != 0:
             previous_tweets = ast.literal_eval(
                 agent_info['previous_tweets'][i])
             for tweet in previous_tweets:
-                await agent.env.twitter_action.action_create_tweet(tweet)
+                await agent.env.twitter_action.create_tweet(tweet)
     print('agent_user_id_mapping:', agent_user_id_mapping)
     return agent_graph
 
@@ -108,9 +108,10 @@ async def generate_controllable_agents(twitter_channel, control_user_num: int):
     agent_user_id_mapping = {}
     for i in range(control_user_num):
         # peofile实际上用不到，写成'None'防止报错
-        user_info = UserInfo(
-            is_controllable=True,
-            profile={'other_info': {'user_profile': 'None'}})
+        user_info = UserInfo(is_controllable=True,
+                             profile={'other_info': {
+                                 'user_profile': 'None'
+                             }})
         # controllable的agent_id全都在llm agent的agent_id的前面
         agent = TwitterUserAgent(i, user_info, twitter_channel)
         # Add agent to the agent graph
@@ -120,8 +121,7 @@ async def generate_controllable_agents(twitter_channel, control_user_num: int):
         name = input(f"Please input name for agent {i}: ")
         bio = input(f"Please input bio for agent {i}: ")
 
-        response = await agent.env.twitter_action.action_sign_up(
-            username, name, bio)
+        response = await agent.env.twitter_action.sign_up(username, name, bio)
         user_id = response['user_id']
         agent_user_id_mapping[i] = user_id
 
@@ -131,6 +131,6 @@ async def generate_controllable_agents(twitter_channel, control_user_num: int):
             # controllable agent互相也全部关注
             if i != j:
                 user_id = agent_user_id_mapping[j]
-                await agent.env.twitter_action.action_follow(user_id)
+                await agent.env.twitter_action.follow(user_id)
                 await agent_graph.add_edge(i, j)
     return agent_graph, agent_user_id_mapping

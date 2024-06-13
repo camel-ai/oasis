@@ -107,6 +107,16 @@ class Twitter:
                 result = await self.unlike(agent_id=agent_id, tweet_id=message)
                 await self.channel.send_to((message_id, agent_id, result))
 
+            elif action == ActionType.DISLIKE:
+                result = await self.dislike(agent_id=agent_id,
+                                            tweet_id=message)
+                await self.channel.send_to((message_id, agent_id, result))
+
+            elif action == ActionType.UNDO_DISLIKE:
+                result = await self.undo_dislike(agent_id=agent_id,
+                                                 tweet_id=message)
+                await self.channel.send_to((message_id, agent_id, result))
+
             elif action == ActionType.SEARCH_TWEET:
                 result = await self.search_tweets(agent_id=agent_id,
                                                   query=message)
@@ -293,10 +303,10 @@ class Twitter:
 
             # 插入推文记录
             tweet_insert_query = (
-                "INSERT INTO tweet (user_id, content, created_at, num_likes) "
-                "VALUES (?, ?, ?, ?)")
+                "INSERT INTO tweet (user_id, content, created_at, num_likes, "
+                "num_dislikes) VALUES (?, ?, ?, ?, ?)")
             self._execute_db_command(tweet_insert_query,
-                                     (user_id, content, current_time, 0),
+                                     (user_id, content, current_time, 0, 0),
                                      commit=True)
             tweet_id = self.db_cursor.lastrowid
             # 准备trace记录的信息
@@ -479,6 +489,110 @@ class Twitter:
                  str(action_info)),
                 commit=True)
             return {"success": True, "like_id": like_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def dislike(self, agent_id: int, tweet_id: int):
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
+        try:
+            user_id = self._check_agent_userid(agent_id)
+            if not user_id:
+                return self._not_signup_error_message(agent_id)
+            # 检查是否已经存在dislike记录
+            like_check_query = (
+                "SELECT * FROM 'dislike' WHERE tweet_id = ? AND user_id = ?")
+            self._execute_db_command(like_check_query, (tweet_id, user_id))
+            if self.db_cursor.fetchone():
+                # 已存在点赞记录
+                return {
+                    "success": False,
+                    "error": "Dislike record already exists."
+                }
+
+            # 更新tweet表中的dislike数
+            tweet_update_query = (
+                "UPDATE tweet SET num_dislikes = num_dislikes + 1 WHERE "
+                "tweet_id = ?")
+            self._execute_db_command(tweet_update_query, (tweet_id, ),
+                                     commit=True)
+
+            # 在dislike表中添加记录
+            dislike_insert_query = (
+                "INSERT INTO 'dislike' (tweet_id, user_id, created_at) "
+                "VALUES (?, ?, ?)")
+            self._execute_db_command(dislike_insert_query,
+                                     (tweet_id, user_id, current_time),
+                                     commit=True)
+            dislike_id = self.db_cursor.lastrowid  # 获取刚刚插入的点赞记录的ID
+
+            # 记录操作到trace表
+            action_info = {"tweet_id": tweet_id, "dislike_id": dislike_id}
+            trace_insert_query = (
+                "INSERT INTO trace (user_id, created_at, action, info) "
+                "VALUES (?, ?, ?, ?)")
+            self._execute_db_command(
+                trace_insert_query,
+                (user_id, current_time, ActionType.DISLIKE.value,
+                 str(action_info)),
+                commit=True)
+            return {"success": True, "dislike_id": dislike_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def undo_dislike(self, agent_id: int, tweet_id: int):
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
+        try:
+            user_id = self._check_agent_userid(agent_id)
+            if not user_id:
+                return self._not_signup_error_message(agent_id)
+
+            # 检查是否已经存在dislike记录
+            like_check_query = (
+                "SELECT * FROM 'dislike' WHERE tweet_id = ? AND user_id = ?")
+            self._execute_db_command(like_check_query, (tweet_id, user_id))
+            result = self.db_cursor.fetchone()
+
+            if not result:
+                # 没有存在dislike记录
+                return {
+                    "success": False,
+                    "error": "Dislike record does not exist."
+                }
+
+            # Get the `dislike_id`
+            dislike_id, _, _, _ = result
+
+            # 更新tweet表中的点踩数
+            tweet_update_query = (
+                "UPDATE tweet SET num_dislikes = num_dislikes - 1 WHERE "
+                "tweet_id = ?")
+            self._execute_db_command(
+                tweet_update_query,
+                (tweet_id, ),
+                commit=True,
+            )
+
+            # 在dislike表中删除记录
+            like_delete_query = ("DELETE FROM 'dislike' WHERE dislike_id = ?")
+            self._execute_db_command(
+                like_delete_query,
+                (dislike_id, ),
+                commit=True,
+            )
+
+            # 记录操作到trace表
+            action_info = {"tweet_id": tweet_id, "dislike_id": dislike_id}
+            trace_insert_query = (
+                "INSERT INTO trace (user_id, created_at, action, info) "
+                "VALUES (?, ?, ?, ?)")
+            self._execute_db_command(
+                trace_insert_query,
+                (user_id, current_time, ActionType.UNDO_DISLIKE.value,
+                 str(action_info)),
+                commit=True)
+            return {"success": True, "dislike_id": dislike_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 

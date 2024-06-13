@@ -10,6 +10,8 @@ class ActionType(Enum):
     CREATE_TWEET = "create_tweet"
     LIKE = "like"
     UNLIKE = "unlike"
+    DISLIKE = "dislike"
+    UNDO_DISLIKE = "undo_dislike"
     FOLLOW = "follow"
     UNFOLLOW = "unfollow"
     MUTE = "mute"
