@@ -99,7 +99,7 @@ async def generate_agents(agent_info_path,
                 agent_info['previous_tweets'][i])
             for tweet in previous_tweets:
                 await agent.env.twitter_action.create_tweet(tweet)
-    print('agent_user_id_mapping:', agent_user_id_mapping)
+    # print('agent_user_id_mapping:', agent_user_id_mapping)
     return agent_graph
 
 

@@ -6,6 +6,6 @@ CREATE TABLE user (
     name TEXT,
     bio TEXT,
     created_at DATETIME,
-    num_followings INTEGER,
-    num_followers INTEGER
+    num_followings INTEGER DEFAULT 0,
+    num_followers INTEGER DEFAULT 0
 );

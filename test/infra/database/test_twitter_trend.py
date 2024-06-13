@@ -2,7 +2,7 @@
 import os
 import os.path as osp
 import sqlite3
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -30,11 +30,13 @@ class MockChannel:
         self.messages.append(message)  # 存储消息以便后续断言
         # 对搜索用户的结果进行断言
         if self.call_count == 1:
+            print(message[2])
             # 验证搜索成功且找到至少一个匹配用户
             assert message[2]["success"] is True, "Trend should be successful"
             assert message[2]["tweets"][0]["content"] == "Tweet 6"
             assert message[2]["tweets"][1]["content"] == "Tweet 5"
             assert message[2]["tweets"][2]["content"] == "Tweet 4"
+            print(message[2]["tweets"])
 
 
 # 定义一个fixture来初始化数据库和Twitter实例
@@ -76,12 +78,20 @@ async def test_search_user(setup_twitter):
         tweets_info = [
             (1, f'Tweet {9-i}',
              (today - timedelta(days=9 - i)).strftime('%Y-%m-%d %H:%M:%S.%f'),
-             9 - i) for i in range(10)
+             (9 - i), 0) for i in range(10)
         ]
 
         cursor.executemany(
-            "INSERT INTO tweet (user_id, content, created_at, num_likes) "
-            "VALUES (?, ?, ?, ?)", tweets_info)
+            "INSERT INTO tweet (user_id, content, created_at, num_likes, "
+            "num_dislikes) VALUES (?, ?, ?, ?, ?)", tweets_info)
+        conn.commit()
+
+        comments_info = [(i + 1, 1, 'Comment', datetime.now())
+                         for i in range(10)]
+
+        cursor.executemany(
+            "INSERT INTO comment (tweet_id, user_id, content, created_at) "
+            "VALUES (?, ?, ?, ?)", comments_info)
         conn.commit()
 
         await twitter.running()
@@ -93,5 +103,5 @@ async def test_search_user(setup_twitter):
     finally:
         conn.close()
         # 清理
-        # if os.path.exists(test_db_filepath):
-        #     os.remove(test_db_filepath)
+        if os.path.exists(test_db_filepath):
+            os.remove(test_db_filepath)

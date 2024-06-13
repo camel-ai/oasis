@@ -200,6 +200,43 @@ class Twitter:
             print(f"Error querying user_id for agent_id {agent_id}: {e}")
             return None
 
+    def _add_comments_to_tweets(self, tweets_results):
+        # 初始化返回的tweets列表
+        tweets = []
+        for row in tweets_results:
+            (tweet_id, user_id, content, created_at, num_likes,
+             num_dislikes) = row
+            # 对于每个tweet，查询其对应的comments
+            self.db_cursor.execute(
+                "SELECT comment_id, tweet_id, user_id, content, created_at, "
+                "num_likes, num_dislikes FROM comment WHERE tweet_id = ?",
+                (tweet_id, ))
+            comments_results = self.db_cursor.fetchall()
+
+            # 将每个comment的结果转换为字典格式
+            comments = [{
+                "comment_id": comment_id,
+                "tweet_id": tweet_id,
+                "user_id": user_id,
+                "content": content,
+                "created_at": created_at,
+                "num_likes": num_likes,
+                "num_dislikes": num_dislikes
+            } for (comment_id, tweet_id, user_id, content, created_at,
+                   num_likes, num_dislikes) in comments_results]
+
+            # 将tweet信息和对应的comments添加到tweets列表
+            tweets.append({
+                "tweet_id": tweet_id,
+                "user_id": user_id,
+                "content": content,
+                "created_at": created_at,
+                "num_likes": num_likes,
+                "num_dislikes": num_dislikes,
+                "comments": comments
+            })
+        return tweets
+
     # 注册
     async def signup(self, agent_id, user_message):
         # 允许重名，user_id是主键
@@ -267,13 +304,13 @@ class Twitter:
             placeholders = ', '.join('?' for _ in selected_tweet_ids)
             # 构造SQL查询字符串
             tweet_query = (
-                f"SELECT tweet_id, user_id, content, created_at, num_likes "
-                f"FROM tweet WHERE tweet_id IN ({placeholders})")
+                f"SELECT tweet_id, user_id, content, created_at, num_likes, "
+                f"num_dislikes FROM tweet WHERE tweet_id IN ({placeholders})")
             self._execute_db_command(tweet_query, selected_tweet_ids)
             results = self.db_cursor.fetchall()
             if not results:
                 return {"success": False, "message": "No tweets found."}
-
+            results_with_comments = self._add_comments_to_tweets(results)
             # 记录操作到trace表
             action_info = {}
             trace_insert_query = (
@@ -284,16 +321,7 @@ class Twitter:
                 (user_id, current_time, ActionType.REFRESH.value,
                  str(action_info)),
                 commit=True)
-
-            # 将结果的每个元组转换为字典
-            tweets = [{
-                "tweet_id": tweet_id,
-                "user_id": user_id,
-                "content": content,
-                "created_at": created_at,
-                "num_likes": num_likes
-            } for tweet_id, user_id, content, created_at, num_likes in results]
-            return {"success": True, "tweets": tweets}
+            return {"success": True, "tweets": results_with_comments}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -632,8 +660,8 @@ class Twitter:
             # 更新SQL查询，以便同时根据content、tweet_id和user_id进行搜索
             # 注意：CAST是必要的，因为tweet_id和user_id是整数类型，而搜索的query是字符串类型
             sql_query = (
-                "SELECT tweet_id, user_id, content, created_at, num_likes "
-                "FROM tweet "
+                "SELECT tweet_id, user_id, content, created_at, num_likes, "
+                "num_dislikes FROM tweet "
                 "WHERE content LIKE ? OR CAST(tweet_id AS TEXT) LIKE ? OR "
                 "CAST(user_id AS TEXT) LIKE ?")
             # 执行数据库查询
@@ -653,16 +681,6 @@ class Twitter:
                 (0, current_time, "search_tweets",
                  str(action_info)),  # 假设user_id为0表示系统操作或未指定用户
                 commit=True)
-            # 记录操作到trace表
-            action_info = {"query": query}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.SEARCH_TWEET.value,
-                 str(action_info)),
-                commit=True)
 
             # 如果没有找到结果，返回一个指示失败的字典
             if not results:
@@ -670,17 +688,9 @@ class Twitter:
                     "success": False,
                     "message": "No tweets found matching the query."
                 }
+            results_with_comments = self._add_comments_to_tweets(results)
 
-            # 将结果的每个元组转换为字典
-            tweets = [{
-                "tweet_id": tweet_id,
-                "user_id": user_id,
-                "content": content,
-                "created_at": created_at,
-                "num_likes": num_likes
-            } for tweet_id, user_id, content, created_at, num_likes in results]
-
-            return {"success": True, "tweets": tweets}
+            return {"success": True, "tweets": results_with_comments}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -940,8 +950,8 @@ class Twitter:
 
             # 构建SQL查询语句
             sql_query = """
-                SELECT user_id, tweet_id, content, created_at, num_likes
-                FROM tweet
+                SELECT user_id, tweet_id, content, created_at, num_likes,
+                num_dislikes FROM tweet
                 WHERE created_at >= ?
                 ORDER BY num_likes DESC
                 LIMIT ?
@@ -957,14 +967,7 @@ class Twitter:
                     "success": False,
                     "message": "No trending tweets in the specified period."
                 }
-            # 将结果的每个元组转换为字典
-            tweets = [{
-                "tweet_id": tweet_id,
-                "user_id": user_id,
-                "content": content,
-                "created_at": created_at,
-                "num_likes": num_likes
-            } for tweet_id, user_id, content, created_at, num_likes in results]
+            results_with_comments = self._add_comments_to_tweets(results)
 
             trace_insert_query = """
                 INSERT INTO trace (user_id, created_at, action, info)
@@ -973,7 +976,7 @@ class Twitter:
             self._execute_db_command(trace_insert_query,
                                      (user_id, current_time, "trend", None),
                                      commit=True)
-            return {"success": True, "tweets": tweets}
+            return {"success": True, "tweets": results_with_comments}
         except Exception as e:
             return {"success": False, "error": str(e)}
 

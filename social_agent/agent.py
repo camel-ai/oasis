@@ -78,7 +78,7 @@ class TwitterUserAgent:
         print('Please choose one function to perform:')
         function_list = self.env.twitter_action.get_openai_function_list()
         for i in range(len(function_list)):
-            print(f"{i}.", function_list[i].func.__name__[7:], end=', ')
+            print(f"{i}.", function_list[i].func.__name__, end=', ')
         print()
 
         selection = int(input("Enter your choice: "))
