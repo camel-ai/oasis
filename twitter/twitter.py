@@ -26,6 +26,7 @@ class Twitter:
         if start_time is None:
             start_time = datetime.now()
         create_db(db_path)
+
         self.db = sqlite3.connect(db_path, check_same_thread=False)
         self.db_cursor = self.db.cursor()
         self.channel = channel
@@ -152,6 +153,31 @@ class Twitter:
             elif action == ActionType.RETWEET:
                 result = await self.retweet(agent_id=agent_id,
                                             tweet_id=message)
+                await self.channel.send_to((message_id, agent_id, result))
+
+            elif action == ActionType.CREATE_COMMENT:
+                result = await self.create_comment(agent_id=agent_id,
+                                                   comment_message=message)
+                await self.channel.send_to((message_id, agent_id, result))
+
+            elif action == ActionType.LIKE_COMMENT:
+                result = await self.like_comment(agent_id=agent_id,
+                                                 comment_id=message)
+                await self.channel.send_to((message_id, agent_id, result))
+
+            elif action == ActionType.UNLIKE_COMMENT:
+                result = await self.unlike_comment(agent_id=agent_id,
+                                                   comment_id=message)
+                await self.channel.send_to((message_id, agent_id, result))
+
+            elif action == ActionType.DISLIKE_COMMENT:
+                result = await self.dislike_comment(agent_id=agent_id,
+                                                    comment_id=message)
+                await self.channel.send_to((message_id, agent_id, result))
+
+            elif action == ActionType.UNDO_DISLIKE_COMMENT:
+                result = await self.undo_dislike_comment(agent_id=agent_id,
+                                                         comment_id=message)
                 await self.channel.send_to((message_id, agent_id, result))
 
             else:
@@ -951,35 +977,255 @@ class Twitter:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    # 同步函数，不在running部分使用，直接被generator模块调用
-    def generate_agents(self, agents_info_list: list):
-        r"""Generate the agents using :obj:`agents_info`.
+    async def create_comment(self, agent_id: int, comment_message: tuple):
+        tweet_id, content = comment_message
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
+        try:
+            user_id = self._check_agent_userid(agent_id)
+            if not user_id:
+                return self._not_signup_error_message(agent_id)
 
-        Args:
-            agents_info_list (List[Dict]): list of agent info
-        """
-        # TODO assert the database is running
-        for index, item in enumerate(agents_info_list):
-            # Insert agents info to USER database
-            self.db_cursor.execute(
-                ("INSERT INTO user (user_name, name, bio, created_at, "
-                 "num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?)"),
-                (item["user_name"], item["name"], item["bio"],
-                 item["created_at"], item["num_followings"],
-                 item["num_followers"]))
-            self.db.commit()
+            # 插入评论记录
+            comment_insert_query = (
+                "INSERT INTO comment (tweet_id, user_id, content, created_at) "
+                "VALUES (?, ?, ?, ?)")
+            self._execute_db_command(
+                comment_insert_query,
+                (tweet_id, user_id, content, current_time),
+                commit=True)
+            comment_id = self.db_cursor.lastrowid
 
-    # 同步函数，不在running部分使用，直接被generator模块调用
-    def update_tweets(self, tweet_info_dict: dict):
-        r"""Update tweets into the database.
+            # 准备trace记录的信息
+            action_info = {"content": content, "comment_id": comment_id}
+            trace_insert_query = (
+                "INSERT INTO trace (user_id, created_at, action, info) "
+                "VALUES (?, ?, ?, ?)")
+            self._execute_db_command(
+                trace_insert_query,
+                (user_id, current_time, ActionType.CREATE_COMMENT.value,
+                 str(action_info)),
+                commit=True)
+            return {"success": True, "comment_id": comment_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
-        Args:
-            tweet_info_dict (dict): Dictionary of tweet information.
-        """
-        self.db_cursor.execute(
-            ("INSERT INTO tweet (tweet_id, user_id, content, created_at, "
-             "num_likes) VALUES (?, ?, ?, ?, ?)"),
-            (tweet_info_dict["tweet_id"], tweet_info_dict["user_id"],
-             tweet_info_dict["content"], tweet_info_dict["created_at"],
-             tweet_info_dict["num_likes"]))
-        self.db.commit()
+    async def like_comment(self, agent_id: int, comment_id: int):
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
+        try:
+            user_id = self._check_agent_userid(agent_id)
+            if not user_id:
+                return self._not_signup_error_message(agent_id)
+
+            # 检查是否已经存在点赞记录
+            like_check_query = (
+                "SELECT * FROM comment_like WHERE comment_id = ? AND "
+                "user_id = ?")
+            self._execute_db_command(like_check_query, (comment_id, user_id))
+            if self.db_cursor.fetchone():
+                # 已存在点赞记录
+                return {
+                    "success": False,
+                    "error": "Comment like record already exists."
+                }
+
+            # 更新tweet表中的点赞数
+            comment_update_query = (
+                "UPDATE comment SET num_likes = num_likes + 1 WHERE "
+                "comment_id = ?")
+            self._execute_db_command(comment_update_query, (comment_id, ),
+                                     commit=True)
+
+            # 在comment_like表中添加记录
+            like_insert_query = (
+                "INSERT INTO comment_like (comment_id, user_id, created_at) "
+                "VALUES (?, ?, ?)")
+            self._execute_db_command(like_insert_query,
+                                     (comment_id, user_id, current_time),
+                                     commit=True)
+            comment_like_id = self.db_cursor.lastrowid  # 获取刚刚插入的点赞记录的ID
+
+            # 记录操作到trace表
+            action_info = {
+                "comment_id": comment_id,
+                "comment_like_id": comment_like_id
+            }
+            trace_insert_query = (
+                "INSERT INTO trace (user_id, created_at, action, info) "
+                "VALUES (?, ?, ?, ?)")
+            self._execute_db_command(
+                trace_insert_query,
+                (user_id, current_time, ActionType.LIKE_COMMENT.value,
+                 str(action_info)),
+                commit=True)
+            return {"success": True, "comment_like_id": comment_like_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def unlike_comment(self, agent_id: int, comment_id: int):
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
+        try:
+            user_id = self._check_agent_userid(agent_id)
+            if not user_id:
+                return self._not_signup_error_message(agent_id)
+
+            # 检查是否已经存在点赞记录
+            like_check_query = (
+                "SELECT * FROM comment_like WHERE comment_id = ? AND "
+                "user_id = ?")
+            self._execute_db_command(like_check_query, (comment_id, user_id))
+            result = self.db_cursor.fetchone()
+
+            if not result:
+                # 没有存在点赞记录
+                return {
+                    "success": False,
+                    "error": "Comment like record does not exist."
+                }
+            # 获取`comment_like_id`
+            comment_like_id = result[0]
+
+            # 更新comment表中的点赞数
+            comment_update_query = (
+                "UPDATE comment SET num_likes = num_likes - 1 WHERE "
+                "comment_id = ?")
+            self._execute_db_command(
+                comment_update_query,
+                (comment_id, ),
+                commit=True,
+            )
+            # 在comment_like表中删除记录
+            like_delete_query = (
+                "DELETE FROM comment_like WHERE comment_like_id = ?")
+            self._execute_db_command(
+                like_delete_query,
+                (comment_like_id, ),
+                commit=True,
+            )
+            # 记录操作到trace表
+            action_info = {
+                "comment_id": comment_id,
+                "comment_like_id": comment_like_id
+            }
+            trace_insert_query = (
+                "INSERT INTO trace (user_id, created_at, action, info) "
+                "VALUES (?, ?, ?, ?)")
+            self._execute_db_command(
+                trace_insert_query,
+                (user_id, current_time, ActionType.UNLIKE_COMMENT.value,
+                 str(action_info)),
+                commit=True)
+            return {"success": True, "comment_like_id": comment_like_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def dislike_comment(self, agent_id: int, comment_id: int):
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
+        try:
+            user_id = self._check_agent_userid(agent_id)
+            if not user_id:
+                return self._not_signup_error_message(agent_id)
+
+            # 检查是否已经存在不喜欢记录
+            dislike_check_query = (
+                "SELECT * FROM comment_dislike WHERE comment_id = ? AND "
+                "user_id = ?")
+            self._execute_db_command(dislike_check_query,
+                                     (comment_id, user_id))
+            if self.db_cursor.fetchone():
+                # 已存在不喜欢记录
+                return {
+                    "success": False,
+                    "error": "Comment dislike record already exists."
+                }
+
+            # 更新comment表中的不喜欢数
+            comment_update_query = (
+                "UPDATE comment SET num_dislikes = num_dislikes + 1 WHERE "
+                "comment_id = ?")
+            self._execute_db_command(comment_update_query, (comment_id, ),
+                                     commit=True)
+
+            # 在comment_dislike表中添加记录
+            dislike_insert_query = (
+                "INSERT INTO comment_dislike (comment_id, user_id, "
+                "created_at) VALUES (?, ?, ?)")
+            self._execute_db_command(dislike_insert_query,
+                                     (comment_id, user_id, current_time),
+                                     commit=True)
+            comment_dislike_id = self.db_cursor.lastrowid  # 获取刚刚插入的不喜欢记录的ID
+
+            # 记录操作到trace表
+            action_info = {
+                "comment_id": comment_id,
+                "comment_dislike_id": comment_dislike_id
+            }
+            trace_insert_query = (
+                "INSERT INTO trace (user_id, created_at, action, info) "
+                "VALUES (?, ?, ?, ?)")
+            self._execute_db_command(
+                trace_insert_query,
+                (user_id, current_time, ActionType.DISLIKE_COMMENT.value,
+                 str(action_info)),
+                commit=True)
+            return {"success": True, "comment_dislike_id": comment_dislike_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def undo_dislike_comment(self, agent_id: int, comment_id: int):
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
+        try:
+            user_id = self._check_agent_userid(agent_id)
+            if not user_id:
+                return self._not_signup_error_message(agent_id)
+
+            # 检查是否已经存在不喜欢记录
+            dislike_check_query = (
+                "SELECT comment_dislike_id FROM comment_dislike WHERE "
+                "comment_id = ? AND user_id = ?")
+            self._execute_db_command(dislike_check_query,
+                                     (comment_id, user_id))
+            dislike_record = self.db_cursor.fetchone()
+            if not dislike_record:
+                # 不存在不喜欢记录
+                return {
+                    "success": False,
+                    "error": "Comment dislike record does not exist."
+                }
+            comment_dislike_id = dislike_record[0]
+
+            # 从comment_dislike表中删除记录
+            dislike_delete_query = (
+                "DELETE FROM comment_dislike WHERE comment_id = ? AND "
+                "user_id = ?")
+            self._execute_db_command(dislike_delete_query,
+                                     (comment_id, user_id),
+                                     commit=True)
+
+            # 更新comment表中的不喜欢数
+            comment_update_query = (
+                "UPDATE comment SET num_dislikes = num_dislikes - 1 WHERE "
+                "comment_id = ?")
+            self._execute_db_command(comment_update_query, (comment_id, ),
+                                     commit=True)
+
+            # 记录操作到trace表
+            action_info = {
+                "comment_id": comment_id,
+                "comment_dislike_id": comment_dislike_id
+            }
+            trace_insert_query = (
+                "INSERT INTO trace (user_id, created_at, action, info) VALUES "
+                "(?, ?, ?, ?)")
+            self._execute_db_command(
+                trace_insert_query,
+                (user_id, current_time, ActionType.UNDO_DISLIKE_COMMENT.value,
+                 str(action_info)),
+                commit=True)
+            return {"success": True, "comment_dislike_id": comment_dislike_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}

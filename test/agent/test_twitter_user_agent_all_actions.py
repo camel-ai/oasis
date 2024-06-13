@@ -125,5 +125,27 @@ async def test_agents_tweeting(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
+    return_message = await action_agent.env.twitter_action.create_comment(
+        1, 'Test comment')
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    return_message = await action_agent.env.twitter_action.like_comment(1)
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    return_message = await action_agent.env.twitter_action.unlike_comment(1)
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    return_message = await action_agent.env.twitter_action.dislike_comment(1)
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    return_message = await (
+        action_agent.env.twitter_action.undo_dislike_comment(1))
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
     await channel.write_to_receive_queue((None, None, ActionType.EXIT))
     await task

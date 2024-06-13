@@ -20,3 +20,8 @@ class ActionType(Enum):
     SIGNUP = "sign_up"
     RETWEET = "retweet"
     UPDATE_REC = "update_rec"
+    CREATE_COMMENT = "create_comment"
+    LIKE_COMMENT = "like_comment"
+    UNLIKE_COMMENT = "unlike_comment"
+    DISLIKE_COMMENT = "dislike_comment"
+    UNDO_DISLIKE_COMMENT = "undo_dislike_comment"

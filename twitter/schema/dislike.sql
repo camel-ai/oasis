@@ -1,4 +1,4 @@
--- This is the schema definition for the like table
+-- This is the schema definition for the dislike table
 CREATE TABLE dislike (
     dislike_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,

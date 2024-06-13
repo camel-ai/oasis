@@ -337,3 +337,119 @@ def test_rec_operations():
     # Assert the rec was deleted correctly
     cursor.execute("SELECT * FROM rec WHERE user_id = 2 AND tweet_id = 2")
     assert cursor.fetchone() is None
+
+
+def test_comment_operations():
+    conn = sqlite3.connect(db_filepath)
+    cursor = conn.cursor()
+
+    # Insert a comment:
+    cursor.execute(
+        ("INSERT INTO comment (tweet_id, user_id, content, created_at) "
+         "VALUES (?, ?, ?, ?)"),
+        (1, 2, 'This is a test comment', '2024-04-21 22:05:00'))
+    conn.commit()
+
+    # Assert the comment was inserted correctly
+    cursor.execute(
+        "SELECT * FROM comment WHERE content = 'This is a test comment'")
+    comment = cursor.fetchone()
+    assert comment is not None, "Comment insertion failed."
+    assert comment[1] == 1, "Tweet ID mismatch."
+    assert comment[2] == 2, "User ID mismatch."
+    assert comment[3] == 'This is a test comment', "Content mismatch."
+    assert comment[4] == '2024-04-21 22:05:00', "Created at mismatch."
+    assert comment[5] == 0, "Likes count mismatch."
+    assert comment[6] == 0, "Dislikes count mismatch."
+
+    # Update the comment
+    cursor.execute("UPDATE comment SET content = ? WHERE content = ?",
+                   ('Updated comment', 'This is a test comment'))
+    conn.commit()
+
+    expected_result = [{
+        'comment_id': 1,
+        'tweet_id': 1,
+        'user_id': 2,
+        'content': 'Updated comment',
+        'created_at': '2024-04-21 22:05:00',
+        'num_likes': 0,
+        'num_dislikes': 0,
+    }]
+    actual_result = fetch_table_from_db(cursor, 'comment')
+
+    # 使用assert语句进行比较
+    assert actual_result == expected_result, "The fetched data does not match."
+
+    # Assert the comment was updated correctly
+    cursor.execute("SELECT * FROM comment WHERE content = 'Updated comment'")
+    comment = cursor.fetchone()
+    assert comment[3] == 'Updated comment', "Comment update failed."
+
+    # Delete the comment
+    cursor.execute("DELETE FROM comment WHERE content = 'Updated comment'")
+    conn.commit()
+
+    # Assert the comment was deleted correctly
+    cursor.execute("SELECT * FROM comment WHERE content = 'Updated comment'")
+    assert cursor.fetchone() is None, "Comment deletion failed."
+
+
+def test_comment_like_operations():
+    conn = sqlite3.connect(db_filepath)
+    cursor = conn.cursor()
+
+    # Insert a comment like relation
+    cursor.execute(
+        "INSERT INTO comment_like (user_id, comment_id, created_at) VALUES "
+        "(?, ?, ?)", (1, 2, '2024-04-21 22:05:00'))
+    conn.commit()
+
+    # Assert the comment like relation was inserted correctly
+    cursor.execute("SELECT * FROM comment_like WHERE user_id = 1 AND "
+                   "comment_id = 2")
+    comment_like = cursor.fetchone()
+    assert comment_like is not None, "Comment like insertion failed."
+    assert comment_like[1] == 1, "User ID mismatch."
+    assert comment_like[2] == 2, "Comment ID mismatch."
+    assert comment_like[3] == '2024-04-21 22:05:00', "Created at mismatch."
+
+    # Delete the comment like relation
+    cursor.execute("DELETE FROM comment_like WHERE user_id = 1 AND "
+                   "comment_id = 2")
+    conn.commit()
+
+    # Assert the comment like relation was deleted correctly
+    cursor.execute("SELECT * FROM comment_like WHERE user_id = 1 AND "
+                   "comment_id = 2")
+    assert cursor.fetchone() is None, "Comment like deletion failed."
+
+
+def test_comment_dislike_operations():
+    conn = sqlite3.connect(db_filepath)
+    cursor = conn.cursor()
+
+    # Insert a comment dislike relation
+    cursor.execute(
+        "INSERT INTO comment_dislike (user_id, comment_id, created_at) VALUES "
+        "(?, ?, ?)", (1, 2, '2024-04-21 22:05:00'))
+    conn.commit()
+
+    # Assert the comment dislike relation was inserted correctly
+    cursor.execute("SELECT * FROM comment_dislike WHERE user_id = 1 AND "
+                   "comment_id = 2")
+    comment_dislike = cursor.fetchone()
+    assert comment_dislike is not None, "Comment dislike insertion failed."
+    assert comment_dislike[1] == 1, "User ID mismatch."
+    assert comment_dislike[2] == 2, "Comment ID mismatch."
+    assert comment_dislike[3] == '2024-04-21 22:05:00', "Created at mismatch."
+
+    # Delete the comment dislike relation
+    cursor.execute("DELETE FROM comment_dislike WHERE user_id = 1 AND "
+                   "comment_id = 2")
+    conn.commit()
+
+    # Assert the comment dislike relation was deleted correctly
+    cursor.execute("SELECT * FROM comment_dislike WHERE user_id = 1 AND "
+                   "comment_id = 2")
+    assert cursor.fetchone() is None, "Comment dislike deletion failed."

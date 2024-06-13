@@ -18,7 +18,9 @@ class TwitterAction:
                 self.create_tweet, self.follow, self.unfollow, self.like,
                 self.unlike, self.dislike, self.undo_dislike,
                 self.search_tweets, self.search_user, self.trend, self.refresh,
-                self.mute, self.unmute, self.retweet
+                self.mute, self.unmute, self.retweet, self.create_comment,
+                self.like_comment, self.unlike_comment, self.dislike_comment,
+                self.undo_dislike_comment
             ]
         ]
 
@@ -414,19 +416,148 @@ class TwitterAction:
                 'error' message or a message indicating no trending tweets
                 were found.
 
-        Example of a successful return:
-        {
-            "success": True,
-            "tweets": [
-                {
-                    "tweet_id": 123,
-                    "user_id": 456,
-                    "content": "Example tweet content",
-                    "created_at": "2024-05-14T12:00:00",
-                    "num_likes": 789
-                },
-                ...
-            ]
-        }
+            Example of a successful return:
+            {
+                "success": True,
+                "tweets": [
+                    {
+                        "tweet_id": 123,
+                        "user_id": 456,
+                        "content": "Example tweet content",
+                        "created_at": "2024-05-14T12:00:00",
+                        "num_likes": 789
+                    },
+                    ...
+                ]
+            }
         """
         return await self.perform_action(None, ActionType.TREND.value)
+
+    async def create_comment(self, tweet_id: int, content: str):
+        r"""Creates a new comment for a specified tweet with the given content.
+
+        This method creates a new comment based on the provided content and
+        associates it with the given tweet ID. Upon successful execution, it
+        returns a dictionary indicating success and the ID of the newly created
+        comment.
+
+        Args:
+            tweet_id (int): The ID of the tweet to which the comment is to be
+                added.
+            content (str): The content of the comment to be created.
+
+        Returns:
+            dict: A dictionary with two key-value pairs. The 'success' key
+                maps to a boolean indicating whether the comment creation was
+                successful. The 'comment_id' key maps to the integer ID of the
+                newly created comment.
+
+            Example of a successful return:
+                {'success': True, 'comment_id': 123}
+        """
+        comment_message = (tweet_id, content)
+        return await self.perform_action(comment_message,
+                                         ActionType.CREATE_COMMENT.value)
+
+    async def like_comment(self, comment_id: int):
+        r"""Creates a new like for a specified comment.
+
+        This method invokes an action to create a new like for a comment,
+        identified by the given comment ID. Upon successful execution, it
+        returns a dictionary indicating success and the ID of the newly
+        created like.
+
+        Args:
+            comment_id (int): The ID of the comment to be liked.
+
+        Returns:
+            dict: A dictionary with two key-value pairs. The 'success' key
+                maps to a boolean indicating whether the like creation was
+                successful. The 'like_id' key maps to the integer ID of the
+                newly created like.
+
+            Example of a successful return:
+            {"success": True, "comment_like_id": 456}
+
+        Note:
+            Attempting to like a comment that the user has already liked will
+            result in a failure.
+        """
+        return await self.perform_action(comment_id,
+                                         ActionType.LIKE_COMMENT.value)
+
+    async def unlike_comment(self, comment_id: int):
+        """Removes a like based on the comment's ID.
+
+        This method removes a like from the database, identified by the
+        comment's ID. It returns a dictionary indicating the success of the
+        operation and the ID of the removed like.
+
+        Args:
+            comment_id (int): The ID of the comment to be unliked.
+
+        Returns:
+            dict: A dictionary with 'success' indicating if the removal was
+                successful, and 'like_id' the ID of the removed like.
+
+            Example of a successful return:
+            {"success": True, "like_id": 456}
+
+        Note:
+            Attempting to remove a like for a comment that the user has not
+            previously liked will result in a failure.
+        """
+        return await self.perform_action(comment_id,
+                                         ActionType.UNLIKE_COMMENT.value)
+
+    async def dislike_comment(self, comment_id: int):
+        r"""Creates a new dislike for a specified comment.
+
+        This method invokes an action to create a new dislike for a
+        comment, identified by the given comment ID. Upon successful execution,
+        it returns a dictionary indicating success and the ID of the newly
+        created dislike.
+
+        Args:
+            comment_id (int): The ID of the comment to be disliked.
+
+        Returns:
+            dict: A dictionary with two key-value pairs. The 'success' key
+                maps to a boolean indicating whether the dislike creation was
+                successful. The 'dislike_id' key maps to the integer ID of the
+                newly created dislike.
+
+            Example of a successful return:
+            {"success": True, "comment_dislike_id": 456}
+
+        Note:
+            Attempting to dislike a comment that the user has already liked
+            will result in a failure.
+        """
+        return await self.perform_action(comment_id,
+                                         ActionType.DISLIKE_COMMENT.value)
+
+    async def undo_dislike_comment(self, comment_id: int):
+        """Removes a dislike based on the comment's ID.
+
+        This method removes a dislike from the database, identified by the
+        comment's ID. It returns a dictionary indicating the success of the
+        operation and the ID of the removed dislike.
+
+        Args:
+            comment_id (int): The ID of the comment to have its dislike
+                removed.
+
+        Returns:
+            dict: A dictionary with 'success' indicating if the removal was
+                successful, and 'dislike_id' the ID of the removed dislike.
+
+            Example of a successful return:
+            {"success": True, "dislike_id": 456}
+
+        Note:
+            Attempting to remove a dislike for a comment that the user has not
+            previously disliked will result in a failure.
+        """
+        return await self.perform_action(comment_id,
+                                         ActionType.UNDO_DISLIKE_COMMENT.value)

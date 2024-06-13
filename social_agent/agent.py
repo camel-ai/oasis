@@ -82,7 +82,7 @@ class TwitterUserAgent:
         print()
 
         selection = int(input("Enter your choice: "))
-        if not 0 <= selection <= 11:
+        if not 0 <= selection < len(function_list):
             print("Invalid input. Please enter a number.")
             return
 
@@ -103,5 +103,5 @@ class TwitterUserAgent:
 
         # 调用函数并传入用户输入的参数
         result = await func(*args)
-        print(result)
+        # print(result)
         return result
