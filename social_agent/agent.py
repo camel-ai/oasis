@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import inspect
 import json
 
@@ -11,7 +13,7 @@ from camel.types import ModelType, OpenAIBackendRole
 
 from social_agent.agent_action import TwitterAction
 from social_agent.agent_environment import TwitterEnvironment
-from twitter.channel import Twitter_Channel
+from twitter.channel import TwitterChannel
 from twitter.config import UserInfo
 
 
@@ -21,7 +23,7 @@ class TwitterUserAgent:
         self,
         agent_id: int,
         user_info: UserInfo,
-        channel: Twitter_Channel,
+        channel: TwitterChannel,
         model_type: ModelType = ModelType.GPT_3_5_TURBO,
     ):
         self.agent_id = agent_id

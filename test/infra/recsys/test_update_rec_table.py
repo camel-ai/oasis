@@ -8,7 +8,7 @@ from test.show_db import print_db_contents
 
 import pytest
 
-from twitter.channel import Twitter_Channel
+from twitter.channel import TwitterChannel
 from twitter.twitter import Twitter
 from twitter.typing import ActionType
 
@@ -27,20 +27,26 @@ def setup_db():
 @pytest.mark.asyncio
 async def test_update_rec_table(setup_db):
     try:
-        channel = Twitter_Channel()
+        channel = TwitterChannel()
         infra = Twitter(test_db_filepath, channel)
         # 在测试开始之前，将3个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
-        cursor.execute(("INSERT INTO user "
-                        "(agent_id, user_name, bio, num_followings, num_followers) "
-                        "VALUES (?, ?, ?, ?, ?)"), (1, "user1", "This is test bio for user1", 0, 0))
-        cursor.execute(("INSERT INTO user "
-                        "(agent_id, user_name, bio, num_followings, num_followers) "
-                        "VALUES (?, ?, ?, ?, ?)"), (2, "user2", "This is test bio for user2", 2, 4))
-        cursor.execute(("INSERT INTO user "
-                        "(agent_id, user_name, bio, num_followings, num_followers) "
-                        "VALUES (?, ?, ?, ?, ?)"), (3, "user3", "This is test bio for user3", 3, 5))
+        cursor.execute(
+            ("INSERT INTO user "
+             "(agent_id, user_name, bio, num_followings, num_followers) "
+             "VALUES (?, ?, ?, ?, ?)"),
+            (1, "user1", "This is test bio for user1", 0, 0))
+        cursor.execute(
+            ("INSERT INTO user "
+             "(agent_id, user_name, bio, num_followings, num_followers) "
+             "VALUES (?, ?, ?, ?, ?)"),
+            (2, "user2", "This is test bio for user2", 2, 4))
+        cursor.execute(
+            ("INSERT INTO user "
+             "(agent_id, user_name, bio, num_followings, num_followers) "
+             "VALUES (?, ?, ?, ?, ?)"),
+            (3, "user3", "This is test bio for user3", 3, 5))
         conn.commit()
 
         # 在测试开始之前，将60条推文用户插入到tweet表中
@@ -65,7 +71,8 @@ async def test_update_rec_table(setup_db):
         for i in range(1, 4):
             cursor.execute("SELECT tweet_id FROM rec WHERE user_id = ?", (i, ))
             tweets = cursor.fetchall()  # 获取所有记录
-            # ! Number of available tweets for recommendation = total tweets - tweets from current user !
+            # ! Number of available tweets for recommendation =
+            # total tweets - tweets from current user !
             assert len(tweets) == 40, f"User {user_id} doesn't have 40 tweets."
             tweet_ids = [tweet[0] for tweet in tweets]
             is_unique = len(tweet_ids) == len(set(tweet_ids))

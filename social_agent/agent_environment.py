@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from abc import ABC, abstractmethod
 from string import Template
@@ -45,10 +47,17 @@ class TwitterEnvironment(Environment):
         # TODO: Implement follows env
         return self.follows_env_template.substitute(num_follows=0)
 
-    async def to_text_prompt(self) -> str:
-        followers_env = await self.get_followers_env()
-        follows_env = await self.get_follows_env()
-        tweets_env = await self.get_tweets_env()
+    async def to_text_prompt(
+        self,
+        include_tweets: bool = True,
+        include_followers: bool = False,
+        include_follows: bool = False,
+    ) -> str:
+        followers_env = await self.get_followers_env(
+        ) if include_follows else "No followers."
+        follows_env = await self.get_follows_env(
+        ) if include_followers else "No follows."
+        tweets_env = await self.get_tweets_env() if include_tweets else ""
 
         return self.env_template.substitute(
             followers_env=followers_env,
