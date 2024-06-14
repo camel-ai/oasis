@@ -45,6 +45,12 @@ class MockChannel:
             assert len(
                 message[2]["tweets"]) > 0, "Should find at least one tweet"
             assert message[2]["tweets"][0]["content"] == "Bob's first tweet!"
+            assert message[2]["tweets"][0]['comments'][0]['content'] == (
+                "Alice's comment")
+            assert message[2]["tweets"][0]['comments'][1]['content'] == (
+                "Bob's comment")
+            assert message[2]["tweets"][0]['comments'][2]['content'] == (
+                "Charlie's comment")
 
 
 # 定义一个fixture来初始化数据库和Twitter实例
@@ -81,15 +87,29 @@ async def test_search_user(setup_twitter):
                            users_info)
         tweets_info = [
             # (user_id, content, created_at, num_likes)
-            (1, "Hello World from Alice!", "2023-01-01 13:00:00", 100),
-            (2, "Bob's first tweet!", "2023-01-02 14:00:00", 150),
-            (3, "Charlie says hi!", "2023-01-03 15:00:00", 200)
+            (1, "Hello World from Alice!", "2023-01-01 13:00:00", 100, 2),
+            (2, "Bob's first tweet!", "2023-01-02 14:00:00", 150, 2),
+            (3, "Charlie says hi!", "2023-01-03 15:00:00", 200, 3)
         ]
         # 假设 cursor 是你已经创建并与数据库建立连接的游标对象
         cursor.executemany(
-            ("INSERT INTO tweet (user_id, content, created_at, num_likes) "
-             "VALUES (?, ?, ?, ?)"), tweets_info)
+            ("INSERT INTO tweet (user_id, content, created_at, num_likes, "
+             "num_dislikes) VALUES (?, ?, ?, ?, ?)"), tweets_info)
         conn.commit()
+
+        comments_info = [
+            # (tweet_id, user_id, content)
+            (2, 1, "Alice's comment", "2023-01-01 13:05:00", 5, 1),
+            (2, 2, "Bob's comment", "2023-01-02 14:10:00", 3, 0),
+            (2, 3, "Charlie's comment", "2023-01-03 15:20:00", 8, 2)
+        ]
+        # 假设 cursor 是你已经创建并与数据库建立连接的游标对象
+        cursor.executemany(
+            "INSERT INTO comment (tweet_id, user_id, content, created_at, "
+            "num_likes, num_dislikes) VALUES (?, ?, ?, ?, ?, ?)",
+            comments_info)
+        conn.commit()
+
         await twitter.running()
 
         # 验证跟踪表(trace)是否正确记录了操作

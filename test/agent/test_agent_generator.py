@@ -11,7 +11,7 @@ from twitter.channel import TwitterChannel
 from twitter.twitter import Twitter
 
 parent_folder = osp.dirname(osp.abspath(__file__))
-test_db_filepath = osp.join(parent_folder, "mock_twitter.db")
+test_db_filepath = osp.join(parent_folder, "test.db")
 if osp.exists(test_db_filepath):
     os.remove(test_db_filepath)
 

@@ -36,10 +36,10 @@ class MockChannel:
         # 对搜索用户的结果进行断言
         if self.call_count == 2:
             # 验证搜索成功且找到至少一个匹配用户
-            print_db_contents(test_db_filepath)
-            assert message[2]["success"] is True, "Trend should be successful"
+            # print_db_contents(test_db_filepath)
+            assert message[2]["success"] is True
             assert len(message[2]["tweets"]) == 5
-
+            print(message[2]["tweets"])
             # 然后检查 'tweets' 列表中的每个条目
             for tweet in message[2].get('tweets', []):
                 assert tweet.get('tweet_id') is not None
@@ -47,6 +47,7 @@ class MockChannel:
                 assert tweet.get('content') is not None
                 assert tweet.get('created_at') is not None
                 assert tweet.get('num_likes') is not None
+                assert tweet.get('comments') is not None
 
 
 # 定义一个fixture来初始化数据库和Twitter实例
@@ -73,9 +74,9 @@ async def test_refresh(setup_twitter):
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
         cursor.execute(
-            ("INSERT INTO user "
-             "(user_id, agent_id, user_name, bio,  num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ? , ?)"), (1, 1, "user1", "This is test bio for user 1", 0, 0))
+            ("INSERT INTO user (user_id, agent_id, user_name, bio, "
+             "num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?)"),
+            (1, 1, "user1", "This is test bio for user 1", 0, 0))
         conn.commit()
 
         # 在测试开始之前，将tweet插入到tweet表中
@@ -86,12 +87,15 @@ async def test_refresh(setup_twitter):
         for i in range(1, 61):  # 生成60条tweet
             user_id = i % 3 + 1  # 循环使用用户ID 1, 2, 3
             content = f"Tweet content for tweet {i}"  # 简单生成不同的内容
+            comment_content = f"Comment content for tweet {i}"
             created_at = datetime.now()
 
-            cursor.execute(("INSERT INTO tweet "
-                            "(user_id, content, created_at, num_likes) "
-                            "VALUES (?, ?, ?, ?)"),
-                           (user_id, content, created_at, 0))
+            cursor.execute(("INSERT INTO tweet (user_id, content, created_at, "
+                            "num_likes, num_dislikes) VALUES (?, ?, ?, ?, ?)"),
+                           (user_id, content, created_at, 0, 0))
+            cursor.execute(("INSERT INTO comment (tweet_id, user_id, content, "
+                            "created_at) VALUES (?, ?, ?, ?)"),
+                           (i, user_id, comment_content, created_at))
         conn.commit()
         print_db_contents(test_db_filepath)
         await twitter.running()

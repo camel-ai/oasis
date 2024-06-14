@@ -5,6 +5,7 @@ CREATE TABLE tweet (
     user_id INTEGER,
     content TEXT,
     created_at DATETIME,
-    num_likes INTEGER,
+    num_likes INTEGER DEFAULT 0,
+    num_dislikes INTEGER DEFAULT 0,
     FOREIGN KEY(user_id) REFERENCES user(user_id)
 );

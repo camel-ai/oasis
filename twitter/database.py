@@ -15,10 +15,17 @@ TWEET_SCHEMA_SQL = "tweet.sql"
 FOLLOW_SCHEMA_SQL = "follow.sql"
 MUTE_SCHEMA_SQL = "mute.sql"
 LIKE_SCHEMA_SQL = "like.sql"
+DISLIKE_SCHEMA_SQL = "dislike.sql"
 TRACE_SCHEMA_SQL = "trace.sql"
 REC_SCHEMA_SQL = "rec.sql"
+COMMENT_SCHEMA_SQL = "comment.sql"
+COMMENT_LIKE_SCHEMA_SQL = "comment_like.sql"
+COMMENT_DISLIKE_SCHEMA_SQL = "comment_dislike.sql"
 
-TABLE_NAMES = {"user", "tweet", "follow", "mute", "like", "trace", "rec"}
+TABLE_NAMES = {
+    "user", "tweet", "follow", "mute", "like", "dislike", "trace", "rec",
+    "comment.sql", "comment_like.sql", "comment_dislike.sql"
+}
 
 
 def get_db_path() -> str:
@@ -80,6 +87,12 @@ def create_db(db_path: str | None = None):
             like_sql_script = sql_file.read()
         cursor.executescript(like_sql_script)
 
+        # Read and execute the dislike table SQL script:
+        dislike_sql_path = osp.join(schema_dir, DISLIKE_SCHEMA_SQL)
+        with open(dislike_sql_path, 'r') as sql_file:
+            dislike_sql_script = sql_file.read()
+        cursor.executescript(dislike_sql_script)
+
         # Read and execute the trace table SQL script:
         trace_sql_path = osp.join(schema_dir, TRACE_SCHEMA_SQL)
         with open(trace_sql_path, 'r') as sql_file:
@@ -91,6 +104,25 @@ def create_db(db_path: str | None = None):
         with open(rec_sql_path, 'r') as sql_file:
             rec_sql_script = sql_file.read()
         cursor.executescript(rec_sql_script)
+
+        # Read and execute the comment table SQL script:
+        comment_sql_path = osp.join(schema_dir, COMMENT_SCHEMA_SQL)
+        with open(comment_sql_path, 'r') as sql_file:
+            comment_sql_script = sql_file.read()
+        cursor.executescript(comment_sql_script)
+
+        # Read and execute the comment_like table SQL script:
+        comment_like_sql_path = osp.join(schema_dir, COMMENT_LIKE_SCHEMA_SQL)
+        with open(comment_like_sql_path, 'r') as sql_file:
+            comment_like_sql_script = sql_file.read()
+        cursor.executescript(comment_like_sql_script)
+
+        # Read and execute the comment_dislike table SQL script:
+        comment_dislike_sql_path = osp.join(schema_dir,
+                                            COMMENT_DISLIKE_SCHEMA_SQL)
+        with open(comment_dislike_sql_path, 'r') as sql_file:
+            comment_dislike_sql_script = sql_file.read()
+        cursor.executescript(comment_dislike_sql_script)
 
         # Commit the changes:
         conn.commit()

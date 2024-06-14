@@ -54,14 +54,14 @@ async def test_agents_tweeting(setup_twitter):
                              description=description,
                              profile=profile)
         agent = TwitterUserAgent(i, user_info, channel)
-        await agent.env.twitter_action.action_sign_up(f"user{i}0101",
-                                                      f"User{i}", "A bio.")
+        await agent.env.twitter_action.sign_up(f"user{i}0101", f"User{i}",
+                                               "A bio.")
         agents.append(agent)
 
     # 发送推文
     for agent in agents:
         for _ in range(M):
-            await agent.env.twitter_action.action_create_tweet(
+            await agent.env.twitter_action.create_tweet(
                 f"hello from {agent.agent_id}")
             await asyncio.sleep(random.uniform(0, 0.1))
 

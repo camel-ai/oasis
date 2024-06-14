@@ -10,19 +10,15 @@ def test_transfer_to_openai_function():
     # 即正确生成了openai schema，并可以被camel Chatagent调用。
     ACTION_FUNCS: List[OpenAIFunction] = [
         OpenAIFunction(func) for func in [
-            TwitterAction.action_sign_up,
-            TwitterAction.action_refresh,
-            TwitterAction.action_create_tweet,
-            TwitterAction.action_like,
-            TwitterAction.action_unlike,
-            TwitterAction.action_search_tweets,
-            TwitterAction.action_search_user,
-            TwitterAction.action_follow,
-            TwitterAction.action_unfollow,
-            TwitterAction.action_mute,
-            TwitterAction.action_unmute,
-            TwitterAction.action_trend,
-            TwitterAction.action_retweet,
+            TwitterAction.sign_up, TwitterAction.refresh, TwitterAction.
+            create_tweet, TwitterAction.like, TwitterAction.unlike,
+            TwitterAction.dislike, TwitterAction.undo_dislike,
+            TwitterAction.search_tweets, TwitterAction.search_user,
+            TwitterAction.follow, TwitterAction.unfollow, TwitterAction.mute,
+            TwitterAction.unmute, TwitterAction.trend, TwitterAction.retweet,
+            TwitterAction.create_comment, TwitterAction.like_comment,
+            TwitterAction.unlike_comment, TwitterAction.dislike_comment,
+            TwitterAction.undo_dislike_comment
         ]
     ]
     assert ACTION_FUNCS is not None
