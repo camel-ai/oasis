@@ -7,7 +7,7 @@ import random
 import pytest
 
 from social_agent.agent import TwitterUserAgent
-from twitter.channel import Twitter_Channel
+from twitter.channel import TwitterChannel
 from twitter.config import UserInfo
 from twitter.twitter import Twitter
 from twitter.typing import ActionType
@@ -27,7 +27,7 @@ def setup_twitter():
 @pytest.mark.asyncio
 async def test_agents_tweeting(setup_twitter):
     agents = []
-    channel = Twitter_Channel()
+    channel = TwitterChannel()
     infra = Twitter(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())
 

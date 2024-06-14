@@ -6,7 +6,7 @@ import pytest
 
 from social_agent.agent import TwitterUserAgent
 from social_agent.agents_generator import generate_controllable_agents
-from twitter.channel import Twitter_Channel
+from twitter.channel import TwitterChannel
 from twitter.config import UserInfo
 from twitter.twitter import Twitter
 
@@ -24,7 +24,7 @@ def setup_twitter():
 
 @pytest.mark.asyncio
 async def test_perform_action_by_hci(monkeypatch, setup_twitter):
-    channel = Twitter_Channel()
+    channel = TwitterChannel()
 
     infra = Twitter(test_db_filepath, channel, rec_update_time=1)
     task = asyncio.create_task(infra.running())

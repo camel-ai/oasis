@@ -26,8 +26,8 @@ async def generate_agents(agent_info_path,
             class instances.
     """
     # 目前已有的都是controllable agent
-    # agent_graph.get_acount() == len(controllable_user_id)
-    control_user_num = agent_graph.get_acount()
+    # agent_graph.get_num_nodes() == len(controllable_user_id)
+    control_user_num = agent_graph.get_num_nodes()
 
     mbti_types = ["INTJ", "ENTP", "INFJ", "ENFP"]
     # activities = ["High", "Medium", "Low"]
