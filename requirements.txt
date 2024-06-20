@@ -112,3 +112,4 @@ wcwidth==0.2.13
 wrapt==1.16.0
 slack_sdk==3.29.0 # TODO: remove
 prance==23.6.21.0 # TODO: remove
+openapi-spec-validator==0.7.1 # TODO: remove
