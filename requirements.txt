@@ -6,7 +6,7 @@ attrs==23.2.0
 backoff==2.2.1
 bcrypt==4.1.2
 beautifulsoup4==4.12.3
-camel-ai==0.1.5.2
+camel-ai==0.1.5.3
 certifi==2024.2.2
 cfgv==3.4.0
 chardet==5.2.0
@@ -110,6 +110,3 @@ urllib3==2.2.1
 virtualenv==20.26.2
 wcwidth==0.2.13
 wrapt==1.16.0
-slack_sdk==3.29.0 # TODO: remove
-prance==23.6.21.0 # TODO: remove
-openapi-spec-validator==0.7.1 # TODO: remove

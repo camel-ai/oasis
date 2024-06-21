@@ -5,6 +5,7 @@ import inspect
 from camel.agents import ChatAgent
 from camel.configs import ChatGPTConfig
 from camel.messages import BaseMessage
+from camel.models import OpenAIModel
 from camel.types import ModelType
 
 from social_agent.agent_action import TwitterAction
@@ -30,14 +31,15 @@ class TwitterUserAgent:
             tools=self.env.twitter_action.get_openai_function_list(),
             temperature=0.0,
         )
+        model = OpenAIModel(model_config_dict=model_config.__dict__,
+                            model_type=model_type)
         self.system_message = BaseMessage.make_assistant_message(
             role_name="User",
             content=self.user_info.to_system_message(),
         )
         self.chat_agent = ChatAgent(
             system_message=self.system_message,
-            model_type=model_type,
-            model_config=model_config,
+            model=model,
             tools=self.env.twitter_action.get_openai_function_list(),
         )
 
