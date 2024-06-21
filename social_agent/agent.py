@@ -1,15 +1,12 @@
 from __future__ import annotations
 
 import inspect
-import json
 
-from camel.configs import FunctionCallingConfig
-from camel.memories import ChatHistoryMemory, MemoryRecord
-from camel.memories.context_creators.score_based import \
-    ScoreBasedContextCreator
+from camel.agents import ChatAgent
+from camel.configs import ChatGPTConfig
 from camel.messages import BaseMessage
-from camel.models import BaseModelBackend, ModelFactory
-from camel.types import ModelType, OpenAIBackendRole
+from camel.models import OpenAIModel
+from camel.types import ModelType
 
 from social_agent.agent_action import TwitterAction
 from social_agent.agent_environment import TwitterEnvironment
@@ -30,26 +27,21 @@ class TwitterUserAgent:
         self.user_info = user_info
         self.channel = channel
         self.env = TwitterEnvironment(TwitterAction(agent_id, channel))
-        model_config = FunctionCallingConfig.from_openai_function_list(
-            function_list=self.env.twitter_action.get_openai_function_list(),
-            kwargs=dict(temperature=0.0),
+        model_config = ChatGPTConfig(
+            tools=self.env.twitter_action.get_openai_function_list(),
+            temperature=0.0,
         )
-        self.model_backend: BaseModelBackend = ModelFactory.create(
-            model_type, model_config.__dict__)
-        self.model_token_limit = self.model_backend.token_limit
-        context_creator = ScoreBasedContextCreator(
-            self.model_backend.token_counter,
-            self.model_token_limit,
-        )
-        self.memory = ChatHistoryMemory(context_creator, window_size=3)
+        model = OpenAIModel(model_config_dict=model_config.__dict__,
+                            model_type=model_type)
         self.system_message = BaseMessage.make_assistant_message(
             role_name="User",
             content=self.user_info.to_system_message(),
         )
-        system_record = MemoryRecord(self.system_message,
-                                     OpenAIBackendRole.SYSTEM)
-        self.memory.write_record(system_record)
-        self.home_content = []
+        self.chat_agent = ChatAgent(
+            system_message=self.system_message,
+            model=model,
+            tools=self.env.twitter_action.get_openai_function_list(),
+        )
 
     async def perform_action_by_llm(self):
         env_prompt = await self.env.to_text_prompt()
@@ -61,20 +53,9 @@ class TwitterUserAgent:
                 f"example to just like the tweets. "
                 f"Here is your twitter environment: {env_prompt}"),
         )
-
-        self.memory.write_record(MemoryRecord(user_msg,
-                                              OpenAIBackendRole.USER))
-        openai_messages, num_tokens = self.memory.get_context()
-        response = self.model_backend.run(openai_messages)
-
-        # Perform twitter action:
-        if response.choices[0].message.function_call:
-            action_name = response.choices[0].message.function_call.name
-            args = json.loads(
-                response.choices[0].message.function_call.arguments)
-            print(f"Agent {self.agent_id} is performing "
-                  f"twitter action: {action_name} with args: {args}")
-            await getattr(self.env.twitter_action, action_name)(**args)
+        await self.chat_agent.step_async(user_msg)
+        record = self.chat_agent.memory.retrieve()[-1].memory_record
+        print(record.message.result)
 
     async def perform_action_by_hci(self):
         print('Please choose one function to perform:')
