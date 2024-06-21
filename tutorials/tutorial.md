@@ -68,4 +68,11 @@ export LLAMA3_MODEL_PATH="/your/path/to/llama3-8b-instruct"
 bash run.sh
 ```
 
+## to-dos
+- [ ] to support functioncall & upgrade camel-ai to 0.1.5.1
+- [ ] to support Multi-GPUs & Multi-LLMs @zhiyu @yuxian
+- [ ] integrate argparser & config files @zhiyu @ziyi
+- [ ] develop a simple GUI as a program entry point and for visualizing the running process and results (preliminary analysis)
+
+
 
