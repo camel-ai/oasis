@@ -20,7 +20,7 @@ class TwitterAction:
                 self.search_tweets, self.search_user, self.trend, self.refresh,
                 self.mute, self.unmute, self.retweet, self.create_comment,
                 self.like_comment, self.unlike_comment, self.dislike_comment,
-                self.undo_dislike_comment
+                self.undo_dislike_comment, self.do_nothing
             ]
         ]
 
@@ -561,3 +561,15 @@ class TwitterAction:
         """
         return await self.perform_action(comment_id,
                                          ActionType.UNDO_DISLIKE_COMMENT.value)
+
+    async def do_nothing(self):
+        """Performs no action and returns nothing.
+
+        Returns:
+            dict: A dictionary with 'success' indicating if the removal was
+                successful.
+
+            Example of a successful return:
+                {"success": True}
+        """
+        return await self.perform_action(None, ActionType.DO_NOTHING.value)

@@ -43,7 +43,7 @@ async def test_perform_action_by_hci(monkeypatch, setup_twitter):
 
     param_lst = [
         'hello world', '2', '2', '1', '1', '1', '1', 'hello', 'user', None,
-        None, '2', '2', '1'
+        None, '2', '2', '1', None
     ]
 
     for i in range(12):

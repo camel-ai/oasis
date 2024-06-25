@@ -18,7 +18,7 @@ def test_transfer_to_openai_function():
             TwitterAction.unmute, TwitterAction.trend, TwitterAction.retweet,
             TwitterAction.create_comment, TwitterAction.like_comment,
             TwitterAction.unlike_comment, TwitterAction.dislike_comment,
-            TwitterAction.undo_dislike_comment
+            TwitterAction.undo_dislike_comment, TwitterAction.do_nothing
         ]
     ]
     assert ACTION_FUNCS is not None
