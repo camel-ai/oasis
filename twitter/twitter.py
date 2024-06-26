@@ -19,7 +19,9 @@ class Twitter:
                  channel: Any,
                  sandbox_clock: clock = None,
                  start_time: datetime = None,
-                 rec_update_time: int = 20):
+                 rec_update_time: int = 20,
+                 show_score: bool = False,
+                 allow_self_rating: bool = True):
         # 未指定时钟时，默认twitter的时间放大系数为60
         if sandbox_clock is None:
             sandbox_clock = clock(60)
@@ -37,6 +39,13 @@ class Twitter:
         self.ope_cnt = -1
         # 推荐系统缓存更新的时间间隔（以传进来的操作数为单位）
         self.rec_update_time = rec_update_time
+
+        # 是否要模拟显示类似reddit的那种点赞数减去点踩数作为分数
+        # 而不分别显示点赞数和点踩数
+        self.show_score = show_score
+
+        # 是否允许用户给自己的tweet和comment点赞或者点踩
+        self.allow_self_rating = allow_self_rating
 
         # twitter内部推荐系统refresh一次返回的推文数量
         self.refresh_tweet_count = 5
@@ -219,25 +228,42 @@ class Twitter:
 
             # 将每个comment的结果转换为字典格式
             comments = [{
-                "comment_id": comment_id,
-                "tweet_id": tweet_id,
-                "user_id": user_id,
-                "content": content,
-                "created_at": created_at,
-                "num_likes": num_likes,
-                "num_dislikes": num_dislikes
+                "comment_id":
+                comment_id,
+                "tweet_id":
+                tweet_id,
+                "user_id":
+                user_id,
+                "content":
+                content,
+                "created_at":
+                created_at,
+                **({
+                    "score": num_likes - num_dislikes
+                } if self.show_score else {
+                       "num_likes": num_likes,
+                       "num_dislikes": num_dislikes
+                   })
             } for (comment_id, tweet_id, user_id, content, created_at,
                    num_likes, num_dislikes) in comments_results]
 
             # 将tweet信息和对应的comments添加到tweets列表
             tweets.append({
-                "tweet_id": tweet_id,
-                "user_id": user_id,
-                "content": content,
-                "created_at": created_at,
-                "num_likes": num_likes,
-                "num_dislikes": num_dislikes,
-                "comments": comments
+                "tweet_id":
+                tweet_id,
+                "user_id":
+                user_id,
+                "content":
+                content,
+                "created_at":
+                created_at,
+                **({
+                    "score": num_likes - num_dislikes
+                } if self.show_score else {
+                       "num_likes": num_likes,
+                       "num_dislikes": num_dislikes
+                   }), "comments":
+                comments
             })
         return tweets
 
@@ -447,6 +473,30 @@ class Twitter:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
+    def _check_self_tweet_rating(self, tweet_id, user_id):
+        self_like_check_query = (
+            "SELECT user_id FROM tweet WHERE tweet_id = ?")
+        self._execute_db_command(self_like_check_query, (tweet_id, ))
+        result = self.db_cursor.fetchone()
+        if result and result[0] == user_id:
+            error_message = (
+                "Users are not allowed to like/dislike their own tweets.")
+            return {"success": False, "error": error_message}
+        else:
+            return None
+
+    def _check_self_comment_rating(self, comment_id, user_id):
+        self_like_check_query = (
+            "SELECT user_id FROM comment WHERE comment_id = ?")
+        self._execute_db_command(self_like_check_query, (comment_id, ))
+        result = self.db_cursor.fetchone()
+        if result and result[0] == user_id:
+            error_message = (
+                "Users are not allowed to like/dislike their own comments.")
+            return {"success": False, "error": error_message}
+        else:
+            return None
+
     async def like(self, agent_id: int, tweet_id: int):
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
@@ -464,6 +514,12 @@ class Twitter:
                     "success": False,
                     "error": "Like record already exists."
                 }
+
+            # 检查要点赞的推文是否是自己发布的
+            if self.allow_self_rating is False:
+                check_result = self._check_self_tweet_rating(tweet_id, user_id)
+                if check_result:
+                    return check_result
 
             # 更新tweet表中的点赞数
             tweet_update_query = (
@@ -567,6 +623,12 @@ class Twitter:
                     "success": False,
                     "error": "Dislike record already exists."
                 }
+
+            # 检查要点踩的推文是否是自己发布的
+            if self.allow_self_rating is False:
+                check_result = self._check_self_tweet_rating(tweet_id, user_id)
+                if check_result:
+                    return check_result
 
             # 更新tweet表中的dislike数
             tweet_update_query = (
@@ -1037,6 +1099,13 @@ class Twitter:
                     "error": "Comment like record already exists."
                 }
 
+            # 检查要点赞的评论是否是自己发布的
+            if self.allow_self_rating is False:
+                check_result = self._check_self_comment_rating(
+                    comment_id, user_id)
+                if check_result:
+                    return check_result
+
             # 更新tweet表中的点赞数
             comment_update_query = (
                 "UPDATE comment SET num_likes = num_likes + 1 WHERE "
@@ -1148,6 +1217,13 @@ class Twitter:
                     "success": False,
                     "error": "Comment dislike record already exists."
                 }
+
+            # 检查要点踩的评论是否是自己发布的
+            if self.allow_self_rating is False:
+                check_result = self._check_self_comment_rating(
+                    comment_id, user_id)
+                if check_result:
+                    return check_result
 
             # 更新comment表中的不喜欢数
             comment_update_query = (
