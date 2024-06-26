@@ -25,7 +25,7 @@ def setup_twitter():
 
 
 @pytest.mark.asyncio
-async def test_agents_tweeting(setup_twitter):
+async def test_agents_actions(setup_twitter):
     agents = []
     channel = TwitterChannel()
     infra = Twitter(test_db_filepath, channel)
@@ -144,6 +144,11 @@ async def test_agents_tweeting(setup_twitter):
 
     return_message = await (
         action_agent.env.twitter_action.undo_dislike_comment(1))
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    return_message = await (action_agent.env.twitter_action.do_nothing())
+    print(return_message)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 

@@ -25,3 +25,4 @@ class ActionType(Enum):
     UNLIKE_COMMENT = "unlike_comment"
     DISLIKE_COMMENT = "dislike_comment"
     UNDO_DISLIKE_COMMENT = "undo_dislike_comment"
+    DO_NOTHING = "do_nothing"

@@ -180,6 +180,10 @@ class Twitter:
                                                          comment_id=message)
                 await self.channel.send_to((message_id, agent_id, result))
 
+            elif action == ActionType.DO_NOTHING:
+                result = await self.do_nothing(agent_id=agent_id)
+                await self.channel.send_to((message_id, agent_id, result))
+
             else:
                 raise ValueError(f"Action {action} is not supported")
 
@@ -1230,5 +1234,27 @@ class Twitter:
                  str(action_info)),
                 commit=True)
             return {"success": True, "comment_dislike_id": comment_dislike_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def do_nothing(self, agent_id: int):
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
+        try:
+            user_id = self._check_agent_userid(agent_id)
+            if not user_id:
+                return self._not_signup_error_message(agent_id)
+
+            # 记录操作到trace表
+            action_info = {}
+            trace_insert_query = (
+                "INSERT INTO trace (user_id, created_at, action, info) VALUES "
+                "(?, ?, ?, ?)")
+            self._execute_db_command(
+                trace_insert_query,
+                (user_id, current_time, ActionType.DO_NOTHING.value,
+                 str(action_info)),
+                commit=True)
+            return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}
