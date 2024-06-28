@@ -55,7 +55,7 @@ class TwitterUserAgent:
         )
         await self.chat_agent.step_async(user_msg)
         record = self.chat_agent.memory.retrieve()[-1].memory_record
-        print(record.message.result)
+        print(record.message)
 
     async def perform_action_by_hci(self):
         print('Please choose one function to perform:')
@@ -95,5 +95,6 @@ class TwitterUserAgent:
             if function_list[i].func.__name__ == func_name:
                 func = function_list[i].func
                 result = await func(*args, **kwargs)
+                print(result)
                 return result
         raise ValueError(f"Function {func_name} not found in the list.")

@@ -18,7 +18,9 @@ except Exception as e:
     model = None
 
 
-def rec_sys_random(user_table: List[Dict[str, Any]], tweet_table: List[Dict[str, Any]],
+def rec_sys_random(user_table: List[Dict[str,
+                                         Any]], tweet_table: List[Dict[str,
+                                                                       Any]],
                    trace_table: List[Dict[str, Any]], rec_matrix: List[List],
                    max_rec_tweet_len: int) -> List[List]:
     """
@@ -50,7 +52,8 @@ def rec_sys_random(user_table: List[Dict[str, Any]], tweet_table: List[Dict[str,
     return new_rec_matrix
 
 
-def calculate_hot_score(num_likes: int, num_dislikes: int, created_at: datetime) -> int:
+def calculate_hot_score(num_likes: int, num_dislikes: int,
+                        created_at: datetime) -> int:
     """
     Compute the hot score for a tweet.
 
@@ -61,7 +64,7 @@ def calculate_hot_score(num_likes: int, num_dislikes: int, created_at: datetime)
 
     Returns:
         int: Hot score of the tweet.
-    
+
     Reference:
         https://medium.com/hacking-and-gonzo/how-reddit-ranking-algorithms-work-ef111e33d0d9
     """
@@ -103,11 +106,11 @@ def rec_sys_reddit(tweet_table: List[Dict[str, Any]], rec_matrix: List[List],
         # 该推荐系统的时间复杂度是O(tweet_num * log max_rec_tweet_len)
         all_hot_score = []
         for tweet in tweet_table:
-            created_at_dt = datetime.strptime(tweet['created_at'], 
-                                                '%Y-%m-%d %H:%M:%S')
-            hot_score = calculate_hot_score(tweet['num_likes'], 
-                                                tweet['num_dislikes'], 
-                                                created_at_dt)
+            created_at_dt = datetime.strptime(tweet['created_at'],
+                                              "%Y-%m-%d %H:%M:%S.%f")
+            hot_score = calculate_hot_score(tweet['num_likes'],
+                                            tweet['num_dislikes'],
+                                            created_at_dt)
             all_hot_score.append((hot_score, tweet['tweet_id']))
         # 排序
         # print(all_hot_score)
@@ -126,8 +129,8 @@ def rec_sys_reddit(tweet_table: List[Dict[str, Any]], rec_matrix: List[List],
 
 def rec_sys_personalized(user_table: List[Dict[str, Any]],
                          tweet_table: List[Dict[str, Any]],
-                         trace_table: List[Dict[str, Any]],
-                         rec_matrix: List[List],
+                         trace_table: List[Dict[str,
+                                                Any]], rec_matrix: List[List],
                          max_rec_tweet_len: int) -> List[List]:
     """
     Recommend tweets based on personalized similarity scores.
@@ -247,9 +250,10 @@ def get_trace_contents(user_id, action, tweet_table, trace_table):
     # Get tweet IDs from trace table for the given user and action
     trace_tweet_ids = [
         trace['tweet_id'] for trace in trace_table
-        if trace['user_id'] == user_id and trace['action'] == action
+        if (trace['user_id'] == user_id and trace['action'] == action)
     ]
-    # Fetch tweet contents from tweet table where tweet IDs match those in the trace
+    # Fetch tweet contents from tweet table where tweet IDs match those in the
+    # trace
     trace_contents = [
         tweet['content'] for tweet in tweet_table
         if tweet['tweet_id'] in trace_tweet_ids
