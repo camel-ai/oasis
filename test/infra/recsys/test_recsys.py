@@ -114,22 +114,22 @@ def test_rec_sys_reddit_sample_tweets():
         'tweet_id': '1',
         'num_likes': 100000,
         'num_dislikes': 25,
-        'created_at': "2024-06-25 12:00:00"
+        'created_at': "2024-06-25 12:00:00.222000"
     }, {
         'tweet_id': '2',
         'num_likes': 90,
         'num_dislikes': 30,
-        'created_at': "2024-06-26 12:00:00"
+        'created_at': "2024-06-26 12:00:00.321009"
     }, {
         'tweet_id': '3',
         'num_likes': 75,
         'num_dislikes': 50,
-        'created_at': "2024-06-27 12:00:00"
+        'created_at': "2024-06-27 12:00:00.123009"
     }, {
         'tweet_id': '4',
         'num_likes': 70,
         'num_dislikes': 50,
-        'created_at': "2024-06-27 13:00:00"
+        'created_at': "2024-06-27 13:00:00.321009"
     }]
     rec_matrix = [[None], [], []]  # 假设有两个用户
     max_rec_tweet_len = 3  # 最大推荐长度设置为2
