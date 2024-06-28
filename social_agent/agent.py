@@ -88,3 +88,13 @@ class TwitterUserAgent:
         result = await func(*args)
         # print(result)
         return result
+
+    async def perform_action_by_data(self, func_name, *args, **kwargs):
+        function_list = self.env.twitter_action.get_openai_function_list()
+        for i in range(len(function_list)):
+            if function_list[i].func.__name__ == func_name:
+                func = function_list[i].func
+                result = await func(*args, **kwargs)
+                print(result)
+                return result
+        raise ValueError(f"Function {func_name} not found in the list.")

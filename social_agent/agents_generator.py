@@ -1,4 +1,5 @@
 import ast
+import json
 import random
 from typing import Dict
 
@@ -134,3 +135,71 @@ async def generate_controllable_agents(twitter_channel, control_user_num: int):
                 await agent.env.twitter_action.follow(user_id)
                 await agent_graph.add_edge(i, j)
     return agent_graph, agent_user_id_mapping
+
+
+async def gen_control_agents_with_data(twitter_channel, control_user_num: int):
+    agent_graph = AgentGraph()
+    agent_user_id_mapping = {}
+    for i in range(control_user_num):
+        # peofile实际上用不到，写成'None'防止报错
+        user_info = UserInfo(is_controllable=True,
+                             profile={'other_info': {
+                                 'user_profile': 'None'
+                             }})
+        # controllable的agent_id全都在llm agent的agent_id的前面
+        agent = TwitterUserAgent(i, user_info, twitter_channel)
+        # Add agent to the agent graph
+        await agent_graph.add_agent(agent)
+
+        response = await agent.env.twitter_action.sign_up(user_name='momo',
+                                                          name='momo',
+                                                          bio='None.')
+        user_id = response['user_id']
+        agent_user_id_mapping[i] = user_id
+
+    # 生成之后，注意1号是发帖机器人，2号是点赞机器人
+    return agent_graph, agent_user_id_mapping
+
+
+async def generate_reddit_agents(agent_info_path,
+                                 twitter_channel,
+                                 agent_graph=AgentGraph(),
+                                 agent_user_id_mapping: Dict[int, int] = {}):
+    # 目前已有的都是controllable agent
+    # agent_graph.get_num_nodes() == len(controllable_user_id)
+    control_user_num = agent_graph.get_num_nodes()
+
+    with open(agent_info_path, 'r') as file:
+        agent_info = json.load(file)
+
+    for i in range(len(agent_info)):
+        # Instantiate an agent
+        profile = {
+            'nodes': [],  # Relationships with other agents
+            'edges': [],  # Relationship details
+            'other_info': {},
+        }
+
+        # Update agent profile with additional information
+        profile['other_info']['user_profile'] = agent_info[i]['bio']
+
+        user_info = UserInfo(name=agent_info[i]['nickname'],
+                             description=agent_info[i]['description'],
+                             profile=profile)
+
+        # controllable的agent_id全都在llm agent的agent_id的前面
+        agent = TwitterUserAgent(i + control_user_num, user_info,
+                                 twitter_channel)
+
+        # Add agent to the agent graph
+        await agent_graph.add_agent(agent)
+
+        # Sign up agent and add their information to the database
+        # print(f"Signing up agent {agent_info['username'][i]}...")
+        response = await agent.env.twitter_action.sign_up(
+            agent_info[i]['nickname'], agent_info[i]['nickname'],
+            agent_info[i]['description'])
+        user_id = response['user_id']
+        agent_user_id_mapping[i + control_user_num] = user_id
+
+    return agent_graph

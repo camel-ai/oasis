@@ -51,7 +51,7 @@ async def test_update_rec_table(setup_db):
         for i in range(1, 61):  # 生成60条tweet
             user_id = i % 3 + 1  # 循环使用用户ID 1, 2, 3
             content = f"Tweet content for tweet {i}"  # 简单生成不同的内容
-            created_at = datetime(2024, 6, 27, i % 24, 0)
+            created_at = datetime(2024, 6, 27, i % 24, 0, 0, 123456)
             num_likes = i  # 随机生成点赞数
 
             cursor.execute(("INSERT INTO tweet "
