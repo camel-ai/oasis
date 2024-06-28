@@ -55,7 +55,7 @@ class TwitterUserAgent:
         )
         await self.chat_agent.step_async(user_msg)
         record = self.chat_agent.memory.retrieve()[-1].memory_record
-        print(record.message)
+        print(record.message.result)
 
     async def perform_action_by_hci(self):
         print('Please choose one function to perform:')

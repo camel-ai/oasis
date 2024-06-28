@@ -69,7 +69,6 @@ async def running(num_timestep):
                 response = await post_agent.perform_action_by_data(
                     'create_tweet',
                     content=rs_rc_pairs[rs_rc_index]["submission"])
-                print('create_tweet_response', response)
                 tweet_id = response['tweet_id']
                 response = await post_agent.perform_action_by_data(
                     'create_comment',
