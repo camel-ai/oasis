@@ -6,7 +6,7 @@ from test.show_db import print_db_contents
 
 import pytest
 
-from social_platform.twitter import Twitter  # 确保从你的模块中导入Twitter类
+from social_platform.platform import Platform  # 确保从你的模块中导入Twitter类
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -85,7 +85,7 @@ async def test_signup_and_create_tweet(setup_twitter,
         user_actions = generate_user_actions(n_users, tweets_per_user)
 
         mock_channel = MockChannel(user_actions)
-        twitter_instance = Twitter(test_db_filepath, mock_channel)
+        twitter_instance = Platform(test_db_filepath, mock_channel)
 
         await twitter_instance.running()
 

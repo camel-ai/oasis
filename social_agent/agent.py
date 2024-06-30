@@ -10,7 +10,7 @@ from camel.types import ModelType
 
 from social_agent.agent_action import TwitterAction
 from social_agent.agent_environment import TwitterEnvironment
-from social_platform.channel import TwitterChannel
+from social_platform.channel import Channel
 from social_platform.config import UserInfo
 
 
@@ -20,7 +20,7 @@ class TwitterUserAgent:
         self,
         agent_id: int,
         user_info: UserInfo,
-        channel: TwitterChannel,
+        channel: Channel,
         model_type: ModelType = ModelType.GPT_3_5_TURBO,
     ):
         self.agent_id = agent_id

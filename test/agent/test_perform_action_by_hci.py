@@ -6,9 +6,9 @@ import pytest
 
 from social_agent.agent import TwitterUserAgent
 from social_agent.agents_generator import generate_controllable_agents
-from social_platform.channel import TwitterChannel
+from social_platform.channel import Channel
 from social_platform.config import UserInfo
-from social_platform.twitter import Twitter
+from social_platform.platform import Platform
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -24,9 +24,9 @@ def setup_twitter():
 
 @pytest.mark.asyncio
 async def test_perform_action_by_hci(monkeypatch, setup_twitter):
-    channel = TwitterChannel()
+    channel = Channel()
 
-    infra = Twitter(test_db_filepath, channel, rec_update_time=1)
+    infra = Platform(test_db_filepath, channel, rec_update_time=1)
     task = asyncio.create_task(infra.running())
 
     inputs = iter(["Alice", "Ali", "a student"])

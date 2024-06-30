@@ -13,7 +13,7 @@ from .recsys import (rec_sys_personalized_with_trace, rec_sys_random,
 from .typing import ActionType, RecsysType
 
 
-class Twitter:
+class Platform:
 
     def __init__(
         self,

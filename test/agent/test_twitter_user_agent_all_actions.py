@@ -7,9 +7,9 @@ import random
 import pytest
 
 from social_agent.agent import TwitterUserAgent
-from social_platform.channel import TwitterChannel
+from social_platform.channel import Channel
 from social_platform.config import UserInfo
-from social_platform.twitter import Twitter
+from social_platform.platform import Platform
 from social_platform.typing import ActionType
 
 parent_folder = osp.dirname(osp.abspath(__file__))
@@ -27,8 +27,8 @@ def setup_twitter():
 @pytest.mark.asyncio
 async def test_agents_actions(setup_twitter):
     agents = []
-    channel = TwitterChannel()
-    infra = Twitter(test_db_filepath, channel)
+    channel = Channel()
+    infra = Platform(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())
 
     # 创建并注册用户
