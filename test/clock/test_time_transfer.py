@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from clock.clock import clock
+from clock.clock import Clock
 
 
 def test_time_transfer():
-    sandbox_clock = clock(K=60)
+    sandbox_clock = Clock(k=60)
     start_date_string = '2024-05-26 22:31:42.098815'
 
     now_date_string_1 = '2024-05-26 22:31:43.098815'

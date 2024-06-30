@@ -26,3 +26,9 @@ class ActionType(Enum):
     DISLIKE_COMMENT = "dislike_comment"
     UNDO_DISLIKE_COMMENT = "undo_dislike_comment"
     DO_NOTHING = "do_nothing"
+
+
+class RecsysType(Enum):
+    TWITTER = "twitter"
+    REDDIT = "reddit"
+    RANDOM = "random"
