@@ -26,14 +26,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -e .
 
       - name: Run tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           pytest
-
-      # - name: Deploy
-      #  run: |
-      #    # 在这里可以添加部署步骤，如部署到服务器或者云服务商等

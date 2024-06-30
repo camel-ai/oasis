@@ -4,7 +4,7 @@ import json
 from abc import ABC, abstractmethod
 from string import Template
 
-from social_agent.agent_action import TwitterAction
+from social_simulation.social_agent.agent_action import TwitterAction
 
 
 class Environment(ABC):

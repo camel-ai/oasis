@@ -5,8 +5,8 @@ from typing import Dict
 
 import pandas as pd
 
-from social_agent.agent_graph import AgentGraph
-from social_platform.config import UserInfo
+from social_simulation.social_agent.agent_graph import AgentGraph
+from social_simulation.social_platform.config import UserInfo
 
 from .agent import TwitterUserAgent
 

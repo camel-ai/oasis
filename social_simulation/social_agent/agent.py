@@ -8,10 +8,10 @@ from camel.messages import BaseMessage
 from camel.models import OpenAIModel
 from camel.types import ModelType
 
-from social_agent.agent_action import TwitterAction
-from social_agent.agent_environment import TwitterEnvironment
-from social_platform.channel import Channel
-from social_platform.config import UserInfo
+from social_simulation.social_agent.agent_action import TwitterAction
+from social_simulation.social_agent.agent_environment import TwitterEnvironment
+from social_simulation.social_platform.channel import Channel
+from social_simulation.social_platform.config import UserInfo
 
 
 class TwitterUserAgent:

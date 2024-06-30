@@ -1,8 +1,6 @@
-'''测试recsys'''
-
-from social_platform.recsys import (rec_sys_personalized,
-                                    rec_sys_personalized_with_trace, rec_sys_random,
-                                    rec_sys_reddit)
+from social_simulation.social_platform.recsys import (
+    rec_sys_personalized, rec_sys_personalized_with_trace, rec_sys_random,
+    rec_sys_reddit)
 
 
 def test_rec_sys_random_all_tweets():

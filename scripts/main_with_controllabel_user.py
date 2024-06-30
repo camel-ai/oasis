@@ -5,17 +5,20 @@ from datetime import datetime
 
 from colorama import Back
 
-from clock.clock import Clock
-from social_agent.agents_generator import (generate_agents,
-                                           generate_controllable_agents)
-from social_platform.channel import Channel
-from social_platform.platform import Platform
-from social_platform.typing import ActionType
+from social_simulation.clock.clock import Clock
+from social_simulation.social_agent.agents_generator import (
+    generate_agents, generate_controllable_agents)
+from social_simulation.social_platform.channel import Channel
+from social_simulation.social_platform.platform import Platform
+from social_simulation.social_platform.typing import ActionType
 
 
 async def running(num_timestep):
+    curr_dir = os.path.dirname(__file__)
+    main_dir = os.path.dirname(curr_dir)
+    data_dir = os.path.join(main_dir, "data")
 
-    test_db_filepath = "./data/mock_twitter.db"
+    test_db_filepath = os.path.join(data_dir, "mock_twitter.db")
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
@@ -34,8 +37,9 @@ async def running(num_timestep):
     agent_graph, agent_user_id_mapping = await generate_controllable_agents(
         channel, 1)
 
-    agent_graph = await generate_agents("./data/user_all_id_time.csv", channel,
-                                        agent_graph, agent_user_id_mapping)
+    csv_path = os.path.join(data_dir, "user_all_id_time.csv")
+    agent_graph = await generate_agents(csv_path, channel, agent_graph,
+                                        agent_user_id_mapping)
     '''
     一个比较简单的思路为：
     为每种活跃状态设置一个对应阈值

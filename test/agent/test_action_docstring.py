@@ -2,7 +2,7 @@ from typing import List
 
 from camel.functions import OpenAIFunction
 
-from social_agent.agent import TwitterAction
+from social_simulation.social_agent.agent import TwitterAction
 
 
 def test_transfer_to_openai_function():
