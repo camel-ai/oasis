@@ -6,7 +6,7 @@ from test.show_db import print_db_contents
 
 from colorama import Back
 
-from clock.clock import clock
+from clock.clock import Clock
 from social_agent.agents_generator import (gen_control_agents_with_data,
                                            generate_reddit_agents)
 from twitter.channel import TwitterChannel
@@ -26,7 +26,7 @@ async def running(num_timestep):
     # 将sandbox启动时间设为当前时刻
     start_time = datetime.now()
     # 将sandbox时间放大系数设为60，即系统运行1秒相当于现实世界60秒
-    sandbox_clock = clock(K=60)
+    sandbox_clock = Clock(k=60)
 
     channel = TwitterChannel()
 

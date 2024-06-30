@@ -5,28 +5,30 @@ import sqlite3
 from datetime import datetime, timedelta
 from typing import Any
 
-from clock.clock import clock
+from clock.clock import Clock
 
 from .database import create_db, fetch_rec_table_as_matrix, fetch_table_from_db
 from .recsys import (rec_sys_personalized_with_trace, rec_sys_random,
                      rec_sys_reddit)
-from .typing import ActionType
+from .typing import ActionType, RecsysType
 
 
 class Twitter:
 
-    def __init__(self,
-                 db_path: str,
-                 channel: Any,
-                 sandbox_clock: clock = None,
-                 start_time: datetime = None,
-                 rec_update_time: int = 20,
-                 show_score: bool = False,
-                 allow_self_rating: bool = True,
-                 recsys_type: str = "twitter"):
+    def __init__(
+        self,
+        db_path: str,
+        channel: Any,
+        sandbox_clock: Clock | None = None,
+        start_time: datetime | None = None,
+        rec_update_time: int = 20,
+        show_score: bool = False,
+        allow_self_rating: bool = True,
+        recsys_type: str | RecsysType = "twitter",
+    ):
         # 未指定时钟时，默认twitter的时间放大系数为60
         if sandbox_clock is None:
-            sandbox_clock = clock(60)
+            sandbox_clock = Clock(60)
         if start_time is None:
             start_time = datetime.now()
         create_db(db_path)
@@ -41,8 +43,7 @@ class Twitter:
         self.ope_cnt = -1
         # 推荐系统缓存更新的时间间隔（以传进来的操作数为单位）
         self.rec_update_time = rec_update_time
-        # 推荐系统的类型，目前该变量只支持'twitter'和'reddit'
-        self.recsys_type = recsys_type
+        self.recsys_type = RecsysType(recsys_type)
 
         # 是否要模拟显示类似reddit的那种点赞数减去点踩数作为分数
         # 而不分别显示点赞数和点踩数
@@ -366,20 +367,20 @@ class Twitter:
         trace_table = fetch_table_from_db(self.db_cursor, 'trace')
         rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
 
-        if self.recsys_type == 'random':
+        if self.recsys_type == RecsysType.RANDOM:
             new_rec_matrix = rec_sys_random(user_table, tweet_table,
                                             trace_table, rec_matrix,
                                             self.max_rec_tweet_len)
-        elif self.recsys_type == 'twitter':
+        elif self.recsys_type == RecsysType.TWITTER:
             new_rec_matrix = rec_sys_personalized_with_trace(
                 user_table, tweet_table, trace_table, rec_matrix,
                 self.max_rec_tweet_len)
-        elif self.recsys_type == 'reddit':
+        elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(tweet_table, rec_matrix,
                                             self.max_rec_tweet_len)
         else:
             raise ValueError("Unsupported recommendation system type, please "
-                             "check the recsys_type variable of Twitter.")
+                             "check the `RecsysType`.")
 
         # 构建SQL语句以删除rec表中的所有记录
         sql_query = "DELETE FROM rec"

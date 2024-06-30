@@ -1,11 +1,11 @@
 from datetime import datetime
 
 
-class clock:
+class Clock:
 
-    def __init__(self, K: int):
+    def __init__(self, k: int):
         # 时间放大系数
-        self.k = K
+        self.k = k
 
     def time_transfer(self, now_time: datetime,
                       start_time: datetime) -> datetime:
