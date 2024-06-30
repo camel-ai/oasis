@@ -1,47 +1,38 @@
-# Pipeline
+# Social Simulation
 
 ## Quickstart
 
-### Step 1: Create and Activate a Virtual Environment
+### Virtual Environment
 
-For win:
+For Windows:
 
 ```bash
-python -m venv camel_ss       # Create virtual environment
-camel_ss\Scripts\activate  # Activate virtual environment
+python -m venv venv
+venv\Scripts\activate
 ```
 
 For macOS:
 
 ```bash
-python -m venv camel_ss       # Create virtual environment
-source camel_ss/bin/activate  # Activate virtual environment
+python -m venv venv
+source venv/bin/activate
 ```
 
-### Step 2: Install Necessary Packages
+### Installation
 
 ```bash
-pip install --upgrade pip     # Upgrade pip
-pip install -r requirements.txt # Install packages from requirements file
+pip install --upgrade pip
+pip install -e .
 ```
 
 ### Step 3: Run the Main Program
 
 ```bash
-python main.py                # Run the program
-# You will be prompted to input 'AgentCount' which is the size of the AI-Society/Sandbox
+python scripts/main.py
 ```
 
-## pytest
-
-For win:
+## Test
 
 ```bash
 pytest test
-```
-
-For Mac OS X:
-
-```bash
-pytest
 ```
