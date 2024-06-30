@@ -10,8 +10,8 @@ from camel.types import ModelType
 
 from social_agent.agent_action import TwitterAction
 from social_agent.agent_environment import TwitterEnvironment
-from twitter.channel import TwitterChannel
-from twitter.config import UserInfo
+from social_platform.channel import TwitterChannel
+from social_platform.config import UserInfo
 
 
 class TwitterUserAgent:

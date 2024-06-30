@@ -5,7 +5,7 @@ import sqlite3
 
 import pytest
 
-from twitter.twitter import Twitter  # 确保从你的模块中导入Twitter类
+from social_platform.twitter import Twitter  # 确保从你的模块中导入Twitter类
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")

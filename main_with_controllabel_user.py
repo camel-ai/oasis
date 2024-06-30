@@ -8,9 +8,9 @@ from colorama import Back
 from clock.clock import Clock
 from social_agent.agents_generator import (generate_agents,
                                            generate_controllable_agents)
-from twitter.channel import TwitterChannel
-from twitter.twitter import Twitter
-from twitter.typing import ActionType
+from social_platform.channel import TwitterChannel
+from social_platform.twitter import Twitter
+from social_platform.typing import ActionType
 
 
 async def running(num_timestep):

@@ -6,7 +6,7 @@ from typing import Dict
 import pandas as pd
 
 from social_agent.agent_graph import AgentGraph
-from twitter.config import UserInfo
+from social_platform.config import UserInfo
 
 from .agent import TwitterUserAgent
 
