@@ -14,7 +14,7 @@ from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.config import UserInfo
 
 
-class TwitterUserAgent:
+class SocialAgent:
 
     def __init__(
         self,
@@ -71,22 +71,19 @@ class TwitterUserAgent:
 
         func = function_list[selection].func
 
-        # 使用inspect获取函数的参数列表
         params = inspect.signature(func).parameters
         args = []
         for param in params.values():
             while True:
                 try:
                     value = input(f"Enter value for {param.name}: ")
-                    # 假设所有参数都是整数，根据需要可以调整
                     args.append(value)
-                    break  # 成功获取有效输入，跳出循环
+                    break
                 except ValueError:
                     print("Invalid input, please enter an integer.")
 
         # 调用函数并传入用户输入的参数
         result = await func(*args)
-        # print(result)
         return result
 
     async def perform_action_by_data(self, func_name, *args, **kwargs):

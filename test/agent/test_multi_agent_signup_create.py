@@ -7,7 +7,7 @@ import sqlite3
 
 import pytest
 
-from social_simulation.social_agent.agent import TwitterUserAgent
+from social_simulation.social_agent.agent import SocialAgent
 from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.config import UserInfo
 from social_simulation.social_platform.platform import Platform
@@ -52,7 +52,7 @@ async def test_agents_tweeting(setup_twitter):
         user_info = UserInfo(name=real_name,
                              description=description,
                              profile=profile)
-        agent = TwitterUserAgent(i, user_info, channel)
+        agent = SocialAgent(i, user_info, channel)
         await agent.env.action.sign_up(f"user{i}0101", f"User{i}", "A bio.")
         agents.append(agent)
 

@@ -4,7 +4,7 @@ import os.path as osp
 
 import pytest
 
-from social_simulation.social_agent.agent import TwitterUserAgent
+from social_simulation.social_agent.agent import SocialAgent
 from social_simulation.social_agent.agents_generator import \
     generate_controllable_agents
 from social_simulation.social_platform.channel import Channel
@@ -38,7 +38,7 @@ async def test_perform_action_by_hci(monkeypatch, setup_twitter):
     assert test_agent.user_info.is_controllable is True
 
     user_info = UserInfo(profile={'other_info': {'user_profile': 'None'}})
-    operated_agent = TwitterUserAgent(1, user_info, channel)
+    operated_agent = SocialAgent(1, user_info, channel)
     await operated_agent.env.action.sign_up("user0101", "User", "A bio.")
 
     param_lst = [

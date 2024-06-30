@@ -6,7 +6,7 @@ import random
 
 import pandas as pd
 
-from social_simulation.social_agent.agent import TwitterUserAgent
+from social_simulation.social_agent.agent import SocialAgent
 from social_simulation.social_agent.agent_graph import AgentGraph
 from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.config import UserInfo
@@ -71,7 +71,7 @@ async def generate_agents(
                              profile=profile)
 
         # controllable的agent_id全都在llm agent的agent_id的前面
-        agent = TwitterUserAgent(i + control_user_num, user_info, channel)
+        agent = SocialAgent(i + control_user_num, user_info, channel)
 
         # Add agent to the agent graph
         await agent_graph.add_agent(agent)
@@ -123,7 +123,7 @@ async def generate_controllable_agents(
             }},
         )
         # controllable的agent_id全都在llm agent的agent_id的前面
-        agent = TwitterUserAgent(i, user_info, channel)
+        agent = SocialAgent(i, user_info, channel)
         # Add agent to the agent graph
         await agent_graph.add_agent(agent)
 
@@ -160,7 +160,7 @@ async def gen_control_agents_with_data(
             }},
         )
         # controllable的agent_id全都在llm agent的agent_id的前面
-        agent = TwitterUserAgent(i, user_info, channel)
+        agent = SocialAgent(i, user_info, channel)
         # Add agent to the agent graph
         await agent_graph.add_agent(agent)
 
@@ -206,7 +206,7 @@ async def generate_reddit_agents(
                              profile=profile)
 
         # controllable的agent_id全都在llm agent的agent_id的前面
-        agent = TwitterUserAgent(i + control_user_num, user_info, channel)
+        agent = SocialAgent(i + control_user_num, user_info, channel)
 
         # Add agent to the agent graph
         await agent_graph.add_agent(agent)
