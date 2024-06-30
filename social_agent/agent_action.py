@@ -2,8 +2,8 @@ from typing import Any
 
 from camel.functions import OpenAIFunction
 
-from twitter.channel import TwitterChannel
-from twitter.typing import ActionType
+from social_platform.channel import TwitterChannel
+from social_platform.typing import ActionType
 
 
 class TwitterAction:

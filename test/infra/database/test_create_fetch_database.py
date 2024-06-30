@@ -6,8 +6,8 @@ import sqlite3
 
 import pytest
 
-from twitter.database import (create_db, fetch_rec_table_as_matrix,
-                              fetch_table_from_db)
+from social_platform.database import (create_db, fetch_rec_table_as_matrix,
+                                      fetch_table_from_db)
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 db_filepath = osp.join(parent_folder, "test.db")

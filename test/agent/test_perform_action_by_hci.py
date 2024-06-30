@@ -6,9 +6,9 @@ import pytest
 
 from social_agent.agent import TwitterUserAgent
 from social_agent.agents_generator import generate_controllable_agents
-from twitter.channel import TwitterChannel
-from twitter.config import UserInfo
-from twitter.twitter import Twitter
+from social_platform.channel import TwitterChannel
+from social_platform.config import UserInfo
+from social_platform.twitter import Twitter
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")

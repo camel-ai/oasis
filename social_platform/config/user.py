@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from twitter.typing import ActionType
+from social_platform.typing import ActionType
 
 
 @dataclass

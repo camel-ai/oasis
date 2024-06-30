@@ -9,9 +9,9 @@ from colorama import Back
 from clock.clock import Clock
 from social_agent.agents_generator import (gen_control_agents_with_data,
                                            generate_reddit_agents)
-from twitter.channel import TwitterChannel
-from twitter.twitter import Twitter
-from twitter.typing import ActionType
+from social_platform.channel import TwitterChannel
+from social_platform.twitter import Twitter
+from social_platform.typing import ActionType
 
 # 每轮在沙盒世界创建的帖子和评论数
 round_post_num = 20
