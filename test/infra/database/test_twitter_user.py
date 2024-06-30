@@ -5,7 +5,7 @@ import sqlite3
 
 import pytest
 
-from social_platform.twitter import Twitter  # 确保从你的模块中导入Twitter类
+from social_platform.platform import Platform  # 确保从你的模块中导入Twitter类
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -81,7 +81,7 @@ def setup_twitter():
 
     # 初始化Twitter实例
     mock_channel = MockChannel()
-    twitter_instance = Twitter(db_path, mock_channel)
+    twitter_instance = Platform(db_path, mock_channel)
     return twitter_instance
 
 

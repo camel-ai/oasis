@@ -6,7 +6,7 @@ from datetime import datetime
 
 import pytest
 
-from social_platform.twitter import Twitter  # 确保从你的模块中导入Twitter类
+from social_platform.platform import Platform  # 确保从你的模块中导入Twitter类
 from social_platform.typing import ActionType
 
 parent_folder = osp.dirname(osp.abspath(__file__))
@@ -60,7 +60,7 @@ def setup_twitter():
     db_path = test_db_filepath
     mock_channel = MockChannel()
     # 初始化Twitter实例
-    twitter_instance = Twitter(db_path, mock_channel, show_score=True)
+    twitter_instance = Platform(db_path, mock_channel, show_score=True)
     return twitter_instance
 
 

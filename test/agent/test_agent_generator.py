@@ -7,8 +7,8 @@ import pytest
 
 from social_agent.agents_generator import (generate_agents,
                                            generate_controllable_agents)
-from social_platform.channel import TwitterChannel
-from social_platform.twitter import Twitter
+from social_platform.channel import Channel
+from social_platform.platform import Platform
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -18,8 +18,8 @@ if osp.exists(test_db_filepath):
 
 async def running():
     agent_info_path = "./test/test_data/user_all_id_time.csv"
-    channel = TwitterChannel()
-    infra = Twitter(test_db_filepath, channel)
+    channel = Channel()
+    infra = Platform(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())
     agent_graph = await generate_agents(agent_info_path, channel)
     await channel.write_to_receive_queue((None, None, "exit"))
@@ -34,10 +34,10 @@ def test_agent_generator():
 @pytest.mark.asyncio
 async def test_generate_controllable(monkeypatch):
     agent_info_path = "./test/test_data/user_all_id_time.csv"
-    channel = TwitterChannel()
+    channel = Channel()
     if osp.exists(test_db_filepath):
         os.remove(test_db_filepath)
-    infra = Twitter(test_db_filepath, channel)
+    infra = Platform(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())
     inputs = iter(["Alice", "Ali", "a student"])
     monkeypatch.setattr('builtins.input', lambda _: next(inputs))

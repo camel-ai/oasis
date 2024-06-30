@@ -8,9 +8,9 @@ import sqlite3
 import pytest
 
 from social_agent.agent import TwitterUserAgent
-from social_platform.channel import TwitterChannel
+from social_platform.channel import Channel
 from social_platform.config import UserInfo
-from social_platform.twitter import Twitter
+from social_platform.platform import Platform
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -30,8 +30,8 @@ async def test_agents_tweeting(setup_twitter):
     M = 3  # 每个用户要发送的推文数量
 
     agents = []
-    channel = TwitterChannel()
-    infra = Twitter(test_db_filepath, channel)
+    channel = Channel()
+    infra = Platform(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())
 
     # 创建并注册用户

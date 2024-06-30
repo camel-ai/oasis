@@ -2,13 +2,13 @@ from typing import Any
 
 from camel.functions import OpenAIFunction
 
-from social_platform.channel import TwitterChannel
+from social_platform.channel import Channel
 from social_platform.typing import ActionType
 
 
 class TwitterAction:
 
-    def __init__(self, agent_id: int, channel: TwitterChannel):
+    def __init__(self, agent_id: int, channel: Channel):
         self.agent_id = agent_id
         self.channel = channel
 

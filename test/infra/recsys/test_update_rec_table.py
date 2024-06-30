@@ -8,8 +8,8 @@ from test.show_db import print_db_contents
 
 import pytest
 
-from social_platform.channel import TwitterChannel
-from social_platform.twitter import Twitter
+from social_platform.channel import Channel
+from social_platform.platform import Platform
 from social_platform.typing import ActionType
 
 parent_folder = osp.dirname(osp.abspath(__file__))
@@ -27,8 +27,8 @@ def setup_db():
 @pytest.mark.asyncio
 async def test_update_rec_table(setup_db):
     try:
-        channel = TwitterChannel()
-        infra = Twitter(test_db_filepath, channel)
+        channel = Channel()
+        infra = Platform(test_db_filepath, channel)
         # 在测试开始之前，将3个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
