@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from social_platform.typing import ActionType
+from social_simulation.social_platform.typing import ActionType
 
 
 @dataclass

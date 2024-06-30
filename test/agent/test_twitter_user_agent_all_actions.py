@@ -1,4 +1,3 @@
-# File: ./test/infra/test_twitter_user_agent_all_actions.py
 import asyncio
 import os
 import os.path as osp
@@ -6,11 +5,11 @@ import random
 
 import pytest
 
-from social_agent.agent import TwitterUserAgent
-from social_platform.channel import Channel
-from social_platform.config import UserInfo
-from social_platform.platform import Platform
-from social_platform.typing import ActionType
+from social_simulation.social_agent.agent import TwitterUserAgent
+from social_simulation.social_platform.channel import Channel
+from social_simulation.social_platform.config import UserInfo
+from social_simulation.social_platform.platform import Platform
+from social_simulation.social_platform.typing import ActionType
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")

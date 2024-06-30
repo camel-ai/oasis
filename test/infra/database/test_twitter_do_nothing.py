@@ -1,12 +1,11 @@
-# File: ./test/infra/test_twitter_refresh.py
 import os
 import os.path as osp
 import sqlite3
 
 import pytest
 
-from social_platform.platform import Platform  # 确保从你的模块中导入Twitter类
-from social_platform.typing import ActionType
+from social_simulation.social_platform.platform import Platform
+from social_simulation.social_platform.typing import ActionType
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")

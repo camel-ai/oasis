@@ -4,22 +4,20 @@ import os.path as osp
 import random
 import sqlite3
 from datetime import datetime
-from test.show_db import print_db_contents
 
 import pytest
 
-from social_platform.channel import Channel
-from social_platform.platform import Platform
-from social_platform.typing import ActionType
+from social_simulation.social_platform.channel import Channel
+from social_simulation.social_platform.platform import Platform
+from social_simulation.social_platform.typing import ActionType
+from social_simulation.testing.show_db import print_db_contents
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
 def setup_db():
-    # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
