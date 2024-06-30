@@ -8,8 +8,8 @@ from camel.messages import BaseMessage
 from camel.models import OpenAIModel
 from camel.types import ModelType
 
-from social_simulation.social_agent.agent_action import TwitterAction
-from social_simulation.social_agent.agent_environment import TwitterEnvironment
+from social_simulation.social_agent.agent_action import SocialAction
+from social_simulation.social_agent.agent_environment import SocialEnvironment
 from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.config import UserInfo
 
@@ -26,9 +26,9 @@ class TwitterUserAgent:
         self.agent_id = agent_id
         self.user_info = user_info
         self.channel = channel
-        self.env = TwitterEnvironment(TwitterAction(agent_id, channel))
+        self.env = SocialEnvironment(SocialAction(agent_id, channel))
         model_config = ChatGPTConfig(
-            tools=self.env.twitter_action.get_openai_function_list(),
+            tools=self.env.action.get_openai_function_list(),
             temperature=0.0,
         )
         model = OpenAIModel(model_config_dict=model_config.__dict__,
@@ -40,7 +40,7 @@ class TwitterUserAgent:
         self.chat_agent = ChatAgent(
             system_message=self.system_message,
             model=model,
-            tools=self.env.twitter_action.get_openai_function_list(),
+            tools=self.env.action.get_openai_function_list(),
         )
 
     async def perform_action_by_llm(self):
@@ -59,7 +59,7 @@ class TwitterUserAgent:
 
     async def perform_action_by_hci(self):
         print('Please choose one function to perform:')
-        function_list = self.env.twitter_action.get_openai_function_list()
+        function_list = self.env.action.get_openai_function_list()
         for i in range(len(function_list)):
             print(f"{i}.", function_list[i].func.__name__, end=', ')
         print()
@@ -90,7 +90,7 @@ class TwitterUserAgent:
         return result
 
     async def perform_action_by_data(self, func_name, *args, **kwargs):
-        function_list = self.env.twitter_action.get_openai_function_list()
+        function_list = self.env.action.get_openai_function_list()
         for i in range(len(function_list)):
             if function_list[i].func.__name__ == func_name:
                 func = function_list[i].func

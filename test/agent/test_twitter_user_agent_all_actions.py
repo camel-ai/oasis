@@ -50,7 +50,7 @@ async def test_agents_actions(setup_twitter):
                              description=description,
                              profile=profile)
         agent = TwitterUserAgent(i, user_info, channel)
-        return_message = await agent.env.twitter_action.sign_up(
+        return_message = await agent.env.action.sign_up(
             f"user{i}0101", f"User{i}", "A bio.")
         assert return_message["success"] is True
         agents.append(agent)
@@ -59,7 +59,7 @@ async def test_agents_actions(setup_twitter):
     for agent in agents:
         for _ in range(4):
             return_message = \
-                await agent.env.twitter_action.create_tweet(
+                await agent.env.action.create_tweet(
                     f"hello from {agent.agent_id}",
                 )
             await asyncio.sleep(random.uniform(0, 0.1))
@@ -69,84 +69,83 @@ async def test_agents_actions(setup_twitter):
 
     # 看推荐系统返回tweet
     action_agent = agents[2]
-    return_message = await action_agent.env.twitter_action.refresh()
+    return_message = await action_agent.env.action.refresh()
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.twitter_action.like(1)
+    return_message = await action_agent.env.action.like(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.twitter_action.unlike(1)
+    return_message = await action_agent.env.action.unlike(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.twitter_action.dislike(1)
+    return_message = await action_agent.env.action.dislike(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.twitter_action.undo_dislike(1)
+    return_message = await action_agent.env.action.undo_dislike(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
     return_message = \
-        await action_agent.env.twitter_action.search_tweets('hello')
+        await action_agent.env.action.search_tweets('hello')
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.twitter_action.search_user('2')
+    return_message = await action_agent.env.action.search_user('2')
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.twitter_action.follow(1)
+    return_message = await action_agent.env.action.follow(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.twitter_action.unfollow(1)
+    return_message = await action_agent.env.action.unfollow(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.twitter_action.mute(1)
+    return_message = await action_agent.env.action.mute(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.twitter_action.unmute(1)
+    return_message = await action_agent.env.action.unmute(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
     # 看最热tweet
-    return_message = await action_agent.env.twitter_action.trend()
+    return_message = await action_agent.env.action.trend()
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
     # retweet
-    return_message = await action_agent.env.twitter_action.retweet(1)
+    return_message = await action_agent.env.action.retweet(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.twitter_action.create_comment(
+    return_message = await action_agent.env.action.create_comment(
         1, 'Test comment')
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.twitter_action.like_comment(1)
+    return_message = await action_agent.env.action.like_comment(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.twitter_action.unlike_comment(1)
+    return_message = await action_agent.env.action.unlike_comment(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.twitter_action.dislike_comment(1)
+    return_message = await action_agent.env.action.dislike_comment(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await (
-        action_agent.env.twitter_action.undo_dislike_comment(1))
+    return_message = await (action_agent.env.action.undo_dislike_comment(1))
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await (action_agent.env.twitter_action.do_nothing())
+    return_message = await (action_agent.env.action.do_nothing())
     print(return_message)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))

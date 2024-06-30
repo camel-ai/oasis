@@ -6,7 +6,7 @@ from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.typing import ActionType
 
 
-class TwitterAction:
+class SocialAction:
 
     def __init__(self, agent_id: int, channel: Channel):
         self.agent_id = agent_id

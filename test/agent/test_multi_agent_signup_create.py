@@ -16,7 +16,6 @@ parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
 def setup_twitter():
     # 测试前确保test.db不存在
@@ -54,15 +53,13 @@ async def test_agents_tweeting(setup_twitter):
                              description=description,
                              profile=profile)
         agent = TwitterUserAgent(i, user_info, channel)
-        await agent.env.twitter_action.sign_up(f"user{i}0101", f"User{i}",
-                                               "A bio.")
+        await agent.env.action.sign_up(f"user{i}0101", f"User{i}", "A bio.")
         agents.append(agent)
 
     # 发送推文
     for agent in agents:
         for _ in range(M):
-            await agent.env.twitter_action.create_tweet(
-                f"hello from {agent.agent_id}")
+            await agent.env.action.create_tweet(f"hello from {agent.agent_id}")
             await asyncio.sleep(random.uniform(0, 0.1))
 
     await channel.write_to_receive_queue((None, None, "exit"))

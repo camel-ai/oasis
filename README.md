@@ -1,5 +1,7 @@
 # Social Simulation
 
+Social Simulation.
+
 ## Quickstart
 
 ### Virtual Environment
@@ -25,7 +27,7 @@ pip install --upgrade pip
 pip install -e .
 ```
 
-### Step 3: Run the Main Program
+### Run the Main Program
 
 ```bash
 python scripts/main.py

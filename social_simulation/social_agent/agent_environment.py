@@ -4,7 +4,7 @@ import json
 from abc import ABC, abstractmethod
 from string import Template
 
-from social_simulation.social_agent.agent_action import TwitterAction
+from social_simulation.social_agent.agent_action import SocialAction
 
 
 class Environment(ABC):
@@ -16,7 +16,7 @@ class Environment(ABC):
         raise NotImplementedError
 
 
-class TwitterEnvironment(Environment):
+class SocialEnvironment(Environment):
     followers_env_template = Template("I have $num_followers followers.")
     follows_env_template = Template("I have $num_follows follows.")
     tweets_env_template = Template(
@@ -26,11 +26,11 @@ class TwitterEnvironment(Environment):
                             "Follows: $follows_env\n"
                             "Tweets: $tweets_env")
 
-    def __init__(self, twitter_action: TwitterAction):
-        self.twitter_action = twitter_action
+    def __init__(self, action: SocialAction):
+        self.action = action
 
     async def get_tweets_env(self) -> str:
-        tweets = await self.twitter_action.refresh()
+        tweets = await self.action.refresh()
         # TODO: Replace tweets json format string to other formats
         if tweets["success"]:
             tweets_env = json.dumps(tweets["tweets"], indent=4)
