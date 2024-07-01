@@ -30,7 +30,10 @@ pip install -e .
 ### Run the Main Program
 
 ```bash
-python scripts/main.py
+python scripts/twitter_simulation.py
+# or
+python scripts/twitter_simulation.py --config_path scripts/twitter.yaml
+# You can also change `controllable_user` to `true` in the yaml file to run with controllable user
 ```
 
 ## Test
