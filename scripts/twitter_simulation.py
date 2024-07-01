@@ -76,7 +76,6 @@ async def running(
                 if agent_ac_prob < threshold:
                     await agent.perform_action_by_llm()
             else:
-                breakpoint()
                 await agent.perform_action_by_hci()
 
     await channel.write_to_receive_queue((None, None, ActionType.EXIT))
