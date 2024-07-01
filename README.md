@@ -27,13 +27,23 @@ pip install --upgrade pip
 pip install -e .
 ```
 
-### Run the Main Program
+## Script
+
+### Run Twitter Script
 
 ```bash
 python scripts/twitter_simulation.py
 # or
 python scripts/twitter_simulation.py --config_path scripts/twitter.yaml
 # You can also change `controllable_user` to `true` in the yaml file to run with controllable user
+```
+
+### Run Reddit Script
+
+```bash
+python3 scripts/reddit_simulation.py
+# or
+python scripts/reddit_simulation.py --config_path scripts/reddit.yaml
 ```
 
 ## Test

@@ -1,0 +1,12 @@
+data:
+  db_path: "./data/mock_reddit.db"
+  user_path: "./data/reddit/filter_user_results.json"
+  pair_path: "./data/reddit/RS-RC-pairs.json"
+simulation:
+  num_timesteps: 3
+  clock_factor: 60
+  recsys_type: "reddit"
+  controllable_user: true
+  allow_self_rating: false
+  show_score: true
+  rec_update_time: 40
