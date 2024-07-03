@@ -29,5 +29,6 @@ class ActionType(Enum):
 
 class RecsysType(Enum):
     TWITTER = "twitter"
+    TWHIN = "twhin-bert"
     REDDIT = "reddit"
     RANDOM = "random"

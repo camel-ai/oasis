@@ -9,9 +9,10 @@ from social_simulation.clock.clock import Clock
 from social_simulation.social_platform.database import (
     create_db, fetch_rec_table_as_matrix, fetch_table_from_db)
 from social_simulation.social_platform.recsys import (
-    rec_sys_personalized_with_trace, rec_sys_random, rec_sys_reddit)
-from social_simulation.social_platform.typing import ActionType, RecsysType
+    rec_sys_personalized_with_trace, rec_sys_random, rec_sys_reddit,
+    rec_sys_personalized_twh, remove_seen_tweet)
 
+from social_simulation.social_platform.typing import ActionType, RecsysType
 
 class Platform:
 
@@ -21,7 +22,7 @@ class Platform:
         channel: Any,
         sandbox_clock: Clock | None = None,
         start_time: datetime | None = None,
-        rec_update_time: int = 20,
+        rec_update_time: int = 50,
         show_score: bool = False,
         allow_self_rating: bool = True,
         recsys_type: str | RecsysType = "twitter",
@@ -313,7 +314,7 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def refresh(self, agent_id: int):
+    async def refresh_orig(self, agent_id: int):
         # output不变，执行内容是从rec table取特定id的tweet
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
@@ -360,6 +361,82 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
+    async def refresh(self, agent_id: int):
+        # output不变，执行内容是从rec table取特定id的tweet
+        current_time = self.sandbox_clock.time_transfer(
+            datetime.now(), self.start_time)
+        try:
+            user_id = self._check_agent_userid(agent_id)
+            if not user_id:
+                return self._not_signup_error_message(agent_id)
+
+            # 从rec表中获取指定user_id的所有tweet_id
+            rec_query = "SELECT tweet_id FROM rec WHERE user_id = ?"
+            self._execute_db_command(rec_query, (user_id, ))
+            rec_results = self.db_cursor.fetchall()
+
+            tweet_ids = [row[0] for row in rec_results]
+            rec_tweet_ids = tweet_ids
+
+            # 如果tweet_id数量 >= self.refresh_tweet_count，则随机选择指定数量的tweet_id
+            if len(tweet_ids) >= self.refresh_tweet_count:
+                rec_tweet_ids = random.sample(tweet_ids,
+                                                   self.refresh_tweet_count)
+            
+            # 从following中去获取推特
+            # 更改SQL查询，令refresh得到的 tweet 是这个用户关注的人的 tweet，排序按照推特的点赞数
+            query_following_tweet = (
+                "SELECT tweet.tweet_id, tweet.user_id, tweet.content, tweet.created_at, tweet.num_likes "
+                "FROM tweet "
+                "JOIN follow ON tweet.user_id = follow.followee_id "
+                "WHERE follow.follower_id = ? "
+                "ORDER BY tweet.num_likes DESC  "  # ORDER BY tweet.num_likes DESC
+                "LIMIT ?")
+            self._execute_db_command(query_following_tweet, (
+                user_id,
+                self.following_tweet_count,
+            ))
+
+            following_tweets = self.db_cursor.fetchall()
+            following_tweets_ids = [row[0] for row in following_tweets]
+            # 清洗，避免following_tweets中别人转发的自己的推特被推荐回来
+            tweet_table = fetch_table_from_db(self.db_cursor, 'tweet')
+            user_table = fetch_table_from_db(self.db_cursor, 'user')
+            items = {tweet['tweet_id']: tweet['content'] for tweet in tweet_table}
+            # 这里还是默认agent在sign up的时候按顺序注册，如果要考虑到并发乱序问题则需要改动
+            user_index = agent_id  
+            user_previous_tweet_all = {index: [] for index in range(len(user_table))}
+            for tweet in tweet_table:
+                user_previous_tweet_all[tweet['user_id']-1] += [tweet['content']]
+            following_tweets_ids = remove_seen_tweet(following_tweets_ids, items, user_index, user_previous_tweet_all)
+
+            selected_tweet_ids = following_tweets_ids + rec_tweet_ids
+
+            # 根据选定的tweet_id从tweet表中获取tweet详情
+            placeholders = ', '.join('?' for _ in selected_tweet_ids)
+            # 构造SQL查询字符串
+            tweet_query = (
+                f"SELECT tweet_id, user_id, content, created_at, num_likes, "
+                f"num_dislikes FROM tweet WHERE tweet_id IN ({placeholders})")
+            self._execute_db_command(tweet_query, selected_tweet_ids)
+            results = self.db_cursor.fetchall()
+            if not results:
+                return {"success": False, "message": "No tweets found."}
+            results_with_comments = self._add_comments_to_tweets(results)
+            # 记录操作到trace表
+            action_info = {}
+            trace_insert_query = (
+                "INSERT INTO trace (user_id, created_at, action, info) "
+                "VALUES (?, ?, ?, ?)")
+            self._execute_db_command(
+                trace_insert_query,
+                (user_id, current_time, ActionType.REFRESH.value,
+                 str(action_info)),
+                commit=True)
+            return {"success": True, "tweets": results_with_comments}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     async def update_rec_table(self):
         # Recsys(trace/user/tweet table), 结果是刷新了rec table
         user_table = fetch_table_from_db(self.db_cursor, 'user')
@@ -373,6 +450,10 @@ class Platform:
                                             self.max_rec_tweet_len)
         elif self.recsys_type == RecsysType.TWITTER:
             new_rec_matrix = rec_sys_personalized_with_trace(
+                user_table, tweet_table, trace_table, rec_matrix,
+                self.max_rec_tweet_len)
+        elif self.recsys_type == RecsysType.TWHIN:
+            new_rec_matrix = rec_sys_personalized_twh(
                 user_table, tweet_table, trace_table, rec_matrix,
                 self.max_rec_tweet_len)
         elif self.recsys_type == RecsysType.REDDIT:

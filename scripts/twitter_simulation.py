@@ -65,7 +65,7 @@ async def running(
 
     for timestep in range(num_timesteps):
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
-        # 0.2 * timestep here means 12 minutes
+        # 0.2 * timestep here means 1 timstep == 12 minutes
         simulation_time_hour = start_hour + 0.2 * timestep
         for node_id, node_data in agent_graph.get_agents():
             agent = node_data['agent']

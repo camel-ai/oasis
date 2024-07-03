@@ -1,22 +1,38 @@
 '''注意需要在写入rec_matrix的时候判断是否超过max_rec_tweet_len'''
+import os
 import heapq
 import random
 from datetime import datetime
 from math import log
 from typing import Any, Dict, List
-
+from .typing import ActionType, RecsysType
 import numpy as np
+from yaml import safe_load
+import torch
+
 # init model
-from sentence_transformers import SentenceTransformer
+with open("scripts/twitter.yaml", "r") as f:
+    cfg = safe_load(f)
+recsys_type = cfg.get("simulation").get("recsys_type")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-from .typing import ActionType
 
-try:
-    model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-except Exception as e:
-    print(e)
-    model = None
-
+if recsys_type == RecsysType.TWITTER:
+    from sentence_transformers import SentenceTransformer
+    try:
+        model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+    except Exception as e:
+        print(e)
+        model = None
+elif recsys_type == RecsysType.TWHIN:
+    from transformers import AutoTokenizer, AutoModel
+    from .process_recsys_tweets import generate_tweet_vector
+    from sklearn.metrics.pairwise import cosine_similarity
+    try:
+        twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base" , model_max_length=512 )
+        twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base").to(device)
+    except Exception as e:
+        print(e)
 
 def rec_sys_random(user_table: List[Dict[str,
                                          Any]], tweet_table: List[Dict[str,
@@ -51,6 +67,28 @@ def rec_sys_random(user_table: List[Dict[str,
 
     return new_rec_matrix
 
+def remove_seen_tweet(rec_ids, items, user_index, user_previous_tweet_all):
+    # 删掉推荐中用户之前看过的内容
+    # 避免自己发的推特被推荐给自己，或者别人转发的自己的推特被推荐回来
+    rec_contents = [items[rec_id] for rec_id in rec_ids]  # 未清洗前的推荐内容
+    remove_rec_id = []  # 后面要删除的推荐推特id
+    for rec_id, rec_content in zip(rec_ids, rec_contents):
+        # 获得该用户之前发的推特（包括转发）
+        user_prev_contents = user_previous_tweet_all[user_index]
+        for prev_content in user_prev_contents:
+            if "original_tweet: " in prev_content:
+                prev_content = prev_content.split("original_tweet: ")[-1]     
+            if prev_content in rec_content:
+                remove_rec_id.append(rec_id)
+                break
+    for r_id in remove_rec_id:
+        rec_ids.remove(r_id)
+    if len(rec_ids) == 0:
+        new_rec_ids = [None]
+    else:
+        new_rec_ids = rec_ids
+
+    return new_rec_ids
 
 def calculate_hot_score(num_likes: int, num_dislikes: int,
                         created_at: datetime) -> int:
@@ -81,6 +119,13 @@ def calculate_hot_score(num_likes: int, num_dislikes: int,
     seconds = epoch_seconds_result - 1134028003
     return round(sign * order + seconds / 45000, 7)
 
+def get_recommendations(user_index, cosine_similarities, items, date_score, top_n = 100):
+    similarities = np.array(cosine_similarities[user_index])
+    time_score = similarities * date_score
+    similarities = time_score
+    top_item_indices = similarities.argsort()[::-1][:top_n]
+    recommended_items = [(list(items.keys())[i], similarities[i]) for i in top_item_indices]
+    return recommended_items
 
 def rec_sys_reddit(tweet_table: List[Dict[str, Any]], rec_matrix: List[List],
                    max_rec_tweet_len: int) -> List[List]:
@@ -187,6 +232,73 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
 
     return new_rec_matrix
 
+def rec_sys_personalized_twh(
+    user_table: List[Dict[str, Any]],
+    tweet_table: List[Dict[str, Any]],
+    trace_table: List[Dict[str, Any]],
+    rec_matrix: List[List],
+    max_rec_tweet_len: int,
+    recsys_model: str,
+    recall_only: bool = False,
+) -> List[List]:
+    # 获取所有推文的ID
+    tweet_ids = [tweet['tweet_id'] for tweet in tweet_table]
+    # 获取 id: content dict
+    items = {tweet['tweet_id']: tweet['content'] for tweet in tweet_table}
+
+    # 获取所有推文的创建时间，根据时间远近来赋分
+    tweet_dates = [int(tweet['created_at']) for tweet in tweet_table]
+    current_time = int(os.environ["SANDBOX_TIME"])
+    date_score = np.array([np.log(tweet_date/current_time + 2) for tweet_date in tweet_dates])
+
+    # 获取 user_index: prev_tweets dict
+    user_previous_tweet_all = {index: [] for index in range(len(user_table))}
+    for tweet in tweet_table:
+        user_previous_tweet_all[tweet['user_id']-1] += [tweet['content']]
+
+    if len(tweet_ids) <= max_rec_tweet_len:
+        # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
+        rec_matrix = [tweet_ids] * (len(rec_matrix) - 1)
+        rec_ids_matrix = [None] + rec_matrix
+        new_rec_matrix = []
+        # 删掉推荐中用户之前看过的内容
+        for index, rec_ids in enumerate(rec_ids_matrix[1:]):
+            new_rec_ids = remove_seen_tweet(rec_ids, items, index, user_previous_tweet_all)
+            new_rec_matrix.append(new_rec_ids)
+
+        new_rec_matrix = [None] + new_rec_matrix
+
+    else: 
+        new_rec_matrix = [None]
+        # 如果推文数量大于最大推荐数，每个用户随机获得personalized推文ID
+        user_profiles = [user['bio'] for user in user_table]
+        user_profiles = [profile if profile is not None else 'This user does not have profile' for profile in user_profiles]
+        
+        # user_id - 1 = agent_id
+        user_previous_tweet =  {tweet['user_id']-1: tweet['content'] for tweet in tweet_table} # 获取每个用户最近发的一条推特，根据最近发的推特进行推荐（这里面可以）
+        # user_profiles.update(user_previous_tweet)
+        # print(len(user_previous_tweet))
+        for tweet_user_index in user_previous_tweet:
+            try:
+                user_profiles[tweet_user_index] = user_previous_tweet[tweet_user_index]
+            except:
+                print("update previous tweet failed")
+
+        corpus = user_profiles + list(items.values())
+        all_tweet_vector = generate_tweet_vector(twhin_model, twhin_tokenizer, corpus, batch_size=1000) 
+        all_tweet_vector_list = [all_tweet_vector[i] for i in range(all_tweet_vector.size(0))] 
+        user_vector = all_tweet_vector_list[:len(user_profiles)]
+        item_vector = all_tweet_vector_list[len(user_profiles):]
+        cosine_similarities = cosine_similarity(user_vector, item_vector)
+
+        for user_index, profile in enumerate(user_profiles):
+            rec_ids = get_recommendations(user_index, cosine_similarities, items, date_score, top_n=max_rec_tweet_len)
+            rec_ids = [item for item, _ in rec_ids]
+            # 删掉推荐中用户之前看过的内容
+            new_rec_ids = remove_seen_tweet(rec_ids, items, user_index, user_previous_tweet_all)
+            new_rec_matrix.append(new_rec_ids)
+                
+    return new_rec_matrix
 
 def normalize_similarity_adjustments(tweet_scores, base_similarity,
                                      like_similarity, dislike_similarity):

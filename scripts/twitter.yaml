@@ -2,7 +2,7 @@ data:
   db_path: null
   csv_path: null
 simulation:
-  num_timesteps: 3
+  num_timesteps: 2
   clock_factor: 60
   recsys_type: "twitter"
   controllable_user: false
