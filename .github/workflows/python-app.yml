@@ -1,0 +1,35 @@
+name: Python application CI
+
+"on":
+  push:
+    branches: [main, twitter_time_map, time_feature]  # 只有在 main 分支推送时触发
+  pull_request:
+    branches: [main]  # 只有在 main 分支的拉取请求触发
+    # 请保持此参数不变使得 feature branch 在给 main 提 pr 的时候可以自动触发
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest      # 使用最新版的 Ubuntu
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.10.11
+        uses: actions/setup-python@v2
+        with:
+
+          python-version: 3.10.11    # 指定 Python 版本，例如 3.8、3.9 等
+
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Run tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          pytest
