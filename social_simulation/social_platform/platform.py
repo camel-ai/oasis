@@ -57,6 +57,8 @@ class Platform:
         self.refresh_tweet_count = 5
         # rec table(buffer)中每个用户的最大tweet数量
         self.max_rec_tweet_len = 50
+        # 除了推荐系统外，从关注用户得到的最大tweet数量
+        self.following_tweet_count = 2
         # rec prob between random and personalized
         self.rec_prob = 0.7
 

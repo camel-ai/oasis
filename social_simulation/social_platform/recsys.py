@@ -119,10 +119,8 @@ def calculate_hot_score(num_likes: int, num_dislikes: int,
     seconds = epoch_seconds_result - 1134028003
     return round(sign * order + seconds / 45000, 7)
 
-def get_recommendations(user_index, cosine_similarities, items, date_score, top_n = 100):
+def get_recommendations(user_index, cosine_similarities, items, top_n = 100):
     similarities = np.array(cosine_similarities[user_index])
-    time_score = similarities * date_score
-    similarities = time_score
     top_item_indices = similarities.argsort()[::-1][:top_n]
     recommended_items = [(list(items.keys())[i], similarities[i]) for i in top_item_indices]
     return recommended_items
@@ -238,7 +236,6 @@ def rec_sys_personalized_twh(
     trace_table: List[Dict[str, Any]],
     rec_matrix: List[List],
     max_rec_tweet_len: int,
-    recsys_model: str,
     recall_only: bool = False,
 ) -> List[List]:
     # 获取所有推文的ID
@@ -246,10 +243,6 @@ def rec_sys_personalized_twh(
     # 获取 id: content dict
     items = {tweet['tweet_id']: tweet['content'] for tweet in tweet_table}
 
-    # 获取所有推文的创建时间，根据时间远近来赋分
-    tweet_dates = [int(tweet['created_at']) for tweet in tweet_table]
-    current_time = int(os.environ["SANDBOX_TIME"])
-    date_score = np.array([np.log(tweet_date/current_time + 2) for tweet_date in tweet_dates])
 
     # 获取 user_index: prev_tweets dict
     user_previous_tweet_all = {index: [] for index in range(len(user_table))}
@@ -292,7 +285,7 @@ def rec_sys_personalized_twh(
         cosine_similarities = cosine_similarity(user_vector, item_vector)
 
         for user_index, profile in enumerate(user_profiles):
-            rec_ids = get_recommendations(user_index, cosine_similarities, items, date_score, top_n=max_rec_tweet_len)
+            rec_ids = get_recommendations(user_index, cosine_similarities, items, top_n=max_rec_tweet_len)
             rec_ids = [item for item, _ in rec_ids]
             # 删掉推荐中用户之前看过的内容
             new_rec_ids = remove_seen_tweet(rec_ids, items, user_index, user_previous_tweet_all)
