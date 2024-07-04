@@ -1,0 +1,1498 @@
+[33mcommit 1afef872b95b5a2bbf84bfc533dcf016292032ca[m[33m ([m[1;36mHEAD -> [m[1;32mrename_twitter_db[m[33m)[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Thu Jul 4 21:07:12 2024 +0800
+
+    refactor platform
+
+[33mcommit 3b51c59364c6747ecc07487b49cef87293632616[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Thu Jul 4 20:12:35 2024 +0800
+
+    add _record_trace function
+
+[33mcommit 07ddc2bf342c7acaee5d598883ac133341c71e4d[m[33m ([m[1;31morigin/rename_twitter_db[m[33m)[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Thu Jul 4 19:19:14 2024 +0800
+
+    rename scripts
+
+[33mcommit 521d8fa7029fd446088a8951c6183b05cec0bbf1[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Thu Jul 4 19:12:14 2024 +0800
+
+    rename agent folder
+
+[33mcommit 4eddbc5cc96622596a13dba157f6a461b7574106[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Thu Jul 4 17:19:53 2024 +0800
+
+    rename tweet in db
+
+[33mcommit c1eb1a616a4af3022d4f545e76b33a8565982b2e[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Merge: 1e2a8b3 a5f72b3
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Mon Jul 1 00:40:25 2024 -0700
+
+    Merge pull request #119 from camel-ai/zecheng_reddit_script
+
+    Add reddit yaml and change the script
+
+[33mcommit a5f72b375b996a0f046945aa22aedd6b4fed24a7[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Mon Jul 1 00:33:26 2024 -0700
+
+    Add reddit yaml and change the script
+
+[33mcommit 1e2a8b39e97b240a5d2d630e00d8ecc3f62c6887[m
+Merge: 7133715 bc25618
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Mon Jul 1 00:04:25 2024 -0700
+
+    Merge pull request #118 from camel-ai/zecheng_add_main_cfg
+
+    Add script cfg and clean the main script program
+
+[33mcommit bc25618256ea8e665b910a2a99a16f8fefc132a2[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sun Jun 30 23:59:53 2024 -0700
+
+    Update
+
+[33mcommit 698354190936fff010af807ed9462933e8144b66[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sun Jun 30 23:45:50 2024 -0700
+
+    Add main script yaml config
+
+[33mcommit 7133715a30d3c807e1db1cffb5abec372528a0c7[m
+Merge: 4a82e40 e1e584e
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sun Jun 30 03:17:05 2024 -0700
+
+    Merge pull request #117 from camel-ai/zecheng_make_agent_more_general
+
+    Make Agent more general
+
+[33mcommit e1e584e6db089629bd15638c47dbcb76e7c9c632[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sun Jun 30 03:11:58 2024 -0700
+
+    Make Agent more general
+
+[33mcommit 4a82e40f7603b6807447b0db821eec2eb09c7116[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sun Jun 30 03:02:46 2024 -0700
+
+    Make agent more general
+
+[33mcommit 219e0ab79a69d5244439c169b2bea4d48b8650c7[m
+Merge: cb654b5 4fb28b9
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sun Jun 30 02:42:32 2024 -0700
+
+    Merge pull request #116 from camel-ai/zecheng_setup_package
+
+    Setup package
+
+[33mcommit 4fb28b932998f8fe608013f018c6dba2703d4814[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sun Jun 30 02:38:11 2024 -0700
+
+    Update
+
+[33mcommit 040b93f667c2bf978cdc22c28e7092237ca8858e[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sun Jun 30 02:33:19 2024 -0700
+
+    Setup package
+
+[33mcommit cb654b5f627834120939eb508ffe3674f23c552e[m
+Merge: 2c72e2b a9f29e6
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sun Jun 30 01:51:17 2024 -0700
+
+    Merge pull request #115 from camel-ai/zecheng_rename_twitter_and_channel
+
+    Rename twitter to platform and rename TwitterChannel to Channel
+
+[33mcommit a9f29e6abf2136ddd34f8f3861ba4a7135d2f5a2[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sun Jun 30 01:46:29 2024 -0700
+
+    Rename twitter to platform and rename TwitterChannel to Channel
+
+[33mcommit 2c72e2b3c3623f35558643e5fe713e6c32f9e366[m
+Merge: f700df0 4f8293a
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sun Jun 30 00:37:53 2024 -0700
+
+    Merge pull request #114 from camel-ai/zecheng_rename_twitter_to_social_platform
+
+    Rename twitter folder to social_platform
+
+[33mcommit 4f8293a5cde7a6eda402934f2d35f4d15f1922e6[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sun Jun 30 00:33:13 2024 -0700
+
+    Rename twitter folder to social_platform
+
+[33mcommit f700df0817097d0e1278d897ff3c2b181e058e56[m
+Merge: 43314fa c99ae7c
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sat Jun 29 23:51:24 2024 -0700
+
+    Merge pull request #113 from camel-ai/zecheng_cleaning
+
+    Some cleaning and refactoring
+
+[33mcommit c99ae7c0eb7404313f2bf3f21d2082286caeb1dd[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Sat Jun 29 23:45:10 2024 -0700
+
+    Some cleaning and refactoring
+
+[33mcommit 43314facc813df3860465fb3aa39131aadc4bc21[m
+Merge: ffc9352 3a9d316
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Sat Jun 29 06:39:08 2024 +0800
+
+    Merge pull request #107 from camel-ai/controllable_agent_data_import
+
+    Reddit Rxperiment Demo Code
+
+[33mcommit 3a9d316848cde5fa66773fd8410640803712352e[m[33m ([m[1;31morigin/controllable_agent_data_import[m[33m, [m[1;32mcontrollable_agent_data_import[m[33m, [m[1;32manalysis_code[m[33m)[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Fri Jun 28 19:39:11 2024 +0800
+
+    restire changes of agents's part
+
+[33mcommit b5cfc85b958b0d8c329cedf7218c707f8eb3d6d7[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Fri Jun 28 19:26:24 2024 +0800
+
+    fix test
+
+[33mcommit 2e93622f3425908bf98e7d857aebcbd1bc4418d6[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Fri Jun 28 19:20:02 2024 +0800
+
+    allow controllable choose action via offline data
+
+[33mcommit 0fdc7d3db4b39d631f1cb38bf81e97a14017271a[m
+Merge: 979de8a ffc9352
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Fri Jun 28 15:13:36 2024 +0800
+
+    Merge branch 'main' into controllable_agent_data_import
+
+[33mcommit 979de8afa16e92367f804239ec36989e81fcc71d[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Fri Jun 28 15:13:00 2024 +0800
+
+    add data import
+
+[33mcommit ffc9352980df969356c304e0adcc390b41604866[m
+Merge: acd85f9 eb623dd
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Fri Jun 28 14:02:36 2024 +0800
+
+    Merge pull request #106 from camel-ai/reddit_recsys
+
+    Add Rec Sys to simulate Reddit
+
+[33mcommit eb623dd7c4981a76eed3f1a30e287316d1ac3a1c[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Fri Jun 28 13:58:52 2024 +0800
+
+    Update recsys.py
+
+    I've added some appropriate comments and renamed the function reddit_hot_compute to calculate_hot_score
+
+    From the perspective of the recommendation system in a platform, the systems on Twitter and Reddit are essentially combinations of different components or the same components with different parameters/weights (and corresponding datasets). Thus, I believe the calculate_hot_score function can be reused across different platform recommendation systems. My understanding after reviewing the original link is that it somewhat resembles PageRank, acting like a manual weighting system.
+
+[33mcommit c518953cdeff6e953d3f1bdd32436502cf5960e6[m[33m ([m[1;31morigin/reddit_recsys[m[33m, [m[1;32mreddit_recsys[m[33m)[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Thu Jun 27 22:26:33 2024 +0800
+
+    add_reddit_recsys
+
+[33mcommit acd85f9e259654dac3e3e25557347fd70c295d13[m
+Merge: 56113c9 1bae0ac
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Thu Jun 27 12:48:32 2024 +0800
+
+    Merge pull request #103 from camel-ai/reddit_feature_adjust
+
+    Reddit Feature: Show Scores and Check Self Rating for Tweets and Comments
+
+[33mcommit 1bae0ac56cddd7294fd0d477e66bd539c8667d9d[m[33m ([m[1;31morigin/reddit_feature_adjust[m[33m)[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Wed Jun 26 20:18:21 2024 +0800
+
+    check twitter self_rating and add score system
+
+[33mcommit 56113c9e834bf301d37a242e35baa565021267a6[m
+Merge: 42bbde3 38b2e96
+Author: Bean <59305487+zhangzaibin@users.noreply.github.com>
+Date:   Wed Jun 26 18:05:19 2024 +0800
+
+    Merge pull request #102 from camel-ai/refactor/scenario-template
+
+    [Refactor] Template for Each Scenario
+
+[33mcommit 38b2e96f0c05a8a77b7d8db037a2fd4fe502a57e[m
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Wed Jun 26 16:25:03 2024 +0800
+
+    Update run_simulation.sh
+
+[33mcommit 9fd4eb6e20bf604008deb5c55e9e8b97b7871b6b[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Wed Jun 26 16:23:05 2024 +0800
+
+    rename template
+
+[33mcommit 3027bd46755918938fb33f185e31f324b62545a2[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Wed Jun 26 16:22:39 2024 +0800
+
+    init
+
+[33mcommit 42bbde34d667bac00e2a298d47ec542f92cacac9[m
+Merge: f8dd29b ba11073
+Author: Ziyi Yang <87371755+yiyiyi0817@users.noreply.github.com>
+Date:   Wed Jun 26 14:46:23 2024 +0800
+
+    Merge pull request #101 from camel-ai/delete_sh
+
+    delete some files should not be merged into main
+
+[33mcommit ba11073e884d7488bf7efba5ae415e087c54b87c[m[33m ([m[1;31morigin/delete_sh[m[33m)[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Wed Jun 26 14:45:37 2024 +0800
+
+    delete some files should not be merged into main
+
+[33mcommit f8dd29b6910939ba066780d604aeac6432e0f44d[m
+Merge: 06fa58f a3be8bd
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Wed Jun 26 12:37:52 2024 +0800
+
+    Merge pull request #93 from camel-ai/tutorials/init
+
+    Tutorials/init
+
+[33mcommit a3be8bd4b039617b193c29554c326d512c0fd7c8[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Wed Jun 26 12:36:40 2024 +0800
+
+    update
+
+[33mcommit 06fa58f4221258642e186346221ffbff90ad68e9[m
+Merge: 04bd5ca 01d8b72
+Author: Bean <59305487+zhangzaibin@users.noreply.github.com>
+Date:   Wed Jun 26 12:17:08 2024 +0800
+
+    Merge pull request #96 from camel-ai/add_do_nothing_func
+
+    Add Do Nothing Function For Twitter User Agent
+
+[33mcommit 01d8b727dc7463d70f15ac94b29867e1079feec0[m[33m ([m[1;31morigin/add_do_nothing_func[m[33m)[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Tue Jun 25 17:39:14 2024 +0800
+
+    add do_nothing_func
+
+[33mcommit 115c6fad14143bb56deaffbc384b4eb65476bc81[m
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Fri Jun 21 22:13:34 2024 +0800
+
+    Update tutorial.md
+
+[33mcommit 8fe2b9d2a83ede6c24bbb9268c5182523888a979[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Fri Jun 21 22:09:37 2024 +0800
+
+    delete obsolete tutorials
+
+[33mcommit a5cbb19d19a56f0c7753f5e6f1fbf387a772fb75[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Fri Jun 21 22:08:44 2024 +0800
+
+    init tutorials
+
+[33mcommit 04bd5cacb61f4041a93ddaeef3b3e0ddc0cb583e[m
+Merge: 17e2816 3d1cc21
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Thu Jun 20 23:01:12 2024 -0700
+
+    Merge pull request #91 from camel-ai/zecheng_simplify_agent
+
+    [DO NOT REVIEW] Simplify agent by updating Camel to the newest version
+
+[33mcommit 3d1cc21a8ec906d3740782dda3963896ff32f2cc[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Thu Jun 20 22:55:41 2024 -0700
+
+    Update
+
+[33mcommit 1a60ac16f5624690e82cf6ad40965b96b12f9fa2[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Thu Jun 20 00:55:45 2024 -0700
+
+    Update
+
+[33mcommit b0991257239bf4063c63144bdcdcd50dde20fe9e[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Thu Jun 20 00:44:14 2024 -0700
+
+    Update
+
+[33mcommit d0679eae6194c6a2eab64fda9b9b115f6951b23e[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Thu Jun 20 00:22:35 2024 -0700
+
+    Simplify agent
+
+[33mcommit 17e2816592cfeaef780294e20f5e75db54560c87[m
+Merge: b51e2cc 9ebe67c
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Fri Jun 14 01:45:53 2024 -0500
+
+    Merge pull request #79 from camel-ai/add_twitter_comment
+
+    Add comment action to Twitter
+
+[33mcommit 9ebe67cebece5813245ad097639a0b43d121dd62[m
+Merge: df0e2d4 b51e2cc
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Fri Jun 14 01:16:13 2024 -0500
+
+    Merge branch 'main' into add_twitter_comment
+
+[33mcommit b51e2ccb4a06eba5a9ea6bc70136b64bc112278c[m
+Merge: c512bf2 833795b
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Thu Jun 13 22:18:19 2024 -0500
+
+    Merge pull request #72 from camel-ai/zecheng_clean_and_rename
+
+    Some rename and clean
+
+[33mcommit df0e2d488bedea4c42788b874a8bb0390e517bad[m[33m ([m[1;31morigin/add_twitter_comment[m[33m)[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Fri Jun 14 00:54:25 2024 +0800
+
+    show comment form refresh, search and trend
+
+[33mcommit 22336fe86c6b3237d56eb5927e66a1521f652230[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Thu Jun 13 22:00:41 2024 +0800
+
+    add comment action without show comment
+
+[33mcommit 8cfeddde55507b22e937abb8aeb923ab321d1d00[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Thu Jun 13 15:38:55 2024 +0800
+
+    add dislike and undo_dislike for twitter
+
+[33mcommit 833795bd0d378e5bbc0065b5c92fea6369fbbfbb[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Tue Jun 11 04:12:24 2024 -0700
+
+    Update
+
+[33mcommit c512bf29d30940d8b1af3fd3930267730c720ed2[m
+Merge: c74982e 9c88009
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Tue Jun 11 00:21:07 2024 -0500
+
+    Merge pull request #71 from camel-ai/add_controllable_user
+
+    Add controllable users for exploring their influence on other llm agents
+
+[33mcommit 9c880096a779c49d11759af7bb2bf3c30d50b37c[m[33m ([m[1;31morigin/add_controllable_user[m[33m)[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Mon Jun 10 17:04:06 2024 +0800
+
+    fix pytest
+
+[33mcommit c7eff81b934acd4e44af9eaad86208bd4786de6a[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Mon Jun 10 16:57:32 2024 +0800
+
+    add controllable agent main.py
+
+[33mcommit 981a1ba9fdb12d9df2c9f5fcfa08c01582e36e26[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Mon Jun 10 15:19:15 2024 +0800
+
+    success generate
+
+[33mcommit c74982e1bde25ee9f604ef008aee7ce8932a61ef[m
+Merge: 7c67fc5 aa3bd81
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Sun Jun 2 22:39:04 2024 -0500
+
+    Merge pull request #64 from camel-ai/docs/init-tutorials-for-newbies
+
+    init tutorials for newbies
+
+[33mcommit aa3bd81272cd772c9638dcfa3aeda27bf03db913[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Mon Jun 3 10:20:58 2024 +0800
+
+    init
+
+[33mcommit 7c67fc55a12816ccbf0593de53156674e27af8f4[m
+Merge: f38e8ba bd7f4e2
+Author: Ziyi Yang <87371755+yiyiyi0817@users.noreply.github.com>
+Date:   Sat Jun 1 16:18:30 2024 +0800
+
+    Merge pull request #62 from camel-ai/chore/update-dependencies
+
+    Update requirements.txt
+
+[33mcommit bd7f4e283b41b94c0240c6b162b43290f599d731[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat Jun 1 11:37:17 2024 +0800
+
+    Update requirements.txt
+
+[33mcommit f38e8bafed2d69ad912f93dccfae8c732b412e73[m
+Merge: bdd93e8 14d3d34
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Fri May 31 22:10:35 2024 -0500
+
+    Merge pull request #61 from camel-ai/personal_ziyi_recsys
+
+    Personal ziyi recsys
+
+[33mcommit 14d3d348092e24af2e56ad0bff15224a0a8ec28e[m
+Author: Zijian Ling <georgeling.0330@gmail.com>
+Date:   Fri May 31 19:04:29 2024 +0100
+
+    fix tests
+
+[33mcommit 8862f02857979fe9e0058bf99bb74f9f4cd96808[m
+Merge: d2e513b bdd93e8
+Author: George L <z.ling22@imperial.ac.uk>
+Date:   Fri May 31 07:33:20 2024 -0700
+
+    Merge branch 'main' into personal_ziyi_recsys
+
+[33mcommit d2e513bf5846a96d31eb1ec34a930f6bcb0cb947[m
+Author: Zijian Ling <georgeling.0330@gmail.com>
+Date:   Fri May 31 15:32:18 2024 +0100
+
+    update recsys test
+
+[33mcommit bdd93e8e89f335a52663cd64709ada5953704be5[m
+Merge: 4f65172 43fb85c
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Fri May 31 08:59:35 2024 -0500
+
+    Merge pull request #58 from camel-ai/zecheng_naive_agent_twitter_env
+
+    Add a naive twitter environment for twitter agent
+
+[33mcommit 37fb41742a93ba28d75f6c31ad588001c88e59f3[m
+Merge: 9892e5e 4f65172
+Author: George L <z.ling22@imperial.ac.uk>
+Date:   Tue May 28 06:46:58 2024 -0700
+
+    Merge branch 'main' into personal_ziyi_recsys
+
+[33mcommit 9892e5e71cc617556b724d1eeda73040690385ef[m
+Author: Zijian Ling <georgeling.0330@gmail.com>
+Date:   Tue May 28 14:17:43 2024 +0100
+
+    add trace usage
+
+[33mcommit 43fb85cc0b2ce4701b5c961dc80c74ae5f07c1a5[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Tue May 28 05:49:57 2024 -0700
+
+    Update
+
+[33mcommit 0e884f09f42da76222153478ba7a6dfc5e48fcbb[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Tue May 28 05:45:08 2024 -0700
+
+    Update
+
+[33mcommit 4f6517266850ccce2870a440c25f78252bd1328e[m
+Merge: 614d31b 29e1b85
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Mon May 27 22:24:21 2024 -0500
+
+    Merge pull request #54 from camel-ai/twitter_time_map
+
+    Add Time Mapping to Info Server
+
+[33mcommit 29e1b85b908df8560aed3a1421d585c65a478cb5[m
+Merge: 0030662 614d31b
+Author: Ziyi Yang <87371755+yiyiyi0817@users.noreply.github.com>
+Date:   Tue May 28 11:13:06 2024 +0800
+
+    Merge branch 'main' into twitter_time_map
+
+[33mcommit 614d31b125029202853fd1ea8dbe8e0737e8fc4b[m
+Merge: 8644f68 8ed05c5
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Mon May 27 21:43:24 2024 -0500
+
+    Merge pull request #53 from camel-ai/time_feature
+
+    Time feature v1 and fix some bugs
+
+[33mcommit 0030662c9a09cac11506158d368c38bda24f6273[m[33m ([m[1;31morigin/twitter_time_map[m[33m)[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Mon May 27 15:32:47 2024 +0800
+
+    fix typo
+
+[33mcommit 8ed05c53c15627225ffc1244d93830de38372447[m
+Merge: b3740e8 8644f68
+Author: Redtides <2607964128@qq.com>
+Date:   Mon May 27 14:47:10 2024 +0800
+
+    merge main
+
+[33mcommit b3740e83cead277aa382e6b703204e45db16757c[m
+Author: Redtides <2607964128@qq.com>
+Date:   Mon May 27 14:35:09 2024 +0800
+
+    pass all test
+
+[33mcommit 1e5e9dd4aa7d57d625613159e5bce24267fee74d[m
+Author: Redtides <2607964128@qq.com>
+Date:   Mon May 27 13:48:39 2024 +0800
+
+    add time_feature github action test
+
+[33mcommit 3128c27f1fbba55e7d911cae7ae5969e41cac3bc[m
+Author: Redtides <2607964128@qq.com>
+Date:   Mon May 27 13:38:27 2024 +0800
+
+    modify retweet action_info
+
+[33mcommit de6cfad7e71c32f22b18d7493f1f237a8c68aff0[m
+Author: Redtides <2607964128@qq.com>
+Date:   Mon May 27 13:27:53 2024 +0800
+
+    fix following bug
+
+[33mcommit 0fe640ba2b14fd5f6fdc2bc9b8aa23386e012552[m
+Author: Redtides <2607964128@qq.com>
+Date:   Mon May 27 13:25:58 2024 +0800
+
+    add retweet test
+
+[33mcommit ce27c5ce52485986f0f1e051a7fe32599f7c3b1b[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Mon May 27 00:16:14 2024 +0800
+
+    add time map to info server
+
+[33mcommit 41fd929c7ba9fbb883788f4dc21df3b21c0b98ee[m
+Author: Redtides <2607964128@qq.com>
+Date:   Fri May 24 15:16:55 2024 +0800
+
+    time feature v1.1
+
+[33mcommit fad06d174ed461ffe8e0f09b98d53835e9987a66[m
+Author: Redtides <2607964128@qq.com>
+Date:   Fri May 24 15:11:09 2024 +0800
+
+    fake following data
+
+[33mcommit 715bb8b7813e13be03e1d73740373b7d918b4a28[m
+Author: Redtides <2607964128@qq.com>
+Date:   Fri May 24 14:59:25 2024 +0800
+
+    simplify time feature v1 main.py
+
+[33mcommit 35adb37ed50bf72a2e717c9a70025e891889caff[m
+Author: Redtides <2607964128@qq.com>
+Date:   Fri May 24 14:58:03 2024 +0800
+
+    tuning prompt
+
+[33mcommit 5934f16620d46442b6bc3e02628e549a15678c2b[m
+Author: Redtides <2607964128@qq.com>
+Date:   Fri May 24 14:54:51 2024 +0800
+
+    set test profile
+
+[33mcommit 2e6350f245b466c6c052c962f2c75792f79e2471[m
+Author: Redtides <2607964128@qq.com>
+Date:   Fri May 24 14:51:34 2024 +0800
+
+    fix description to user_profile
+
+[33mcommit 1d507f73b1bd2f0b39473afd5a4f2e53ffbbb0e8[m
+Author: Redtides <2607964128@qq.com>
+Date:   Fri May 24 14:47:39 2024 +0800
+
+    unify search_tweet to search_tweets
+
+[33mcommit d66f91415eb4656157b31d62459d2f1138fb82f0[m
+Author: Redtides <2607964128@qq.com>
+Date:   Fri May 24 11:49:13 2024 +0800
+
+    Format code
+
+[33mcommit 8644f686347a5bb46e5c6d9236564b7b8fccabe4[m
+Merge: 5c5872e f968431
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Wed May 22 22:06:45 2024 +0800
+
+    Merge pull request #48 from camel-ai/dependabot/pip/tqdm-4.66.3
+
+    Bump tqdm from 4.66.2 to 4.66.3
+
+[33mcommit 5c5872e94ad1ceb1ebe3fe890d21d1ffc4999dd7[m
+Merge: a24c0c4 e837c41
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Wed May 22 22:04:58 2024 +0800
+
+    Merge pull request #50 from camel-ai/revert-47-zecheng_agent_clean_2
+
+    Revert "Refactor and clean agent and some renaming"
+
+[33mcommit e837c41546876dde9f78e8ca2d812d817bc78519[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Wed May 22 21:51:23 2024 +0800
+
+    Update python-app.yml
+
+[33mcommit 866fdda826d6ecb15145f91b2e7f09bf65304f9c[m
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Wed May 22 21:43:20 2024 +0800
+
+    Revert "Refactor and clean agent and some renaming"
+
+[33mcommit a24c0c4071c838aaa7b91b941832a1b73f1f358c[m
+Merge: 2dfc3b7 de2073f
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Wed May 22 21:36:47 2024 +0800
+
+    Merge pull request #47 from camel-ai/zecheng_agent_clean_2
+
+    Refactor and clean agent and some renaming
+
+[33mcommit f96843176d7e005b520fdba961faf33188a6b4bc[m
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Wed May 22 12:49:05 2024 +0000
+
+    ---
+    updated-dependencies:
+    - dependency-name: tqdm
+      dependency-type: direct:production
+    ...
+
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+[33mcommit ccc65051ad8971cdb89ec3290f743c14ffb607ac[m
+Author: Redtides <2607964128@qq.com>
+Date:   Wed May 22 20:39:26 2024 +0800
+
+    time feature v1
+
+[33mcommit 77b867f88c0c09f2acccc2b6256c09dce5c874ce[m
+Author: Redtides <2607964128@qq.com>
+Date:   Wed May 22 20:38:41 2024 +0800
+
+    time feature v1
+
+[33mcommit 14b382d8eaafaa8d9cc1d9d6dfacba584014c9f3[m
+Author: Redtides <2607964128@qq.com>
+Date:   Wed May 22 20:02:46 2024 +0800
+
+    pass agent generator and all action test
+
+[33mcommit e8a85341a8d41466e8a382d78905e658552b9075[m
+Author: Redtides <2607964128@qq.com>
+Date:   Wed May 22 19:53:17 2024 +0800
+
+    add retweet function
+
+[33mcommit 51aedf55806d49cc8db8903e2d65af2c9554f65d[m
+Author: Redtides <2607964128@qq.com>
+Date:   Wed May 22 19:42:44 2024 +0800
+
+    add time feature for agent generator from new csv
+
+[33mcommit 9d20997348c46baea9c684a9f31822d57dd3b13d[m
+Merge: 9925a6c 2dfc3b7
+Author: Redtides <2607964128@qq.com>
+Date:   Wed May 22 19:26:39 2024 +0800
+
+    merge latest main
+
+[33mcommit 9925a6c6c06f2e41b0e114a0a780abe369b433bd[m
+Author: Redtides <2607964128@qq.com>
+Date:   Wed May 22 18:29:42 2024 +0800
+
+    ignore
+
+[33mcommit 64739551ebb006814d6ab0c85fed82d5ac169c35[m
+Author: Redtides <2607964128@qq.com>
+Date:   Wed May 22 18:29:19 2024 +0800
+
+    change off_line threshold to 0.1
+
+[33mcommit df0890e78e7ddec62a8029eba835bb13c12953cd[m
+Author: Redtides <2607964128@qq.com>
+Date:   Wed May 22 18:28:00 2024 +0800
+
+    tuning user prompt, add retweet action
+
+[33mcommit 87f5e2f376c316e49bee9161c38c1ad4a9d63fd4[m
+Author: Redtides <2607964128@qq.com>
+Date:   Wed May 22 18:23:57 2024 +0800
+
+    change off_line threshold to 0.1
+
+[33mcommit de2073f0f5b0301f029ba48586bae2378290628b[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Wed May 22 02:05:34 2024 -0700
+
+    Update
+
+[33mcommit 9619b8bb321fd52c35c4fd0cb127545e1ace3d35[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Wed May 22 02:01:27 2024 -0700
+
+    Update
+
+[33mcommit d8c709b4c65b0499594221121dc6f4a8d1211e1b[m
+Merge: 90b9a87 2dfc3b7
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Wed May 22 01:58:22 2024 -0700
+
+    Update
+
+[33mcommit 90b9a8705ce2cc28774e90d948c593830de20003[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Wed May 22 01:53:43 2024 -0700
+
+    Clean and refactor agent
+
+[33mcommit 2dfc3b750c42741bc5c038f42580cf94f3bbf27b[m
+Merge: 4cb779a acb338e
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Wed May 22 16:03:36 2024 +0800
+
+    Merge pull request #46 from camel-ai/dependabot/pip/requests-2.32.2
+
+    Bump requests from 2.31.0 to 2.32.2
+
+[33mcommit acb338e8c50338f6853ce2505ea9d03581418d55[m
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Wed May 22 08:03:04 2024 +0000
+
+    ---
+    updated-dependencies:
+    - dependency-name: requests
+      dependency-type: direct:production
+    ...
+
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+[33mcommit 4cb779ab7e54a050f3a3d4ad3c4bcd9127e14661[m
+Merge: 18cec4f 8b67560
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Wed May 22 16:00:43 2024 +0800
+
+    Merge pull request #43 from camel-ai/personal_ziyi
+
+    Add Interface of Infomation Server for Recsys
+
+[33mcommit 5e8eeb9cb42cd6b3b24549afd10433261c8af02e[m[33m ([m[1;31morigin/personal_ziyi_recsys[m[33m)[m
+Author: Zijian Ling <georgeling.0330@gmail.com>
+Date:   Tue May 21 14:20:40 2024 +0100
+
+    Add user_bio content recsys
+
+[33mcommit 8b67560804b6f12a5ce5aead0b3a6ca7398d9bed[m[33m ([m[1;31morigin/personal_ziyi[m[33m)[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Tue May 21 20:13:31 2024 +0800
+
+    fix update_rec problem of main.py
+
+[33mcommit 40fcaef98df52cf18d7576023f781ac0342017a8[m
+Merge: 974c31f 18cec4f
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Tue May 21 15:59:27 2024 +0800
+
+    add recsys interface and align to zecheng's main
+
+[33mcommit 18cec4fc49aa003ba299274ab8f5c18801d9271b[m
+Merge: 5a1801c 6d37a3e
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Tue May 21 12:14:54 2024 +0800
+
+    Merge pull request #42 from camel-ai/zecheng_agent_clean
+
+    Refactor and clean agent and some other files
+
+[33mcommit 974c31ff2597a9235ed31306d8773b538fc00b3b[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Mon May 20 19:59:29 2024 +0800
+
+    timing update rec table
+
+[33mcommit 6a6a18443f66b667240ad6e21404177e072d2051[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Mon May 20 18:39:38 2024 +0800
+
+    add interface for recsys
+
+[33mcommit 6d37a3e568f310d3511d1295a2834f53ebf3522f[m
+Author: Zecheng Zhang <zecheng@alumni.stanford.edu>
+Date:   Mon May 20 02:02:56 2024 -0700
+
+    Refactor and clean agent and some other files
+
+[33mcommit b70e8438938b63585fc09bea8d74355ea7a7ceb8[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Mon May 20 16:57:47 2024 +0800
+
+    complete update_rec_table
+
+[33mcommit 029942d8101a9e5922ad72134fe97db541e846d9[m
+Merge: 50ede3a 5a1801c
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Sun May 19 14:05:36 2024 +0800
+
+    Merge pull request #34 from camel-ai/main
+
+    to Align with the Current Main
+
+[33mcommit 50ede3af0a9a0f6045d35007ddb41220633e7879[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sun May 19 00:55:21 2024 +0800
+
+    Update python-app.yml
+
+[33mcommit c4ebe5c3716f260a37c996459eb447fccec6e71b[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sun May 19 00:45:52 2024 +0800
+
+    ALIGN with the currentStableVersion(0.0.1)
+
+    Co-Authored-By: Ziyi Yang <87371755+yiyiyi0817@users.noreply.github.com>
+
+[33mcommit 5a1801cb688b5cc845688e82040504fa5471e2fb[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Sat May 18 20:35:47 2024 +0800
+
+    fix file path of main.py
+
+[33mcommit 45a5787504d8c8bbb4577dc2ac9712e1f8ec86ae[m
+Author: Ziyi Yang <87371755+yiyiyi0817@users.noreply.github.com>
+Date:   Sat May 18 20:22:07 2024 +0800
+
+    Update README.md
+
+[33mcommit 64b5ef2ff8689cfed9fc6ca2b4ee0781380e0c77[m
+Author: Ziyi Yang <87371755+yiyiyi0817@users.noreply.github.com>
+Date:   Sat May 18 20:21:39 2024 +0800
+
+    Update README.md
+
+[33mcommit 189345058f58bcd493303da27bda66b6c4eaac7a[m
+Author: Ziyi Yang <87371755+yiyiyi0817@users.noreply.github.com>
+Date:   Sat May 18 20:08:24 2024 +0800
+
+    Add openai API KEY while running github actions
+
+[33mcommit 6f6bdb56f6ee6512befa306319877d80b154398c[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Sat May 18 19:49:03 2024 +0800
+
+    fix requirement.txt and test code
+
+[33mcommit 9a8d8b51ad49392dec228faee2981cb02364450e[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 18 18:58:04 2024 +0800
+
+    Update requirements.txt
+
+[33mcommit 9e3dc33135b7e7ad2f9ad4698dfcd9c5e64f6fd6[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 18 18:51:36 2024 +0800
+
+    ALL unit tests [PASS]
+
+[33mcommit 06838cdf7336adc776002b06a268135eb1828b38[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 18 18:20:49 2024 +0800
+
+    Reapply "correct mosts import errors"
+
+    This reverts commit b4bfce8f1593bea0f98f80acf65c0188927cc746.
+
+[33mcommit b4bfce8f1593bea0f98f80acf65c0188927cc746[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 18 18:20:16 2024 +0800
+
+    Revert "correct mosts import errors"
+
+    This reverts commit 79e6c5607a12e4b17fe7de025286732a99ccd6df.
+
+[33mcommit 79e6c5607a12e4b17fe7de025286732a99ccd6df[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 18 18:20:04 2024 +0800
+
+    correct mosts import errors
+
+    BUT there're still many issues in the File: ./test/test_infra/test_agent_generator.py
+
+[33mcommit b4e63fc0ea3b842ea1f1e0af594884aca7dc6395[m[33m ([m[1;31morigin/personal_konisberg[m[33m)[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 18 17:56:00 2024 +0800
+
+    udpate
+
+[33mcommit 9c190a0e380f64279a4389c2999243c51493a466[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 18 17:49:48 2024 +0800
+
+    update
+
+[33mcommit b61fc9a89e47f49995dba6c06ab753d5b161fc19[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 18 17:49:13 2024 +0800
+
+    Update test_multi_agent_signup_create.py
+
+[33mcommit 46223f9ec76c875cc167a56f6a0cc4c361e97b24[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 18 17:46:00 2024 +0800
+
+    Update requirements.txt
+
+[33mcommit c6dc53a044efd16e4a94dabdced8cafac5276ca0[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 18 17:44:14 2024 +0800
+
+    First trial to add tests
+
+[33mcommit 226c0d24710e0a773849a330b8b882e5e87284c8[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 18 17:41:43 2024 +0800
+
+    First trial to add tests
+
+[33mcommit a78a9a534a1e5423a4e53c6fd94d6de11d21d34b[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 18 16:54:14 2024 +0800
+
+    all the db files IGNORED
+
+    the .gitignore file has been settled down
+    BUT the "./data/" folder should be remained
+
+    Co-Authored-By: Ziyi Yang <87371755+yiyiyi0817@users.noreply.github.com>
+    Co-Authored-By: Zhiyu Wang <121875294+zhiyu-01@users.noreply.github.com>
+
+[33mcommit a26e1d1c5c6bbd7c5314c3455f6a535bd6320fed[m
+Merge: e5ac051 388f8ab
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Sat May 18 16:42:07 2024 +0800
+
+    Merge branch 'main' of https://github.com/camel-ai/social-simulation
+
+[33mcommit e5ac05166f54f7eeade00a01e3f98b72d282a290[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Sat May 18 16:40:39 2024 +0800
+
+    update
+
+[33mcommit 388f8abe1c842da5752e0cf367d8fec393f5830b[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 18 16:31:51 2024 +0800
+
+    Update .gitignore
+
+    Co-Authored-By: Ziyi Yang <87371755+yiyiyi0817@users.noreply.github.com>
+    Co-Authored-By: Zhiyu Wang <121875294+zhiyu-01@users.noreply.github.com>
+
+[33mcommit a9c80749a9546964ae63381b2c154a472fa23794[m[33m ([m[1;31morigin/time_feature[m[33m)[m
+Author: Redtides <2607964128@qq.com>
+Date:   Fri May 17 13:19:01 2024 +0800
+
+    ignore
+
+[33mcommit f75f1ea57b54343ad0b137fca3bee88218a71dfb[m
+Author: Redtides <2607964128@qq.com>
+Date:   Fri May 17 13:17:47 2024 +0800
+
+    refresh to get followee twitter, not random
+
+[33mcommit 152b37180fa91cef486cfba0920d8fb4ff0e8bdd[m
+Author: Redtides <2607964128@qq.com>
+Date:   Fri May 17 13:12:42 2024 +0800
+
+    add simple time feature
+
+[33mcommit 4f855c39789525f32fd7c79dfe4a7097f14ef927[m
+Merge: 044a2d7 14ce660
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Tue May 14 19:18:16 2024 +0800
+
+    Merge branch 'main' of https://github.com/camel-ai/social-simulation
+
+[33mcommit 044a2d72e8794545c89709e5d1dceeef81866a57[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Tue May 14 19:13:21 2024 +0800
+
+    update
+
+[33mcommit 14ce66041c98ec4f1ef3e562b8b63bc9484e5198[m
+Author: Zhiyu Wang <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Tue May 14 19:09:46 2024 +0800
+
+    Update README.md
+
+[33mcommit 9b7e0b212d831a7dbe0b97f6b8685bd776deb047[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Tue May 14 19:08:33 2024 +0800
+
+    update
+
+[33mcommit d80a9788f168aaf3b8a7e9b266d6a14c8f9fb446[m
+Merge: a4351d9 a00dd96
+Author: Zhiyu Wang <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Tue May 14 19:03:26 2024 +0800
+
+    Merge pull request #30 from camel-ai/zhiyu
+
+    Zhiyu
+
+[33mcommit a00dd96f51f754226ebea299939773a724a263e0[m[33m ([m[1;31morigin/zhiyu[m[33m)[m
+Merge: d5a863c a4351d9
+Author: Zhiyu Wang <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Tue May 14 19:03:14 2024 +0800
+
+    Merge branch 'main' into zhiyu
+
+[33mcommit d5a863c6a240b726b0a34e7e7dc697a50fec6fcd[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Tue May 14 18:55:26 2024 +0800
+
+    update
+
+[33mcommit a4351d9fddf2ea75fcfb4695c7c449a94fa4446e[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Tue May 14 18:25:26 2024 +0800
+
+    update
+
+[33mcommit 5ec8db0fbd0d66309708b65a831911c1dc96036d[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Tue May 14 16:54:51 2024 +0800
+
+    update
+
+[33mcommit 716de0b63e767c9f46147b4c65399202b27c0e72[m
+Merge: 7b32fee 9322c77
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Tue May 14 13:52:41 2024 +0800
+
+    Merge branch 'personal_konisberg' of https://github.com/camel-ai/social-simulation into restruct_info_server
+
+[33mcommit 7b32fee3698594053e793fd566cf4888293f446b[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Tue May 14 13:45:38 2024 +0800
+
+    add docstring for action functions and test
+
+[33mcommit 9322c776944d0173ceb857cc0540ebf6ea05a837[m
+Merge: 0212b9a 52e88f9
+Author: zhangzaibin <m18602438523@163.com>
+Date:   Tue May 14 13:23:52 2024 +0800
+
+    Merge branch 'personal_konisberg' of https://github.com/camel-ai/social-simulation into personal_konisberg
+
+    Add the agent generator class in SandboxTwitterModule/infra/agents_generator.py
+    Add a initial agent infomation file(csv)
+    Add test in test/test_infra/test_agent_generator.py
+
+[33mcommit 0212b9ab0b293485b0014dd08e2e403da621ce28[m
+Author: zhangzaibin <m18602438523@163.com>
+Date:   Tue May 14 13:21:40 2024 +0800
+
+    Agent-Generator
+
+[33mcommit 2d40464dbe06b5351236bbcdcb49f4e13d330800[m
+Author: zhangzaibin <m18602438523@163.com>
+Date:   Tue May 14 13:17:46 2024 +0800
+
+    Agent-Generator
+
+[33mcommit 52e88f90011e2ac20651373608510994c8e6faa8[m
+Author: Ziyi Yang <87371755+yiyiyi0817@users.noreply.github.com>
+Date:   Mon May 13 18:00:03 2024 +0800
+
+    Update README.md
+
+[33mcommit 987e6430a11d8933b1acf2b98a6d6eee6251eb89[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Mon May 13 16:58:51 2024 +0800
+
+    delete out-of-date implements of infra
+
+    delete the db/api/realapi/infra files of the last edition
+
+[33mcommit 668219e41979bc1c78c45a313b6fa6e528812ecc[m
+Merge: 4393d0c 856a90b
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Mon May 13 16:55:01 2024 +0800
+
+    Merge branch 'personal_konisberg' of https://github.com/camel-ai/social-simulation into personal_konisberg
+
+[33mcommit 4393d0cb308350e4337515e44560a4d8a06ce6d1[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Mon May 13 16:54:58 2024 +0800
+
+    real-world(NOT in-sandbox) interaction of agents PUT ASIDE!
+
+[33mcommit 856a90b095db43b08d19156b26fa373b9e1701f9[m
+Author: Ziyi Yang <87371755+yiyiyi0817@users.noreply.github.com>
+Date:   Mon May 13 16:43:52 2024 +0800
+
+    Update README.md
+
+[33mcommit 1448cd2e4e1c08eafae86698a2ea05734e869e3e[m[33m ([m[1;31morigin/perso[m[33m)[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sun May 12 12:09:17 2024 +0800
+
+    agent creating has been automated(
+
+[33mcommit 6ccf26917bfab0fb5e5065a693136df3590c8436[m
+Merge: 446d878 c4bedce
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Sat May 11 23:43:46 2024 +0800
+
+    quick edition and add all actions
+
+[33mcommit 446d878c824031350c4ab0c94f08a5a9fd29fb89[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Sat May 11 23:31:45 2024 +0800
+
+    become quick and add all actions api
+
+[33mcommit c4bedce75bb9ab6f97abe3e6526a43fab6b513e5[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 11 22:52:53 2024 +0800
+
+    test(N=1000, M=10)
+
+[33mcommit 89e0f4e7a98e44e9f216f288fc23414d2622f4e2[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 11 22:49:53 2024 +0800
+
+    test(N=1000, M=10)
+
+[33mcommit 6a68cd294403214f9b3c0154d90a44e672f286d2[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 11 21:57:01 2024 +0800
+
+    Update python-app.yml
+
+[33mcommit 6fc5588f30afd5d6fa1fede6211783ec4ebaa64a[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 11 21:55:16 2024 +0800
+
+    test(N=1000, M=10)
+
+[33mcommit e20368abdb10728495b6a2a903c861a225e79e93[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 11 21:51:24 2024 +0800
+
+    Update python-app.yml
+
+    添加 personal_konisberg 分支
+
+[33mcommit f52bc31309743c39f0429e638485b1b8dd671396[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 11 21:30:47 2024 +0800
+
+    Update README.md
+
+[33mcommit 10ec57a9ce19314ededc1e64a21056283da27230[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 11 21:27:46 2024 +0800
+
+    unit-test & integrated-test
+
+[33mcommit 97efe658b71d62c79d85d7a9cdfb478bb67e391b[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 11 21:25:14 2024 +0800
+
+    pipelineInit(N=100, M=3)
+
+    N: agent_count
+    M: action_count/agent
+
+[33mcommit 013a50e0ab377d9aed0ec1405f33b11aee044348[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 11 21:24:25 2024 +0800
+
+    Adjusted based on commenting standards for STM
+
+[33mcommit 2477501f01d1b5fd837a220de6948cf37577ef79[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 11 21:23:33 2024 +0800
+
+    Adjusted based on commenting standards
+
+[33mcommit a7a29ec0cb9a7a5b82e9c390aa83de1265afbf0b[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Sat May 11 19:53:05 2024 +0800
+
+    update for test
+
+    delete files that have conflicts with the test
+
+[33mcommit cdc26a932b8b45ec7c73194415eac31db11ece0d[m
+Author: Ziyi Yang <87371755+yiyiyi0817@users.noreply.github.com>
+Date:   Sat May 11 17:39:23 2024 +0800
+
+    Update README.md
+
+[33mcommit 8042d838dd29808bbde919ffb350f9e1ab391fa3[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Sat May 11 17:24:32 2024 +0800
+
+    add pytest to doc
+
+[33mcommit 92c345f0c2d099d250257d7146020ec16f5b0ab4[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Sat May 11 17:20:00 2024 +0800
+
+    stable infra but slow
+
+[33mcommit 4cb7e34eaa0847b8f1ef71643d5ab4a11d3651a6[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Sat May 11 16:11:33 2024 +0800
+
+    pass channel test with 500 users
+
+[33mcommit 09ab4995bfc88edc2e719fec5070f326dfb96d56[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Sat May 11 15:10:18 2024 +0800
+
+    add channel and message_id for signup
+
+[33mcommit 4bd75045c352dd42ebd51b912ce2e7826e6db7a5[m
+Author: yiyiyi0817 <1359513271@qq.com>
+Date:   Sat May 11 10:45:51 2024 +0800
+
+    successful change file dir
+
+[33mcommit 71c35ca2210c8afeba36361279dfbc7b8b333f64[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Fri May 10 15:50:54 2024 +0800
+
+    udpate for to-dos
+
+[33mcommit f373ca67ad65153be22bdcb7bf61db7e450c3259[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Thu May 9 15:35:30 2024 +0800
+
+    solve the bug "unstructured not found"
+
+[33mcommit 76ea8706361d7b11ead86a97ced414986cccee37[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Wed May 8 16:27:04 2024 +0800
+
+    Update test_twitterAccount_Relationships.py
+
+[33mcommit 79a76e23b9a32b9e14f1d2ecf6499e7d20fe710d[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Wed May 8 16:21:40 2024 +0800
+
+    New test for following/follower consistency check
+
+    确实有 关注/被关注 不对应的情况
+
+[33mcommit 30e31a463b3ada55a360add70fe3c9209803f08e[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Wed May 8 11:50:50 2024 +0800
+
+    update based on the Unified Developing Standards
+
+[33mcommit a127a9b93fb765754800062fe8365197b178646e[m
+Merge: ab0e1e5 457c7a8
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Tue May 7 13:47:18 2024 +0800
+
+    Merge pull request #7 from camel-ai/codeIntegrationPipelineInit
+
+    Code integration pipeline init
+
+[33mcommit 457c7a83aa41850e716fb3f529d1d79247c414a2[m
+Author: Konisberg <cjs@bupt.edu.cn>
+Date:   Tue May 7 13:18:13 2024 +0800
+
+    Update README.md
+
+[33mcommit c38a625828428679da0ef69bb2d9960100f8d693[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Tue May 7 13:17:49 2024 +0800
+
+    Update README.md
+
+[33mcommit f52982a788d42ca8101a7d00fd142c43d8390832[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Tue May 7 12:30:21 2024 +0800
+
+    update .gitignore and structure
+
+[33mcommit 2d77903df68056b0d697ce37d95cf8f4c3f69bd7[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Mon May 6 20:00:54 2024 +0800
+
+    test when agent_count=1000
+
+[33mcommit ff55c8ac0c8ce295904c7de322777e2afa880819[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Mon May 6 19:57:30 2024 +0800
+
+    Update python-app.yml
+
+[33mcommit e5fe7b778a9b8170624bf4fa60b0994529ab9905[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Mon May 6 14:52:51 2024 +0800
+
+    update more feature: Agent actions
+
+[33mcommit 4baafad26c4da5418d69d8821dcff8d1302b7e50[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Mon May 6 10:17:13 2024 +0800
+
+    update more feature of actions and wait for integration with llm-api
+
+    1. Added a new 'account' table to assist agent running.
+    2. Added API to decouple agent and database
+
+[33mcommit 058a5ed508047a8382c148a519a8cd6d03cf15d2[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Tue Apr 30 19:09:23 2024 +0800
+
+    Update test_db.py
+
+[33mcommit 6ed2179f478ee84d152694cd745b2195f39f1ea2[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Tue Apr 30 19:07:36 2024 +0800
+
+    Update twitter_db.py
+
+[33mcommit ff9edcb902464d69e0d690aebd37fb6fc595f08f[m
+Author: cjs <cjs@bupt.edu.cn>
+Date:   Tue Apr 30 16:00:37 2024 +0800
+
+    init
+
+[33mcommit ab0e1e56d3e1194919063562fcb784094fe08b53[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Mon Apr 29 10:52:29 2024 +0800
+
+    Update .gitignore
+
+[33mcommit 10be8ea97b449eda27e9a684079a4355835a3df9[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Mon Apr 29 10:26:38 2024 +0800
+
+    update
+
+[33mcommit 2e680b5ec684cd795b243bd657b6434a2c4122ad[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Wed Apr 24 09:42:54 2024 +0800
+
+    Delete python-package-test.yml
+
+[33mcommit d8ae12b30288fed51190178f5633d0520ecaa521[m
+Author: Zhiyu Wang <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Wed Apr 24 09:38:29 2024 +0800
+
+    Update python-package-test.yml
+
+[33mcommit 0cb59a48a083077615a2cd25169ded9b49ed7695[m
+Author: Zhiyu Wang <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Wed Apr 24 09:30:19 2024 +0800
+
+    Create python-package-test.yml
+
+[33mcommit 6c20c5aed243f4eea38552aea016ba91b3df4ebe[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Sun Apr 21 11:21:28 2024 +0800
+
+    Update interface.ipynb
+
+[33mcommit 29bb854969945f9f991336dd872883ff869c811a[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Thu Apr 18 18:13:12 2024 +0800
+
+    update
+
+[33mcommit 410bf1a5c22ed7bb2e6828ca0306fa60e4786ca6[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Fri Apr 12 17:49:02 2024 +0800
+
+    update
+
+[33mcommit b01bdbdad2c1d8d7057affac5273a58e3c6c41fd[m[33m ([m[1;31morigin/multimodal[m[33m)[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Thu Apr 11 17:01:10 2024 +0800
+
+    update
+
+[33mcommit e6ec26a9e9624a1f3b1df0a5a9c38981a824f3bb[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Thu Apr 11 16:52:42 2024 +0800
+
+    update
+
+[33mcommit 63acd7c1c12b1425f833bbad59dbcf679074ad89[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Thu Apr 11 13:04:22 2024 +0800
+
+    update
+
+[33mcommit 6152918bf82b8aa4860ca595b9516ec90b74e28b[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Wed Apr 10 15:06:30 2024 +0800
+
+    update
+
+[33mcommit eea07b9a3f6ac9c1c4525a7745d956aef22b7f05[m
+Merge: c7eb666 9978741
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Wed Apr 10 15:04:28 2024 +0800
+
+    Merge branch 'main' of https://github.com/camel-ai/social-simulation
+
+[33mcommit c7eb66625a93eacb3404253d80b3b4508174d17a[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Wed Apr 10 15:04:24 2024 +0800
+
+    update
+
+[33mcommit 9978741d6f821ea3ea39e32e2c9090d2bbde6a20[m
+Author: Zhiyu Wang <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Tue Apr 9 20:05:38 2024 +0800
+
+    Update README.md
+
+[33mcommit eec4f6969752cf9d0824f261965817822fe739f4[m
+Author: zhiyu-01 <121875294+zhiyu-01@users.noreply.github.com>
+Date:   Tue Apr 9 20:05:12 2024 +0800
+
+    update

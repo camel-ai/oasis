@@ -22,7 +22,7 @@ class MockChannel:
         # 第一次调用返回搜索用户的指令
         if self.call_count == 0:
             self.call_count += 1
-            return ('id_', (None, None, ActionType.UPDATE_REC))
+            return ('id_', (None, None, ActionType.UPDATE_REC_TABLE))
         if self.call_count == 1:
             self.call_count += 1
             return ('id_', (1, None, ActionType.REFRESH))

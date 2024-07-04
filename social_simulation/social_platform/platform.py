@@ -77,7 +77,6 @@ class Platform:
 
             if (self.ope_cnt % self.rec_update_time == 0
                     and action != ActionType.REFRESH):
-                print('Updating rec table.')
                 self.ope_cnt += 1
                 await self.update_rec_table()
 
@@ -86,69 +85,35 @@ class Platform:
                 self.db.close()
                 break
 
-            # 定义操作到函数的映射
-            action_to_function = {
-                ActionType.UPDATE_REC:
-                self.update_rec_table,
-                ActionType.SIGNUP:
-                lambda: self.signup(agent_id=agent_id, user_message=message),
-                ActionType.REFRESH:
-                lambda: self.refresh(agent_id=agent_id),
-                ActionType.CREATE_POST:
-                lambda: self.create_post(agent_id=agent_id, content=message),
-                ActionType.LIKE:
-                lambda: self.like(agent_id=agent_id, post_id=message),
-                ActionType.UNLIKE:
-                lambda: self.unlike(agent_id=agent_id, post_id=message),
-                ActionType.DISLIKE:
-                lambda: self.dislike(agent_id=agent_id, post_id=message),
-                ActionType.UNDO_DISLIKE:
-                lambda: self.undo_dislike(agent_id=agent_id, post_id=message),
-                ActionType.SEARCH_POSTS:
-                lambda: self.search_posts(agent_id=agent_id, query=message),
-                ActionType.SEARCH_USER:
-                lambda: self.search_user(agent_id=agent_id, query=message),
-                ActionType.FOLLOW:
-                lambda: self.follow(agent_id=agent_id, followee_id=message),
-                ActionType.UNFOLLOW:
-                lambda: self.unfollow(agent_id=agent_id, followee_id=message),
-                ActionType.MUTE:
-                lambda: self.mute(agent_id=agent_id, mutee_id=message),
-                ActionType.UNMUTE:
-                lambda: self.unmute(agent_id=agent_id, mutee_id=message),
-                ActionType.TREND:
-                lambda: self.trend(agent_id=agent_id),
-                ActionType.REPOST:
-                lambda: self.repost(agent_id=agent_id, post_id=message),
-                ActionType.CREATE_COMMENT:
-                lambda: self.create_comment(agent_id=agent_id,
-                                            comment_message=message),
-                ActionType.LIKE_COMMENT:
-                lambda: self.like_comment(agent_id=agent_id,
-                                          comment_id=message),
-                ActionType.UNLIKE_COMMENT:
-                lambda: self.unlike_comment(agent_id=agent_id,
-                                            comment_id=message),
-                ActionType.DISLIKE_COMMENT:
-                lambda: self.dislike_comment(agent_id=agent_id,
-                                             comment_id=message),
-                ActionType.UNDO_DISLIKE_COMMENT:
-                lambda: self.undo_dislike_comment(agent_id=agent_id,
-                                                  comment_id=message),
-                ActionType.DO_NOTHING:
-                lambda: self.do_nothing(agent_id=agent_id)
-            }
+            # 通过getattr获取相应的函数
+            action_function = getattr(self, action.value, None)
+            if action_function:
+                # 获取函数的参数名称
+                func_code = action_function.__code__
+                param_names = func_code.co_varnames[:func_code.co_argcount]
 
-            # 执行对应的操作并发送结果
-            if action in action_to_function:
-                result = await action_to_function[action]()
+                len_param_names = len(param_names)
+                if len_param_names > 3:
+                    raise ValueError(
+                        f"Functions with {len_param_names} parameters are not "
+                        f"supported.")
+                # 构建参数字典
+                params = {}
+                if len_param_names >= 2:
+                    params['agent_id'] = agent_id
+                if len_param_names == 3:
+                    # 假设param_names中第二个元素是你想要添加的第二个参数名称
+                    second_param_name = param_names[2]
+                    params[second_param_name] = message
+
+                # 调用函数并传入参数
+                result = await action_function(**params)
                 await self.channel.send_to((message_id, agent_id, result))
             else:
                 raise ValueError(f"Action {action} is not supported")
 
     # 注册
-    async def signup(self, agent_id, user_message):
-        # 允许重名，user_id是主键
+    async def sign_up(self, agent_id, user_message):
         user_name, name, bio = user_message
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)

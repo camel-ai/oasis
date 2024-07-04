@@ -65,7 +65,8 @@ async def test_agents_actions(setup_twitter):
             await asyncio.sleep(random.uniform(0, 0.1))
             assert return_message["success"] is True
 
-    await channel.write_to_receive_queue((None, None, ActionType.UPDATE_REC))
+    await channel.write_to_receive_queue(
+        (None, None, ActionType.UPDATE_REC_TABLE))
 
     # 看推荐系统返回post
     action_agent = agents[2]
