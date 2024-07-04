@@ -67,29 +67,6 @@ def rec_sys_random(user_table: List[Dict[str,
 
     return new_rec_matrix
 
-def remove_seen_tweet(rec_ids, items, user_index, user_previous_tweet_all):
-    # 删掉推荐中用户之前看过的内容
-    # 避免自己发的推特被推荐给自己，或者别人转发的自己的推特被推荐回来
-    rec_contents = [items[rec_id] for rec_id in rec_ids]  # 未清洗前的推荐内容
-    remove_rec_id = []  # 后面要删除的推荐推特id
-    for rec_id, rec_content in zip(rec_ids, rec_contents):
-        # 获得该用户之前发的推特（包括转发）
-        user_prev_contents = user_previous_tweet_all[user_index]
-        for prev_content in user_prev_contents:
-            if "original_tweet: " in prev_content:
-                prev_content = prev_content.split("original_tweet: ")[-1]     
-            if prev_content in rec_content:
-                remove_rec_id.append(rec_id)
-                break
-    for r_id in remove_rec_id:
-        rec_ids.remove(r_id)
-    if len(rec_ids) == 0:
-        new_rec_ids = [None]
-    else:
-        new_rec_ids = rec_ids
-
-    return new_rec_ids
-
 def calculate_hot_score(num_likes: int, num_dislikes: int,
                         created_at: datetime) -> int:
     """
@@ -236,29 +213,19 @@ def rec_sys_personalized_twh(
     trace_table: List[Dict[str, Any]],
     rec_matrix: List[List],
     max_rec_tweet_len: int,
-    recall_only: bool = False,
 ) -> List[List]:
     # 获取所有推文的ID
     tweet_ids = [tweet['tweet_id'] for tweet in tweet_table]
     # 获取 id: content dict
     items = {tweet['tweet_id']: tweet['content'] for tweet in tweet_table}
 
-
-    # 获取 user_index: prev_tweets dict
-    user_previous_tweet_all = {index: [] for index in range(len(user_table))}
-    for tweet in tweet_table:
-        user_previous_tweet_all[tweet['user_id']-1] += [tweet['content']]
-
     if len(tweet_ids) <= max_rec_tweet_len:
         # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
         rec_matrix = [tweet_ids] * (len(rec_matrix) - 1)
         rec_ids_matrix = [None] + rec_matrix
         new_rec_matrix = []
-        # 删掉推荐中用户之前看过的内容
         for index, rec_ids in enumerate(rec_ids_matrix[1:]):
-            new_rec_ids = remove_seen_tweet(rec_ids, items, index, user_previous_tweet_all)
-            new_rec_matrix.append(new_rec_ids)
-
+            new_rec_matrix.append(rec_ids)
         new_rec_matrix = [None] + new_rec_matrix
 
     else: 
@@ -285,10 +252,8 @@ def rec_sys_personalized_twh(
         cosine_similarities = cosine_similarity(user_vector, item_vector)
 
         for user_index, profile in enumerate(user_profiles):
-            rec_ids = get_recommendations(user_index, cosine_similarities, items, top_n=max_rec_tweet_len)
-            rec_ids = [item for item, _ in rec_ids]
-            # 删掉推荐中用户之前看过的内容
-            new_rec_ids = remove_seen_tweet(rec_ids, items, user_index, user_previous_tweet_all)
+            rec_items = get_recommendations(user_index, cosine_similarities, items, top_n=max_rec_tweet_len)
+            new_rec_ids = [item for item, _ in rec_items]
             new_rec_matrix.append(new_rec_ids)
                 
     return new_rec_matrix

@@ -10,7 +10,7 @@ from social_simulation.social_platform.database import (
     create_db, fetch_rec_table_as_matrix, fetch_table_from_db)
 from social_simulation.social_platform.recsys import (
     rec_sys_personalized_with_trace, rec_sys_random, rec_sys_reddit,
-    rec_sys_personalized_twh, remove_seen_tweet)
+    rec_sys_personalized_twh)
 
 from social_simulation.social_platform.typing import ActionType, RecsysType
 
@@ -385,8 +385,8 @@ class Platform:
                 rec_tweet_ids = random.sample(tweet_ids,
                                                    self.refresh_tweet_count)
             
-            # 从following中去获取推特
-            # 更改SQL查询，令refresh得到的 tweet 是这个用户关注的人的 tweet，排序按照推特的点赞数
+            # 从following中去获取 tweet
+            # 更改SQL查询，令 refresh得到的 tweet 是这个用户关注的人的 tweet，排序按照点赞数
             query_following_tweet = (
                 "SELECT tweet.tweet_id, tweet.user_id, tweet.content, tweet.created_at, tweet.num_likes "
                 "FROM tweet "
@@ -401,16 +401,6 @@ class Platform:
 
             following_tweets = self.db_cursor.fetchall()
             following_tweets_ids = [row[0] for row in following_tweets]
-            # 清洗，避免following_tweets中别人转发的自己的推特被推荐回来
-            tweet_table = fetch_table_from_db(self.db_cursor, 'tweet')
-            user_table = fetch_table_from_db(self.db_cursor, 'user')
-            items = {tweet['tweet_id']: tweet['content'] for tweet in tweet_table}
-            # 这里还是默认agent在sign up的时候按顺序注册，如果要考虑到并发乱序问题则需要改动
-            user_index = agent_id  
-            user_previous_tweet_all = {index: [] for index in range(len(user_table))}
-            for tweet in tweet_table:
-                user_previous_tweet_all[tweet['user_id']-1] += [tweet['content']]
-            following_tweets_ids = remove_seen_tweet(following_tweets_ids, items, user_index, user_previous_tweet_all)
 
             selected_tweet_ids = following_tweets_ids + rec_tweet_ids
 
@@ -525,21 +515,23 @@ class Platform:
             if not results:
                 return {"success": False, "error": "Tweet not found."}
 
-            orig_content = results[0][2]
-            orig_like = results[0][-1]
-            orig_user_id = results[0][1]
+            prev_content = results[0][2]
+            orig_content = prev_content.split("original_tweet: ")[-1]
+            prev_like = results[0][-1]
+            prev_user_id = results[0][1]
+            
 
             # 转发的推特标识一下是从哪个user转的，方便判断
             retweet_content = (
-                f"user{user_id} retweet from user{str(orig_user_id)}. "
-                f"original_tweet: {orig_content}")
+                f"user{user_id} retweet from user{str(prev_user_id)}. "
+                f"original_tweet: {prev_content}")
 
-            # 确保此前未转发过
+            # 确保相关内容此前未被该用户转发过
             retweet_check_query = (
                 "SELECT * FROM 'tweet' WHERE content LIKE ? ")
-            self._execute_db_command(retweet_check_query, (retweet_content, ))
+            self._execute_db_command(retweet_check_query, ("%"+orig_content+"%", ))
             if self.db_cursor.fetchone():
-                # 已存在转发记录
+                # 该用户存在转发记录
                 return {
                     "success": False,
                     "error": "Retweet record already exists."
@@ -552,7 +544,7 @@ class Platform:
 
             self._execute_db_command(
                 tweet_insert_query,
-                (user_id, retweet_content, current_time, orig_like),
+                (user_id, retweet_content, current_time, prev_like),
                 commit=True)
 
             tweet_id = self.db_cursor.lastrowid
