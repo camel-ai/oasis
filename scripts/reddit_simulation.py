@@ -95,11 +95,11 @@ async def running(
                 break
             else:
                 response = await post_agent.perform_action_by_data(
-                    'create_tweet', content=pairs[rs_rc_index]["submission"])
-                tweet_id = response['tweet_id']
+                    'create_post', content=pairs[rs_rc_index]["submission"])
+                post_id = response['post_id']
                 response = await post_agent.perform_action_by_data(
                     'create_comment',
-                    tweet_id=tweet_id,
+                    post_id=post_id,
                     content=pairs[rs_rc_index]["comment"])
                 comment_id = response['comment_id']
 
