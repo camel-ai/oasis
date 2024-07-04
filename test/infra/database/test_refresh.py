@@ -2,12 +2,12 @@ import os
 import os.path as osp
 import sqlite3
 from datetime import datetime
-from social_simulation.testing.show_db import print_db_contents
 
 import pytest
 
 from social_simulation.social_platform.platform import Platform
 from social_simulation.social_platform.typing import ActionType
+from social_simulation.testing.show_db import print_db_contents
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -37,21 +37,20 @@ class MockChannel:
             # 验证搜索成功且找到至少一个匹配用户
             # print_db_contents(test_db_filepath)
             assert message[2]["success"] is True
-            assert len(message[2]["tweets"]) == 5
-            print(message[2]["tweets"])
-            # 然后检查 'tweets' 列表中的每个条目
-            for tweet in message[2].get('tweets', []):
-                assert tweet.get('tweet_id') is not None
-                assert tweet.get('user_id') is not None
-                assert tweet.get('content') is not None
-                assert tweet.get('created_at') is not None
-                assert tweet.get('num_likes') is not None
-                assert tweet.get('comments') is not None
+            assert len(message[2]["posts"]) == 5
+            print(message[2]["posts"])
+            # 然后检查 'posts' 列表中的每个条目
+            for post in message[2].get('posts', []):
+                assert post.get('post_id') is not None
+                assert post.get('user_id') is not None
+                assert post.get('content') is not None
+                assert post.get('created_at') is not None
+                assert post.get('num_likes') is not None
+                assert post.get('comments') is not None
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
-def setup_twitter():
+def setup_platform():
     # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
@@ -59,15 +58,14 @@ def setup_twitter():
     # 创建数据库和表
     db_path = test_db_filepath
     mock_channel = MockChannel()
-    # 初始化Twitter实例
-    twitter_instance = Platform(db_path, mock_channel)
-    return twitter_instance
+    instance = Platform(db_path, mock_channel)
+    return instance
 
 
 @pytest.mark.asyncio
-async def test_refresh(setup_twitter):
+async def test_refresh(setup_platform):
     try:
-        twitter = setup_twitter
+        platform = setup_platform
 
         # 在测试开始之前，将1个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
@@ -78,26 +76,26 @@ async def test_refresh(setup_twitter):
             (1, 1, "user1", "This is test bio for user 1", 0, 0))
         conn.commit()
 
-        # 在测试开始之前，将tweet插入到tweet表中
+        # 在测试开始之前，将post插入到post表中
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
 
-        # 在测试开始之前，将60条推文用户插入到tweet表中
-        for i in range(1, 61):  # 生成60条tweet
+        # 在测试开始之前，将60条推文用户插入到post表中
+        for i in range(1, 61):  # 生成60条post
             user_id = i % 3 + 1  # 循环使用用户ID 1, 2, 3
-            content = f"Tweet content for tweet {i}"  # 简单生成不同的内容
-            comment_content = f"Comment content for tweet {i}"
+            content = f"Post content for post {i}"  # 简单生成不同的内容
+            comment_content = f"Comment content for post {i}"
             created_at = datetime.now()
 
-            cursor.execute(("INSERT INTO tweet (user_id, content, created_at, "
+            cursor.execute(("INSERT INTO post (user_id, content, created_at, "
                             "num_likes, num_dislikes) VALUES (?, ?, ?, ?, ?)"),
                            (user_id, content, created_at, 0, 0))
-            cursor.execute(("INSERT INTO comment (tweet_id, user_id, content, "
+            cursor.execute(("INSERT INTO comment (post_id, user_id, content, "
                             "created_at) VALUES (?, ?, ?, ?)"),
                            (i, user_id, comment_content, created_at))
         conn.commit()
         print_db_contents(test_db_filepath)
-        await twitter.running()
+        await platform.running()
         # 验证跟踪表(trace)是否正确记录了操作
         cursor.execute("SELECT * FROM trace WHERE action='refresh'")
         assert cursor.fetchone() is not None, "trend action not traced"

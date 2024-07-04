@@ -31,9 +31,8 @@ class MockChannel:
             assert message[2]["success"] is True
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
-def setup_twitter():
+def setup_platform():
     # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
@@ -41,15 +40,15 @@ def setup_twitter():
     # 创建数据库和表
     db_path = test_db_filepath
     mock_channel = MockChannel()
-    # 初始化Twitter实例
-    twitter_instance = Platform(db_path, mock_channel)
-    return twitter_instance
+
+    platform_instance = Platform(db_path, mock_channel)
+    return platform_instance
 
 
 @pytest.mark.asyncio
-async def test_refresh(setup_twitter):
+async def test_refresh(setup_platform):
     try:
-        twitter = setup_twitter
+        platform = setup_platform
 
         # 在测试开始之前，将1个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
@@ -60,7 +59,7 @@ async def test_refresh(setup_twitter):
             (1, 1, "user1", "This is test bio for user 1", 0, 0))
         conn.commit()
 
-        await twitter.running()
+        await platform.running()
         # 验证跟踪表(trace)是否正确记录了操作
         cursor.execute("SELECT * FROM trace WHERE action='do_nothing'")
         assert cursor.fetchone() is not None, "trend action not traced"

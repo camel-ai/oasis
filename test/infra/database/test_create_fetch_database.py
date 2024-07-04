@@ -101,56 +101,55 @@ def test_user_operations():
     assert cursor.fetchone() is None
 
 
-def test_tweet_operations():
+def test_post_operations():
     conn = sqlite3.connect(db_filepath)
     cursor = conn.cursor()
-    # Insert a tweet:
+    # Insert a post:
     cursor.execute(
-        ("INSERT INTO tweet (user_id, content, created_at, num_likes, "
+        ("INSERT INTO post (user_id, content, created_at, num_likes, "
          "num_dislikes) VALUES (?, ?, ?, ?, ?)"),
-        (1, 'This is a test tweet', '2024-04-21 22:02:42', 0, 1))
+        (1, 'This is a test post', '2024-04-21 22:02:42', 0, 1))
     conn.commit()
 
-    # Assert the tweet was inserted correctly
-    cursor.execute(
-        "SELECT * FROM tweet WHERE content = 'This is a test tweet'")
-    tweet = cursor.fetchone()
-    assert tweet is not None
-    assert tweet[1] == 1
-    assert tweet[2] == 'This is a test tweet'
-    assert tweet[3] == '2024-04-21 22:02:42'
-    assert tweet[4] == 0
-    assert tweet[5] == 1
+    # Assert the post was inserted correctly
+    cursor.execute("SELECT * FROM post WHERE content = 'This is a test post'")
+    post = cursor.fetchone()
+    assert post is not None
+    assert post[1] == 1
+    assert post[2] == 'This is a test post'
+    assert post[3] == '2024-04-21 22:02:42'
+    assert post[4] == 0
+    assert post[5] == 1
 
-    # Update the tweet
-    cursor.execute("UPDATE tweet SET content = ? WHERE content = ?",
-                   ('Updated tweet', 'This is a test tweet'))
+    # Update the post
+    cursor.execute("UPDATE post SET content = ? WHERE content = ?",
+                   ('Updated post', 'This is a test post'))
     conn.commit()
 
     expected_result = [{
-        'tweet_id': 1,
+        'post_id': 1,
         'user_id': 1,
-        'content': 'Updated tweet',
+        'content': 'Updated post',
         'created_at': '2024-04-21 22:02:42',
         'num_likes': 0,
         'num_dislikes': 1,
     }]
-    actual_result = fetch_table_from_db(cursor, 'tweet')
+    actual_result = fetch_table_from_db(cursor, 'post')
 
     # 使用assert语句进行比较
     assert actual_result == expected_result, "The fetched data does not match."
 
-    # Assert the tweet was updated correctly
-    cursor.execute("SELECT * FROM tweet WHERE content = 'Updated tweet'")
-    tweet = cursor.fetchone()
-    assert tweet[2] == 'Updated tweet'
+    # Assert the post was updated correctly
+    cursor.execute("SELECT * FROM post WHERE content = 'Updated post'")
+    post = cursor.fetchone()
+    assert post[2] == 'Updated post'
 
-    # Delete the tweet
-    cursor.execute("DELETE FROM tweet WHERE content = 'Updated tweet'")
+    # Delete the post
+    cursor.execute("DELETE FROM post WHERE content = 'Updated post'")
     conn.commit()
 
-    # Assert the tweet was deleted correctly
-    cursor.execute("SELECT * FROM tweet WHERE content = 'Updated tweet'")
+    # Assert the post was deleted correctly
+    cursor.execute("SELECT * FROM post WHERE content = 'Updated post'")
     assert cursor.fetchone() is None
 
 
@@ -214,12 +213,12 @@ def test_like_operations():
     cursor = conn.cursor()
     # Insert a like relation
     cursor.execute(
-        "INSERT INTO like (user_id, tweet_id, created_at) VALUES (?, ?, ?)",
+        "INSERT INTO like (user_id, post_id, created_at) VALUES (?, ?, ?)",
         (1, 2, '2024-04-21 22:02:42'))
     conn.commit()
 
     # Assert the like relation was inserted correctly
-    cursor.execute("SELECT * FROM like WHERE user_id = 1 AND tweet_id = 2")
+    cursor.execute("SELECT * FROM like WHERE user_id = 1 AND post_id = 2")
     like = cursor.fetchone()
     assert like is not None
     assert like[1] == 1
@@ -227,11 +226,11 @@ def test_like_operations():
     assert like[3] == '2024-04-21 22:02:42'
 
     # Delete the like relation
-    cursor.execute("DELETE FROM like WHERE user_id = 1 AND tweet_id = 2")
+    cursor.execute("DELETE FROM like WHERE user_id = 1 AND post_id = 2")
     conn.commit()
 
     # Assert the like relation was deleted correctly
-    cursor.execute("SELECT * FROM like WHERE user_id = 1 AND tweet_id = 2")
+    cursor.execute("SELECT * FROM like WHERE user_id = 1 AND post_id = 2")
     assert cursor.fetchone() is None
 
 
@@ -240,12 +239,12 @@ def test_dislike_operations():
     cursor = conn.cursor()
     # Insert a like relation
     cursor.execute(
-        "INSERT INTO dislike (user_id, tweet_id, created_at) VALUES (?, ?, ?)",
+        "INSERT INTO dislike (user_id, post_id, created_at) VALUES (?, ?, ?)",
         (1, 2, '2024-04-21 22:02:42'))
     conn.commit()
 
     # Assert the like relation was inserted correctly
-    cursor.execute("SELECT * FROM dislike WHERE user_id = 1 AND tweet_id = 2")
+    cursor.execute("SELECT * FROM dislike WHERE user_id = 1 AND post_id = 2")
     dislike = cursor.fetchone()
     assert dislike is not None
     assert dislike[1] == 1
@@ -253,11 +252,11 @@ def test_dislike_operations():
     assert dislike[3] == '2024-04-21 22:02:42'
 
     # Delete the like relation
-    cursor.execute("DELETE FROM dislike WHERE user_id = 1 AND tweet_id = 2")
+    cursor.execute("DELETE FROM dislike WHERE user_id = 1 AND post_id = 2")
     conn.commit()
 
     # Assert the like relation was deleted correctly
-    cursor.execute("SELECT * FROM like WHERE user_id = 1 AND tweet_id = 2")
+    cursor.execute("SELECT * FROM like WHERE user_id = 1 AND post_id = 2")
     assert cursor.fetchone() is None
 
 
@@ -305,23 +304,23 @@ def test_rec_operations():
     conn = sqlite3.connect(db_filepath)
     cursor = conn.cursor()
     # Insert a trace
-    cursor.execute(("INSERT INTO rec (user_id, tweet_id) "
+    cursor.execute(("INSERT INTO rec (user_id, post_id) "
                     "VALUES (?, ?)"), (2, 2))
-    cursor.execute(("INSERT INTO rec (user_id, tweet_id) "
+    cursor.execute(("INSERT INTO rec (user_id, post_id) "
                     "VALUES (?, ?)"), (2, 3))
-    cursor.execute(("INSERT INTO rec (user_id, tweet_id) "
+    cursor.execute(("INSERT INTO rec (user_id, post_id) "
                     "VALUES (?, ?)"), (1, 3))
     conn.commit()
 
     # Assert the rec was inserted correctly
-    cursor.execute("SELECT * FROM rec WHERE user_id = ? AND tweet_id = ?",
+    cursor.execute("SELECT * FROM rec WHERE user_id = ? AND post_id = ?",
                    (2, 2))
     record = cursor.fetchone()
     assert record is not None
     assert record[0] == 2
     assert record[1] == 2
 
-    cursor.execute("SELECT * FROM rec WHERE user_id = ? AND tweet_id = ?",
+    cursor.execute("SELECT * FROM rec WHERE user_id = ? AND post_id = ?",
                    (2, 3))
     record = cursor.fetchone()
     assert record is not None
@@ -330,11 +329,11 @@ def test_rec_operations():
 
     assert fetch_rec_table_as_matrix(cursor) == [None, [3], [2, 3]]
     # Delete the rec
-    cursor.execute("DELETE FROM rec WHERE user_id = 2 AND tweet_id = 2")
+    cursor.execute("DELETE FROM rec WHERE user_id = 2 AND post_id = 2")
     conn.commit()
 
     # Assert the rec was deleted correctly
-    cursor.execute("SELECT * FROM rec WHERE user_id = 2 AND tweet_id = 2")
+    cursor.execute("SELECT * FROM rec WHERE user_id = 2 AND post_id = 2")
     assert cursor.fetchone() is None
 
 
@@ -344,7 +343,7 @@ def test_comment_operations():
 
     # Insert a comment:
     cursor.execute(
-        ("INSERT INTO comment (tweet_id, user_id, content, created_at) "
+        ("INSERT INTO comment (post_id, user_id, content, created_at) "
          "VALUES (?, ?, ?, ?)"),
         (1, 2, 'This is a test comment', '2024-04-21 22:05:00'))
     conn.commit()
@@ -354,7 +353,7 @@ def test_comment_operations():
         "SELECT * FROM comment WHERE content = 'This is a test comment'")
     comment = cursor.fetchone()
     assert comment is not None, "Comment insertion failed."
-    assert comment[1] == 1, "Tweet ID mismatch."
+    assert comment[1] == 1, "Post ID mismatch."
     assert comment[2] == 2, "User ID mismatch."
     assert comment[3] == 'This is a test comment', "Content mismatch."
     assert comment[4] == '2024-04-21 22:05:00', "Created at mismatch."
@@ -368,7 +367,7 @@ def test_comment_operations():
 
     expected_result = [{
         'comment_id': 1,
-        'tweet_id': 1,
+        'post_id': 1,
         'user_id': 2,
         'content': 'Updated comment',
         'created_at': '2024-04-21 22:05:00',

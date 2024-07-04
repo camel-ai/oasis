@@ -32,15 +32,14 @@ class MockChannel:
             print(message[2])
             # 验证搜索成功且找到至少一个匹配用户
             assert message[2]["success"] is True, "Trend should be successful"
-            assert message[2]["tweets"][0]["content"] == "Tweet 6"
-            assert message[2]["tweets"][1]["content"] == "Tweet 5"
-            assert message[2]["tweets"][2]["content"] == "Tweet 4"
-            print(message[2]["tweets"])
+            assert message[2]["posts"][0]["content"] == "Post 6"
+            assert message[2]["posts"][1]["content"] == "Post 5"
+            assert message[2]["posts"][2]["content"] == "Post 4"
+            print(message[2]["posts"])
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
-def setup_twitter():
+def setup_platform():
     # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
@@ -48,16 +47,15 @@ def setup_twitter():
     # 创建数据库和表
     db_path = test_db_filepath
 
-    # 初始化Twitter实例
     mock_channel = MockChannel()
-    twitter_instance = Platform(db_path, mock_channel)
-    return twitter_instance
+    instance = Platform(db_path, mock_channel)
+    return instance
 
 
 @pytest.mark.asyncio
-async def test_search_user(setup_twitter):
+async def test_search_user(setup_platform):
     try:
-        twitter = setup_twitter
+        platform = setup_platform
 
         # 在测试开始之前，将1个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
@@ -68,32 +66,32 @@ async def test_search_user(setup_twitter):
              "VALUES (?, ?, ?, ?, ?)"), (1, 1, "user1", 0, 0))
         conn.commit()
 
-        # 在测试开始之前，将tweet插入到tweet表中
+        # 在测试开始之前，将post插入到post表中
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
 
-        today = twitter.start_time
+        today = platform.start_time
         # 生成从今天开始往前数10天的时间戳列表
-        tweets_info = [
-            (1, f'Tweet {9-i}',
+        posts_info = [
+            (1, f'Post {9-i}',
              (today - timedelta(days=9 - i)).strftime('%Y-%m-%d %H:%M:%S.%f'),
              (9 - i), 0) for i in range(10)
         ]
 
         cursor.executemany(
-            "INSERT INTO tweet (user_id, content, created_at, num_likes, "
-            "num_dislikes) VALUES (?, ?, ?, ?, ?)", tweets_info)
+            "INSERT INTO post (user_id, content, created_at, num_likes, "
+            "num_dislikes) VALUES (?, ?, ?, ?, ?)", posts_info)
         conn.commit()
 
         comments_info = [(i + 1, 1, 'Comment', datetime.now())
                          for i in range(10)]
 
         cursor.executemany(
-            "INSERT INTO comment (tweet_id, user_id, content, created_at) "
+            "INSERT INTO comment (post_id, user_id, content, created_at) "
             "VALUES (?, ?, ?, ?)", comments_info)
         conn.commit()
 
-        await twitter.running()
+        await platform.running()
 
         # 验证跟踪表(trace)是否正确记录了操作
         cursor.execute("SELECT * FROM trace WHERE action='trend'")

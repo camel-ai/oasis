@@ -20,7 +20,7 @@ class MockChannel:
         # 第1次调用返回创建推文的指令
         if self.call_count == 0:
             self.call_count += 1
-            return ('id_', (1, "Test tweet", "create_tweet"))
+            return ('id_', (1, "Test post", "create_post"))
         # 第2次调用返回创建评论的指令
         if self.call_count == 1:
             self.call_count += 1
@@ -52,7 +52,7 @@ class MockChannel:
         if self.call_count == 1:
             # 对创建推文的成功消息进行断言
             assert message[2]["success"] is True
-            assert "tweet_id" in message[2]
+            assert "post_id" in message[2]
         elif self.call_count == 2:
             # 对点赞操作的成功消息进行断言
             assert message[2]["success"] is True
@@ -83,9 +83,8 @@ class MockChannel:
             assert "comment_dislike_id" in message[2]
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
-def setup_twitter():
+def setup_platform():
     # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
@@ -93,16 +92,15 @@ def setup_twitter():
     # 创建数据库和表
     db_path = test_db_filepath
 
-    # 初始化Twitter实例
     mock_channel = MockChannel()
-    twitter_instance = Platform(db_path, mock_channel)
-    return twitter_instance
+    platform_instance = Platform(db_path, mock_channel)
+    return platform_instance
 
 
 @pytest.mark.asyncio
-async def test_comment(setup_twitter):
+async def test_comment(setup_platform):
     try:
-        twitter = setup_twitter
+        platform = setup_platform
 
         # 在测试开始之前，将2个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
@@ -117,18 +115,18 @@ async def test_comment(setup_twitter):
              "VALUES (?, ?, ?, ?, ?)"), (2, 2, "user2", 2, 4))
         conn.commit()
 
-        await twitter.running()
+        await platform.running()
 
         # 验证数据库中是否正确插入了数据
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
 
-        # 验证推文表(tweet)是否正确插入了数据
+        # 验证推文表(post)是否正确插入了数据
         cursor.execute("SELECT * FROM comment")
         comments = cursor.fetchall()
-        assert len(comments) == 1  # 一条test tweet，一条retweet
+        assert len(comments) == 1  # 一条test post，一条repost
         comment = comments[0]
-        assert comment[1] == 1  # tweet ID是1
+        assert comment[1] == 1  # post ID是1
         assert comment[2] == 1  # user ID是1
         assert comment[3] == "Test Comment"
         assert comment[5] == 1  # num_likes
@@ -146,7 +144,7 @@ async def test_comment(setup_twitter):
 
         # 验证跟踪表(trace)是否正确记录了创建推文和点赞操作
         cursor.execute("SELECT * FROM trace WHERE action='create_comment'")
-        assert cursor.fetchone() is not None, "Create tweet action not traced"
+        assert cursor.fetchone() is not None, "Create post action not traced"
 
         cursor.execute("SELECT * FROM trace WHERE action='like_comment'")
         results = cursor.fetchall()

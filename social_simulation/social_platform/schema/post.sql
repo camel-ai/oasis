@@ -1,7 +1,7 @@
--- This is the schema definition for the tweet table
+-- This is the schema definition for the post table
 -- Add Images, location etc.?
-CREATE TABLE tweet (
-    tweet_id INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE post (
+    post_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     content TEXT,
     created_at DATETIME,

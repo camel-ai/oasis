@@ -49,9 +49,8 @@ class MockChannel:
                 "Agent 1 have already signed up with user id: 1")
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
-def setup_twitter():
+def setup_platform():
     # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
@@ -59,24 +58,23 @@ def setup_twitter():
     # 创建数据库和表
     db_path = test_db_filepath
 
-    # 初始化Twitter实例
     mock_channel = MockChannel()
-    twitter_instance = Platform(db_path, mock_channel)
-    return twitter_instance
+    instance = Platform(db_path, mock_channel)
+    return instance
 
 
 @pytest.mark.asyncio
-async def test_create_like_unlike_tweet(setup_twitter):
+async def test_create_like_unlike_post(setup_platform):
     try:
-        twitter = setup_twitter
+        platform = setup_platform
 
-        await twitter.running()
+        await platform.running()
 
         # 验证数据库中是否正确插入了数据
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
 
-        # 验证推文表(tweet)是否正确插入了数据
+        # 验证推文表(post)是否正确插入了数据
         cursor.execute("SELECT * FROM user")
         users = cursor.fetchall()
         assert len(users) == 2

@@ -15,18 +15,17 @@ from social_simulation.social_platform.typing import ActionType, RecsysType
 
 class Platform:
 
-    def __init__(
-        self,
-        db_path: str,
-        channel: Any,
-        sandbox_clock: Clock | None = None,
-        start_time: datetime | None = None,
-        rec_update_time: int = 20,
-        show_score: bool = False,
-        allow_self_rating: bool = True,
-        recsys_type: str | RecsysType = "twitter",
-    ):
-        # 未指定时钟时，默认twitter的时间放大系数为60
+    def __init__(self,
+                 db_path: str,
+                 channel: Any,
+                 sandbox_clock: Clock | None = None,
+                 start_time: datetime | None = None,
+                 rec_update_time: int = 20,
+                 show_score: bool = False,
+                 allow_self_rating: bool = True,
+                 recsys_type: str | RecsysType = "twitter",
+                 refresh_post_count: int = 5):
+        # 未指定时钟时，默认platform的时间放大系数为60
         if sandbox_clock is None:
             sandbox_clock = Clock(60)
         if start_time is None:
@@ -49,17 +48,17 @@ class Platform:
         # 而不分别显示点赞数和点踩数
         self.show_score = show_score
 
-        # 是否允许用户给自己的tweet和comment点赞或者点踩
+        # 是否允许用户给自己的post和comment点赞或者点踩
         self.allow_self_rating = allow_self_rating
 
-        # twitter内部推荐系统refresh一次返回的推文数量
-        self.refresh_tweet_count = 5
-        # rec table(buffer)中每个用户的最大tweet数量
-        self.max_rec_tweet_len = 50
+        # 社交媒体内部推荐系统refresh一次返回的推文数量
+        self.refresh_post_count = refresh_post_count
+        # rec table(buffer)中每个用户的最大post数量
+        self.max_rec_post_len = 50
         # rec prob between random and personalized
         self.rec_prob = 0.7
 
-        # twitter内部定义的热搜规则参数
+        # platform内部定义的热搜规则参数
         self.trend_num_days = 7
         self.trend_top_k = 10
 
@@ -109,32 +108,31 @@ class Platform:
                 result = await self.refresh(agent_id=agent_id)
                 await self.channel.send_to((message_id, agent_id, result))
 
-            elif action == ActionType.CREATE_TWEET:
-                result = await self.create_tweet(agent_id=agent_id,
-                                                 content=message)
+            elif action == ActionType.CREATE_POST:
+                result = await self.create_post(agent_id=agent_id,
+                                                content=message)
                 await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.LIKE:
-                result = await self.like(agent_id=agent_id, tweet_id=message)
+                result = await self.like(agent_id=agent_id, post_id=message)
                 await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.UNLIKE:
-                result = await self.unlike(agent_id=agent_id, tweet_id=message)
+                result = await self.unlike(agent_id=agent_id, post_id=message)
                 await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.DISLIKE:
-                result = await self.dislike(agent_id=agent_id,
-                                            tweet_id=message)
+                result = await self.dislike(agent_id=agent_id, post_id=message)
                 await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.UNDO_DISLIKE:
                 result = await self.undo_dislike(agent_id=agent_id,
-                                                 tweet_id=message)
+                                                 post_id=message)
                 await self.channel.send_to((message_id, agent_id, result))
 
-            elif action == ActionType.SEARCH_TWEET:
-                result = await self.search_tweets(agent_id=agent_id,
-                                                  query=message)
+            elif action == ActionType.SEARCH_POST:
+                result = await self.search_posts(agent_id=agent_id,
+                                                 query=message)
                 await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.SEARCH_USER:
@@ -164,9 +162,8 @@ class Platform:
                 result = await self.trend(agent_id=agent_id)
                 await self.channel.send_to((message_id, agent_id, result))
 
-            elif action == ActionType.RETWEET:
-                result = await self.retweet(agent_id=agent_id,
-                                            tweet_id=message)
+            elif action == ActionType.REPOST:
+                result = await self.repost(agent_id=agent_id, post_id=message)
                 await self.channel.send_to((message_id, agent_id, result))
 
             elif action == ActionType.CREATE_COMMENT:
@@ -218,25 +215,25 @@ class Platform:
             print(f"Error querying user_id for agent_id {agent_id}: {e}")
             return None
 
-    def _add_comments_to_tweets(self, tweets_results):
-        # 初始化返回的tweets列表
-        tweets = []
-        for row in tweets_results:
-            (tweet_id, user_id, content, created_at, num_likes,
+    def _add_comments_to_posts(self, posts_results):
+        # 初始化返回的posts列表
+        posts = []
+        for row in posts_results:
+            (post_id, user_id, content, created_at, num_likes,
              num_dislikes) = row
-            # 对于每个tweet，查询其对应的comments
+            # 对于每个post，查询其对应的comments
             self.db_cursor.execute(
-                "SELECT comment_id, tweet_id, user_id, content, created_at, "
-                "num_likes, num_dislikes FROM comment WHERE tweet_id = ?",
-                (tweet_id, ))
+                "SELECT comment_id, post_id, user_id, content, created_at, "
+                "num_likes, num_dislikes FROM comment WHERE post_id = ?",
+                (post_id, ))
             comments_results = self.db_cursor.fetchall()
 
             # 将每个comment的结果转换为字典格式
             comments = [{
                 "comment_id":
                 comment_id,
-                "tweet_id":
-                tweet_id,
+                "post_id":
+                post_id,
                 "user_id":
                 user_id,
                 "content":
@@ -249,13 +246,13 @@ class Platform:
                        "num_likes": num_likes,
                        "num_dislikes": num_dislikes
                    })
-            } for (comment_id, tweet_id, user_id, content, created_at,
+            } for (comment_id, post_id, user_id, content, created_at,
                    num_likes, num_dislikes) in comments_results]
 
-            # 将tweet信息和对应的comments添加到tweets列表
-            tweets.append({
-                "tweet_id":
-                tweet_id,
+            # 将post信息和对应的comments添加到posts列表
+            posts.append({
+                "post_id":
+                post_id,
                 "user_id":
                 user_id,
                 "content":
@@ -270,7 +267,7 @@ class Platform:
                    }), "comments":
                 comments
             })
-        return tweets
+        return posts
 
     # 注册
     async def signup(self, agent_id, user_message):
@@ -314,7 +311,7 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def refresh(self, agent_id: int):
-        # output不变，执行内容是从rec table取特定id的tweet
+        # output不变，执行内容是从rec table取特定id的post
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
@@ -322,30 +319,30 @@ class Platform:
             if not user_id:
                 return self._not_signup_error_message(agent_id)
 
-            # 从rec表中获取指定user_id的所有tweet_id
-            rec_query = "SELECT tweet_id FROM rec WHERE user_id = ?"
+            # 从rec表中获取指定user_id的所有post_id
+            rec_query = "SELECT post_id FROM rec WHERE user_id = ?"
             self._execute_db_command(rec_query, (user_id, ))
             rec_results = self.db_cursor.fetchall()
 
-            tweet_ids = [row[0] for row in rec_results]
-            selected_tweet_ids = tweet_ids
+            post_ids = [row[0] for row in rec_results]
+            selected_post_ids = post_ids
 
-            # 如果tweet_id数量 >= self.refresh_tweet_count，则随机选择指定数量的tweet_id
-            if len(tweet_ids) >= self.refresh_tweet_count:
-                selected_tweet_ids = random.sample(tweet_ids,
-                                                   self.refresh_tweet_count)
+            # 如果post_id数量 >= self.refresh_post_count，则随机选择指定数量的post_id
+            if len(post_ids) >= self.refresh_post_count:
+                selected_post_ids = random.sample(post_ids,
+                                                  self.refresh_post_count)
 
-            # 根据选定的tweet_id从tweet表中获取tweet详情
-            placeholders = ', '.join('?' for _ in selected_tweet_ids)
+            # 根据选定的post_id从post表中获取post详情
+            placeholders = ', '.join('?' for _ in selected_post_ids)
             # 构造SQL查询字符串
-            tweet_query = (
-                f"SELECT tweet_id, user_id, content, created_at, num_likes, "
-                f"num_dislikes FROM tweet WHERE tweet_id IN ({placeholders})")
-            self._execute_db_command(tweet_query, selected_tweet_ids)
+            post_query = (
+                f"SELECT post_id, user_id, content, created_at, num_likes, "
+                f"num_dislikes FROM post WHERE post_id IN ({placeholders})")
+            self._execute_db_command(post_query, selected_post_ids)
             results = self.db_cursor.fetchall()
             if not results:
-                return {"success": False, "message": "No tweets found."}
-            results_with_comments = self._add_comments_to_tweets(results)
+                return {"success": False, "message": "No posts found."}
+            results_with_comments = self._add_comments_to_posts(results)
             # 记录操作到trace表
             action_info = {}
             trace_insert_query = (
@@ -356,28 +353,28 @@ class Platform:
                 (user_id, current_time, ActionType.REFRESH.value,
                  str(action_info)),
                 commit=True)
-            return {"success": True, "tweets": results_with_comments}
+            return {"success": True, "posts": results_with_comments}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def update_rec_table(self):
-        # Recsys(trace/user/tweet table), 结果是刷新了rec table
+        # Recsys(trace/user/post table), 结果是刷新了rec table
         user_table = fetch_table_from_db(self.db_cursor, 'user')
-        tweet_table = fetch_table_from_db(self.db_cursor, 'tweet')
+        post_table = fetch_table_from_db(self.db_cursor, 'post')
         trace_table = fetch_table_from_db(self.db_cursor, 'trace')
         rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
 
         if self.recsys_type == RecsysType.RANDOM:
-            new_rec_matrix = rec_sys_random(user_table, tweet_table,
+            new_rec_matrix = rec_sys_random(user_table, post_table,
                                             trace_table, rec_matrix,
-                                            self.max_rec_tweet_len)
+                                            self.max_rec_post_len)
         elif self.recsys_type == RecsysType.TWITTER:
             new_rec_matrix = rec_sys_personalized_with_trace(
-                user_table, tweet_table, trace_table, rec_matrix,
-                self.max_rec_tweet_len)
+                user_table, post_table, trace_table, rec_matrix,
+                self.max_rec_post_len)
         elif self.recsys_type == RecsysType.REDDIT:
-            new_rec_matrix = rec_sys_reddit(tweet_table, rec_matrix,
-                                            self.max_rec_tweet_len)
+            new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
+                                            self.max_rec_post_len)
         else:
             raise ValueError("Unsupported recommendation system type, please "
                              "check the `RecsysType`.")
@@ -387,13 +384,13 @@ class Platform:
         # 使用封装好的_execute_db_command函数执行SQL语句
         self._execute_db_command(sql_query, commit=True)
         for user_id in range(1, len(new_rec_matrix)):
-            for tweet_id in new_rec_matrix[user_id]:
+            for post_id in new_rec_matrix[user_id]:
                 sql_query = (
-                    "INSERT INTO rec (user_id, tweet_id) VALUES (?, ?)")
-                self._execute_db_command(sql_query, (user_id, tweet_id),
+                    "INSERT INTO rec (user_id, post_id) VALUES (?, ?)")
+                self._execute_db_command(sql_query, (user_id, post_id),
                                          commit=True)
 
-    async def create_tweet(self, agent_id: int, content: str):
+    async def create_post(self, agent_id: int, content: str):
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
@@ -402,29 +399,29 @@ class Platform:
                 return self._not_signup_error_message(agent_id)
 
             # 插入推文记录
-            tweet_insert_query = (
-                "INSERT INTO tweet (user_id, content, created_at, num_likes, "
+            post_insert_query = (
+                "INSERT INTO post (user_id, content, created_at, num_likes, "
                 "num_dislikes) VALUES (?, ?, ?, ?, ?)")
-            self._execute_db_command(tweet_insert_query,
+            self._execute_db_command(post_insert_query,
                                      (user_id, content, current_time, 0, 0),
                                      commit=True)
-            tweet_id = self.db_cursor.lastrowid
+            post_id = self.db_cursor.lastrowid
             # 准备trace记录的信息
-            action_info = {"content": content, "tweet_id": tweet_id}
+            action_info = {"content": content, "post_id": post_id}
             trace_insert_query = (
                 "INSERT INTO trace (user_id, created_at, action, info) "
                 "VALUES (?, ?, ?, ?)")
             self._execute_db_command(
                 trace_insert_query,
-                (user_id, current_time, ActionType.CREATE_TWEET.value,
+                (user_id, current_time, ActionType.CREATE_POST.value,
                  str(action_info)),
                 commit=True)
-            return {"success": True, "tweet_id": tweet_id}
+            return {"success": True, "post_id": post_id}
 
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def retweet(self, agent_id: int, tweet_id: int):
+    async def repost(self, agent_id: int, post_id: int):
         current_time = datetime.now()
         try:
             user_id = self._check_agent_userid(agent_id)
@@ -433,70 +430,68 @@ class Platform:
 
             # 查询要转发的推特内容
             sql_query = (
-                "SELECT tweet_id, user_id, content, created_at, num_likes "
-                "FROM tweet "
-                "WHERE tweet_id = ? ")
+                "SELECT post_id, user_id, content, created_at, num_likes "
+                "FROM post "
+                "WHERE post_id = ? ")
             # 执行数据库查询
-            self._execute_db_command(sql_query, (tweet_id, ))
+            self._execute_db_command(sql_query, (post_id, ))
             results = self.db_cursor.fetchall()
             if not results:
-                return {"success": False, "error": "Tweet not found."}
+                return {"success": False, "error": "Post not found."}
 
             orig_content = results[0][2]
             orig_like = results[0][-1]
             orig_user_id = results[0][1]
 
             # 转发的推特标识一下是从哪个user转的，方便判断
-            retweet_content = (
-                f"user{user_id} retweet from user{str(orig_user_id)}. "
-                f"original_tweet: {orig_content}")
+            repost_content = (
+                f"user{user_id} repost from user{str(orig_user_id)}. "
+                f"original_post: {orig_content}")
 
             # 确保此前未转发过
-            retweet_check_query = (
-                "SELECT * FROM 'tweet' WHERE content LIKE ? ")
-            self._execute_db_command(retweet_check_query, (retweet_content, ))
+            repost_check_query = ("SELECT * FROM 'post' WHERE content LIKE ? ")
+            self._execute_db_command(repost_check_query, (repost_content, ))
             if self.db_cursor.fetchone():
                 # 已存在转发记录
                 return {
                     "success": False,
-                    "error": "Retweet record already exists."
+                    "error": "Repost record already exists."
                 }
 
             # 插入转推推文记录
-            tweet_insert_query = (
-                "INSERT INTO tweet (user_id, content, created_at, num_likes) "
+            post_insert_query = (
+                "INSERT INTO post (user_id, content, created_at, num_likes) "
                 "VALUES (?, ?, ?, ?)")
 
             self._execute_db_command(
-                tweet_insert_query,
-                (user_id, retweet_content, current_time, orig_like),
+                post_insert_query,
+                (user_id, repost_content, current_time, orig_like),
                 commit=True)
 
-            tweet_id = self.db_cursor.lastrowid
+            post_id = self.db_cursor.lastrowid
             # 准备trace记录的信息
-            action_info = {"tweet_id": tweet_id}
+            action_info = {"post_id": post_id}
             trace_insert_query = (
                 "INSERT INTO trace (user_id, created_at, action, info) "
                 "VALUES (?, ?, ?, ?)")
             self._execute_db_command(
                 trace_insert_query,
-                (user_id, current_time, ActionType.RETWEET.value,
+                (user_id, current_time, ActionType.REPOST.value,
                  str(action_info)),
                 commit=True)
 
-            return {"success": True, "tweet_id": tweet_id}
+            return {"success": True, "post_id": post_id}
 
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def _check_self_tweet_rating(self, tweet_id, user_id):
-        self_like_check_query = (
-            "SELECT user_id FROM tweet WHERE tweet_id = ?")
-        self._execute_db_command(self_like_check_query, (tweet_id, ))
+    def _check_self_post_rating(self, post_id, user_id):
+        self_like_check_query = ("SELECT user_id FROM post WHERE post_id = ?")
+        self._execute_db_command(self_like_check_query, (post_id, ))
         result = self.db_cursor.fetchone()
         if result and result[0] == user_id:
             error_message = (
-                "Users are not allowed to like/dislike their own tweets.")
+                "Users are not allowed to like/dislike their own posts.")
             return {"success": False, "error": error_message}
         else:
             return None
@@ -513,7 +508,7 @@ class Platform:
         else:
             return None
 
-    async def like(self, agent_id: int, tweet_id: int):
+    async def like(self, agent_id: int, post_id: int):
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
@@ -522,8 +517,8 @@ class Platform:
                 return self._not_signup_error_message(agent_id)
             # 检查是否已经存在点赞记录
             like_check_query = (
-                "SELECT * FROM 'like' WHERE tweet_id = ? AND user_id = ?")
-            self._execute_db_command(like_check_query, (tweet_id, user_id))
+                "SELECT * FROM 'like' WHERE post_id = ? AND user_id = ?")
+            self._execute_db_command(like_check_query, (post_id, user_id))
             if self.db_cursor.fetchone():
                 # 已存在点赞记录
                 return {
@@ -533,28 +528,27 @@ class Platform:
 
             # 检查要点赞的推文是否是自己发布的
             if self.allow_self_rating is False:
-                check_result = self._check_self_tweet_rating(tweet_id, user_id)
+                check_result = self._check_self_post_rating(post_id, user_id)
                 if check_result:
                     return check_result
 
-            # 更新tweet表中的点赞数
-            tweet_update_query = (
-                "UPDATE tweet SET num_likes = num_likes + 1 WHERE tweet_id = ?"
-            )
-            self._execute_db_command(tweet_update_query, (tweet_id, ),
+            # 更新post表中的点赞数
+            post_update_query = (
+                "UPDATE post SET num_likes = num_likes + 1 WHERE post_id = ?")
+            self._execute_db_command(post_update_query, (post_id, ),
                                      commit=True)
 
             # 在like表中添加记录
             like_insert_query = (
-                "INSERT INTO 'like' (tweet_id, user_id, created_at) "
+                "INSERT INTO 'like' (post_id, user_id, created_at) "
                 "VALUES (?, ?, ?)")
             self._execute_db_command(like_insert_query,
-                                     (tweet_id, user_id, current_time),
+                                     (post_id, user_id, current_time),
                                      commit=True)
             like_id = self.db_cursor.lastrowid  # 获取刚刚插入的点赞记录的ID
 
             # 记录操作到trace表
-            action_info = {"tweet_id": tweet_id, "like_id": like_id}
+            action_info = {"post_id": post_id, "like_id": like_id}
             trace_insert_query = (
                 "INSERT INTO trace (user_id, created_at, action, info) "
                 "VALUES (?, ?, ?, ?)")
@@ -566,7 +560,7 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def unlike(self, agent_id: int, tweet_id: int):
+    async def unlike(self, agent_id: int, post_id: int):
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
@@ -576,8 +570,8 @@ class Platform:
 
             # 检查是否已经存在点赞记录
             like_check_query = (
-                "SELECT * FROM 'like' WHERE tweet_id = ? AND user_id = ?")
-            self._execute_db_command(like_check_query, (tweet_id, user_id))
+                "SELECT * FROM 'like' WHERE post_id = ? AND user_id = ?")
+            self._execute_db_command(like_check_query, (post_id, user_id))
             result = self.db_cursor.fetchone()
 
             if not result:
@@ -590,13 +584,12 @@ class Platform:
             # Get the `like_id`
             like_id, _, _, _ = result
 
-            # 更新tweet表中的点赞数
-            tweet_update_query = (
-                "UPDATE tweet SET num_likes = num_likes - 1 WHERE tweet_id = ?"
-            )
+            # 更新post表中的点赞数
+            post_update_query = (
+                "UPDATE post SET num_likes = num_likes - 1 WHERE post_id = ?")
             self._execute_db_command(
-                tweet_update_query,
-                (tweet_id, ),
+                post_update_query,
+                (post_id, ),
                 commit=True,
             )
 
@@ -609,7 +602,7 @@ class Platform:
             )
 
             # 记录操作到trace表
-            action_info = {"tweet_id": tweet_id, "like_id": like_id}
+            action_info = {"post_id": post_id, "like_id": like_id}
             trace_insert_query = (
                 "INSERT INTO trace (user_id, created_at, action, info) "
                 "VALUES (?, ?, ?, ?)")
@@ -622,7 +615,7 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def dislike(self, agent_id: int, tweet_id: int):
+    async def dislike(self, agent_id: int, post_id: int):
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
@@ -631,8 +624,8 @@ class Platform:
                 return self._not_signup_error_message(agent_id)
             # 检查是否已经存在dislike记录
             like_check_query = (
-                "SELECT * FROM 'dislike' WHERE tweet_id = ? AND user_id = ?")
-            self._execute_db_command(like_check_query, (tweet_id, user_id))
+                "SELECT * FROM 'dislike' WHERE post_id = ? AND user_id = ?")
+            self._execute_db_command(like_check_query, (post_id, user_id))
             if self.db_cursor.fetchone():
                 # 已存在点赞记录
                 return {
@@ -642,28 +635,28 @@ class Platform:
 
             # 检查要点踩的推文是否是自己发布的
             if self.allow_self_rating is False:
-                check_result = self._check_self_tweet_rating(tweet_id, user_id)
+                check_result = self._check_self_post_rating(post_id, user_id)
                 if check_result:
                     return check_result
 
-            # 更新tweet表中的dislike数
-            tweet_update_query = (
-                "UPDATE tweet SET num_dislikes = num_dislikes + 1 WHERE "
-                "tweet_id = ?")
-            self._execute_db_command(tweet_update_query, (tweet_id, ),
+            # 更新post表中的dislike数
+            post_update_query = (
+                "UPDATE post SET num_dislikes = num_dislikes + 1 WHERE "
+                "post_id = ?")
+            self._execute_db_command(post_update_query, (post_id, ),
                                      commit=True)
 
             # 在dislike表中添加记录
             dislike_insert_query = (
-                "INSERT INTO 'dislike' (tweet_id, user_id, created_at) "
+                "INSERT INTO 'dislike' (post_id, user_id, created_at) "
                 "VALUES (?, ?, ?)")
             self._execute_db_command(dislike_insert_query,
-                                     (tweet_id, user_id, current_time),
+                                     (post_id, user_id, current_time),
                                      commit=True)
             dislike_id = self.db_cursor.lastrowid  # 获取刚刚插入的点赞记录的ID
 
             # 记录操作到trace表
-            action_info = {"tweet_id": tweet_id, "dislike_id": dislike_id}
+            action_info = {"post_id": post_id, "dislike_id": dislike_id}
             trace_insert_query = (
                 "INSERT INTO trace (user_id, created_at, action, info) "
                 "VALUES (?, ?, ?, ?)")
@@ -676,7 +669,7 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def undo_dislike(self, agent_id: int, tweet_id: int):
+    async def undo_dislike(self, agent_id: int, post_id: int):
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
@@ -686,8 +679,8 @@ class Platform:
 
             # 检查是否已经存在dislike记录
             like_check_query = (
-                "SELECT * FROM 'dislike' WHERE tweet_id = ? AND user_id = ?")
-            self._execute_db_command(like_check_query, (tweet_id, user_id))
+                "SELECT * FROM 'dislike' WHERE post_id = ? AND user_id = ?")
+            self._execute_db_command(like_check_query, (post_id, user_id))
             result = self.db_cursor.fetchone()
 
             if not result:
@@ -700,13 +693,13 @@ class Platform:
             # Get the `dislike_id`
             dislike_id, _, _, _ = result
 
-            # 更新tweet表中的点踩数
-            tweet_update_query = (
-                "UPDATE tweet SET num_dislikes = num_dislikes - 1 WHERE "
-                "tweet_id = ?")
+            # 更新post表中的点踩数
+            post_update_query = (
+                "UPDATE post SET num_dislikes = num_dislikes - 1 WHERE "
+                "post_id = ?")
             self._execute_db_command(
-                tweet_update_query,
-                (tweet_id, ),
+                post_update_query,
+                (post_id, ),
                 commit=True,
             )
 
@@ -719,7 +712,7 @@ class Platform:
             )
 
             # 记录操作到trace表
-            action_info = {"tweet_id": tweet_id, "dislike_id": dislike_id}
+            action_info = {"post_id": post_id, "dislike_id": dislike_id}
             trace_insert_query = (
                 "INSERT INTO trace (user_id, created_at, action, info) "
                 "VALUES (?, ?, ?, ?)")
@@ -732,19 +725,19 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def search_tweets(self, agent_id: int, query: str):
+    async def search_posts(self, agent_id: int, query: str):
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
                 return self._not_signup_error_message(agent_id)
-            # 更新SQL查询，以便同时根据content、tweet_id和user_id进行搜索
-            # 注意：CAST是必要的，因为tweet_id和user_id是整数类型，而搜索的query是字符串类型
+            # 更新SQL查询，以便同时根据content、post_id和user_id进行搜索
+            # 注意：CAST是必要的，因为post_id和user_id是整数类型，而搜索的query是字符串类型
             sql_query = (
-                "SELECT tweet_id, user_id, content, created_at, num_likes, "
-                "num_dislikes FROM tweet "
-                "WHERE content LIKE ? OR CAST(tweet_id AS TEXT) LIKE ? OR "
+                "SELECT post_id, user_id, content, created_at, num_likes, "
+                "num_dislikes FROM post "
+                "WHERE content LIKE ? OR CAST(post_id AS TEXT) LIKE ? OR "
                 "CAST(user_id AS TEXT) LIKE ?")
             # 执行数据库查询
             self._execute_db_command(
@@ -760,7 +753,7 @@ class Platform:
                 "VALUES (?, ?, ?, ?)")
             self._execute_db_command(
                 trace_insert_query,
-                (0, current_time, "search_tweets",
+                (0, current_time, "search_posts",
                  str(action_info)),  # 假设user_id为0表示系统操作或未指定用户
                 commit=True)
 
@@ -768,11 +761,11 @@ class Platform:
             if not results:
                 return {
                     "success": False,
-                    "message": "No tweets found matching the query."
+                    "message": "No posts found matching the query."
                 }
-            results_with_comments = self._add_comments_to_tweets(results)
+            results_with_comments = self._add_comments_to_posts(results)
 
-            return {"success": True, "tweets": results_with_comments}
+            return {"success": True, "posts": results_with_comments}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -1019,7 +1012,7 @@ class Platform:
 
     async def trend(self, agent_id: int):
         """
-        Get the top K trending tweets in the last num_days days.
+        Get the top K trending posts in the last num_days days.
         """
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
@@ -1032,8 +1025,8 @@ class Platform:
 
             # 构建SQL查询语句
             sql_query = """
-                SELECT user_id, tweet_id, content, created_at, num_likes,
-                num_dislikes FROM tweet
+                SELECT user_id, post_id, content, created_at, num_likes,
+                num_dislikes FROM post
                 WHERE created_at >= ?
                 ORDER BY num_likes DESC
                 LIMIT ?
@@ -1047,9 +1040,9 @@ class Platform:
             if not results:
                 return {
                     "success": False,
-                    "message": "No trending tweets in the specified period."
+                    "message": "No trending posts in the specified period."
                 }
-            results_with_comments = self._add_comments_to_tweets(results)
+            results_with_comments = self._add_comments_to_posts(results)
 
             trace_insert_query = """
                 INSERT INTO trace (user_id, created_at, action, info)
@@ -1058,12 +1051,12 @@ class Platform:
             self._execute_db_command(trace_insert_query,
                                      (user_id, current_time, "trend", None),
                                      commit=True)
-            return {"success": True, "tweets": results_with_comments}
+            return {"success": True, "posts": results_with_comments}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def create_comment(self, agent_id: int, comment_message: tuple):
-        tweet_id, content = comment_message
+        post_id, content = comment_message
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
@@ -1073,12 +1066,11 @@ class Platform:
 
             # 插入评论记录
             comment_insert_query = (
-                "INSERT INTO comment (tweet_id, user_id, content, created_at) "
+                "INSERT INTO comment (post_id, user_id, content, created_at) "
                 "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                comment_insert_query,
-                (tweet_id, user_id, content, current_time),
-                commit=True)
+            self._execute_db_command(comment_insert_query,
+                                     (post_id, user_id, content, current_time),
+                                     commit=True)
             comment_id = self.db_cursor.lastrowid
 
             # 准备trace记录的信息
@@ -1122,7 +1114,7 @@ class Platform:
                 if check_result:
                     return check_result
 
-            # 更新tweet表中的点赞数
+            # 更新comment表中的点赞数
             comment_update_query = (
                 "UPDATE comment SET num_likes = num_likes + 1 WHERE "
                 "comment_id = ?")

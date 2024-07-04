@@ -47,14 +47,14 @@ async def test_update_rec_table(setup_db):
             (3, "user3", "This is test bio for user3", 3, 5))
         conn.commit()
 
-        # 在测试开始之前，将60条推文用户插入到tweet表中
-        for i in range(1, 61):  # 生成60条tweet
+        # 在测试开始之前，将60条推文用户插入到post表中
+        for i in range(1, 61):  # 生成60条post
             user_id = i % 3 + 1  # 循环使用用户ID 1, 2, 3
-            content = f"Tweet content for tweet {i}"  # 简单生成不同的内容
+            content = f"Post content for post {i}"  # 简单生成不同的内容
             created_at = datetime.now()
             num_likes = random.randint(0, 100)  # 随机生成点赞数
 
-            cursor.execute(("INSERT INTO tweet "
+            cursor.execute(("INSERT INTO post "
                             "(user_id, content, created_at, num_likes) "
                             "VALUES (?, ?, ?, ?)"),
                            (user_id, content, created_at, num_likes))
@@ -67,15 +67,15 @@ async def test_update_rec_table(setup_db):
         await task
 
         for i in range(1, 4):
-            cursor.execute("SELECT tweet_id FROM rec WHERE user_id = ?", (i, ))
-            tweets = cursor.fetchall()  # 获取所有记录
-            # ! Number of available tweets for recommendation =
-            # total tweets - tweets from current user !
-            assert len(tweets) == 40, f"User {user_id} doesn't have 40 tweets."
-            tweet_ids = [tweet[0] for tweet in tweets]
-            is_unique = len(tweet_ids) == len(set(tweet_ids))
-            print(set(tweet_ids))
-            assert is_unique, f"User {user_id} has duplicate tweet_ids."
+            cursor.execute("SELECT post_id FROM rec WHERE user_id = ?", (i, ))
+            posts = cursor.fetchall()  # 获取所有记录
+            # ! Number of available posts for recommendation =
+            # total posts - posts from current user !
+            assert len(posts) == 40, f"User {user_id} doesn't have 40 posts."
+            post_ids = [post[0] for post in posts]
+            is_unique = len(post_ids) == len(set(post_ids))
+            print(set(post_ids))
+            assert is_unique, f"User {user_id} has duplicate post_ids."
 
         print_db_contents(test_db_filepath)
 

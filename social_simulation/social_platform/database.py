@@ -1,4 +1,3 @@
-# File: SandboxTwitterModule/twitter_infra_core/create_database.py
 from __future__ import annotations
 
 import os
@@ -8,10 +7,10 @@ from typing import Any, Dict, List
 
 SCHEMA_DIR = "social_platform/schema"
 DB_DIR = "db"
-DB_NAME = "twitter.db"
+DB_NAME = "social_media.db"
 
 USER_SCHEMA_SQL = "user.sql"
-TWEET_SCHEMA_SQL = "tweet.sql"
+POST_SCHEMA_SQL = "post.sql"
 FOLLOW_SCHEMA_SQL = "follow.sql"
 MUTE_SCHEMA_SQL = "mute.sql"
 LIKE_SCHEMA_SQL = "like.sql"
@@ -23,7 +22,7 @@ COMMENT_LIKE_SCHEMA_SQL = "comment_like.sql"
 COMMENT_DISLIKE_SCHEMA_SQL = "comment_dislike.sql"
 
 TABLE_NAMES = {
-    "user", "tweet", "follow", "mute", "like", "dislike", "trace", "rec",
+    "user", "post", "follow", "mute", "like", "dislike", "trace", "rec",
     "comment.sql", "comment_like.sql", "comment_dislike.sql"
 }
 
@@ -63,11 +62,11 @@ def create_db(db_path: str | None = None):
             user_sql_script = sql_file.read()
         cursor.executescript(user_sql_script)
 
-        # Read and execute the tweet table SQL script:
-        tweet_sql_path = osp.join(schema_dir, TWEET_SCHEMA_SQL)
-        with open(tweet_sql_path, 'r') as sql_file:
-            tweet_sql_script = sql_file.read()
-        cursor.executescript(tweet_sql_script)
+        # Read and execute the post table SQL script:
+        post_sql_path = osp.join(schema_dir, POST_SCHEMA_SQL)
+        with open(post_sql_path, 'r') as sql_file:
+            post_sql_script = sql_file.read()
+        cursor.executescript(post_sql_script)
 
         # Read and execute the follow table SQL script:
         follow_sql_path = osp.join(schema_dir, FOLLOW_SCHEMA_SQL)
@@ -196,27 +195,27 @@ def fetch_rec_table_as_matrix(cursor: sqlite3.Cursor) -> List[List[int]]:
 
     # 接着，查询rec表中的所有记录
     cursor.execute(
-        "SELECT user_id, tweet_id FROM rec ORDER BY user_id, tweet_id")
+        "SELECT user_id, post_id FROM rec ORDER BY user_id, post_id")
     rec_rows = cursor.fetchall()
     # 初始化一个字典，为每个user_id分配一个空列表
-    user_tweets = {user_id: [] for user_id in user_ids}
+    user_posts = {user_id: [] for user_id in user_ids}
     # 使用查询到的rec表记录填充字典
-    for user_id, tweet_id in rec_rows:
-        if user_id in user_tweets:
-            user_tweets[user_id].append(tweet_id)
+    for user_id, post_id in rec_rows:
+        if user_id in user_posts:
+            user_posts[user_id].append(post_id)
     # 将字典转换为矩阵形式
-    matrix = [None] + [user_tweets[user_id] for user_id in user_ids]
+    matrix = [None] + [user_posts[user_id] for user_id in user_ids]
     return matrix
 
 
 def insert_matrix_into_rec_table(cursor: sqlite3.Cursor,
                                  matrix: List[List[int]]) -> None:
     # 遍历matrix，跳过索引0的占位符
-    for user_id, tweet_ids in enumerate(matrix[1:], start=1):
-        for tweet_id in tweet_ids:
-            # 对每个user_id和tweet_id的组合，插入到rec表中
-            cursor.execute("INSERT INTO rec (user_id, tweet_id) VALUES (?, ?)",
-                           (user_id, tweet_id))
+    for user_id, post_ids in enumerate(matrix[1:], start=1):
+        for post_id in post_ids:
+            # 对每个user_id和post_id的组合，插入到rec表中
+            cursor.execute("INSERT INTO rec (user_id, post_id) VALUES (?, ?)",
+                           (user_id, post_id))
 
 
 if __name__ == "__main__":
