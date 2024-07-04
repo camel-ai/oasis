@@ -277,7 +277,7 @@ class SocialAction:
                 ]
             }
         """
-        return await self.perform_action(query, ActionType.SEARCH_POST.value)
+        return await self.perform_action(query, ActionType.SEARCH_POSTS.value)
 
     async def search_user(self, query: str):
         r"""Searches users based on a given query.

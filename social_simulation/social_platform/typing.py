@@ -5,7 +5,7 @@ class ActionType(Enum):
     EXIT = "exit"
     REFRESH = "refresh"
     SEARCH_USER = "search_user"
-    SEARCH_POST = "search_posts"
+    SEARCH_POSTS = "search_posts"
     CREATE_POST = "create_post"
     LIKE = "like"
     UNLIKE = "unlike"

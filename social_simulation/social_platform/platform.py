@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import random
 import sqlite3
 from datetime import datetime, timedelta
@@ -87,7 +88,7 @@ class Platform:
 
             if (self.ope_cnt % self.rec_update_time == 0
                     and action != ActionType.REFRESH):
-                print('Successfully update rec table.')
+                print('Updating rec table.')
                 self.ope_cnt += 1
                 await self.update_rec_table()
 
@@ -130,7 +131,7 @@ class Platform:
                                                  post_id=message)
                 await self.channel.send_to((message_id, agent_id, result))
 
-            elif action == ActionType.SEARCH_POST:
+            elif action == ActionType.SEARCH_POSTS:
                 result = await self.search_posts(agent_id=agent_id,
                                                  query=message)
                 await self.channel.send_to((message_id, agent_id, result))
@@ -269,6 +270,50 @@ class Platform:
             })
         return posts
 
+    def _record_trace(self,
+                      user_id,
+                      action_type,
+                      action_info,
+                      current_time=None):
+        # 如果除了trace，该操作函数还在数据库的其他表中记录了时间，以进入操作函数的时间为准
+        # 传入current_time，使得比如post table的created_at和trace表中时间一模一样
+
+        # 如果只有trace表需要记录时间，将进入_record_trace作为trace记录的时间
+        if current_time is None:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        trace_insert_query = (
+            "INSERT INTO trace (user_id, created_at, action, info) "
+            "VALUES (?, ?, ?, ?)")
+        action_info_str = json.dumps(action_info)
+        self._execute_db_command(
+            trace_insert_query,
+            (user_id, current_time, action_type, action_info_str),
+            commit=True)
+
+    def _check_self_post_rating(self, post_id, user_id):
+        self_like_check_query = ("SELECT user_id FROM post WHERE post_id = ?")
+        self._execute_db_command(self_like_check_query, (post_id, ))
+        result = self.db_cursor.fetchone()
+        if result and result[0] == user_id:
+            error_message = (
+                "Users are not allowed to like/dislike their own posts.")
+            return {"success": False, "error": error_message}
+        else:
+            return None
+
+    def _check_self_comment_rating(self, comment_id, user_id):
+        self_like_check_query = (
+            "SELECT user_id FROM comment WHERE comment_id = ?")
+        self._execute_db_command(self_like_check_query, (comment_id, ))
+        result = self.db_cursor.fetchone()
+        if result and result[0] == user_id:
+            error_message = (
+                "Users are not allowed to like/dislike their own comments.")
+            return {"success": False, "error": error_message}
+        else:
+            return None
+
     # 注册
     async def signup(self, agent_id, user_message):
         # 允许重名，user_id是主键
@@ -296,24 +341,14 @@ class Platform:
             user_id = self.db_cursor.lastrowid
             # 准备trace记录的信息
             action_info = {"name": name, "user_name": user_name, "bio": bio}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.SIGNUP.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.SIGNUP.value, action_info,
+                               current_time)
 
             return {"success": True, "user_id": user_id}
-
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def refresh(self, agent_id: int):
-        # output不变，执行内容是从rec table取特定id的post
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -344,15 +379,9 @@ class Platform:
                 return {"success": False, "message": "No posts found."}
             results_with_comments = self._add_comments_to_posts(results)
             # 记录操作到trace表
-            action_info = {}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.REFRESH.value,
-                 str(action_info)),
-                commit=True)
+            action_info = {"posts": results_with_comments}
+            self._record_trace(user_id, ActionType.REFRESH.value, action_info)
+
             return {"success": True, "posts": results_with_comments}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -408,14 +437,8 @@ class Platform:
             post_id = self.db_cursor.lastrowid
             # 准备trace记录的信息
             action_info = {"content": content, "post_id": post_id}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.CREATE_POST.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.CREATE_POST.value,
+                               action_info, current_time)
             return {"success": True, "post_id": post_id}
 
         except Exception as e:
@@ -471,42 +494,12 @@ class Platform:
             post_id = self.db_cursor.lastrowid
             # 准备trace记录的信息
             action_info = {"post_id": post_id}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.REPOST.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.REPOST.value, action_info,
+                               current_time)
 
             return {"success": True, "post_id": post_id}
-
         except Exception as e:
             return {"success": False, "error": str(e)}
-
-    def _check_self_post_rating(self, post_id, user_id):
-        self_like_check_query = ("SELECT user_id FROM post WHERE post_id = ?")
-        self._execute_db_command(self_like_check_query, (post_id, ))
-        result = self.db_cursor.fetchone()
-        if result and result[0] == user_id:
-            error_message = (
-                "Users are not allowed to like/dislike their own posts.")
-            return {"success": False, "error": error_message}
-        else:
-            return None
-
-    def _check_self_comment_rating(self, comment_id, user_id):
-        self_like_check_query = (
-            "SELECT user_id FROM comment WHERE comment_id = ?")
-        self._execute_db_command(self_like_check_query, (comment_id, ))
-        result = self.db_cursor.fetchone()
-        if result and result[0] == user_id:
-            error_message = (
-                "Users are not allowed to like/dislike their own comments.")
-            return {"success": False, "error": error_message}
-        else:
-            return None
 
     async def like(self, agent_id: int, post_id: int):
         current_time = self.sandbox_clock.time_transfer(
@@ -549,20 +542,13 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"post_id": post_id, "like_id": like_id}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(trace_insert_query,
-                                     (user_id, current_time,
-                                      ActionType.LIKE.value, str(action_info)),
-                                     commit=True)
+            self._record_trace(user_id, ActionType.LIKE.value, action_info,
+                               current_time)
             return {"success": True, "like_id": like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def unlike(self, agent_id: int, post_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -603,14 +589,7 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"post_id": post_id, "like_id": like_id}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.UNLIKE.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.UNLIKE.value, action_info)
             return {"success": True, "like_id": like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -657,21 +636,13 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"post_id": post_id, "dislike_id": dislike_id}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.DISLIKE.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.DISLIKE.value, action_info,
+                               current_time)
             return {"success": True, "dislike_id": dislike_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def undo_dislike(self, agent_id: int, post_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -713,21 +684,13 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"post_id": post_id, "dislike_id": dislike_id}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.UNDO_DISLIKE.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.UNDO_DISLIKE.value,
+                               action_info)
             return {"success": True, "dislike_id": dislike_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def search_posts(self, agent_id: int, query: str):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -748,14 +711,8 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"query": query}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (0, current_time, "search_posts",
-                 str(action_info)),  # 假设user_id为0表示系统操作或未指定用户
-                commit=True)
+            self._record_trace(user_id, ActionType.SEARCH_POSTS.value,
+                               action_info)
 
             # 如果没有找到结果，返回一个指示失败的字典
             if not results:
@@ -770,8 +727,6 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def search_user(self, agent_id: int, query: str):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -791,14 +746,8 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"query": query}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.SEARCH_USER.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.SEARCH_USER.value,
+                               action_info)
 
             # If no results found, return a dict with 'success' key as False:
             if not results:
@@ -866,21 +815,13 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"follow_id": follow_id}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.FOLLOW.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.FOLLOW.value, action_info,
+                               current_time)
             return {"success": True, "follow_id": follow_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def unfollow(self, agent_id: int, followee_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -920,14 +861,7 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"followee_id": followee_id}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.UNFOLLOW.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.UNFOLLOW.value, action_info)
             return {
                 "success": True,
                 "follow_id": follow_id  # 返回被删除的关注记录ID
@@ -963,20 +897,13 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"mutee_id": mutee_id}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(trace_insert_query,
-                                     (user_id, current_time,
-                                      ActionType.MUTE.value, str(action_info)),
-                                     commit=True)
+            self._record_trace(user_id, ActionType.MUTE.value, action_info,
+                               current_time)
             return {"success": True, "mute_id": mute_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def unmute(self, agent_id: int, mutee_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -998,14 +925,7 @@ class Platform:
 
             # 记录解除禁言操作到trace表
             action_info = {"mutee_id": mutee_id}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.UNMUTE.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.UNMUTE.value, action_info)
             return {"success": True, "mute_id": mute_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -1044,13 +964,10 @@ class Platform:
                 }
             results_with_comments = self._add_comments_to_posts(results)
 
-            trace_insert_query = """
-                INSERT INTO trace (user_id, created_at, action, info)
-                VALUES (?, ?, ?, ?)
-            """
-            self._execute_db_command(trace_insert_query,
-                                     (user_id, current_time, "trend", None),
-                                     commit=True)
+            action_info = {"posts": results_with_comments}
+            self._record_trace(user_id, ActionType.TREND.value, action_info,
+                               current_time)
+
             return {"success": True, "posts": results_with_comments}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -1075,14 +992,9 @@ class Platform:
 
             # 准备trace记录的信息
             action_info = {"content": content, "comment_id": comment_id}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.CREATE_COMMENT.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.CREATE_COMMENT.value,
+                               action_info, current_time)
+
             return {"success": True, "comment_id": comment_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -1135,21 +1047,13 @@ class Platform:
                 "comment_id": comment_id,
                 "comment_like_id": comment_like_id
             }
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.LIKE_COMMENT.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.LIKE_COMMENT.value,
+                               action_info, current_time)
             return {"success": True, "comment_like_id": comment_like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def unlike_comment(self, agent_id: int, comment_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -1193,14 +1097,8 @@ class Platform:
                 "comment_id": comment_id,
                 "comment_like_id": comment_like_id
             }
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.UNLIKE_COMMENT.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.UNLIKE_COMMENT.value,
+                               action_info)
             return {"success": True, "comment_like_id": comment_like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -1254,21 +1152,13 @@ class Platform:
                 "comment_id": comment_id,
                 "comment_dislike_id": comment_dislike_id
             }
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.DISLIKE_COMMENT.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.DISLIKE_COMMENT.value,
+                               action_info, current_time)
             return {"success": True, "comment_dislike_id": comment_dislike_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def undo_dislike_comment(self, agent_id: int, comment_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -1309,21 +1199,13 @@ class Platform:
                 "comment_id": comment_id,
                 "comment_dislike_id": comment_dislike_id
             }
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) VALUES "
-                "(?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.UNDO_DISLIKE_COMMENT.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.UNDO_DISLIKE_COMMENT.value,
+                               action_info)
             return {"success": True, "comment_dislike_id": comment_dislike_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def do_nothing(self, agent_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
         try:
             user_id = self._check_agent_userid(agent_id)
             if not user_id:
@@ -1331,14 +1213,8 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) VALUES "
-                "(?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.DO_NOTHING.value,
-                 str(action_info)),
-                commit=True)
+            self._record_trace(user_id, ActionType.DO_NOTHING.value,
+                               action_info)
             return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}

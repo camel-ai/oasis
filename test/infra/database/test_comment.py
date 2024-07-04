@@ -155,7 +155,7 @@ async def test_comment(setup_platform):
         results = cursor.fetchall()
         assert results is not None, "Unlike comment action not traced"
         assert results[0][0] == 2  # `user_id`
-        assert results[0][-1] == "{'comment_id': 1, 'comment_like_id': 2}"
+        assert results[0][-1] == '{"comment_id": 1, "comment_like_id": 2}'
 
         cursor.execute("SELECT * FROM trace WHERE action='dislike_comment'")
         results = cursor.fetchall()
@@ -167,7 +167,7 @@ async def test_comment(setup_platform):
         results = cursor.fetchall()
         assert results is not None, "Undo dislike comment action not traced"
         assert results[0][0] == 2  # `user_id`
-        assert results[0][-1] == "{'comment_id': 1, 'comment_dislike_id': 2}"
+        assert results[0][-1] == '{"comment_id": 1, "comment_dislike_id": 2}'
 
         # 验证comment like表是否正确插入了数据
         cursor.execute("SELECT * FROM comment_like WHERE comment_id=1 AND "

@@ -160,7 +160,7 @@ async def test_create_repost_like_unlike_post(setup_platform):
         results = cursor.fetchall()
         assert results is not None, "Unlike post action not traced"
         assert results[0][0] == 2  # `user_id`
-        assert results[0][-1] == "{'post_id': 1, 'like_id': 2}"
+        assert results[0][-1] == '{"post_id": 1, "like_id": 2}'
 
         cursor.execute("SELECT * FROM trace WHERE action='dislike'")
         results = cursor.fetchall()
@@ -171,7 +171,7 @@ async def test_create_repost_like_unlike_post(setup_platform):
         results = cursor.fetchall()
         assert results is not None, "Undo dislike post action not traced"
         assert results[0][0] == 2  # `user_id`
-        assert results[0][-1] == "{'post_id': 1, 'dislike_id': 2}"
+        assert results[0][-1] == '{"post_id": 1, "dislike_id": 2}'
 
         # 验证点赞表(like)是否正确插入了数据
         cursor.execute("SELECT * FROM like WHERE post_id=1 AND user_id=1")
