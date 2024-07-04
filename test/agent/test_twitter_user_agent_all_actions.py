@@ -59,7 +59,7 @@ async def test_agents_actions(setup_twitter):
     for agent in agents:
         for _ in range(4):
             return_message = \
-                await agent.env.action.create_tweet(
+                await agent.env.action.create_post(
                     f"hello from {agent.agent_id}",
                 )
             await asyncio.sleep(random.uniform(0, 0.1))
@@ -67,7 +67,7 @@ async def test_agents_actions(setup_twitter):
 
     await channel.write_to_receive_queue((None, None, ActionType.UPDATE_REC))
 
-    # 看推荐系统返回tweet
+    # 看推荐系统返回post
     action_agent = agents[2]
     return_message = await action_agent.env.action.refresh()
     assert return_message["success"] is True
@@ -90,7 +90,7 @@ async def test_agents_actions(setup_twitter):
     await asyncio.sleep(random.uniform(0, 0.1))
 
     return_message = \
-        await action_agent.env.action.search_tweets('hello')
+        await action_agent.env.action.search_posts('hello')
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
@@ -114,13 +114,13 @@ async def test_agents_actions(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    # 看最热tweet
+    # 看最热post
     return_message = await action_agent.env.action.trend()
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    # retweet
-    return_message = await action_agent.env.action.retweet(1)
+    # repos
+    return_message = await action_agent.env.action.repost(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
