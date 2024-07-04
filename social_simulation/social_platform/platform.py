@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import random
 import sqlite3
 from datetime import datetime, timedelta
@@ -9,6 +8,7 @@ from typing import Any
 from social_simulation.clock.clock import Clock
 from social_simulation.social_platform.database import (
     create_db, fetch_rec_table_as_matrix, fetch_table_from_db)
+from social_simulation.social_platform.platform_utils import PlatformUtils
 from social_simulation.social_platform.recsys import (
     rec_sys_personalized_with_trace, rec_sys_random, rec_sys_reddit)
 from social_simulation.social_platform.typing import ActionType, RecsysType
@@ -35,6 +35,7 @@ class Platform:
 
         self.db = sqlite3.connect(db_path, check_same_thread=False)
         self.db_cursor = self.db.cursor()
+
         self.channel = channel
         self.start_time = start_time
         self.sandbox_clock = sandbox_clock
@@ -63,20 +64,8 @@ class Platform:
         self.trend_num_days = 7
         self.trend_top_k = 10
 
-    @staticmethod
-    def _not_signup_error_message(agent_id):
-        return {
-            "success":
-            False,
-            "error": (f"Agent {agent_id} have not signed up and have no "
-                      f"user id.")
-        }
-
-    def _execute_db_command(self, command, args=(), commit=False):
-        self.db_cursor.execute(command, args)
-        if commit:
-            self.db.commit()
-        return self.db_cursor
+        self.pl_utils = PlatformUtils(self.db, self.db_cursor, self.start_time,
+                                      self.sandbox_clock, self.show_score)
 
     async def running(self):
         while True:
@@ -97,222 +86,65 @@ class Platform:
                 self.db.close()
                 break
 
-            elif action == ActionType.UPDATE_REC:
-                await self.update_rec_table()
+            # 定义操作到函数的映射
+            action_to_function = {
+                ActionType.UPDATE_REC:
+                self.update_rec_table,
+                ActionType.SIGNUP:
+                lambda: self.signup(agent_id=agent_id, user_message=message),
+                ActionType.REFRESH:
+                lambda: self.refresh(agent_id=agent_id),
+                ActionType.CREATE_POST:
+                lambda: self.create_post(agent_id=agent_id, content=message),
+                ActionType.LIKE:
+                lambda: self.like(agent_id=agent_id, post_id=message),
+                ActionType.UNLIKE:
+                lambda: self.unlike(agent_id=agent_id, post_id=message),
+                ActionType.DISLIKE:
+                lambda: self.dislike(agent_id=agent_id, post_id=message),
+                ActionType.UNDO_DISLIKE:
+                lambda: self.undo_dislike(agent_id=agent_id, post_id=message),
+                ActionType.SEARCH_POSTS:
+                lambda: self.search_posts(agent_id=agent_id, query=message),
+                ActionType.SEARCH_USER:
+                lambda: self.search_user(agent_id=agent_id, query=message),
+                ActionType.FOLLOW:
+                lambda: self.follow(agent_id=agent_id, followee_id=message),
+                ActionType.UNFOLLOW:
+                lambda: self.unfollow(agent_id=agent_id, followee_id=message),
+                ActionType.MUTE:
+                lambda: self.mute(agent_id=agent_id, mutee_id=message),
+                ActionType.UNMUTE:
+                lambda: self.unmute(agent_id=agent_id, mutee_id=message),
+                ActionType.TREND:
+                lambda: self.trend(agent_id=agent_id),
+                ActionType.REPOST:
+                lambda: self.repost(agent_id=agent_id, post_id=message),
+                ActionType.CREATE_COMMENT:
+                lambda: self.create_comment(agent_id=agent_id,
+                                            comment_message=message),
+                ActionType.LIKE_COMMENT:
+                lambda: self.like_comment(agent_id=agent_id,
+                                          comment_id=message),
+                ActionType.UNLIKE_COMMENT:
+                lambda: self.unlike_comment(agent_id=agent_id,
+                                            comment_id=message),
+                ActionType.DISLIKE_COMMENT:
+                lambda: self.dislike_comment(agent_id=agent_id,
+                                             comment_id=message),
+                ActionType.UNDO_DISLIKE_COMMENT:
+                lambda: self.undo_dislike_comment(agent_id=agent_id,
+                                                  comment_id=message),
+                ActionType.DO_NOTHING:
+                lambda: self.do_nothing(agent_id=agent_id)
+            }
 
-            elif action == ActionType.SIGNUP:
-                result = await self.signup(agent_id=agent_id,
-                                           user_message=message)
+            # 执行对应的操作并发送结果
+            if action in action_to_function:
+                result = await action_to_function[action]()
                 await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.REFRESH:
-                result = await self.refresh(agent_id=agent_id)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.CREATE_POST:
-                result = await self.create_post(agent_id=agent_id,
-                                                content=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.LIKE:
-                result = await self.like(agent_id=agent_id, post_id=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.UNLIKE:
-                result = await self.unlike(agent_id=agent_id, post_id=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.DISLIKE:
-                result = await self.dislike(agent_id=agent_id, post_id=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.UNDO_DISLIKE:
-                result = await self.undo_dislike(agent_id=agent_id,
-                                                 post_id=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.SEARCH_POSTS:
-                result = await self.search_posts(agent_id=agent_id,
-                                                 query=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.SEARCH_USER:
-                result = await self.search_user(agent_id=agent_id,
-                                                query=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.FOLLOW:
-                result = await self.follow(agent_id=agent_id,
-                                           followee_id=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.UNFOLLOW:
-                result = await self.unfollow(agent_id=agent_id,
-                                             followee_id=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.MUTE:
-                result = await self.mute(agent_id=agent_id, mutee_id=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.UNMUTE:
-                result = await self.unmute(agent_id=agent_id, mutee_id=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.TREND:
-                result = await self.trend(agent_id=agent_id)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.REPOST:
-                result = await self.repost(agent_id=agent_id, post_id=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.CREATE_COMMENT:
-                result = await self.create_comment(agent_id=agent_id,
-                                                   comment_message=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.LIKE_COMMENT:
-                result = await self.like_comment(agent_id=agent_id,
-                                                 comment_id=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.UNLIKE_COMMENT:
-                result = await self.unlike_comment(agent_id=agent_id,
-                                                   comment_id=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.DISLIKE_COMMENT:
-                result = await self.dislike_comment(agent_id=agent_id,
-                                                    comment_id=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.UNDO_DISLIKE_COMMENT:
-                result = await self.undo_dislike_comment(agent_id=agent_id,
-                                                         comment_id=message)
-                await self.channel.send_to((message_id, agent_id, result))
-
-            elif action == ActionType.DO_NOTHING:
-                result = await self.do_nothing(agent_id=agent_id)
-                await self.channel.send_to((message_id, agent_id, result))
-
             else:
                 raise ValueError(f"Action {action} is not supported")
-
-    def _check_agent_userid(self, agent_id):
-        try:
-            user_query = ("SELECT user_id FROM user WHERE agent_id = ?")
-            # Assuming execute_db_query_async returns a list of query results
-            results = self._execute_db_command(user_query, (agent_id, ))
-            # Fetch the first row of the query result
-            first_row = results.fetchone()
-            if first_row:
-                user_id = first_row[0]
-                return user_id
-            else:
-                return None
-        except Exception as e:
-            # Log or handle the error as appropriate
-            print(f"Error querying user_id for agent_id {agent_id}: {e}")
-            return None
-
-    def _add_comments_to_posts(self, posts_results):
-        # 初始化返回的posts列表
-        posts = []
-        for row in posts_results:
-            (post_id, user_id, content, created_at, num_likes,
-             num_dislikes) = row
-            # 对于每个post，查询其对应的comments
-            self.db_cursor.execute(
-                "SELECT comment_id, post_id, user_id, content, created_at, "
-                "num_likes, num_dislikes FROM comment WHERE post_id = ?",
-                (post_id, ))
-            comments_results = self.db_cursor.fetchall()
-
-            # 将每个comment的结果转换为字典格式
-            comments = [{
-                "comment_id":
-                comment_id,
-                "post_id":
-                post_id,
-                "user_id":
-                user_id,
-                "content":
-                content,
-                "created_at":
-                created_at,
-                **({
-                    "score": num_likes - num_dislikes
-                } if self.show_score else {
-                       "num_likes": num_likes,
-                       "num_dislikes": num_dislikes
-                   })
-            } for (comment_id, post_id, user_id, content, created_at,
-                   num_likes, num_dislikes) in comments_results]
-
-            # 将post信息和对应的comments添加到posts列表
-            posts.append({
-                "post_id":
-                post_id,
-                "user_id":
-                user_id,
-                "content":
-                content,
-                "created_at":
-                created_at,
-                **({
-                    "score": num_likes - num_dislikes
-                } if self.show_score else {
-                       "num_likes": num_likes,
-                       "num_dislikes": num_dislikes
-                   }), "comments":
-                comments
-            })
-        return posts
-
-    def _record_trace(self,
-                      user_id,
-                      action_type,
-                      action_info,
-                      current_time=None):
-        # 如果除了trace，该操作函数还在数据库的其他表中记录了时间，以进入操作函数的时间为准
-        # 传入current_time，使得比如post table的created_at和trace表中时间一模一样
-
-        # 如果只有trace表需要记录时间，将进入_record_trace作为trace记录的时间
-        if current_time is None:
-            current_time = self.sandbox_clock.time_transfer(
-                datetime.now(), self.start_time)
-        trace_insert_query = (
-            "INSERT INTO trace (user_id, created_at, action, info) "
-            "VALUES (?, ?, ?, ?)")
-        action_info_str = json.dumps(action_info)
-        self._execute_db_command(
-            trace_insert_query,
-            (user_id, current_time, action_type, action_info_str),
-            commit=True)
-
-    def _check_self_post_rating(self, post_id, user_id):
-        self_like_check_query = ("SELECT user_id FROM post WHERE post_id = ?")
-        self._execute_db_command(self_like_check_query, (post_id, ))
-        result = self.db_cursor.fetchone()
-        if result and result[0] == user_id:
-            error_message = (
-                "Users are not allowed to like/dislike their own posts.")
-            return {"success": False, "error": error_message}
-        else:
-            return None
-
-    def _check_self_comment_rating(self, comment_id, user_id):
-        self_like_check_query = (
-            "SELECT user_id FROM comment WHERE comment_id = ?")
-        self._execute_db_command(self_like_check_query, (comment_id, ))
-        result = self.db_cursor.fetchone()
-        if result and result[0] == user_id:
-            error_message = (
-                "Users are not allowed to like/dislike their own comments.")
-            return {"success": False, "error": error_message}
-        else:
-            return None
 
     # 注册
     async def signup(self, agent_id, user_message):
@@ -321,8 +153,8 @@ class Platform:
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
-            if self._check_agent_userid(agent_id):
-                user_id = self._check_agent_userid(agent_id)
+            if self.pl_utils._check_agent_userid(agent_id):
+                user_id = self.pl_utils._check_agent_userid(agent_id)
                 return {
                     "success":
                     False,
@@ -334,15 +166,15 @@ class Platform:
             user_insert_query = (
                 "INSERT INTO user (agent_id, user_name, name, bio, created_at,"
                 " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?)")
-            self._execute_db_command(
+            self.pl_utils._execute_db_command(
                 user_insert_query,
                 (agent_id, user_name, name, bio, current_time, 0, 0),
                 commit=True)
             user_id = self.db_cursor.lastrowid
             # 准备trace记录的信息
             action_info = {"name": name, "user_name": user_name, "bio": bio}
-            self._record_trace(user_id, ActionType.SIGNUP.value, action_info,
-                               current_time)
+            self.pl_utils._record_trace(user_id, ActionType.SIGNUP.value,
+                                        action_info, current_time)
 
             return {"success": True, "user_id": user_id}
         except Exception as e:
@@ -350,13 +182,13 @@ class Platform:
 
     async def refresh(self, agent_id: int):
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
 
             # 从rec表中获取指定user_id的所有post_id
             rec_query = "SELECT post_id FROM rec WHERE user_id = ?"
-            self._execute_db_command(rec_query, (user_id, ))
+            self.pl_utils._execute_db_command(rec_query, (user_id, ))
             rec_results = self.db_cursor.fetchall()
 
             post_ids = [row[0] for row in rec_results]
@@ -373,14 +205,16 @@ class Platform:
             post_query = (
                 f"SELECT post_id, user_id, content, created_at, num_likes, "
                 f"num_dislikes FROM post WHERE post_id IN ({placeholders})")
-            self._execute_db_command(post_query, selected_post_ids)
+            self.pl_utils._execute_db_command(post_query, selected_post_ids)
             results = self.db_cursor.fetchall()
             if not results:
                 return {"success": False, "message": "No posts found."}
-            results_with_comments = self._add_comments_to_posts(results)
+            results_with_comments = self.pl_utils._add_comments_to_posts(
+                results)
             # 记录操作到trace表
             action_info = {"posts": results_with_comments}
-            self._record_trace(user_id, ActionType.REFRESH.value, action_info)
+            self.pl_utils._record_trace(user_id, ActionType.REFRESH.value,
+                                        action_info)
 
             return {"success": True, "posts": results_with_comments}
         except Exception as e:
@@ -411,34 +245,35 @@ class Platform:
         # 构建SQL语句以删除rec表中的所有记录
         sql_query = "DELETE FROM rec"
         # 使用封装好的_execute_db_command函数执行SQL语句
-        self._execute_db_command(sql_query, commit=True)
+        self.pl_utils._execute_db_command(sql_query, commit=True)
         for user_id in range(1, len(new_rec_matrix)):
             for post_id in new_rec_matrix[user_id]:
                 sql_query = (
                     "INSERT INTO rec (user_id, post_id) VALUES (?, ?)")
-                self._execute_db_command(sql_query, (user_id, post_id),
-                                         commit=True)
+                self.pl_utils._execute_db_command(sql_query,
+                                                  (user_id, post_id),
+                                                  commit=True)
 
     async def create_post(self, agent_id: int, content: str):
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
 
             # 插入推文记录
             post_insert_query = (
                 "INSERT INTO post (user_id, content, created_at, num_likes, "
                 "num_dislikes) VALUES (?, ?, ?, ?, ?)")
-            self._execute_db_command(post_insert_query,
-                                     (user_id, content, current_time, 0, 0),
-                                     commit=True)
+            self.pl_utils._execute_db_command(
+                post_insert_query, (user_id, content, current_time, 0, 0),
+                commit=True)
             post_id = self.db_cursor.lastrowid
             # 准备trace记录的信息
             action_info = {"content": content, "post_id": post_id}
-            self._record_trace(user_id, ActionType.CREATE_POST.value,
-                               action_info, current_time)
+            self.pl_utils._record_trace(user_id, ActionType.CREATE_POST.value,
+                                        action_info, current_time)
             return {"success": True, "post_id": post_id}
 
         except Exception as e:
@@ -447,9 +282,9 @@ class Platform:
     async def repost(self, agent_id: int, post_id: int):
         current_time = datetime.now()
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
 
             # 查询要转发的推特内容
             sql_query = (
@@ -457,7 +292,7 @@ class Platform:
                 "FROM post "
                 "WHERE post_id = ? ")
             # 执行数据库查询
-            self._execute_db_command(sql_query, (post_id, ))
+            self.pl_utils._execute_db_command(sql_query, (post_id, ))
             results = self.db_cursor.fetchall()
             if not results:
                 return {"success": False, "error": "Post not found."}
@@ -473,7 +308,8 @@ class Platform:
 
             # 确保此前未转发过
             repost_check_query = ("SELECT * FROM 'post' WHERE content LIKE ? ")
-            self._execute_db_command(repost_check_query, (repost_content, ))
+            self.pl_utils._execute_db_command(repost_check_query,
+                                              (repost_content, ))
             if self.db_cursor.fetchone():
                 # 已存在转发记录
                 return {
@@ -486,7 +322,7 @@ class Platform:
                 "INSERT INTO post (user_id, content, created_at, num_likes) "
                 "VALUES (?, ?, ?, ?)")
 
-            self._execute_db_command(
+            self.pl_utils._execute_db_command(
                 post_insert_query,
                 (user_id, repost_content, current_time, orig_like),
                 commit=True)
@@ -494,8 +330,8 @@ class Platform:
             post_id = self.db_cursor.lastrowid
             # 准备trace记录的信息
             action_info = {"post_id": post_id}
-            self._record_trace(user_id, ActionType.REPOST.value, action_info,
-                               current_time)
+            self.pl_utils._record_trace(user_id, ActionType.REPOST.value,
+                                        action_info, current_time)
 
             return {"success": True, "post_id": post_id}
         except Exception as e:
@@ -505,13 +341,14 @@ class Platform:
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
             # 检查是否已经存在点赞记录
             like_check_query = (
                 "SELECT * FROM 'like' WHERE post_id = ? AND user_id = ?")
-            self._execute_db_command(like_check_query, (post_id, user_id))
+            self.pl_utils._execute_db_command(like_check_query,
+                                              (post_id, user_id))
             if self.db_cursor.fetchone():
                 # 已存在点赞记录
                 return {
@@ -521,43 +358,45 @@ class Platform:
 
             # 检查要点赞的推文是否是自己发布的
             if self.allow_self_rating is False:
-                check_result = self._check_self_post_rating(post_id, user_id)
+                check_result = self.pl_utils._check_self_post_rating(
+                    post_id, user_id)
                 if check_result:
                     return check_result
 
             # 更新post表中的点赞数
             post_update_query = (
                 "UPDATE post SET num_likes = num_likes + 1 WHERE post_id = ?")
-            self._execute_db_command(post_update_query, (post_id, ),
-                                     commit=True)
+            self.pl_utils._execute_db_command(post_update_query, (post_id, ),
+                                              commit=True)
 
             # 在like表中添加记录
             like_insert_query = (
                 "INSERT INTO 'like' (post_id, user_id, created_at) "
                 "VALUES (?, ?, ?)")
-            self._execute_db_command(like_insert_query,
-                                     (post_id, user_id, current_time),
-                                     commit=True)
+            self.pl_utils._execute_db_command(like_insert_query,
+                                              (post_id, user_id, current_time),
+                                              commit=True)
             like_id = self.db_cursor.lastrowid  # 获取刚刚插入的点赞记录的ID
 
             # 记录操作到trace表
             action_info = {"post_id": post_id, "like_id": like_id}
-            self._record_trace(user_id, ActionType.LIKE.value, action_info,
-                               current_time)
+            self.pl_utils._record_trace(user_id, ActionType.LIKE.value,
+                                        action_info, current_time)
             return {"success": True, "like_id": like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def unlike(self, agent_id: int, post_id: int):
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
 
             # 检查是否已经存在点赞记录
             like_check_query = (
                 "SELECT * FROM 'like' WHERE post_id = ? AND user_id = ?")
-            self._execute_db_command(like_check_query, (post_id, user_id))
+            self.pl_utils._execute_db_command(like_check_query,
+                                              (post_id, user_id))
             result = self.db_cursor.fetchone()
 
             if not result:
@@ -573,7 +412,7 @@ class Platform:
             # 更新post表中的点赞数
             post_update_query = (
                 "UPDATE post SET num_likes = num_likes - 1 WHERE post_id = ?")
-            self._execute_db_command(
+            self.pl_utils._execute_db_command(
                 post_update_query,
                 (post_id, ),
                 commit=True,
@@ -581,7 +420,7 @@ class Platform:
 
             # 在like表中删除记录
             like_delete_query = ("DELETE FROM 'like' WHERE like_id = ?")
-            self._execute_db_command(
+            self.pl_utils._execute_db_command(
                 like_delete_query,
                 (like_id, ),
                 commit=True,
@@ -589,7 +428,8 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"post_id": post_id, "like_id": like_id}
-            self._record_trace(user_id, ActionType.UNLIKE.value, action_info)
+            self.pl_utils._record_trace(user_id, ActionType.UNLIKE.value,
+                                        action_info)
             return {"success": True, "like_id": like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -598,13 +438,14 @@ class Platform:
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
             # 检查是否已经存在dislike记录
             like_check_query = (
                 "SELECT * FROM 'dislike' WHERE post_id = ? AND user_id = ?")
-            self._execute_db_command(like_check_query, (post_id, user_id))
+            self.pl_utils._execute_db_command(like_check_query,
+                                              (post_id, user_id))
             if self.db_cursor.fetchone():
                 # 已存在点赞记录
                 return {
@@ -614,7 +455,8 @@ class Platform:
 
             # 检查要点踩的推文是否是自己发布的
             if self.allow_self_rating is False:
-                check_result = self._check_self_post_rating(post_id, user_id)
+                check_result = self.pl_utils._check_self_post_rating(
+                    post_id, user_id)
                 if check_result:
                     return check_result
 
@@ -622,36 +464,37 @@ class Platform:
             post_update_query = (
                 "UPDATE post SET num_dislikes = num_dislikes + 1 WHERE "
                 "post_id = ?")
-            self._execute_db_command(post_update_query, (post_id, ),
-                                     commit=True)
+            self.pl_utils._execute_db_command(post_update_query, (post_id, ),
+                                              commit=True)
 
             # 在dislike表中添加记录
             dislike_insert_query = (
                 "INSERT INTO 'dislike' (post_id, user_id, created_at) "
                 "VALUES (?, ?, ?)")
-            self._execute_db_command(dislike_insert_query,
-                                     (post_id, user_id, current_time),
-                                     commit=True)
+            self.pl_utils._execute_db_command(dislike_insert_query,
+                                              (post_id, user_id, current_time),
+                                              commit=True)
             dislike_id = self.db_cursor.lastrowid  # 获取刚刚插入的点赞记录的ID
 
             # 记录操作到trace表
             action_info = {"post_id": post_id, "dislike_id": dislike_id}
-            self._record_trace(user_id, ActionType.DISLIKE.value, action_info,
-                               current_time)
+            self.pl_utils._record_trace(user_id, ActionType.DISLIKE.value,
+                                        action_info, current_time)
             return {"success": True, "dislike_id": dislike_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def undo_dislike(self, agent_id: int, post_id: int):
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
 
             # 检查是否已经存在dislike记录
             like_check_query = (
                 "SELECT * FROM 'dislike' WHERE post_id = ? AND user_id = ?")
-            self._execute_db_command(like_check_query, (post_id, user_id))
+            self.pl_utils._execute_db_command(like_check_query,
+                                              (post_id, user_id))
             result = self.db_cursor.fetchone()
 
             if not result:
@@ -668,7 +511,7 @@ class Platform:
             post_update_query = (
                 "UPDATE post SET num_dislikes = num_dislikes - 1 WHERE "
                 "post_id = ?")
-            self._execute_db_command(
+            self.pl_utils._execute_db_command(
                 post_update_query,
                 (post_id, ),
                 commit=True,
@@ -676,7 +519,7 @@ class Platform:
 
             # 在dislike表中删除记录
             like_delete_query = ("DELETE FROM 'dislike' WHERE dislike_id = ?")
-            self._execute_db_command(
+            self.pl_utils._execute_db_command(
                 like_delete_query,
                 (dislike_id, ),
                 commit=True,
@@ -684,17 +527,17 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"post_id": post_id, "dislike_id": dislike_id}
-            self._record_trace(user_id, ActionType.UNDO_DISLIKE.value,
-                               action_info)
+            self.pl_utils._record_trace(user_id, ActionType.UNDO_DISLIKE.value,
+                                        action_info)
             return {"success": True, "dislike_id": dislike_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def search_posts(self, agent_id: int, query: str):
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
             # 更新SQL查询，以便同时根据content、post_id和user_id进行搜索
             # 注意：CAST是必要的，因为post_id和user_id是整数类型，而搜索的query是字符串类型
             sql_query = (
@@ -703,7 +546,7 @@ class Platform:
                 "WHERE content LIKE ? OR CAST(post_id AS TEXT) LIKE ? OR "
                 "CAST(user_id AS TEXT) LIKE ?")
             # 执行数据库查询
-            self._execute_db_command(
+            self.pl_utils._execute_db_command(
                 sql_query,
                 ('%' + query + '%', '%' + query + '%', '%' + query + '%'),
                 commit=True)
@@ -711,8 +554,8 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"query": query}
-            self._record_trace(user_id, ActionType.SEARCH_POSTS.value,
-                               action_info)
+            self.pl_utils._record_trace(user_id, ActionType.SEARCH_POSTS.value,
+                                        action_info)
 
             # 如果没有找到结果，返回一个指示失败的字典
             if not results:
@@ -720,7 +563,8 @@ class Platform:
                     "success": False,
                     "message": "No posts found matching the query."
                 }
-            results_with_comments = self._add_comments_to_posts(results)
+            results_with_comments = self.pl_utils._add_comments_to_posts(
+                results)
 
             return {"success": True, "posts": results_with_comments}
         except Exception as e:
@@ -728,9 +572,9 @@ class Platform:
 
     async def search_user(self, agent_id: int, query: str):
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
             sql_query = (
                 "SELECT user_id, user_name, name, bio, created_at, "
                 "num_followings, num_followers "
@@ -738,16 +582,16 @@ class Platform:
                 "WHERE user_name LIKE ? OR name LIKE ? OR bio LIKE ? OR "
                 "CAST(user_id AS TEXT) LIKE ?")
             # 改写为使用 execute_db_command 方法
-            self._execute_db_command(sql_query,
-                                     ('%' + query + '%', '%' + query + '%',
-                                      '%' + query + '%', '%' + query + '%'),
-                                     commit=True)
+            self.pl_utils._execute_db_command(
+                sql_query, ('%' + query + '%', '%' + query + '%',
+                            '%' + query + '%', '%' + query + '%'),
+                commit=True)
             results = self.db_cursor.fetchall()
 
             # 记录操作到trace表
             action_info = {"query": query}
-            self._record_trace(user_id, ActionType.SEARCH_USER.value,
-                               action_info)
+            self.pl_utils._record_trace(user_id, ActionType.SEARCH_USER.value,
+                                        action_info)
 
             # If no results found, return a dict with 'success' key as False:
             if not results:
@@ -775,14 +619,14 @@ class Platform:
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
             # 检查是否已经存在关注记录
             follow_check_query = ("SELECT * FROM follow WHERE follower_id = ? "
                                   "AND followee_id = ?")
-            self._execute_db_command(follow_check_query,
-                                     (user_id, followee_id))
+            self.pl_utils._execute_db_command(follow_check_query,
+                                              (user_id, followee_id))
             if self.db_cursor.fetchone():
                 # 已存在关注记录
                 return {
@@ -794,44 +638,45 @@ class Platform:
             follow_insert_query = (
                 "INSERT INTO follow (follower_id, followee_id, created_at) "
                 "VALUES (?, ?, ?)")
-            self._execute_db_command(follow_insert_query,
-                                     (user_id, followee_id, current_time),
-                                     commit=True)
+            self.pl_utils._execute_db_command(
+                follow_insert_query, (user_id, followee_id, current_time),
+                commit=True)
             follow_id = self.db_cursor.lastrowid  # 获取刚刚插入的关注记录的ID
 
             # 更新user表中的following字段
             user_update_query1 = (
                 "UPDATE user SET num_followings = num_followings + 1 "
                 "WHERE user_id = ?")
-            self._execute_db_command(user_update_query1, (user_id, ),
-                                     commit=True)
+            self.pl_utils._execute_db_command(user_update_query1, (user_id, ),
+                                              commit=True)
 
             # 更新user表中的follower字段
             user_update_query2 = (
                 "UPDATE user SET num_followers = num_followers + 1 "
                 "WHERE user_id = ?")
-            self._execute_db_command(user_update_query2, (followee_id, ),
-                                     commit=True)
+            self.pl_utils._execute_db_command(user_update_query2,
+                                              (followee_id, ),
+                                              commit=True)
 
             # 记录操作到trace表
             action_info = {"follow_id": follow_id}
-            self._record_trace(user_id, ActionType.FOLLOW.value, action_info,
-                               current_time)
+            self.pl_utils._record_trace(user_id, ActionType.FOLLOW.value,
+                                        action_info, current_time)
             return {"success": True, "follow_id": follow_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def unfollow(self, agent_id: int, followee_id: int):
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
             # 检查是否存在关注记录，并获取其ID
             follow_check_query = (
                 "SELECT follow_id FROM follow WHERE follower_id = ? AND "
                 "followee_id = ?")
-            self._execute_db_command(follow_check_query,
-                                     (user_id, followee_id))
+            self.pl_utils._execute_db_command(follow_check_query,
+                                              (user_id, followee_id))
             follow_record = self.db_cursor.fetchone()
             if not follow_record:
                 return {
@@ -842,26 +687,29 @@ class Platform:
 
             # 在follow表中删除记录
             follow_delete_query = "DELETE FROM follow WHERE follow_id = ?"
-            self._execute_db_command(follow_delete_query, (follow_id, ),
-                                     commit=True)
+            self.pl_utils._execute_db_command(follow_delete_query,
+                                              (follow_id, ),
+                                              commit=True)
 
             # 更新user表中的following字段
             user_update_query1 = (
                 "UPDATE user SET num_followings = num_followings - 1 "
                 "WHERE user_id = ?")
-            self._execute_db_command(user_update_query1, (user_id, ),
-                                     commit=True)
+            self.pl_utils._execute_db_command(user_update_query1, (user_id, ),
+                                              commit=True)
 
             # 更新user表中的follower字段
             user_update_query2 = (
                 "UPDATE user SET num_followers = num_followers - 1 "
                 "WHERE user_id = ?")
-            self._execute_db_command(user_update_query2, (followee_id, ),
-                                     commit=True)
+            self.pl_utils._execute_db_command(user_update_query2,
+                                              (followee_id, ),
+                                              commit=True)
 
             # 记录操作到trace表
             action_info = {"followee_id": followee_id}
-            self._record_trace(user_id, ActionType.UNFOLLOW.value, action_info)
+            self.pl_utils._record_trace(user_id, ActionType.UNFOLLOW.value,
+                                        action_info)
             return {
                 "success": True,
                 "follow_id": follow_id  # 返回被删除的关注记录ID
@@ -873,13 +721,14 @@ class Platform:
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
             # 检查是否已经存在禁言记录
             mute_check_query = ("SELECT * FROM mute WHERE muter_id = ? AND "
                                 "mutee_id = ?")
-            self._execute_db_command(mute_check_query, (user_id, mutee_id))
+            self.pl_utils._execute_db_command(mute_check_query,
+                                              (user_id, mutee_id))
             if self.db_cursor.fetchone():
                 # 已存在禁言记录
                 return {
@@ -890,28 +739,29 @@ class Platform:
             mute_insert_query = (
                 "INSERT INTO mute (muter_id, mutee_id, created_at) "
                 "VALUES (?, ?, ?)")
-            self._execute_db_command(mute_insert_query,
-                                     (user_id, mutee_id, current_time),
-                                     commit=True)
+            self.pl_utils._execute_db_command(
+                mute_insert_query, (user_id, mutee_id, current_time),
+                commit=True)
             mute_id = self.db_cursor.lastrowid  # 获取刚刚插入的禁言记录的ID
 
             # 记录操作到trace表
             action_info = {"mutee_id": mutee_id}
-            self._record_trace(user_id, ActionType.MUTE.value, action_info,
-                               current_time)
+            self.pl_utils._record_trace(user_id, ActionType.MUTE.value,
+                                        action_info, current_time)
             return {"success": True, "mute_id": mute_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def unmute(self, agent_id: int, mutee_id: int):
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
             # 检查是否存在指定的禁言记录，并获取mute_id
             mute_check_query = (
                 "SELECT mute_id FROM mute WHERE muter_id = ? AND mutee_id = ?")
-            self._execute_db_command(mute_check_query, (user_id, mutee_id))
+            self.pl_utils._execute_db_command(mute_check_query,
+                                              (user_id, mutee_id))
             mute_record = self.db_cursor.fetchone()
             if not mute_record:
                 # 如果不存在禁言记录
@@ -920,12 +770,13 @@ class Platform:
 
             # 从mute表中删除指定的禁言记录
             mute_delete_query = ("DELETE FROM mute WHERE mute_id = ?")
-            self._execute_db_command(mute_delete_query, (mute_id, ),
-                                     commit=True)
+            self.pl_utils._execute_db_command(mute_delete_query, (mute_id, ),
+                                              commit=True)
 
             # 记录解除禁言操作到trace表
             action_info = {"mutee_id": mutee_id}
-            self._record_trace(user_id, ActionType.UNMUTE.value, action_info)
+            self.pl_utils._record_trace(user_id, ActionType.UNMUTE.value,
+                                        action_info)
             return {"success": True, "mute_id": mute_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -937,9 +788,9 @@ class Platform:
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
             # 计算搜索的起始时间
             start_time = current_time - timedelta(days=self.trend_num_days)
 
@@ -952,8 +803,9 @@ class Platform:
                 LIMIT ?
             """
             # 执行数据库查询
-            self._execute_db_command(sql_query, (start_time, self.trend_top_k),
-                                     commit=True)
+            self.pl_utils._execute_db_command(sql_query,
+                                              (start_time, self.trend_top_k),
+                                              commit=True)
             results = self.db_cursor.fetchall()
 
             # 如果没有找到结果，返回一个指示失败的字典
@@ -962,11 +814,12 @@ class Platform:
                     "success": False,
                     "message": "No trending posts in the specified period."
                 }
-            results_with_comments = self._add_comments_to_posts(results)
+            results_with_comments = self.pl_utils._add_comments_to_posts(
+                results)
 
             action_info = {"posts": results_with_comments}
-            self._record_trace(user_id, ActionType.TREND.value, action_info,
-                               current_time)
+            self.pl_utils._record_trace(user_id, ActionType.TREND.value,
+                                        action_info, current_time)
 
             return {"success": True, "posts": results_with_comments}
         except Exception as e:
@@ -977,23 +830,25 @@ class Platform:
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
 
             # 插入评论记录
             comment_insert_query = (
                 "INSERT INTO comment (post_id, user_id, content, created_at) "
                 "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(comment_insert_query,
-                                     (post_id, user_id, content, current_time),
-                                     commit=True)
+            self.pl_utils._execute_db_command(
+                comment_insert_query,
+                (post_id, user_id, content, current_time),
+                commit=True)
             comment_id = self.db_cursor.lastrowid
 
             # 准备trace记录的信息
             action_info = {"content": content, "comment_id": comment_id}
-            self._record_trace(user_id, ActionType.CREATE_COMMENT.value,
-                               action_info, current_time)
+            self.pl_utils._record_trace(user_id,
+                                        ActionType.CREATE_COMMENT.value,
+                                        action_info, current_time)
 
             return {"success": True, "comment_id": comment_id}
         except Exception as e:
@@ -1003,15 +858,16 @@ class Platform:
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
 
             # 检查是否已经存在点赞记录
             like_check_query = (
                 "SELECT * FROM comment_like WHERE comment_id = ? AND "
                 "user_id = ?")
-            self._execute_db_command(like_check_query, (comment_id, user_id))
+            self.pl_utils._execute_db_command(like_check_query,
+                                              (comment_id, user_id))
             if self.db_cursor.fetchone():
                 # 已存在点赞记录
                 return {
@@ -1021,7 +877,7 @@ class Platform:
 
             # 检查要点赞的评论是否是自己发布的
             if self.allow_self_rating is False:
-                check_result = self._check_self_comment_rating(
+                check_result = self.pl_utils._check_self_comment_rating(
                     comment_id, user_id)
                 if check_result:
                     return check_result
@@ -1030,16 +886,17 @@ class Platform:
             comment_update_query = (
                 "UPDATE comment SET num_likes = num_likes + 1 WHERE "
                 "comment_id = ?")
-            self._execute_db_command(comment_update_query, (comment_id, ),
-                                     commit=True)
+            self.pl_utils._execute_db_command(comment_update_query,
+                                              (comment_id, ),
+                                              commit=True)
 
             # 在comment_like表中添加记录
             like_insert_query = (
                 "INSERT INTO comment_like (comment_id, user_id, created_at) "
                 "VALUES (?, ?, ?)")
-            self._execute_db_command(like_insert_query,
-                                     (comment_id, user_id, current_time),
-                                     commit=True)
+            self.pl_utils._execute_db_command(
+                like_insert_query, (comment_id, user_id, current_time),
+                commit=True)
             comment_like_id = self.db_cursor.lastrowid  # 获取刚刚插入的点赞记录的ID
 
             # 记录操作到trace表
@@ -1047,23 +904,24 @@ class Platform:
                 "comment_id": comment_id,
                 "comment_like_id": comment_like_id
             }
-            self._record_trace(user_id, ActionType.LIKE_COMMENT.value,
-                               action_info, current_time)
+            self.pl_utils._record_trace(user_id, ActionType.LIKE_COMMENT.value,
+                                        action_info, current_time)
             return {"success": True, "comment_like_id": comment_like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def unlike_comment(self, agent_id: int, comment_id: int):
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
 
             # 检查是否已经存在点赞记录
             like_check_query = (
                 "SELECT * FROM comment_like WHERE comment_id = ? AND "
                 "user_id = ?")
-            self._execute_db_command(like_check_query, (comment_id, user_id))
+            self.pl_utils._execute_db_command(like_check_query,
+                                              (comment_id, user_id))
             result = self.db_cursor.fetchone()
 
             if not result:
@@ -1079,7 +937,7 @@ class Platform:
             comment_update_query = (
                 "UPDATE comment SET num_likes = num_likes - 1 WHERE "
                 "comment_id = ?")
-            self._execute_db_command(
+            self.pl_utils._execute_db_command(
                 comment_update_query,
                 (comment_id, ),
                 commit=True,
@@ -1087,7 +945,7 @@ class Platform:
             # 在comment_like表中删除记录
             like_delete_query = (
                 "DELETE FROM comment_like WHERE comment_like_id = ?")
-            self._execute_db_command(
+            self.pl_utils._execute_db_command(
                 like_delete_query,
                 (comment_like_id, ),
                 commit=True,
@@ -1097,8 +955,9 @@ class Platform:
                 "comment_id": comment_id,
                 "comment_like_id": comment_like_id
             }
-            self._record_trace(user_id, ActionType.UNLIKE_COMMENT.value,
-                               action_info)
+            self.pl_utils._record_trace(user_id,
+                                        ActionType.UNLIKE_COMMENT.value,
+                                        action_info)
             return {"success": True, "comment_like_id": comment_like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -1107,16 +966,16 @@ class Platform:
         current_time = self.sandbox_clock.time_transfer(
             datetime.now(), self.start_time)
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
 
             # 检查是否已经存在不喜欢记录
             dislike_check_query = (
                 "SELECT * FROM comment_dislike WHERE comment_id = ? AND "
                 "user_id = ?")
-            self._execute_db_command(dislike_check_query,
-                                     (comment_id, user_id))
+            self.pl_utils._execute_db_command(dislike_check_query,
+                                              (comment_id, user_id))
             if self.db_cursor.fetchone():
                 # 已存在不喜欢记录
                 return {
@@ -1126,7 +985,7 @@ class Platform:
 
             # 检查要点踩的评论是否是自己发布的
             if self.allow_self_rating is False:
-                check_result = self._check_self_comment_rating(
+                check_result = self.pl_utils._check_self_comment_rating(
                     comment_id, user_id)
                 if check_result:
                     return check_result
@@ -1135,16 +994,17 @@ class Platform:
             comment_update_query = (
                 "UPDATE comment SET num_dislikes = num_dislikes + 1 WHERE "
                 "comment_id = ?")
-            self._execute_db_command(comment_update_query, (comment_id, ),
-                                     commit=True)
+            self.pl_utils._execute_db_command(comment_update_query,
+                                              (comment_id, ),
+                                              commit=True)
 
             # 在comment_dislike表中添加记录
             dislike_insert_query = (
                 "INSERT INTO comment_dislike (comment_id, user_id, "
                 "created_at) VALUES (?, ?, ?)")
-            self._execute_db_command(dislike_insert_query,
-                                     (comment_id, user_id, current_time),
-                                     commit=True)
+            self.pl_utils._execute_db_command(
+                dislike_insert_query, (comment_id, user_id, current_time),
+                commit=True)
             comment_dislike_id = self.db_cursor.lastrowid  # 获取刚刚插入的不喜欢记录的ID
 
             # 记录操作到trace表
@@ -1152,24 +1012,25 @@ class Platform:
                 "comment_id": comment_id,
                 "comment_dislike_id": comment_dislike_id
             }
-            self._record_trace(user_id, ActionType.DISLIKE_COMMENT.value,
-                               action_info, current_time)
+            self.pl_utils._record_trace(user_id,
+                                        ActionType.DISLIKE_COMMENT.value,
+                                        action_info, current_time)
             return {"success": True, "comment_dislike_id": comment_dislike_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def undo_dislike_comment(self, agent_id: int, comment_id: int):
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
 
             # 检查是否已经存在不喜欢记录
             dislike_check_query = (
                 "SELECT comment_dislike_id FROM comment_dislike WHERE "
                 "comment_id = ? AND user_id = ?")
-            self._execute_db_command(dislike_check_query,
-                                     (comment_id, user_id))
+            self.pl_utils._execute_db_command(dislike_check_query,
+                                              (comment_id, user_id))
             dislike_record = self.db_cursor.fetchone()
             if not dislike_record:
                 # 不存在不喜欢记录
@@ -1183,38 +1044,40 @@ class Platform:
             dislike_delete_query = (
                 "DELETE FROM comment_dislike WHERE comment_id = ? AND "
                 "user_id = ?")
-            self._execute_db_command(dislike_delete_query,
-                                     (comment_id, user_id),
-                                     commit=True)
+            self.pl_utils._execute_db_command(dislike_delete_query,
+                                              (comment_id, user_id),
+                                              commit=True)
 
             # 更新comment表中的不喜欢数
             comment_update_query = (
                 "UPDATE comment SET num_dislikes = num_dislikes - 1 WHERE "
                 "comment_id = ?")
-            self._execute_db_command(comment_update_query, (comment_id, ),
-                                     commit=True)
+            self.pl_utils._execute_db_command(comment_update_query,
+                                              (comment_id, ),
+                                              commit=True)
 
             # 记录操作到trace表
             action_info = {
                 "comment_id": comment_id,
                 "comment_dislike_id": comment_dislike_id
             }
-            self._record_trace(user_id, ActionType.UNDO_DISLIKE_COMMENT.value,
-                               action_info)
+            self.pl_utils._record_trace(user_id,
+                                        ActionType.UNDO_DISLIKE_COMMENT.value,
+                                        action_info)
             return {"success": True, "comment_dislike_id": comment_dislike_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def do_nothing(self, agent_id: int):
         try:
-            user_id = self._check_agent_userid(agent_id)
+            user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
-                return self._not_signup_error_message(agent_id)
+                return self.pl_utils._not_signup_error_message(agent_id)
 
             # 记录操作到trace表
             action_info = {}
-            self._record_trace(user_id, ActionType.DO_NOTHING.value,
-                               action_info)
+            self.pl_utils._record_trace(user_id, ActionType.DO_NOTHING.value,
+                                        action_info)
             return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}

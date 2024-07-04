@@ -36,6 +36,7 @@ class MockChannel:
         self.messages.append(message)  # 存储消息以便后续断言
         if self.call_count == 1:
             # 对创建推文的成功消息进行断言
+            print(message[2])
             assert message[2]["success"] is True
             assert "user_id" in message[2]
         elif self.call_count == 2:
