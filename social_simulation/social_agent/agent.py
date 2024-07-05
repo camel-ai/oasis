@@ -38,7 +38,7 @@ class SocialAgent:
         )
 
         if model_type.is_open_source:
-            self.has_functionCall = False
+            self.has_function_call = False
             api_params = ChatGPTConfig(
                 temperature=0.0,
                 stop=stop_tokens,
@@ -49,7 +49,7 @@ class SocialAgent:
                 api_params=api_params,
             )
         else:
-            self.has_functionCall = True
+            self.has_function_call = True
             model_config = ChatGPTConfig(
                 temperature=0.0,
             )
@@ -85,7 +85,7 @@ class SocialAgent:
         openai_messages, num_tokens = self.memory.get_context()
         content = ""
 
-        if self.has_functionCall:
+        if self.has_function_call:
             response = self.model_backend.run(openai_messages)
             if response.choices[0].message.function_call:
                 action_name = response.choices[0].message.function_call.name
