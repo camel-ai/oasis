@@ -37,7 +37,7 @@ async def running(
     clock_factor: int = 60,
     recsys_type: str = "twitter",
     controllable_user: bool = False,
-    model_configs: dict = None,
+    model_configs: dict[str, Any] | None = None,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     csv_path = DEFAULT_CSV_PATH if csv_path is None else csv_path
