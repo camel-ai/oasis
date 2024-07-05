@@ -43,7 +43,7 @@ Your actions should be consistent with your self-description and personality.
 Your answer should follow the response format:
 
 {{
-    "reason": "your feeling about these tweets and users, then choose some functions based on the feeling",
+    "reason": "your feeling about these tweets and users, then choose some functions based on the feeling. Reasons and explanations can only appear here.",
     "functions": [{{
         "name": "Function name 1",
         "arguments": {{

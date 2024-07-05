@@ -37,6 +37,7 @@ async def running(
     clock_factor: int = 60,
     recsys_type: str = "twitter",
     controllable_user: bool = False,
+    model_configs: dict = None,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     csv_path = DEFAULT_CSV_PATH if csv_path is None else csv_path
@@ -54,13 +55,9 @@ async def running(
         recsys_type=recsys_type,
     )
     task = asyncio.create_task(infra.running())
-    if not controllable_user:
-        agent_graph = await generate_agents(csv_path, channel)
-    else:
-        agent_graph, agent_user_id_mapping = await \
-            generate_controllable_agents(channel, 1)
-        agent_graph = await generate_agents(csv_path, channel, agent_graph,
-                                            agent_user_id_mapping)
+
+    agent_graph = await generate_agents(csv_path, channel, model_configs)
+
     start_hour = 1
 
     for timestep in range(num_timesteps):
@@ -89,6 +86,8 @@ if __name__ == "__main__":
             cfg = safe_load(f)
         data_params = cfg.get("data")
         simulation_params = cfg.get("simulation")
-        asyncio.run(running(**data_params, **simulation_params))
+        model_configs = cfg.get("model")
+
+        asyncio.run(running(**data_params, **simulation_params, model_configs=model_configs))
     else:
         asyncio.run(running())

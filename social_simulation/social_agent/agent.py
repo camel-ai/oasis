@@ -41,7 +41,7 @@ class SocialAgent:
             self.has_functionCall = False
             api_params = ChatGPTConfig(
                 temperature=0.0,
-                # stop=stop_tokens,
+                stop=stop_tokens,
             )
             model_config = OpenSourceConfig(
                 model_path=model_path,
@@ -53,7 +53,6 @@ class SocialAgent:
             model_config = ChatGPTConfig(
                 temperature=0.0,
             )
-        print(model_type, model_path)
         self.model_backend: BaseModelBackend = ModelFactory.create(
             model_type, model_config.__dict__)
         self.model_token_limit = self.model_backend.token_limit
