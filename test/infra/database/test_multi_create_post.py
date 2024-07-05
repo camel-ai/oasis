@@ -1,12 +1,11 @@
-# File: ./test/infra/test_multi_create_tweet.py
 import os
 import os.path as osp
 import sqlite3
-from social_simulation.testing.show_db import print_db_contents
 
 import pytest
 
 from social_simulation.social_platform.platform import Platform
+from social_simulation.testing.show_db import print_db_contents
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -35,11 +34,11 @@ class MockChannel:
         self.messages.append(message)  # 存储消息以便后续断言
 
 
-def generate_user_actions(n_users, tweets_per_user):
+def generate_user_actions(n_users, posts_per_user):
     """
-    Generate a list of user actions for n users with different tweeting
-    behaviors. 1/3 of the users each sending m tweets, 1/3 sending 1 tweet,
-    and 1/3 not tweeting at all.
+    Generate a list of user actions for n users with different posting
+    behaviors. 1/3 of the users each sending m posts, 1/3 sending 1 post,
+    and 1/3 not posting at all.
     """
     actions = []
     users_per_group = n_users // 3
@@ -51,43 +50,43 @@ def generate_user_actions(n_users, tweets_per_user):
         actions.append((user_id, user_message, "sign_up"))
 
         if user_id <= users_per_group:
-            # This group of users sends m tweets each
-            for tweet_num in range(1, tweets_per_user + 1):
+            # This group of users sends m posts each
+            for post_num in range(1, posts_per_user + 1):
                 actions.append(
-                    (user_id, f"This is tweet {tweet_num} from User{user_id}",
-                     "create_tweet"))
+                    (user_id, f"This is post {post_num} from User{user_id}",
+                     "create_post"))
         elif user_id <= 2 * users_per_group:
-            # This group of users sends 1 tweet each
-            actions.append((user_id, f"This is tweet 1 from User{user_id}",
-                            "create_tweet"))
-        # The last group does not send any tweets
+            # This group of users sends 1 post each
+            actions.append(
+                (user_id, f"This is post 1 from User{user_id}", "create_post"))
+        # The last group does not send any posts
 
     return actions
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
+# 定义一个fixture来初始化数据库和Platform实例
 @pytest.fixture
-def setup_twitter():
+def setup_platform():
     # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
 
 @pytest.mark.asyncio
-async def test_signup_and_create_tweet(setup_twitter,
-                                       n_users=30,
-                                       tweets_per_user=4):
+async def test_signup_and_create_post(setup_platform,
+                                      n_users=30,
+                                      posts_per_user=4):
     try:
         # 为了简化模拟，假设n_users是3的倍数
         assert n_users % 3 == 0, "n_users should be a multiple of 3."
 
-        # Generate user actions based on n_users and tweets_per_user
-        user_actions = generate_user_actions(n_users, tweets_per_user)
+        # Generate user actions based on n_users and posts_per_user
+        user_actions = generate_user_actions(n_users, posts_per_user)
 
         mock_channel = MockChannel(user_actions)
-        twitter_instance = Platform(test_db_filepath, mock_channel)
+        platform_instance = Platform(test_db_filepath, mock_channel)
 
-        await twitter_instance.running()
+        await platform_instance.running()
 
         # 验证数据库中是否正确插入了数据
         conn = sqlite3.connect(test_db_filepath)
@@ -99,12 +98,12 @@ async def test_signup_and_create_tweet(setup_twitter,
         assert len(users) == n_users, ("The number of users in the database"
                                        "should match n_users.")
 
-        # 验证推文(tweet)表是否正确插入了数据
-        cursor.execute("SELECT * FROM tweet")
-        tweets = cursor.fetchall()
-        expected_tweets = (n_users // 3) * tweets_per_user + (n_users // 3)
-        assert len(tweets) == expected_tweets, (
-            "The number of tweets should match the expected value.")
+        # 验证推文(post)表是否正确插入了数据
+        cursor.execute("SELECT * FROM post")
+        posts = cursor.fetchall()
+        expected_posts = (n_users // 3) * posts_per_user + (n_users // 3)
+        assert len(posts) == expected_posts, (
+            "The number of posts should match the expected value.")
 
         conn.close()
         print_db_contents(test_db_filepath)

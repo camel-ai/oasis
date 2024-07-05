@@ -9,11 +9,11 @@ def test_transfer_to_openai_function():
     action_funcs: List[OpenAIFunction] = [
         OpenAIFunction(func) for func in [
             SocialAction.sign_up, SocialAction.refresh,
-            SocialAction.create_tweet, SocialAction.like, SocialAction.unlike,
+            SocialAction.create_post, SocialAction.like, SocialAction.unlike,
             SocialAction.dislike, SocialAction.undo_dislike,
-            SocialAction.search_tweets, SocialAction.search_user,
+            SocialAction.search_posts, SocialAction.search_user,
             SocialAction.follow, SocialAction.unfollow, SocialAction.mute,
-            SocialAction.unmute, SocialAction.trend, SocialAction.retweet,
+            SocialAction.unmute, SocialAction.trend, SocialAction.repost,
             SocialAction.create_comment, SocialAction.like_comment,
             SocialAction.unlike_comment, SocialAction.dislike_comment,
             SocialAction.undo_dislike_comment, SocialAction.do_nothing

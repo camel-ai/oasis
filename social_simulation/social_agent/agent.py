@@ -48,10 +48,10 @@ class SocialAgent:
         user_msg = BaseMessage.make_user_message(
             role_name="User",
             content=(
-                f"Please perform twitter actions after observing the twitter "
-                f"environments. Notice that don't limit your actions for "
-                f"example to just like the tweets. "
-                f"Here is your twitter environment: {env_prompt}"),
+                f"Please perform social media actions after observing the "
+                f"platform environments. Notice that don't limit your actions "
+                f"for example to just like the posts. "
+                f"Here is your social media environment: {env_prompt}"),
         )
         await self.chat_agent.step_async(user_msg)
         record = self.chat_agent.memory.retrieve()[-1].memory_record

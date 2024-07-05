@@ -105,7 +105,7 @@ async def generate_agents(
             previous_tweets = ast.literal_eval(
                 agent_info['previous_tweets'][i])
             for tweet in previous_tweets:
-                await agent.env.action.create_tweet(tweet)
+                await agent.env.action.create_post(tweet)
     return agent_graph
 
 
