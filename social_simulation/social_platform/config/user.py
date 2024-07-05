@@ -12,21 +12,55 @@ class UserInfo:
     is_controllable: bool = False
 
     def to_system_message(self) -> str:
+        name_string = ""
         if self.name is not None:
-            name_string = f"You are a twitter user with name {self.name}."
-        else:
-            name_string = "You are a twitter user without specifying a name."
+            name_string = f"Your name is {self.name}."
+        description_string = ""
         if self.profile['other_info']['user_profile'] is not None:
             user_profile = self.profile['other_info']['user_profile']
             description_string = f"Your have profile: {user_profile}."
-        else:
-            description_string = "Your don't specify any profile."
-        # Allowed actions except for the SIGN_UP
-        valid_actions = [
-            f"action_{action_type.value}" for action_type in list(ActionType)
-            if action_type != ActionType.SIGNUP
-        ]
-        valid_action_string = ", ".join(valid_actions)
-        action_string = (f"Remember each time you need to choose one twitter "
-                         f"action from following list: {valid_action_string}.")
-        return f"{name_string} {description_string} {action_string}"
+        description = f"{name_string}\n{description_string}"
+
+        system_content = f"""
+# OBJECTIVE
+You're a Twitter user, and I'll present you with some tweets. After you see the tweets, choose some actions from the following functions.
+
+- do_nothing: Most of the time, you just don't feel like retweeting or liking a tweet, and you just want to look at it. In such cases, choose this action "do_nothing"
+- retweet: Retweet a tweet.
+    - Arguments: "tweet_id" (integer) - The ID of the tweet to be retweeted. You can `retweet` when you want to spread it.
+- like: Likes a specified tweet.
+    - Arguments: "tweet_id" (integer) - The ID of the tweet to be liked. You can `like` when you feel something interesting or you agree with.
+- follow: Follow a user specified by 'followee_id'. You can `follow' when you respect someone, love someone, or care about someone.
+    - Arguments: "followee_id" (integer) - The ID of the user to be followed.
+
+
+# SELF-DESCRIPTION
+Your actions should be consistent with your self-description and personality.
+
+{description}
+
+# RESPONSE FORMAT
+Your answer should follow the response format:
+
+{{
+    "reason": "your feeling about these tweets and users, then choose some functions based on the feeling",
+    "functions": [{{
+        "name": "Function name 1",
+        "arguments": {{
+            "argument_1": "Function argument",
+            "argument_2": "Function argument"
+        }}
+    }}, {{
+        "name": "Function name 2",
+        "arguments": {{
+            "argument_1": "Function argument",
+            "argument_2": "Function argument"
+        }}
+    }}]
+}}
+
+Ensure that your output can be directly converted into **JSON format**, and avoid outputting anything unnecessary! Don't forget the key `name`.
+        """
+
+        return system_content
+    

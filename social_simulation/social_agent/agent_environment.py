@@ -20,11 +20,10 @@ class SocialEnvironment(Environment):
     followers_env_template = Template("I have $num_followers followers.")
     follows_env_template = Template("I have $num_follows follows.")
     tweets_env_template = Template(
-        "Here are the tweets available after refreshing:"
-        "\n$tweets.")
-    env_template = Template("Followers: $followers_env\n"
-                            "Follows: $follows_env\n"
-                            "Tweets: $tweets_env")
+        "After refreshing, you see some tweets $tweets")
+    env_template = Template("$tweets_env\npick one you want to perform action that best "
+                            "reflects your current inclination based on your profile and "
+                            "tweets content. Do not limit your action in just `like` to like tweets")
 
     def __init__(self, action: SocialAction):
         self.action = action
