@@ -54,7 +54,7 @@ async def generate_agents(
     assert len(model_indices) == len(agent_info), \
         f"Mismatch between the number of agents and the number of models, with {len(agent_info)} agents and {len(model_indices)} models."
 
-    temp = list(agent_info["activity_level_frequency"])
+    freq = list(agent_info["activity_level_frequency"])
     all_freq = np.array([ast.literal_eval(fre) for fre in temp])
     normalized_prob =  all_freq / np.max(all_freq)
     normalized_prob[normalized_prob < 0.6] += 0.1
