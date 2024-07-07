@@ -19,6 +19,7 @@ class Environment(ABC):
 class SocialEnvironment(Environment):
     followers_env_template = Template("I have $num_followers followers.")
     follows_env_template = Template("I have $num_follows follows.")
+
     tweets_env_template = Template(
         "After refreshing, you see some tweets $tweets")
     env_template = Template("$tweets_env\npick one you want to perform action that best "
@@ -28,15 +29,15 @@ class SocialEnvironment(Environment):
     def __init__(self, action: SocialAction):
         self.action = action
 
-    async def get_tweets_env(self) -> str:
-        tweets = await self.action.refresh()
-        # TODO: Replace tweets json format string to other formats
-        if tweets["success"]:
-            tweets_env = json.dumps(tweets["tweets"], indent=4)
-            tweets_env = self.tweets_env_template.substitute(tweets=tweets_env)
+    async def get_posts_env(self) -> str:
+        posts = await self.action.refresh()
+        # TODO: Replace posts json format string to other formats
+        if posts["success"]:
+            posts_env = json.dumps(posts["posts"], indent=4)
+            posts_env = self.posts_env_template.substitute(posts=posts_env)
         else:
-            tweets_env = "After refreshing, there are no existing tweets."
-        return tweets_env
+            posts_env = "After refreshing, there are no existing posts."
+        return posts_env
 
     async def get_followers_env(self) -> str:
         # TODO: Implement followers env
@@ -48,7 +49,7 @@ class SocialEnvironment(Environment):
 
     async def to_text_prompt(
         self,
-        include_tweets: bool = True,
+        include_posts: bool = True,
         include_followers: bool = False,
         include_follows: bool = False,
     ) -> str:
@@ -56,10 +57,10 @@ class SocialEnvironment(Environment):
         ) if include_follows else "No followers."
         follows_env = await self.get_follows_env(
         ) if include_followers else "No follows."
-        tweets_env = await self.get_tweets_env() if include_tweets else ""
+        posts_env = await self.get_posts_env() if include_posts else ""
 
         return self.env_template.substitute(
             followers_env=followers_env,
             follows_env=follows_env,
-            tweets_env=tweets_env,
+            posts_env=posts_env,
         )

@@ -17,27 +17,24 @@ class MockChannel:
         self.messages = []  # 用于存储发送的消息
 
     async def receive_from(self):
-        # 第1次调用返回创建推文的指令
+        # 第一次调用返回创建推文的指令
         if self.call_count == 0:
             self.call_count += 1
-            return ('id_', (1, "Test tweet", "create_tweet"))
-        # 第2次调用返回创建评论的指令
-        if self.call_count == 1:
+            return ('id_', (1, "This is a test post", "create_post"))
+        # 第二次调用返回点赞操作的指令
+        elif self.call_count == 1:
             self.call_count += 1
-            return ('id_', (1, (1, "Test Comment"), "create_comment"))
-        # 第3次调用返回点赞评论的指令
-        if self.call_count == 2:
+            return ('id_', (1, 1, "like"))
+        elif self.call_count == 2:
             self.call_count += 1
-            return ('id_', (1, 1, "like_comment"))
-        if self.call_count == 3:
+            return ('id_', (2, 1, "like"))
+        elif self.call_count == 3:
             self.call_count += 1
-            return ('id_', (2, 1, "like_comment"))
-        if self.call_count == 4:
+            return ('id_', (1, 1, "dislike"))
+        elif self.call_count == 4:
             self.call_count += 1
-            return ('id_', (1, 1, "dislike_comment"))
-        if self.call_count == 5:
-            self.call_count += 1
-            return ('id_', (2, 1, "dislike_comment"))
+            return ('id_', (2, 1, "dislike"))
+        # 返回退出指令
         else:
             return ('id_', (None, None, "exit"))
 
@@ -46,33 +43,27 @@ class MockChannel:
         if self.call_count == 1:
             # 对创建推文的成功消息进行断言
             assert message[2]["success"] is True
-            assert "tweet_id" in message[2]
+            assert "post_id" in message[2]
         elif self.call_count == 2:
             # 对点赞操作的成功消息进行断言
-            assert message[2]["success"] is True
-            assert "comment_id" in message[2]
+            assert message[2]["success"] is False
+            assert message[2]["error"] == (
+                'Users are not allowed to like/dislike their own posts.')
         elif self.call_count == 3:
-            assert message[2]["success"] is False
-            assert message[2]["error"] == (
-                'Users are not allowed to like/dislike their own comments.')
+            assert message[2]["success"] is True
+            assert "like_id" in message[2]
         elif self.call_count == 4:
-            # 对点赞操作的成功消息进行断言
-            assert message[2]["success"] is True
-            assert "comment_like_id" in message[2]
-        elif self.call_count == 5:
-            # 对取消点赞操作的成功消息进行断言
             assert message[2]["success"] is False
             assert message[2]["error"] == (
-                'Users are not allowed to like/dislike their own comments.')
-        elif self.call_count == 6:
+                'Users are not allowed to like/dislike their own posts.')
+        elif self.call_count == 5:
             # 对点赞操作的成功消息进行断言
             assert message[2]["success"] is True
-            assert "comment_dislike_id" in message[2]
+            assert "dislike_id" in message[2]
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
-def setup_twitter():
+def setup_platform():
     # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
@@ -80,16 +71,15 @@ def setup_twitter():
     # 创建数据库和表
     db_path = test_db_filepath
 
-    # 初始化Twitter实例
     mock_channel = MockChannel()
-    twitter_instance = Platform(db_path, mock_channel, allow_self_rating=False)
-    return twitter_instance
+    instance = Platform(db_path, mock_channel, allow_self_rating=False)
+    return instance
 
 
 @pytest.mark.asyncio
-async def test_comment(setup_twitter):
+async def test_create_repost_like_unlike_post(setup_platform):
     try:
-        twitter = setup_twitter
+        platform = setup_platform
 
         # 在测试开始之前，将2个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
@@ -104,7 +94,7 @@ async def test_comment(setup_twitter):
              "VALUES (?, ?, ?, ?, ?)"), (2, 2, "user2", 2, 4))
         conn.commit()
 
-        await twitter.running()
+        await platform.running()
 
     finally:
         # 清理

@@ -20,7 +20,7 @@ class MockChannel:
         # 第一次调用返回创建推文的指令
         if self.call_count == 0:
             self.call_count += 1
-            return ('id_', (1, "This is a test tweet", "create_tweet"))
+            return ('id_', (1, "This is a test post", "create_post"))
         # 第二次调用返回点赞操作的指令
         elif self.call_count == 1:
             self.call_count += 1
@@ -43,7 +43,7 @@ class MockChannel:
         # 调用返回转推操作的指令
         elif self.call_count == 7:
             self.call_count += 1
-            return ('id_', (2, 1, "retweet"))
+            return ('id_', (2, 1, "repost"))
         # 返回退出指令
         else:
             return ('id_', (None, None, "exit"))
@@ -53,7 +53,7 @@ class MockChannel:
         if self.call_count == 1:
             # 对创建推文的成功消息进行断言
             assert message[2]["success"] is True
-            assert "tweet_id" in message[2]
+            assert "post_id" in message[2]
         elif self.call_count == 2:
             # 对点赞操作的成功消息进行断言
             assert message[2]["success"] is True
@@ -77,12 +77,11 @@ class MockChannel:
         elif self.call_count == 8:
             # 对转推的成功消息进行断言
             assert message[2]["success"] is True
-            assert "tweet_id" in message[2]
+            assert "post_id" in message[2]
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
-def setup_twitter():
+def setup_platform():
     # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
@@ -90,16 +89,15 @@ def setup_twitter():
     # 创建数据库和表
     db_path = test_db_filepath
 
-    # 初始化Twitter实例
     mock_channel = MockChannel()
-    twitter_instance = Platform(db_path, mock_channel)
-    return twitter_instance
+    instance = Platform(db_path, mock_channel)
+    return instance
 
 
 @pytest.mark.asyncio
-async def test_create_retweet_like_unlike_tweet(setup_twitter):
+async def test_create_repost_like_unlike_post(setup_platform):
     try:
-        twitter = setup_twitter
+        platform = setup_platform
 
         # 在测试开始之前，将2个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
@@ -114,27 +112,27 @@ async def test_create_retweet_like_unlike_tweet(setup_twitter):
              "VALUES (?, ?, ?, ?, ?)"), (2, 2, "user2", 2, 4))
         conn.commit()
 
-        await twitter.running()
+        await platform.running()
 
         # 验证数据库中是否正确插入了数据
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
 
-        # 验证推文表(tweet)是否正确插入了数据
-        cursor.execute("SELECT * FROM tweet")
-        tweets = cursor.fetchall()
-        assert len(tweets) == 2  # 一条test tweet，一条retweet
-        tweet = tweets[0]
-        assert tweet[1] == 1  # 假设用户ID是1
-        assert tweet[2] == "This is a test tweet"
-        assert tweet[4] == 1  # num_likes
-        assert tweet[5] == 1  # num_dislikes
+        # 验证推文表(post)是否正确插入了数据
+        cursor.execute("SELECT * FROM post")
+        posts = cursor.fetchall()
+        assert len(posts) == 2  # 一条test post，一条repost
+        post = posts[0]
+        assert post[1] == 1  # 假设用户ID是1
+        assert post[2] == "This is a test post"
+        assert post[4] == 1  # num_likes
+        assert post[5] == 1  # num_dislikes
 
-        retweet = tweets[1]
-        rt_content = ("user2 retweet from user1. "
-                      "original_tweet: This is a test tweet")
-        assert retweet[1] == 2  # 转发用户ID为2
-        assert retweet[2] == rt_content
+        repost = posts[1]
+        rt_content = ("user2 repost from user1. "
+                      "original_post: This is a test post")
+        assert repost[1] == 2  # 转发用户ID为2
+        assert repost[2] == rt_content
 
         # 验证like表是否正确插入了数据
         cursor.execute("SELECT * FROM like")
@@ -147,40 +145,40 @@ async def test_create_retweet_like_unlike_tweet(setup_twitter):
         assert len(dislikes) == 1
 
         # 验证跟踪表(trace)是否正确记录了创建推文和点赞操作
-        cursor.execute("SELECT * FROM trace WHERE action='create_tweet'")
-        assert cursor.fetchone() is not None, "Create tweet action not traced"
+        cursor.execute("SELECT * FROM trace WHERE action='create_post'")
+        assert cursor.fetchone() is not None, "Create post action not traced"
 
-        cursor.execute("SELECT * FROM trace WHERE action='retweet'")
-        assert cursor.fetchone() is not None, "Retweet action not traced"
+        cursor.execute("SELECT * FROM trace WHERE action='repost'")
+        assert cursor.fetchone() is not None, "Repost action not traced"
 
         cursor.execute("SELECT * FROM trace WHERE action='like'")
         results = cursor.fetchall()
-        assert results is not None, "Like tweet action not traced"
+        assert results is not None, "Like post action not traced"
         assert len(results) == 2
 
         cursor.execute("SELECT * FROM trace WHERE action='unlike'")
         results = cursor.fetchall()
-        assert results is not None, "Unlike tweet action not traced"
+        assert results is not None, "Unlike post action not traced"
         assert results[0][0] == 2  # `user_id`
-        assert results[0][-1] == "{'tweet_id': 1, 'like_id': 2}"
+        assert results[0][-1] == '{"post_id": 1, "like_id": 2}'
 
         cursor.execute("SELECT * FROM trace WHERE action='dislike'")
         results = cursor.fetchall()
-        assert results is not None, "Dislike tweet action not traced"
+        assert results is not None, "Dislike post action not traced"
         assert len(results) == 2
 
         cursor.execute("SELECT * FROM trace WHERE action='undo_dislike'")
         results = cursor.fetchall()
-        assert results is not None, "Undo dislike tweet action not traced"
+        assert results is not None, "Undo dislike post action not traced"
         assert results[0][0] == 2  # `user_id`
-        assert results[0][-1] == "{'tweet_id': 1, 'dislike_id': 2}"
+        assert results[0][-1] == '{"post_id": 1, "dislike_id": 2}'
 
         # 验证点赞表(like)是否正确插入了数据
-        cursor.execute("SELECT * FROM like WHERE tweet_id=1 AND user_id=1")
+        cursor.execute("SELECT * FROM like WHERE post_id=1 AND user_id=1")
         assert cursor.fetchone() is not None, "Like record not found"
 
         # 验证点踩表(dislike)是否正确插入了数据
-        cursor.execute("SELECT * FROM dislike WHERE tweet_id=1 AND user_id=1")
+        cursor.execute("SELECT * FROM dislike WHERE post_id=1 AND user_id=1")
         assert cursor.fetchone() is not None, "Like record not found"
 
     finally:

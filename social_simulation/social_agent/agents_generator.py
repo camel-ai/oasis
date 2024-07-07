@@ -109,6 +109,7 @@ async def generate_agents(
         if len(agent_info['previous_tweets']) != 0:
             previous_tweets = ast.literal_eval(
                 agent_info['previous_tweets'][i])
+
             tweet_tasks = [
                 agent.env.action.create_tweet(tweet)
                 for tweet in previous_tweets
