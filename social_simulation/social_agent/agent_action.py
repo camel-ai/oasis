@@ -15,18 +15,17 @@ class SocialAction:
     def get_openai_function_list(self) -> list[OpenAIFunction]:
         return [
             OpenAIFunction(func) for func in [
-                self.create_post, self.follow, self.unfollow, self.like,
-                self.unlike, self.dislike, self.undo_dislike,
-                self.search_posts, self.search_user, self.trend, self.refresh,
-                self.mute, self.unmute, self.repost, self.create_comment,
-                self.like_comment, self.unlike_comment, self.dislike_comment,
-                self.undo_dislike_comment, self.do_nothing
+                self.create_tweet, self.follow,
+                self.unfollow, self.like, self.unlike,
+                self.search_tweets, self.search_user,
+                self.trend, self.refresh, self.mute,
+                self.unmute, self.retweet, self.do_nothing
             ]
         ]
 
-    async def perform_action(self, message: Any, action_type: str):
+    async def perform_action(self, message: Any, type: str):
         message_id = await self.channel.write_to_receive_queue(
-            (self.agent_id, message, action_type))
+            (self.agent_id, message, type))
         response = await self.channel.read_from_send_queue(message_id)
         return response[2]
 
@@ -96,8 +95,18 @@ class SocialAction:
         """
         return await self.perform_action(None, ActionType.REFRESH.value)
 
+    async def do_nothing(self):
+        """Performs no action and returns nothing.
+        Returns:
+            dict: A dictionary with 'success' indicating if the removal was
+                successful.
+            Example of a successful return:
+                {"success": True}
+        """
+        return await self.perform_action(None, ActionType.DO_NOTHING.value)
+
     async def create_post(self, content: str):
-        r"""Creates a new post with the given content.
+        r"""Creates a new tweet with the given content.
 
         This method invokes an asynchronous action to create a new post based
         on the provided content. Upon successful execution, it returns a
@@ -560,15 +569,5 @@ class SocialAction:
         """
         return await self.perform_action(comment_id,
                                          ActionType.UNDO_DISLIKE_COMMENT.value)
-
-    async def do_nothing(self):
-        """Performs no action and returns nothing.
-
-        Returns:
-            dict: A dictionary with 'success' indicating if the removal was
-                successful.
-
-            Example of a successful return:
-                {"success": True}
-        """
-        return await self.perform_action(None, ActionType.DO_NOTHING.value)
+      
+    
