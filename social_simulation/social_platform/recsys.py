@@ -9,30 +9,43 @@ from .typing import ActionType, RecsysType
 import numpy as np
 from yaml import safe_load
 import torch
-
-# init model
-with open("scripts/twitter.yaml", "r") as f:
-    cfg = safe_load(f)
-recsys_type = cfg.get("simulation").get("recsys_type")
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+from sentence_transformers import SentenceTransformer
+from transformers import AutoTokenizer, AutoModel
+from .process_recsys_tweets import generate_tweet_vector
+from sklearn.metrics.pairwise import cosine_similarity
 
 
-if recsys_type == RecsysType.TWITTER:
-    from sentence_transformers import SentenceTransformer
+def load_model(model_name):
     try:
-        model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if model_name == 'paraphrase-MiniLM-L6-v2':
+            return SentenceTransformer(model_name, device=device, cache_folder="./models")
+        elif model_name == 'Twitter/twhin-bert-base':
+            tokenizer = AutoTokenizer.from_pretrained(model_name, model_max_length=512)
+            model = AutoModel.from_pretrained(model_name, cache_dir="./models").to(device)
+            return tokenizer, model
+        else:
+            raise ValueError(f"Unknown model name: {model_name}")
     except Exception as e:
-        print(e)
-        model = None
-elif recsys_type == RecsysType.TWHIN:
-    from transformers import AutoTokenizer, AutoModel
-    from .process_recsys_tweets import generate_tweet_vector
-    from sklearn.metrics.pairwise import cosine_similarity
-    try:
-        twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base" , model_max_length=512 )
-        twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base").to(device)
-    except Exception as e:
-        print(e)
+        raise Exception(f"Failed to load the model: {model_name}") from e
+
+def get_recsys_model(config_path="scripts/twitter.yaml", recsys_type:str=None):
+    if recsys_type == None:
+        with open(config_path, "r") as f:
+            cfg = safe_load(f)
+        recsys_type = cfg.get("simulation").get("recsys_type")
+    if recsys_type == RecsysType.TWITTER.value:
+        model = load_model('paraphrase-MiniLM-L6-v2')
+        return model
+    elif recsys_type == RecsysType.TWHIN.value:
+        twhin_tokenizer, twhin_model = load_model("Twitter/twhin-bert-base")
+        models = (twhin_tokenizer, twhin_model)
+        return models
+    elif recsys_type == RecsysType.REDDIT.value or recsys_type == RecsysType.RANDOM.value:
+        return None
+    else:
+        raise ValueError(f"Unknown recsys type: {recsys_type}")
+
 
 def rec_sys_random(user_table: List[Dict[str,
                                          Any]], tweet_table: List[Dict[str,
@@ -96,9 +109,9 @@ def calculate_hot_score(num_likes: int, num_dislikes: int,
     seconds = epoch_seconds_result - 1134028003
     return round(sign * order + seconds / 45000, 7)
 
-def get_recommendations(user_index, cosine_similarities, items, top_n = 100):
+def get_recommendations(user_index:int, cosine_similarities:List[List], items:Dict, top_k = 100):
     similarities = np.array(cosine_similarities[user_index])
-    top_item_indices = similarities.argsort()[::-1][:top_n]
+    top_item_indices = similarities.argsort()[::-1][:top_k]
     recommended_items = [(list(items.keys())[i], similarities[i]) for i in top_item_indices]
     return recommended_items
 
@@ -146,7 +159,6 @@ def rec_sys_reddit(tweet_table: List[Dict[str, Any]], rec_matrix: List[List],
 
     return new_rec_matrix
 
-
 def rec_sys_personalized(user_table: List[Dict[str, Any]],
                          tweet_table: List[Dict[str, Any]],
                          trace_table: List[Dict[str,
@@ -167,6 +179,8 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
     """
     # 获取所有推文的ID
     tweet_ids = [tweet['tweet_id'] for tweet in tweet_table]
+
+    model = get_recsys_model(recsys_type="twitter")
 
     if len(tweet_ids) <= max_rec_tweet_len:
         # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
@@ -219,6 +233,9 @@ def rec_sys_personalized_twh(
     # 获取 id: content dict
     items = {tweet['tweet_id']: tweet['content'] for tweet in tweet_table}
 
+    model = get_recsys_model(recsys_type="twhin-bert")
+    (twhin_tokenizer, twhin_model)  = model
+
     if len(tweet_ids) <= max_rec_tweet_len:
         # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
         rec_matrix = [tweet_ids] * (len(rec_matrix) - 1)
@@ -235,7 +252,8 @@ def rec_sys_personalized_twh(
         user_profiles = [profile if profile is not None else 'This user does not have profile' for profile in user_profiles]
         
         # user_id - 1 = agent_id
-        user_previous_tweet =  {tweet['user_id']-1: tweet['content'] for tweet in tweet_table} # 获取每个用户最近发的一条推特，根据最近发的推特进行推荐（这里面可以）
+        # 获取每个用户最近发的一条推特，根据最近发的推特进行推荐（这里面可以）
+        user_previous_tweet =  {tweet['user_id']-1: tweet['content'] for tweet in tweet_table} 
         # user_profiles.update(user_previous_tweet)
         # print(len(user_previous_tweet))
         for tweet_user_index in user_previous_tweet:
@@ -245,6 +263,7 @@ def rec_sys_personalized_twh(
                 print("update previous tweet failed")
 
         corpus = user_profiles + list(items.values())
+        
         all_tweet_vector = generate_tweet_vector(twhin_model, twhin_tokenizer, corpus, batch_size=1000) 
         all_tweet_vector_list = [all_tweet_vector[i] for i in range(all_tweet_vector.size(0))] 
         user_vector = all_tweet_vector_list[:len(user_profiles)]
@@ -252,10 +271,10 @@ def rec_sys_personalized_twh(
         cosine_similarities = cosine_similarity(user_vector, item_vector)
 
         for user_index, profile in enumerate(user_profiles):
-            rec_items = get_recommendations(user_index, cosine_similarities, items, top_n=max_rec_tweet_len)
+            rec_items = get_recommendations(user_index, cosine_similarities, items, top_k=max_rec_tweet_len)
             new_rec_ids = [item for item, _ in rec_items]
             new_rec_matrix.append(new_rec_ids)
-                
+
     return new_rec_matrix
 
 def normalize_similarity_adjustments(tweet_scores, base_similarity,
@@ -367,6 +386,7 @@ def rec_sys_personalized_with_trace(
     """
     # 获取所有推文的ID
     tweet_ids = [tweet['tweet_id'] for tweet in tweet_table]
+    model = get_recsys_model()
     if len(tweet_ids) <= max_rec_tweet_len:
         # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
         new_rec_matrix = [tweet_ids] * (len(rec_matrix) - 1)

@@ -516,7 +516,11 @@ class Platform:
                 return {"success": False, "error": "Tweet not found."}
 
             prev_content = results[0][2]
-            orig_content = prev_content.split("original_tweet: ")[-1]
+            if "original_tweet: " in prev_content:
+                orig_content = prev_content.split("original_tweet: ")[-1]
+            else:
+                orig_content = prev_content
+            orig_content = f"%{orig_content}%"
             prev_like = results[0][-1]
             prev_user_id = results[0][1]
             
@@ -528,8 +532,8 @@ class Platform:
 
             # 确保相关内容此前未被该用户转发过
             retweet_check_query = (
-                "SELECT * FROM 'tweet' WHERE content LIKE ? ")
-            self._execute_db_command(retweet_check_query, ("%"+orig_content+"%", ))
+                "SELECT * FROM 'tweet' WHERE content LIKE ? AND user_id = ?")
+            self._execute_db_command(retweet_check_query, (orig_content,user_id ))
             if self.db_cursor.fetchone():
                 # 该用户存在转发记录
                 return {
