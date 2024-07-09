@@ -3,11 +3,11 @@ from __future__ import annotations
 import inspect
 import json
 
-from camel.agents import ChatAgent
 from camel.configs import ChatGPTConfig, OpenSourceConfig
-from camel.memories import ScoreBasedContextCreator, ChatHistoryMemory, MemoryRecord
+from camel.memories import (ChatHistoryMemory, MemoryRecord,
+                            ScoreBasedContextCreator)
 from camel.messages import BaseMessage
-from camel.models import OpenAIModel, OpenSourceModel, BaseModelBackend, ModelFactory
+from camel.models import BaseModelBackend, ModelFactory
 from camel.types import ModelType, OpenAIBackendRole
 from colorama import Fore, Style
 
@@ -18,15 +18,18 @@ from social_simulation.social_platform.config import UserInfo
 
 
 class SocialAgent:
+
     def __init__(
-            self,
-            agent_id: int,
-            user_info: UserInfo,
-            channel: Channel,
-            model_path: str = "/mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct",
-            server_url: str = "http://10.140.0.144:8000/v1",
-            stop_tokens: list[str] = None,
-            model_type: ModelType = ModelType.LLAMA_3,
+        self,
+        agent_id: int,
+        user_info: UserInfo,
+        channel: Channel,
+        model_path:
+        str = "/mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct",  # noqa
+        server_url: str = "http://10.140.0.144:8000/v1",
+        stop_tokens: list[str] = None,
+        model_type: ModelType = ModelType.LLAMA_3,
+        temperature: float = 0.0,
     ):
         self.agent_id = agent_id
         self.user_info = user_info
@@ -40,7 +43,7 @@ class SocialAgent:
         if model_type.is_open_source:
             self.has_function_call = False
             api_params = ChatGPTConfig(
-                temperature=0.0,
+                temperature=temperature,
                 stop=stop_tokens,
             )
             model_config = OpenSourceConfig(
@@ -51,7 +54,8 @@ class SocialAgent:
         else:
             self.has_function_call = True
             model_config = ChatGPTConfig(
-                temperature=0.0,
+                temperature=temperature,
+                # tools=self.env.action.get_openai_function_list(),
             )
         self.model_backend: BaseModelBackend = ModelFactory.create(
             model_type, model_config.__dict__)
@@ -79,8 +83,11 @@ class SocialAgent:
                 f"for example to just like the posts. "
                 f"Here is your social media environment: {env_prompt}"),
         )
-        self.memory.write_record(MemoryRecord(user_msg,
-                                              OpenAIBackendRole.USER))
+        self.memory.write_record(
+            MemoryRecord(
+                user_msg,
+                OpenAIBackendRole.USER,
+            ))
 
         openai_messages, num_tokens = self.memory.get_context()
         content = ""
@@ -162,7 +169,6 @@ class SocialAgent:
         if not 0 <= selection < len(function_list):
             print("Invalid input. Please enter a number.")
             return
-
         func = function_list[selection].func
 
         params = inspect.signature(func).parameters
@@ -176,7 +182,6 @@ class SocialAgent:
                 except ValueError:
                     print("Invalid input, please enter an integer.")
 
-        # 调用函数并传入用户输入的参数
         result = await func(*args)
         return result
 

@@ -1,0 +1,31 @@
+data:
+  db_path: null
+  csv_path: null
+simulation:
+  num_timesteps: 3
+  clock_factor: 60
+  recsys_type: "twitter"
+model:
+  num_agents: 26
+  model_random_seed: 42
+  cfgs:
+    - model_type: "llama-3"
+      num: 16
+      server_url: "http://{ip address}:{port number}/v1" # eg, http://10.160.2.154:8000/v1
+      model_path: "/your/path/to/llama-3"
+      stop_tokens: []
+      temperature: 0.0
+    - model_type: "internlm-chat-20b"
+      num: 5
+      server_url: "http://{ip address}:{port number}/v1"
+      model_path: "/your/path/to/internlm-chat-20b"
+      stop_tokens:
+        - "<eoa>"
+      temperature: 0.0
+    - model_type: "Qwen-7B-Chat"
+      num: 5
+      server_url: "http://{ip address}:{port number}/v1"
+      model_path: "/your/path/to/Qwen-7B-Chat"
+      stop_tokens:
+        - "<|im_end|>"
+      temperature: 0.0

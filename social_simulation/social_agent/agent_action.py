@@ -15,11 +15,9 @@ class SocialAction:
     def get_openai_function_list(self) -> list[OpenAIFunction]:
         return [
             OpenAIFunction(func) for func in [
-                self.create_tweet, self.follow,
-                self.unfollow, self.like, self.unlike,
-                self.search_tweets, self.search_user,
-                self.trend, self.refresh, self.mute,
-                self.unmute, self.retweet, self.do_nothing
+                self.create_post, self.follow, self.unfollow, self.like, self.
+                unlike, self.search_posts, self.search_user, self.trend, self.
+                refresh, self.mute, self.unmute, self.repost, self.do_nothing
             ]
         ]
 
@@ -569,5 +567,3 @@ class SocialAction:
         """
         return await self.perform_action(comment_id,
                                          ActionType.UNDO_DISLIKE_COMMENT.value)
-      
-    

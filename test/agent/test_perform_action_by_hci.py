@@ -42,13 +42,17 @@ async def test_perform_action_by_hci(monkeypatch, setup_twitter):
     await operated_agent.env.action.sign_up("user0101", "User", "A bio.")
 
     param_lst = [
-        'hello world', '2', '2', '1', '1', '1', '1', 'hello', 'user', None,
-        None, '2', '2', '1', None
+        'hello world', '2', '2', '1', '1', '1', '1', 'hello', 'user', '0', '0',
+        '1'
     ]
 
     for i in range(12):
-        inputs = iter([i, param_lst[i]]) if param_lst[i] else iter([i])
-        monkeypatch.setattr('builtins.input', lambda _: next(inputs))
+        if param_lst[i] is not None:
+            inputs = iter([i, param_lst[i]])
+            monkeypatch.setattr('builtins.input', lambda _: next(inputs))
+        else:
+            inputs = iter([i])
+            monkeypatch.setattr('builtins.input', lambda _: next(inputs))
         result = await test_agent.perform_action_by_hci()
         assert result['success'] is True
 

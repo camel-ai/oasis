@@ -5,13 +5,13 @@ import asyncio
 import os
 import random
 from datetime import datetime
+from typing import Any
 
 from colorama import Back
 from yaml import safe_load
 
 from social_simulation.clock.clock import Clock
-from social_simulation.social_agent.agents_generator import (
-    generate_agents, generate_controllable_agents)
+from social_simulation.social_agent.agents_generator import generate_agents
 from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.platform import Platform
 from social_simulation.social_platform.typing import ActionType
@@ -36,7 +36,6 @@ async def running(
     num_timesteps: int = 3,
     clock_factor: int = 60,
     recsys_type: str = "twitter",
-    controllable_user: bool = False,
     model_configs: dict[str, Any] | None = None,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
@@ -56,7 +55,12 @@ async def running(
     )
     task = asyncio.create_task(infra.running())
 
-    agent_graph = await generate_agents(csv_path, channel, model_configs)
+    model_configs = model_configs or {}
+    agent_graph = await generate_agents(
+        agent_info_path=csv_path,
+        channel=channel,
+        **model_configs,
+    )
 
     start_hour = 1
 
@@ -88,6 +92,11 @@ if __name__ == "__main__":
         simulation_params = cfg.get("simulation")
         model_configs = cfg.get("model")
 
-        asyncio.run(running(**data_params, **simulation_params, model_configs=model_configs))
+        asyncio.run(
+            running(
+                **data_params,
+                **simulation_params,
+                model_configs=model_configs,
+            ))
     else:
         asyncio.run(running())
