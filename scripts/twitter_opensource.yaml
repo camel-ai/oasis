@@ -7,6 +7,7 @@ simulation:
   recsys_type: "twitter"
 model:
   num_agents: 26
+  model_random_seed: 42
   cfgs:
     - model_type: "llama-3"
       num: 16
