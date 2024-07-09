@@ -170,7 +170,6 @@ class SocialAgent:
         if not 0 <= selection < len(function_list):
             print("Invalid input. Please enter a number.")
             return
-        print(selection)
         func = function_list[selection].func
 
         params = inspect.signature(func).parameters
