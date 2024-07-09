@@ -95,7 +95,6 @@ class SocialAgent:
         if self.has_function_call:
             response = self.model_backend.run(openai_messages)
             if response.choices[0].message.function_call:
-                breakpoint()
                 action_name = response.choices[0].message.function_call.name
                 args = json.loads(
                     response.choices[0].message.function_call.arguments)
