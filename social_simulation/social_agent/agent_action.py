@@ -56,7 +56,7 @@ class SocialAction:
         return await self.perform_action(user_message, ActionType.SIGNUP.value)
 
     async def refresh(self):
-        r"""Refreshes to get recommended posts.
+        r"""Refresh to get recommended posts.
 
         This method invokes an asynchronous action to refresh and fetch
         recommended posts. On successful execution, it returns a dictionary
@@ -94,7 +94,7 @@ class SocialAction:
         return await self.perform_action(None, ActionType.REFRESH.value)
 
     async def do_nothing(self):
-        """Performs no action and returns nothing.
+        """Perform no action.
         Returns:
             dict: A dictionary with 'success' indicating if the removal was
                 successful.
@@ -104,7 +104,7 @@ class SocialAction:
         return await self.perform_action(None, ActionType.DO_NOTHING.value)
 
     async def create_post(self, content: str):
-        r"""Creates a new tweet with the given content.
+        r"""Create a new post with the given content.
 
         This method invokes an asynchronous action to create a new post based
         on the provided content. Upon successful execution, it returns a
@@ -133,7 +133,7 @@ class SocialAction:
         the newly created repost.
 
         Args:
-            post_id (int): The ID of the post to be repost.
+            post_id (int): The ID of the post to be reposted.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -145,13 +145,13 @@ class SocialAction:
             {"success": True, "post_id": 123}
 
         Note:
-            Attempting to repost a post that the user has already repost
+            Attempting to repost a post that the user has already reposted
             will result in a failure.
         """
         return await self.perform_action(post_id, ActionType.REPOST.value)
 
     async def like(self, post_id: int):
-        r"""Creates a new like for a specified post.
+        r"""Create a new like for a specified post.
 
         This method invokes an asynchronous action to create a new like for a
         post. It is identified by the given post ID. Upon successful
@@ -177,7 +177,7 @@ class SocialAction:
         return await self.perform_action(post_id, ActionType.LIKE.value)
 
     async def unlike(self, post_id: int):
-        """Removes a like based on the post's ID.
+        """Remove a like for a post.
 
         This method removes a like from the database, identified by the
         post's ID. It returns a dictionary indicating the success of the
@@ -200,7 +200,7 @@ class SocialAction:
         return await self.perform_action(post_id, ActionType.UNLIKE.value)
 
     async def dislike(self, post_id: int):
-        r"""Creates a new dislike for a specified post.
+        r"""Create a new dislike for a specified post.
 
         This method invokes an asynchronous action to create a new dislike for
         a post. It is identified by the given post ID. Upon successful
@@ -226,7 +226,7 @@ class SocialAction:
         return await self.perform_action(post_id, ActionType.DISLIKE.value)
 
     async def undo_dislike(self, post_id: int):
-        """Removes a dislike based on the post's ID.
+        """Remove a dislike for a post.
 
         This method removes a dislike from the database, identified by the
         post's ID. It returns a dictionary indicating the success of the
@@ -250,7 +250,7 @@ class SocialAction:
                                          ActionType.UNDO_DISLIKE.value)
 
     async def search_posts(self, query: str):
-        r"""searches posts based on a given query.
+        r"""Search posts based on a given query.
 
         This method performs a search operation in the database for posts
         that match the given query string. The search considers the
@@ -287,7 +287,7 @@ class SocialAction:
         return await self.perform_action(query, ActionType.SEARCH_POSTS.value)
 
     async def search_user(self, query: str):
-        r"""Searches users based on a given query.
+        r"""Search users based on a given query.
 
         This asynchronous method performs a search operation in the database
         for users that match the given query string. The search considers the
@@ -326,7 +326,7 @@ class SocialAction:
         return await self.perform_action(query, ActionType.SEARCH_USER.value)
 
     async def follow(self, followee_id: int):
-        r"""Follow a users.
+        r"""Follow a user.
 
         This method allows agent to follow another user (followee).
         It checks if the agent initiating the follow request has a
@@ -347,7 +347,7 @@ class SocialAction:
         return await self.perform_action(followee_id, ActionType.FOLLOW.value)
 
     async def unfollow(self, followee_id: int):
-        r"""Unfollow a users.
+        r"""Unfollow a user.
 
         This method allows agent to unfollow another user (followee). It
         checks if the agent initiating the unfollow request has a
@@ -371,7 +371,7 @@ class SocialAction:
                                          ActionType.UNFOLLOW.value)
 
     async def mute(self, mutee_id: int):
-        r"""Mutes a user.
+        r"""Mute a user.
 
         Allows agent to mute another user. Checks for an existing mute
         record before adding a new one to the database.
@@ -390,7 +390,7 @@ class SocialAction:
         return await self.perform_action(mutee_id, ActionType.MUTE.value)
 
     async def unmute(self, mutee_id: int):
-        r"""Unmutes a user.
+        r"""Unmute a user.
 
         Allows agent to remove a mute on another user. Checks for an
         existing mute record before removing it from the database.
@@ -409,7 +409,7 @@ class SocialAction:
         return await self.perform_action(mutee_id, ActionType.UNMUTE.value)
 
     async def trend(self):
-        r"""Fetches the top trending posts within a predefined time period.
+        r"""Fetch the trending posts within a predefined time period.
 
         Retrieves the top K posts with the most likes in the last specified
         number of days.
@@ -440,7 +440,7 @@ class SocialAction:
         return await self.perform_action(None, ActionType.TREND.value)
 
     async def create_comment(self, post_id: int, content: str):
-        r"""Creates a new comment for a specified post with the given content.
+        r"""Create a new comment for a specified post given content.
 
         This method creates a new comment based on the provided content and
         associates it with the given post ID. Upon successful execution, it
@@ -466,7 +466,7 @@ class SocialAction:
                                          ActionType.CREATE_COMMENT.value)
 
     async def like_comment(self, comment_id: int):
-        r"""Creates a new like for a specified comment.
+        r"""Create a new like for a specified comment.
 
         This method invokes an action to create a new like for a comment,
         identified by the given comment ID. Upon successful execution, it
@@ -493,7 +493,7 @@ class SocialAction:
                                          ActionType.LIKE_COMMENT.value)
 
     async def unlike_comment(self, comment_id: int):
-        """Removes a like based on the comment's ID.
+        """Remove a like for a comment based on the comment's ID.
 
         This method removes a like from the database, identified by the
         comment's ID. It returns a dictionary indicating the success of the
@@ -517,7 +517,7 @@ class SocialAction:
                                          ActionType.UNLIKE_COMMENT.value)
 
     async def dislike_comment(self, comment_id: int):
-        r"""Creates a new dislike for a specified comment.
+        r"""Create a new dislike for a specified comment.
 
         This method invokes an action to create a new dislike for a
         comment, identified by the given comment ID. Upon successful execution,
@@ -544,14 +544,14 @@ class SocialAction:
                                          ActionType.DISLIKE_COMMENT.value)
 
     async def undo_dislike_comment(self, comment_id: int):
-        """Removes a dislike based on the comment's ID.
+        """Remove a dislike for a comment.
 
         This method removes a dislike from the database, identified by the
         comment's ID. It returns a dictionary indicating the success of the
         operation and the ID of the removed dislike.
 
         Args:
-            comment_id (int): The ID of the comment to have its dislike
+            comment_id (int): The ID of the comment to have the dislike
                 removed.
 
         Returns:

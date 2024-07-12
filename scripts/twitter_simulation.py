@@ -61,6 +61,7 @@ async def running(
         channel=channel,
         **model_configs,
     )
+    # agent_graph.visualize("initial_social_graph.png")
 
     start_hour = 1
 
@@ -68,8 +69,7 @@ async def running(
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         # 0.2 * timestep here means 12 minutes
         simulation_time_hour = start_hour + 0.2 * timestep
-        for node_id, node_data in agent_graph.get_agents():
-            agent = node_data['agent']
+        for node_id, agent in agent_graph.get_agents():
             if agent.user_info.is_controllable is False:
                 agent_ac_prob = random.random()
                 threshold = agent.user_info.profile['other_info'][
@@ -78,6 +78,7 @@ async def running(
                     await agent.perform_action_by_llm()
             else:
                 await agent.perform_action_by_hci()
+        # agent_graph.visualize(f"timestep_{timestep}_social_graph.png")
 
     await channel.write_to_receive_queue((None, None, ActionType.EXIT))
     await task

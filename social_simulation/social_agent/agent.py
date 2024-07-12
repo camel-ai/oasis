@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import inspect
 import json
+from typing import TYPE_CHECKING, Any
 
 from camel.configs import ChatGPTConfig, OpenSourceConfig
 from camel.memories import (ChatHistoryMemory, MemoryRecord,
@@ -13,8 +14,11 @@ from colorama import Fore, Style
 
 from social_simulation.social_agent.agent_action import SocialAction
 from social_simulation.social_agent.agent_environment import SocialEnvironment
-from social_simulation.social_platform.channel import Channel
+from social_simulation.social_platform import Channel
 from social_simulation.social_platform.config import UserInfo
+
+if TYPE_CHECKING:
+    from social_simulation.social_agent import AgentGraph
 
 
 class SocialAgent:
@@ -30,6 +34,7 @@ class SocialAgent:
         stop_tokens: list[str] = None,
         model_type: ModelType = ModelType.LLAMA_3,
         temperature: float = 0.0,
+        agent_graph: "AgentGraph" = None,
     ):
         self.agent_id = agent_id
         self.user_info = user_info
@@ -39,6 +44,7 @@ class SocialAgent:
             role_name="User",
             content=self.user_info.to_system_message(),
         )
+        self.model_type = model_type
 
         if model_type.is_open_source:
             self.has_function_call = False
@@ -69,7 +75,7 @@ class SocialAgent:
             role_name="system",
             content=self.user_info.to_system_message()  # system prompt
         )
-        self.home_content = []
+        self.agent_graph = agent_graph
         print(Fore.RED + f"{agent_id}: model type {model_type}" + Fore.RESET)
 
     async def perform_action_by_llm(self):
@@ -101,6 +107,7 @@ class SocialAgent:
                 print(f"Agent {self.agent_id} is performing "
                       f"twitter action: {action_name} with args: {args}")
                 await getattr(self.env.action, action_name)(**args)
+                self.perform_agent_graph_action(action_name, args)
 
         else:
             retry = 5
@@ -131,6 +138,7 @@ class SocialAgent:
                             'name': name,
                             'arguments': arguments
                         })
+                        self.perform_agent_graph_action(name, arguments)
                     break
                 except Exception as e:
                     print(Fore.LIGHTRED_EX + f"Agent {self.agent_id}, time " +
@@ -158,7 +166,7 @@ class SocialAgent:
         self.memory.write_record(
             MemoryRecord(agent_msg, OpenAIBackendRole.ASSISTANT))
 
-    async def perform_action_by_hci(self):
+    async def perform_action_by_hci(self) -> Any:
         print('Please choose one function to perform:')
         function_list = self.env.action.get_openai_function_list()
         for i in range(len(function_list)):
@@ -185,7 +193,7 @@ class SocialAgent:
         result = await func(*args)
         return result
 
-    async def perform_action_by_data(self, func_name, *args, **kwargs):
+    async def perform_action_by_data(self, func_name, *args, **kwargs) -> Any:
         function_list = self.env.action.get_openai_function_list()
         for i in range(len(function_list)):
             if function_list[i].func.__name__ == func_name:
@@ -194,3 +202,26 @@ class SocialAgent:
                 print(result)
                 return result
         raise ValueError(f"Function {func_name} not found in the list.")
+
+    def perform_agent_graph_action(
+        self,
+        action_name: str,
+        arguments: dict[str, Any],
+    ):
+        r"""Remove edge if action is unfollow or add edge
+        if action is follow to the agent graph.
+        """
+        if "unfollow" in action_name:
+            followee_id: int | None = arguments.get("followee_id", None)
+            if followee_id is None:
+                return
+            self.agent_graph.remove_edge(self.agent_id, followee_id)
+        elif "follow" in action_name:
+            followee_id: int | None = arguments.get("followee_id", None)
+            if followee_id is None:
+                return
+            self.agent_graph.add_edge(self.agent_id, followee_id)
+
+    def __str__(self) -> str:
+        return (f"{self.__class__.__name__}(agent_id={self.agent_id}, "
+                f"model_type={self.model_type.value})")

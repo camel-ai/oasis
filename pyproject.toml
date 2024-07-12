@@ -16,7 +16,8 @@ repository = "https://github.com/camel-ai/social-simulation.git"
 [tool.poetry.dependencies]
 python = ">=3.9"
 pandas = "2.2.2"
-networkx = "3.3"
+igraph = "0.11.6"
+cairocffi = "1.7.1"
 pytest = "8.2.0"
 pytest-asyncio = "0.23.6"
 pillow = "10.3.0"
@@ -26,7 +27,7 @@ pre-commit = "3.7.1"
 prance = "23.6.21.0"
 openapi-spec-validator = "0.7.1"
 slack_sdk = "3.31.0"
-camel-ai = { git = "https://github.com/zhangzaibin/camel-llama3.git" }
+camel-ai = { git = "https://github.com/zhangzaibin/camel-llama3.git", rev = "0d5c9dfa621a14b15f6425497be769215fcd8a05" }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

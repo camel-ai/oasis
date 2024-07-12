@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Any
 
-from social_simulation.social_platform.typing import ActionType
-
 
 @dataclass
 class UserInfo:
@@ -13,13 +11,18 @@ class UserInfo:
 
     def to_system_message(self) -> str:
         name_string = ""
+        description_string = ""
         if self.name is not None:
             name_string = f"Your name is {self.name}."
-        description_string = ""
-        if self.profile['other_info']['user_profile'] is not None:
-            user_profile = self.profile['other_info']['user_profile']
-            description_string = f"Your have profile: {user_profile}."
-        description = f"{name_string}\n{description_string}"
+        if self.profile is None:
+            description = name_string
+        elif "other_info" not in self.profile:
+            description = name_string
+        elif "user_profile" in self.profile["other_info"]:
+            if self.profile["other_info"]["user_profile"] is not None:
+                user_profile = self.profile["other_info"]["user_profile"]
+                description_string = f"Your have profile: {user_profile}."
+                description = f"{name_string}\n{description_string}"
 
         system_content = f"""
 # OBJECTIVE
@@ -63,4 +66,3 @@ Ensure that your output can be directly converted into **JSON format**, and avoi
         """
 
         return system_content
-    
