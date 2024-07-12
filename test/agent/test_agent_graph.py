@@ -1,15 +1,12 @@
 import os.path as osp
 
-import pytest
-
 from social_simulation.social_agent.agent import SocialAgent
 from social_simulation.social_agent.agent_graph import AgentGraph
 from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.config import UserInfo
 
 
-@pytest.mark.asyncio
-async def test_agent_graph(tmp_path):
+def test_agent_graph(tmp_path):
     channel = Channel()
     graph = AgentGraph()
     agent_0 = SocialAgent(agent_id=0,
