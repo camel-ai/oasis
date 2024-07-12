@@ -10,9 +10,8 @@ import numpy as np
 import pandas as pd
 from camel.types.enums import ModelType
 
-from social_simulation.social_agent.agent import SocialAgent
-from social_simulation.social_agent.agent_graph import AgentGraph
-from social_simulation.social_platform.channel import Channel
+from social_simulation.social_agent import AgentGraph, SocialAgent
+from social_simulation.social_platform import Channel
 from social_simulation.social_platform.config import UserInfo
 
 
@@ -23,7 +22,7 @@ async def generate_agents(
     model_random_seed: int = 42,
     cfgs: list[Any] | None = None,
 ) -> AgentGraph:
-    """Generates and returns a dictionary of agents from the agent
+    """Generate and return a dictionary of agents from the agent
     information CSV file. Each agent is added to the database and
     their respective profiles are updated.
 
@@ -100,9 +99,10 @@ async def generate_agents(
             stop_tokens=model_config.get("stop_tokens"),
             model_type=model_type,
             temperature=model_temperatures[agent_id],
+            agent_graph=agent_graph,
         )
 
-        await agent_graph.add_agent(agent)
+        agent_graph.add_agent(agent)
 
         await agent.env.action.sign_up(
             agent_info["username"][agent_id],
@@ -119,7 +119,7 @@ async def generate_agents(
             ]
             await asyncio.gather(*follow_tasks)
             for following_id in following_id_list:
-                await agent_graph.add_edge(agent_id, following_id)
+                agent_graph.add_edge(agent_id, following_id)
 
         if len(agent_info['previous_tweets']) != 0:
             previous_posts = ast.literal_eval(
@@ -152,7 +152,7 @@ async def generate_controllable_agents(
         # controllable的agent_id全都在llm agent的agent_id的前面
         agent = SocialAgent(i, user_info, channel)
         # Add agent to the agent graph
-        await agent_graph.add_agent(agent)
+        agent_graph.add_agent(agent)
 
         username = input(f"Please input username for agent {i}: ")
         name = input(f"Please input name for agent {i}: ")
@@ -169,7 +169,7 @@ async def generate_controllable_agents(
             if i != j:
                 user_id = agent_user_id_mapping[j]
                 await agent.env.action.follow(user_id)
-                await agent_graph.add_edge(i, j)
+                agent_graph.add_edge(i, j)
     return agent_graph, agent_user_id_mapping
 
 
@@ -189,7 +189,7 @@ async def gen_control_agents_with_data(
         # controllable的agent_id全都在llm agent的agent_id的前面
         agent = SocialAgent(i, user_info, channel)
         # Add agent to the agent graph
-        await agent_graph.add_agent(agent)
+        agent_graph.add_agent(agent)
 
         response = await agent.env.action.sign_up(
             user_name='momo',
@@ -238,7 +238,7 @@ async def generate_reddit_agents(
         agent = SocialAgent(i + control_user_num, user_info, channel)
 
         # Add agent to the agent graph
-        await agent_graph.add_agent(agent)
+        agent_graph.add_agent(agent)
 
         # Sign up agent and add their information to the database
         # print(f"Signing up agent {agent_info['username'][i]}...")

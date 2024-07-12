@@ -439,3 +439,5 @@ check_time_feature/
 
 # prompt engineering
 prompt_engineering/
+
+*.png
