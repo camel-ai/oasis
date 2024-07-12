@@ -61,7 +61,7 @@ async def running(
         channel=channel,
         **model_configs,
     )
-    agent_graph.visualize("initial_social_graph.png")
+    # agent_graph.visualize("initial_social_graph.png")
 
     start_hour = 1
 
@@ -78,7 +78,7 @@ async def running(
                     await agent.perform_action_by_llm()
             else:
                 await agent.perform_action_by_hci()
-        agent_graph.visualize(f"timestep_{timestep}_social_graph.png")
+        # agent_graph.visualize(f"timestep_{timestep}_social_graph.png")
 
     await channel.write_to_receive_queue((None, None, ActionType.EXIT))
     await task
