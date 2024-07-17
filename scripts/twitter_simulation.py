@@ -6,15 +6,27 @@ import os
 import random
 from datetime import datetime
 from typing import Any
-
+import logging
 from colorama import Back
 from yaml import safe_load
-
 from social_simulation.clock.clock import Clock
 from social_simulation.social_agent.agents_generator import generate_agents
 from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.platform import Platform
 from social_simulation.social_platform.typing import ActionType
+
+
+social_log = logging.getLogger(name='social')
+social_log.setLevel('DEBUG')
+
+file_handler = logging.FileHandler('social.log')
+file_handler.setLevel('DEBUG')
+file_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+social_log.addHandler(file_handler)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel('DEBUG')
+stream_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+social_log.addHandler(stream_handler)
 
 parser = argparse.ArgumentParser(description="Arguments for script.")
 parser.add_argument(
@@ -44,6 +56,7 @@ async def running(
         os.remove(db_path)
 
     start_time = datetime.now()
+    social_log.info(f"Start time: {start_time}")
     clock = Clock(k=clock_factor)
     channel = Channel()
     infra = Platform(
@@ -66,6 +79,7 @@ async def running(
     start_hour = 1
 
     for timestep in range(num_timesteps):
+        social_log.info(f"timestep:{timestep}")
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         # 0.2 * timestep here means 12 minutes
         simulation_time_hour = start_hour + 0.2 * timestep
@@ -101,3 +115,4 @@ if __name__ == "__main__":
             ))
     else:
         asyncio.run(running())
+    social_log.info("Simulation finished.")
