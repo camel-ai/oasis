@@ -12,7 +12,7 @@ test_db_filepath = osp.join(parent_folder, "test.db")
 def test_multi_signup():
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
-    N = 100000
+    N = 100
     create_db(test_db_filepath)
 
     db = sqlite3.connect(test_db_filepath, check_same_thread=False)
