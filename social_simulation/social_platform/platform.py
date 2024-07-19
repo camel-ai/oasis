@@ -219,13 +219,25 @@ class Platform:
         sql_query = "DELETE FROM rec"
         # 使用封装好的_execute_db_command函数执行SQL语句
         self.pl_utils._execute_db_command(sql_query, commit=True)
-        for user_id in range(1, len(new_rec_matrix)):
-            for post_id in new_rec_matrix[user_id]:
-                sql_query = (
-                    "INSERT INTO rec (user_id, post_id) VALUES (?, ?)")
-                self.pl_utils._execute_db_command(sql_query,
-                                                  (user_id, post_id),
-                                                  commit=True)
+        # for user_id in range(1, len(new_rec_matrix)):
+        #     for post_id in new_rec_matrix[user_id]:
+        #         sql_query = (
+        #             "INSERT INTO rec (user_id, post_id) VALUES (?, ?)")
+        #         self.pl_utils._execute_db_command(sql_query,
+        #                                           (user_id, post_id),
+        #                                           commit=True)
+
+        # 批量插入更省时, 创建插入值列表
+        insert_values = [
+            (user_id, post_id) 
+            for user_id in range(1, len(new_rec_matrix)) 
+            for post_id in new_rec_matrix[user_id]]
+
+        # 批量插入到数据库
+        self.pl_utils._execute_many_db_command(
+            "INSERT INTO rec (user_id, post_id) VALUES (?, ?)", 
+            insert_values, 
+            commit=True)
 
     async def create_post(self, agent_id: int, content: str):
         current_time = self.sandbox_clock.time_transfer(
