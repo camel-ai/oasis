@@ -58,7 +58,9 @@ python -m vllm.entrypoints.openai.api_server --model /your/path/to/llama3-8b-ins
 ### Step 5: Run the Main Program
 
 ```bash
-python scripts/twitter_simulation.py --config_path scripts/twitter.yaml
+python scripts/twitter_simulation.py --config_path scripts/twitter_openai.yaml
+# or
+python scripts/twitter_simulation.py --config_path scripts/twitter_opensource.yaml
 # or
 python scripts/reddit_simulation.py --config_path scripts/reddit.yaml
 ```
