@@ -3,7 +3,7 @@ from __future__ import annotations
 import inspect
 import json
 from typing import TYPE_CHECKING, Any
-
+import logging
 from camel.configs import ChatGPTConfig, OpenSourceConfig
 from camel.memories import (ChatHistoryMemory, MemoryRecord,
                             ScoreBasedContextCreator)
@@ -19,6 +19,14 @@ from social_simulation.social_platform.config import UserInfo
 
 if TYPE_CHECKING:
     from social_simulation.social_agent import AgentGraph
+
+
+agent_log = logging.getLogger(name='social.agent')
+agent_log.setLevel('DEBUG')
+file_handler = logging.FileHandler('social.agent.log')
+file_handler.setLevel('DEBUG')
+file_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+agent_log.addHandler(file_handler)
 
 
 class SocialAgent:
@@ -98,8 +106,11 @@ class SocialAgent:
         openai_messages, num_tokens = self.memory.get_context()
         content = ""
 
+        agent_log.info(f"Agent {self.agent_id} is running with prompt: {openai_messages}")
+
         if self.has_function_call:
             response = self.model_backend.run(openai_messages)
+            agent_log.info(f"Agent {self.agent_id} response: {response}")
             if response.choices[0].message.function_call:
                 action_name = response.choices[0].message.function_call.name
                 args = json.loads(
@@ -122,6 +133,7 @@ class SocialAgent:
                     }] + openai_messages
 
                 response = self.model_backend.run(openai_messages)
+                agent_log.info(f"Agent {self.agent_id} response: {response}")
                 content = response.choices[0].message.content
                 try:
                     content_json = json.loads(content)
@@ -216,11 +228,13 @@ class SocialAgent:
             if followee_id is None:
                 return
             self.agent_graph.remove_edge(self.agent_id, followee_id)
+            agent_log.info(f"Agent {self.agent_id} unfollowed {followee_id}")
         elif "follow" in action_name:
             followee_id: int | None = arguments.get("followee_id", None)
             if followee_id is None:
                 return
             self.agent_graph.add_edge(self.agent_id, followee_id)
+            agent_log.info(f"Agent {self.agent_id} followed {followee_id}")
 
     def __str__(self) -> str:
         return (f"{self.__class__.__name__}(agent_id={self.agent_id}, "
