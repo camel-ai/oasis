@@ -1,111 +1,138 @@
 from __future__ import annotations
 
 import ast
+import asyncio
 import json
 import random
+from typing import Any
 
+import numpy as np
 import pandas as pd
+from camel.types.enums import ModelType
 
-from social_simulation.social_agent.agent import SocialAgent
-from social_simulation.social_agent.agent_graph import AgentGraph
-from social_simulation.social_platform.channel import Channel
+from social_simulation.social_agent import AgentGraph, SocialAgent
+from social_simulation.social_platform import Channel
 from social_simulation.social_platform.config import UserInfo
 
 
 async def generate_agents(
     agent_info_path: str,
     channel: Channel,
-    agent_graph: AgentGraph | None = None,
-    agent_user_id_mapping: dict[int, int] | None = None,
+    num_agents: int,
+    model_random_seed: int = 42,
+    cfgs: list[Any] | None = None,
 ) -> AgentGraph:
-    """Generates and returns a dictionary of agents from the agent
+    """Generate and return a dictionary of agents from the agent
     information CSV file. Each agent is added to the database and
     their respective profiles are updated.
 
     Args:
         agent_info_path (str): The file path to the agent information CSV file.
         channel (Channel): Information channel.
-        agent_graph (AgentGraph): Agent graph.
-        agent_user_id_mapping (dict): Mapping dictionary.
+        num_agents (int): Number of agents.
+        model_random_seed (int): Random seed to randomly assign model to
+            each agent. (default: 42)
+        cfgs (list, optional): List of configuration. (default: `None`)
 
     Returns:
         dict: A dictionary of agent IDs mapped to their respective agent
             class instances.
     """
-    if agent_user_id_mapping is None:
-        agent_user_id_mapping = {}
-    if agent_graph is None:
-        agent_graph = AgentGraph()
-
-    control_user_num = agent_graph.get_num_nodes()
+    random.seed(model_random_seed)
+    model_types = []
+    model_temperatures = []
+    model_config_dict = {}
+    for i, cfg in enumerate(cfgs):
+        model_type = ModelType(cfg["model_type"])
+        model_config_dict[model_type] = cfg
+        model_types.extend([model_type] * cfg["num"])
+        temperature = cfg.get("temperature", 0.0)
+        model_temperatures.extend([temperature] * cfg["num"])
+    random.shuffle(model_types)
+    assert len(model_types) == num_agents
+    agent_info = pd.read_csv(agent_info_path)
+    assert len(model_types) == len(agent_info), \
+        (f"Mismatch between the number of agents "
+         f"and the number of models, with {len(agent_info)} "
+         f"agents and {len(model_types)} models.")
 
     mbti_types = ["INTJ", "ENTP", "INFJ", "ENFP"]
-    agent_info = pd.read_csv(agent_info_path)
 
-    # active state to active prob dict
-    threshold_dict = {"off_line": 0.1, "busy": 0.3, "normal": 0.6, "active": 1}
+    freq = list(agent_info["activity_level_frequency"])
+    all_freq = np.array([ast.literal_eval(fre) for fre in freq])
+    normalized_prob = all_freq / np.max(all_freq)
+    # Make sure probability is not too small
+    normalized_prob[normalized_prob < 0.6] += 0.1
+    normalized_prob = np.round(normalized_prob, 2)
+    prob_list: list[float] = normalized_prob.tolist()
 
-    for i in range(len(agent_info)):
-        # Instantiate an agent
+    agent_graph = AgentGraph()
+
+    async def setup_agent(agent_id: int):
         profile = {
-            'nodes': [],  # Relationships with other agents
-            'edges': [],  # Relationship details
+            'nodes': [],
+            'edges': [],
             'other_info': {},
         }
-        # Update agent profile with additional information
-        profile['other_info']['user_profile'] = agent_info['user_char'][i]
-        # Randomly assign an MBTI type (temporary, subject to change)
+        profile['other_info']['user_profile'] = agent_info['user_char'][
+            agent_id]
         profile['other_info']['mbti'] = random.choice(mbti_types)
-        # Randomly assign an activity level (temporary, subject to change)
-        profile['other_info']['activity_level'] = ast.literal_eval(
-            agent_info["activity_level"][i])
         profile['other_info']['activity_level_frequency'] = ast.literal_eval(
-            agent_info["activity_level_frequency"][i])
-        profile['other_info']['active_threshold'] = [
-            threshold_dict[ac_lv]
-            for ac_lv in profile['other_info']['activity_level']
-        ]
+            agent_info["activity_level_frequency"][agent_id])
+        profile['other_info']['active_threshold'] = prob_list[agent_id]
 
-        user_info = UserInfo(name=agent_info['username'][i],
-                             description=agent_info['description'][i],
-                             profile=profile)
+        user_info = UserInfo(
+            name=agent_info['username'][agent_id],
+            description=agent_info['description'][agent_id],
+            profile=profile,
+        )
 
-        # controllable的agent_id全都在llm agent的agent_id的前面
-        agent = SocialAgent(i + control_user_num, user_info, channel)
+        model_type: ModelType = model_types[agent_id]
+        model_config = model_config_dict[model_type]
+        agent = SocialAgent(
+            agent_id=agent_id,
+            user_info=user_info,
+            channel=channel,
+            model_path=model_config.get("model_path", model_type.value),
+            server_url=model_config.get("server_url",
+                                        "http://10.140.0.144:8000/v1"),
+            stop_tokens=model_config.get("stop_tokens"),
+            model_type=model_type,
+            temperature=model_temperatures[agent_id],
+            agent_graph=agent_graph,
+        )
 
-        # Add agent to the agent graph
-        await agent_graph.add_agent(agent)
+        agent_graph.add_agent(agent)
 
-        # Sign up agent and add their information to the database
-        response = await agent.env.action.sign_up(agent_info['username'][i],
-                                                  agent_info['name'][i],
-                                                  agent_info['description'][i])
-        user_id = response['user_id']
-        agent_user_id_mapping[i + control_user_num] = user_id
+        await agent.env.action.sign_up(
+            agent_info["username"][agent_id],
+            agent_info["name"][agent_id],
+            agent_info["description"][agent_id],
+        )
 
-    for i in range(len(agent_info)):
-        agent = agent_graph.get_agent(i)
-        # Add user relationships if any
-        if agent_info['following_agentid_list'][i] != "0":
+        if agent_info["following_agentid_list"][agent_id] != "0":
             following_id_list = ast.literal_eval(
-                agent_info['following_agentid_list'][i])
-            for _agent_id in following_id_list:
-                # 这里action_follow接受的是user_id，不是agent id，所以会出现关注错误的问题
-                # 由于二者只差一个1，所以加个1就可以了
-                user_id = agent_user_id_mapping[_agent_id + control_user_num]
-                await agent.env.action.follow(user_id)
-                await agent_graph.add_edge(agent.agent_id,
-                                           _agent_id + control_user_num)
-            for _control_agent_id in range(control_user_num):
-                user_id = agent_user_id_mapping[_control_agent_id]
-                await agent.env.action.follow(user_id)
-                await agent_graph.add_edge(agent.agent_id, _control_agent_id)
+                agent_info["following_agentid_list"][agent_id])
+            follow_tasks = [
+                agent.env.action.follow(following_id + 1)
+                for following_id in following_id_list
+            ]
+            await asyncio.gather(*follow_tasks)
+            for following_id in following_id_list:
+                agent_graph.add_edge(agent_id, following_id)
 
         if len(agent_info['previous_tweets']) != 0:
-            previous_tweets = ast.literal_eval(
-                agent_info['previous_tweets'][i])
-            for tweet in previous_tweets:
-                await agent.env.action.create_tweet(tweet)
+            previous_posts = ast.literal_eval(
+                agent_info['previous_tweets'][agent_id])
+
+            post_tasks = [
+                agent.env.action.create_post(post) for post in previous_posts
+            ]
+            await asyncio.gather(*post_tasks)
+
+    tasks = [setup_agent(i) for i in range(len(agent_info))]
+    await asyncio.gather(*tasks)
+
     return agent_graph
 
 
@@ -125,7 +152,7 @@ async def generate_controllable_agents(
         # controllable的agent_id全都在llm agent的agent_id的前面
         agent = SocialAgent(i, user_info, channel)
         # Add agent to the agent graph
-        await agent_graph.add_agent(agent)
+        agent_graph.add_agent(agent)
 
         username = input(f"Please input username for agent {i}: ")
         name = input(f"Please input name for agent {i}: ")
@@ -142,7 +169,7 @@ async def generate_controllable_agents(
             if i != j:
                 user_id = agent_user_id_mapping[j]
                 await agent.env.action.follow(user_id)
-                await agent_graph.add_edge(i, j)
+                agent_graph.add_edge(i, j)
     return agent_graph, agent_user_id_mapping
 
 
@@ -162,11 +189,13 @@ async def gen_control_agents_with_data(
         # controllable的agent_id全都在llm agent的agent_id的前面
         agent = SocialAgent(i, user_info, channel)
         # Add agent to the agent graph
-        await agent_graph.add_agent(agent)
+        agent_graph.add_agent(agent)
 
-        response = await agent.env.action.sign_up(user_name='momo',
-                                                  name='momo',
-                                                  bio='None.')
+        response = await agent.env.action.sign_up(
+            user_name='momo',
+            name='momo',
+            bio='None.',
+        )
         user_id = response['user_id']
         agent_user_id_mapping[i] = user_id
 
@@ -209,7 +238,7 @@ async def generate_reddit_agents(
         agent = SocialAgent(i + control_user_num, user_info, channel)
 
         # Add agent to the agent graph
-        await agent_graph.add_agent(agent)
+        agent_graph.add_agent(agent)
 
         # Sign up agent and add their information to the database
         # print(f"Signing up agent {agent_info['username'][i]}...")

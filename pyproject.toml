@@ -1,41 +1,34 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[project]
+[tool.poetry]
 name = "social-simulation"
-
-version="0.0.0"
-
-authors=[
-    {name="TODO", email="TODO@gmail.com"},
-]
-
-description="Social Simulation"
-
-readme="README.md"
-
-requires-python=">=3.9"
-
-keywords=[
+version = "0.0.0"
+description = "Social Simulation"
+authors = ["TODO <TODO@gmail.com>"]
+readme = "README.md"
+keywords = [
     "LLM",
     "agent",
     "social-network",
     "graph",
     "recommendation-system",
 ]
+repository = "https://github.com/camel-ai/social-simulation.git"
 
-dependencies=[
-    "camel-ai==0.1.5.3",
-    "pandas==2.2.2",
-    "networkx==3.3",
-    "pytest==8.2.0",
-    "pytest-asyncio==0.23.6",
-    "pillow==10.3.0",
-    "unstructured==0.13.7",
-    "sentence-transformers==3.0.0",
-    "pre-commit==3.7.1",
-]
+[tool.poetry.dependencies]
+python = ">=3.9"
+pandas = "2.2.2"
+igraph = "0.11.6"
+cairocffi = "1.7.1"
+pytest = "8.2.0"
+pytest-asyncio = "0.23.6"
+pillow = "10.3.0"
+unstructured = "0.13.7"
+sentence-transformers = "3.0.0"
+pre-commit = "3.7.1"
+prance = "23.6.21.0"
+openapi-spec-validator = "0.7.1"
+slack_sdk = "3.31.0"
+camel-ai = { git = "https://github.com/zhangzaibin/camel-llama3.git", rev = "0d5c9dfa621a14b15f6425497be769215fcd8a05" }
 
-[project.urls]
-repository="https://github.com/camel-ai/social-simulation.git"
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -1,8 +1,0 @@
-data:
-  db_path: null
-  csv_path: null
-simulation:
-  num_timesteps: 3
-  clock_factor: 60
-  recsys_type: "twitter"
-  controllable_user: false

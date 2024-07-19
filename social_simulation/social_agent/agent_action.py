@@ -15,18 +15,15 @@ class SocialAction:
     def get_openai_function_list(self) -> list[OpenAIFunction]:
         return [
             OpenAIFunction(func) for func in [
-                self.create_tweet, self.follow, self.unfollow, self.like,
-                self.unlike, self.dislike, self.undo_dislike,
-                self.search_tweets, self.search_user, self.trend, self.refresh,
-                self.mute, self.unmute, self.retweet, self.create_comment,
-                self.like_comment, self.unlike_comment, self.dislike_comment,
-                self.undo_dislike_comment, self.do_nothing
+                self.create_post, self.follow, self.unfollow, self.like, self.
+                unlike, self.search_posts, self.search_user, self.trend, self.
+                refresh, self.mute, self.unmute, self.repost, self.do_nothing
             ]
         ]
 
-    async def perform_action(self, message: Any, action_type: str):
+    async def perform_action(self, message: Any, type: str):
         message_id = await self.channel.write_to_receive_queue(
-            (self.agent_id, message, action_type))
+            (self.agent_id, message, type))
         response = await self.channel.read_from_send_queue(message_id)
         return response[2]
 
@@ -59,35 +56,35 @@ class SocialAction:
         return await self.perform_action(user_message, ActionType.SIGNUP.value)
 
     async def refresh(self):
-        r"""Refreshes to get recommended tweets.
+        r"""Refresh to get recommended posts.
 
         This method invokes an asynchronous action to refresh and fetch
-        recommended tweets. On successful execution, it returns a dictionary
-        indicating success along with a list of tweets. Each tweet in the list
-        contains details such as tweet ID, user ID, content, creation date,
+        recommended posts. On successful execution, it returns a dictionary
+        indicating success along with a list of posts. Each post in the list
+        contains details such as post ID, user ID, content, creation date,
         and the number of likes.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
                 maps to a boolean indicating whether the refresh is
-                successful. The 'tweets' key maps to a list of dictionaries,
-                each representing a tweet with its details.
+                successful. The 'posts' key maps to a list of dictionaries,
+                each representing a post with its details.
 
             Example of a successful return:
             {
                 "success": True,
-                "tweets": [
+                "posts": [
                     {
-                        "tweet_id": 1,
+                        "post_id": 1,
                         "user_id": 23,
-                        "content": "This is an example tweet content.",
+                        "content": "This is an example post content.",
                         "created_at": "2024-05-14T12:00:00Z",
                         "num_likes": 5
                     },
                     {
-                        "tweet_id": 2,
+                        "post_id": 2,
                         "user_id": 42,
-                        "content": "Another example tweet content.",
+                        "content": "Another example post content.",
                         "created_at": "2024-05-14T12:05:00Z",
                         "num_likes": 15
                     }
@@ -96,64 +93,73 @@ class SocialAction:
         """
         return await self.perform_action(None, ActionType.REFRESH.value)
 
-    async def create_tweet(self, content: str):
-        r"""Creates a new tweet with the given content.
-
-        This method invokes an asynchronous action to create a new tweet based
-        on the provided content. Upon successful execution, it returns a
-        dictionary indicating success and the ID of the newly created tweet.
-
-        Args:
-            content (str): The content of the tweet to be created.
-
+    async def do_nothing(self):
+        """Perform no action.
         Returns:
-            dict: A dictionary with two key-value pairs. The 'success' key
-                maps to a boolean indicating whether the tweet creation was
-                successful. The 'tweet_id' key maps to the integer ID of the
-                newly created tweet.
-
+            dict: A dictionary with 'success' indicating if the removal was
+                successful.
             Example of a successful return:
-            {'success': True, 'tweet_id': 50}
+                {"success": True}
         """
-        return await self.perform_action(content,
-                                         ActionType.CREATE_TWEET.value)
+        return await self.perform_action(None, ActionType.DO_NOTHING.value)
 
-    async def retweet(self, tweet_id: int):
-        r"""Retweet a specified tweet.
+    async def create_post(self, content: str):
+        r"""Create a new post with the given content.
 
-        This method invokes an asynchronous action to Retweet a specified
-        tweet. It is identified by the given tweet ID. Upon successful
-        execution, it returns a dictionary indicating success and the ID of
-        the newly created retweet.
+        This method invokes an asynchronous action to create a new post based
+        on the provided content. Upon successful execution, it returns a
+        dictionary indicating success and the ID of the newly created post.
 
         Args:
-            tweet_id (int): The ID of the tweet to be retweet.
+            content (str): The content of the post to be created.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
-                maps to a boolean indicating whether the Retweet creation was
-                successful. The 'tweet_id' key maps to the integer ID of the
-                newly created retweet.
+                maps to a boolean indicating whether the post creation was
+                successful. The 'post_id' key maps to the integer ID of the
+                newly created post.
 
             Example of a successful return:
-            {"success": True, "tweet_id": 123}
+            {'success': True, 'post_id': 50}
+        """
+        return await self.perform_action(content, ActionType.CREATE_POST.value)
+
+    async def repost(self, post_id: int):
+        r"""Repost a specified post.
+
+        This method invokes an asynchronous action to Repost a specified
+        post. It is identified by the given post ID. Upon successful
+        execution, it returns a dictionary indicating success and the ID of
+        the newly created repost.
+
+        Args:
+            post_id (int): The ID of the post to be reposted.
+
+        Returns:
+            dict: A dictionary with two key-value pairs. The 'success' key
+                maps to a boolean indicating whether the Repost creation was
+                successful. The 'post_id' key maps to the integer ID of the
+                newly created repost.
+
+            Example of a successful return:
+            {"success": True, "post_id": 123}
 
         Note:
-            Attempting to retweet a tweet that the user has already retweet
+            Attempting to repost a post that the user has already reposted
             will result in a failure.
         """
-        return await self.perform_action(tweet_id, ActionType.RETWEET.value)
+        return await self.perform_action(post_id, ActionType.REPOST.value)
 
-    async def like(self, tweet_id: int):
-        r"""Creates a new like for a specified tweet.
+    async def like(self, post_id: int):
+        r"""Create a new like for a specified post.
 
         This method invokes an asynchronous action to create a new like for a
-        tweet. It is identified by the given tweet ID. Upon successful
+        post. It is identified by the given post ID. Upon successful
         execution, it returns a dictionary indicating success and the ID of
         the newly created like.
 
         Args:
-            tweet_id (int): The ID of the tweet to be liked.
+            post_id (int): The ID of the post to be liked.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -165,20 +171,20 @@ class SocialAction:
             {"success": True, "like_id": 123}
 
         Note:
-            Attempting to like a tweet that the user has already liked will
+            Attempting to like a post that the user has already liked will
             result in a failure.
         """
-        return await self.perform_action(tweet_id, ActionType.LIKE.value)
+        return await self.perform_action(post_id, ActionType.LIKE.value)
 
-    async def unlike(self, tweet_id: int):
-        """Removes a like based on the tweet's ID.
+    async def unlike(self, post_id: int):
+        """Remove a like for a post.
 
         This method removes a like from the database, identified by the
-        tweet's ID. It returns a dictionary indicating the success of the
+        post's ID. It returns a dictionary indicating the success of the
         operation and the ID of the removed like.
 
         Args:
-            tweet_id (int): The ID of the tweet to be unliked.
+            post_id (int): The ID of the post to be unliked.
 
         Returns:
             dict: A dictionary with 'success' indicating if the removal was
@@ -188,21 +194,21 @@ class SocialAction:
             {"success": True, "like_id": 123}
 
         Note:
-            Attempting to remove a like for a tweet that the user has not
+            Attempting to remove a like for a post that the user has not
             previously liked will result in a failure.
         """
-        return await self.perform_action(tweet_id, ActionType.UNLIKE.value)
+        return await self.perform_action(post_id, ActionType.UNLIKE.value)
 
-    async def dislike(self, tweet_id: int):
-        r"""Creates a new dislike for a specified tweet.
+    async def dislike(self, post_id: int):
+        r"""Create a new dislike for a specified post.
 
         This method invokes an asynchronous action to create a new dislike for
-        a tweet. It is identified by the given tweet ID. Upon successful
+        a post. It is identified by the given post ID. Upon successful
         execution, it returns a dictionary indicating success and the ID of
         the newly created dislike.
 
         Args:
-            tweet_id (int): The ID of the tweet to be disliked.
+            post_id (int): The ID of the post to be disliked.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -214,20 +220,20 @@ class SocialAction:
             {"success": True, "dislike_id": 123}
 
         Note:
-            Attempting to dislike a tweet that the user has already liked will
+            Attempting to dislike a post that the user has already liked will
             result in a failure.
         """
-        return await self.perform_action(tweet_id, ActionType.DISLIKE.value)
+        return await self.perform_action(post_id, ActionType.DISLIKE.value)
 
-    async def undo_dislike(self, tweet_id: int):
-        """Removes a dislike based on the tweet's ID.
+    async def undo_dislike(self, post_id: int):
+        """Remove a dislike for a post.
 
         This method removes a dislike from the database, identified by the
-        tweet's ID. It returns a dictionary indicating the success of the
+        post's ID. It returns a dictionary indicating the success of the
         operation and the ID of the removed dislike.
 
         Args:
-            tweet_id (int): The ID of the tweet to be unliked.
+            post_id (int): The ID of the post to be unliked.
 
         Returns:
             dict: A dictionary with 'success' indicating if the removal was
@@ -237,38 +243,38 @@ class SocialAction:
             {"success": True, "dislike_id": 123}
 
         Note:
-            Attempting to remove a dislike for a tweet that the user has not
+            Attempting to remove a dislike for a post that the user has not
             previously liked will result in a failure.
         """
-        return await self.perform_action(tweet_id,
+        return await self.perform_action(post_id,
                                          ActionType.UNDO_DISLIKE.value)
 
-    async def search_tweets(self, query: str):
-        r"""searches tweets based on a given query.
+    async def search_posts(self, query: str):
+        r"""Search posts based on a given query.
 
-        This method performs a search operation in the database for tweets
+        This method performs a search operation in the database for posts
         that match the given query string. The search considers the
-        tweet's content, tweet ID, and user ID. It returns a dictionary
+        post's content, post ID, and user ID. It returns a dictionary
         indicating the operation's success and, if successful, a list of
-        tweets that match the query.
+        posts that match the query.
 
         Args:
             query (str): The search query string. The search is performed
-                against the tweet's content, tweet ID, and user ID.
+                against the post's content, post ID, and user ID.
 
         Returns:
             dict: A dictionary with a 'success' key indicating the operation's
-                success. On success, it includes a 'tweets' key with a list of
-                dictionaries, each representing a tweet. On failure, it
+                success. On success, it includes a 'posts' key with a list of
+                dictionaries, each representing a post. On failure, it
                 includes an 'error' message or a 'message' indicating no
-                tweets were found.
+                posts were found.
 
             Example of a successful return:
             {
                 "success": True,
-                "tweets": [
+                "posts": [
                     {
-                        "tweet_id": 1,
+                        "post_id": 1,
                         "user_id": 42,
                         "content": "Hello, world!",
                         "created_at": "2024-05-14T12:00:00Z",
@@ -278,10 +284,10 @@ class SocialAction:
                 ]
             }
         """
-        return await self.perform_action(query, ActionType.SEARCH_TWEET.value)
+        return await self.perform_action(query, ActionType.SEARCH_POSTS.value)
 
     async def search_user(self, query: str):
-        r"""Searches users based on a given query.
+        r"""Search users based on a given query.
 
         This asynchronous method performs a search operation in the database
         for users that match the given query string. The search considers the
@@ -320,7 +326,7 @@ class SocialAction:
         return await self.perform_action(query, ActionType.SEARCH_USER.value)
 
     async def follow(self, followee_id: int):
-        r"""Follow a users.
+        r"""Follow a user.
 
         This method allows agent to follow another user (followee).
         It checks if the agent initiating the follow request has a
@@ -341,7 +347,7 @@ class SocialAction:
         return await self.perform_action(followee_id, ActionType.FOLLOW.value)
 
     async def unfollow(self, followee_id: int):
-        r"""Unfollow a users.
+        r"""Unfollow a user.
 
         This method allows agent to unfollow another user (followee). It
         checks if the agent initiating the unfollow request has a
@@ -365,7 +371,7 @@ class SocialAction:
                                          ActionType.UNFOLLOW.value)
 
     async def mute(self, mutee_id: int):
-        r"""Mutes a user.
+        r"""Mute a user.
 
         Allows agent to mute another user. Checks for an existing mute
         record before adding a new one to the database.
@@ -384,7 +390,7 @@ class SocialAction:
         return await self.perform_action(mutee_id, ActionType.MUTE.value)
 
     async def unmute(self, mutee_id: int):
-        r"""Unmutes a user.
+        r"""Unmute a user.
 
         Allows agent to remove a mute on another user. Checks for an
         existing mute record before removing it from the database.
@@ -403,27 +409,27 @@ class SocialAction:
         return await self.perform_action(mutee_id, ActionType.UNMUTE.value)
 
     async def trend(self):
-        r"""Fetches the top trending tweets within a predefined time period.
+        r"""Fetch the trending posts within a predefined time period.
 
-        Retrieves the top K tweets with the most likes in the last specified
+        Retrieves the top K posts with the most likes in the last specified
         number of days.
 
         Returns:
             dict: On success, returns a dictionary with 'success': True and a
-                list of 'tweets', each tweet being a dictionary containing
-                'tweet_id', 'user_id', 'content', 'created_at', and
+                list of 'posts', each post being a dictionary containing
+                'post_id', 'user_id', 'content', 'created_at', and
                 'num_likes'. On failure, returns 'success': False and an
-                'error' message or a message indicating no trending tweets
+                'error' message or a message indicating no trending posts
                 were found.
 
             Example of a successful return:
             {
                 "success": True,
-                "tweets": [
+                "posts": [
                     {
-                        "tweet_id": 123,
+                        "post_id": 123,
                         "user_id": 456,
-                        "content": "Example tweet content",
+                        "content": "Example post content",
                         "created_at": "2024-05-14T12:00:00",
                         "num_likes": 789
                     },
@@ -433,16 +439,16 @@ class SocialAction:
         """
         return await self.perform_action(None, ActionType.TREND.value)
 
-    async def create_comment(self, tweet_id: int, content: str):
-        r"""Creates a new comment for a specified tweet with the given content.
+    async def create_comment(self, post_id: int, content: str):
+        r"""Create a new comment for a specified post given content.
 
         This method creates a new comment based on the provided content and
-        associates it with the given tweet ID. Upon successful execution, it
+        associates it with the given post ID. Upon successful execution, it
         returns a dictionary indicating success and the ID of the newly created
         comment.
 
         Args:
-            tweet_id (int): The ID of the tweet to which the comment is to be
+            post_id (int): The ID of the post to which the comment is to be
                 added.
             content (str): The content of the comment to be created.
 
@@ -455,12 +461,12 @@ class SocialAction:
             Example of a successful return:
                 {'success': True, 'comment_id': 123}
         """
-        comment_message = (tweet_id, content)
+        comment_message = (post_id, content)
         return await self.perform_action(comment_message,
                                          ActionType.CREATE_COMMENT.value)
 
     async def like_comment(self, comment_id: int):
-        r"""Creates a new like for a specified comment.
+        r"""Create a new like for a specified comment.
 
         This method invokes an action to create a new like for a comment,
         identified by the given comment ID. Upon successful execution, it
@@ -487,7 +493,7 @@ class SocialAction:
                                          ActionType.LIKE_COMMENT.value)
 
     async def unlike_comment(self, comment_id: int):
-        """Removes a like based on the comment's ID.
+        """Remove a like for a comment based on the comment's ID.
 
         This method removes a like from the database, identified by the
         comment's ID. It returns a dictionary indicating the success of the
@@ -511,7 +517,7 @@ class SocialAction:
                                          ActionType.UNLIKE_COMMENT.value)
 
     async def dislike_comment(self, comment_id: int):
-        r"""Creates a new dislike for a specified comment.
+        r"""Create a new dislike for a specified comment.
 
         This method invokes an action to create a new dislike for a
         comment, identified by the given comment ID. Upon successful execution,
@@ -538,14 +544,14 @@ class SocialAction:
                                          ActionType.DISLIKE_COMMENT.value)
 
     async def undo_dislike_comment(self, comment_id: int):
-        """Removes a dislike based on the comment's ID.
+        """Remove a dislike for a comment.
 
         This method removes a dislike from the database, identified by the
         comment's ID. It returns a dictionary indicating the success of the
         operation and the ID of the removed dislike.
 
         Args:
-            comment_id (int): The ID of the comment to have its dislike
+            comment_id (int): The ID of the comment to have the dislike
                 removed.
 
         Returns:
@@ -561,15 +567,3 @@ class SocialAction:
         """
         return await self.perform_action(comment_id,
                                          ActionType.UNDO_DISLIKE_COMMENT.value)
-
-    async def do_nothing(self):
-        """Performs no action and returns nothing.
-
-        Returns:
-            dict: A dictionary with 'success' indicating if the removal was
-                successful.
-
-            Example of a successful return:
-                {"success": True}
-        """
-        return await self.perform_action(None, ActionType.DO_NOTHING.value)

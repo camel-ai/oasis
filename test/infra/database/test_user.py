@@ -68,9 +68,8 @@ class MockChannel:
             assert "mute_id" in message[2]
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
-def setup_twitter():
+def setup_platform():
     # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
@@ -78,16 +77,15 @@ def setup_twitter():
     # 创建数据库和表
     db_path = test_db_filepath
 
-    # 初始化Twitter实例
     mock_channel = MockChannel()
-    twitter_instance = Platform(db_path, mock_channel)
-    return twitter_instance
+    instance = Platform(db_path, mock_channel)
+    return instance
 
 
 @pytest.mark.asyncio
-async def test_follow_user(setup_twitter):
+async def test_follow_user(setup_platform):
     try:
-        twitter = setup_twitter
+        platform = setup_platform
 
         # 在测试开始之前，将3个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
@@ -106,7 +104,7 @@ async def test_follow_user(setup_twitter):
              "VALUES (?, ?, ?, ?, ?)"), (3, 3, "user3", 3, 5))
         conn.commit()
 
-        await twitter.running()
+        await platform.running()
 
         # 验证数据库中是否正确插入了数据
 
@@ -156,5 +154,5 @@ async def test_follow_user(setup_twitter):
     finally:
         # 清理
         conn.close()
-        # if os.path.exists(test_db_filepath):
-        #     os.remove(test_db_filepath)
+        if os.path.exists(test_db_filepath):
+            os.remove(test_db_filepath)
