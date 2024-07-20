@@ -25,6 +25,12 @@ class PlatformUtils:
         if commit:
             self.db.commit()
         return self.db_cursor
+    
+    def _execute_many_db_command(self, command, args_list, commit=False):
+        self.db_cursor.executemany(command, args_list)
+        if commit:
+            self.db.commit()
+        return self.db_cursor
 
     def _check_agent_userid(self, agent_id):
         try:
