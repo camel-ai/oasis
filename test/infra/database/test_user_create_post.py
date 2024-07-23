@@ -27,10 +27,10 @@ class MockChannel:
             return ('id_', (2, ("bubble", "Bob", "A boy."), "sign_up"))
         elif self.call_count == 2:
             self.call_count += 1
-            return ('id_', (1, "This is a test tweet", "create_tweet"))
+            return ('id_', (1, "This is a test post", "create_post"))
         elif self.call_count == 3:
             self.call_count += 1
-            return ('id_', (3, "This is a test tweet", "create_tweet"))
+            return ('id_', (3, "This is a test post", "create_post"))
         else:
             return ('id_', (None, None, "exit"))
 
@@ -46,16 +46,15 @@ class MockChannel:
             assert "user_id" in message[2]
         elif self.call_count == 3:
             assert message[2]["success"] is True
-            assert "tweet_id" in message[2]
+            assert "post_id" in message[2]
         elif self.call_count == 4:
             assert message[2]["success"] is False
             assert message[2]["error"] == (
                 "Agent 3 have not signed up and have no user id.")
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
-def setup_twitter():
+def setup_platform():
     # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
@@ -63,24 +62,23 @@ def setup_twitter():
     # 创建数据库和表
     db_path = test_db_filepath
 
-    # 初始化Twitter实例
     mock_channel = MockChannel()
-    twitter_instance = Platform(db_path, mock_channel)
-    return twitter_instance
+    instance = Platform(db_path, mock_channel)
+    return instance
 
 
 @pytest.mark.asyncio
-async def test_signup_create_tweet(setup_twitter):
+async def test_signup_create_post(setup_platform):
     try:
-        twitter = setup_twitter
+        platform = setup_platform
 
-        await twitter.running()
+        await platform.running()
 
         # 验证数据库中是否正确插入了数据
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
 
-        # 验证推文表(tweet)是否正确插入了数据
+        # 验证推文表(post)是否正确插入了数据
         cursor.execute("SELECT * FROM user")
         users = cursor.fetchall()
         assert len(users) == 2
@@ -89,14 +87,14 @@ async def test_signup_create_tweet(setup_twitter):
         assert users[1][1] == 2
         assert users[1][3] == "Bob"
 
-        # 验证推文表(tweet)是否正确插入了数据
-        cursor.execute("SELECT * FROM tweet")
-        tweets = cursor.fetchall()
-        assert len(tweets) == 1
-        tweet = tweets[0]
-        assert tweet[1] == 1  # 假设用户ID是1
-        assert tweet[2] == "This is a test tweet"
-        assert tweet[4] == 0
+        # 验证推文表(post)是否正确插入了数据
+        cursor.execute("SELECT * FROM post")
+        posts = cursor.fetchall()
+        assert len(posts) == 1
+        post = posts[0]
+        assert post[1] == 1  # 假设用户ID是1
+        assert post[2] == "This is a test post"
+        assert post[4] == 0
 
         # 验证跟踪表(trace)是否正确记录了创建注册操作
         cursor.execute("SELECT * FROM trace WHERE action ='sign_up'")
@@ -104,8 +102,8 @@ async def test_signup_create_tweet(setup_twitter):
         assert len(results) == 2
 
         # 验证跟踪表(trace)是否正确记录了创建推文操作
-        cursor.execute("SELECT * FROM trace WHERE action='create_tweet'")
-        assert cursor.fetchone() is not None, "Create tweet action not traced"
+        cursor.execute("SELECT * FROM trace WHERE action='create_post'")
+        assert cursor.fetchone() is not None, "Create post action not traced"
 
     finally:
         pass

@@ -17,14 +17,14 @@ test_db_filepath = osp.join(parent_folder, "test.db")
 
 
 @pytest.fixture
-def setup_twitter():
+def setup_platform():
     # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
 
 @pytest.mark.asyncio
-async def test_agents_tweeting(setup_twitter):
+async def test_agents_posting(setup_platform):
     N = 5  # 代理（用户）数量
     M = 3  # 每个用户要发送的推文数量
 
@@ -59,7 +59,7 @@ async def test_agents_tweeting(setup_twitter):
     # 发送推文
     for agent in agents:
         for _ in range(M):
-            await agent.env.action.create_tweet(f"hello from {agent.agent_id}")
+            await agent.env.action.create_post(f"hello from {agent.agent_id}")
             await asyncio.sleep(random.uniform(0, 0.1))
 
     await channel.write_to_receive_queue((None, None, "exit"))
@@ -75,10 +75,10 @@ async def test_agents_tweeting(setup_twitter):
     assert len(users) == N, ("The number of users in the database"
                              "should match n")
 
-    # 验证推文(tweet)表是否正确插入了数据
-    cursor.execute("SELECT * FROM tweet")
-    tweets = cursor.fetchall()
-    assert len(tweets) == M * N, (
-        "The number of tweets should match the expected value.")
+    # 验证推文(post)表是否正确插入了数据
+    cursor.execute("SELECT * FROM post")
+    posts = cursor.fetchall()
+    assert len(posts) == M * N, (
+        "The number of posts should match the expected value.")
     cursor.close()
     conn.close()

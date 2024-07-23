@@ -439,5 +439,9 @@ check_time_feature/
 
 # prompt engineering
 prompt_engineering/
-models/
 camel-llama3/
+configs/
+data/
+models/
+*.sh
+visualization/
