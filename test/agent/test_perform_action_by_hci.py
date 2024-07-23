@@ -41,12 +41,17 @@ async def test_perform_action_by_hci(monkeypatch, setup_twitter):
     operated_agent = SocialAgent(1, user_info, channel)
     await operated_agent.env.action.sign_up("user0101", "User", "A bio.")
 
+    # param_lst = [
+    #     'hello world', '2', '2', '1', '1', '1', '1', 'hello', 'user', '0', '0',
+    #     '1'
+    # ]
+
+    # you should not repost your own post
     param_lst = [
-        'hello world', '2', '2', '1', '1', '1', '1', 'hello', 'user', '0', '0',
-        '1'
+        'hello world', '2', '2', '1', '1', '1', '1', 'hello', 'user', '0', '0'
     ]
 
-    for i in range(12):
+    for i in range(11):
         if param_lst[i] is not None:
             inputs = iter([i, param_lst[i]])
             monkeypatch.setattr('builtins.input', lambda _: next(inputs))
@@ -54,6 +59,7 @@ async def test_perform_action_by_hci(monkeypatch, setup_twitter):
             inputs = iter([i])
             monkeypatch.setattr('builtins.input', lambda _: next(inputs))
         result = await test_agent.perform_action_by_hci()
+        print(result)
         assert result['success'] is True
 
     await channel.write_to_receive_queue((None, None, "exit"))
