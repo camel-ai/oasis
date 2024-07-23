@@ -22,10 +22,10 @@ def load_model(model_name):
     try:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         if model_name == 'paraphrase-MiniLM-L6-v2':
-            return SentenceTransformer(model_name, device=device, cache_folder="/mnt/petrelfs/zhengzirui/social-simulation/models")
+            return SentenceTransformer(model_name, device=device, cache_folder="./models")
         elif model_name == 'Twitter/twhin-bert-base':
             tokenizer = AutoTokenizer.from_pretrained(model_name, model_max_length=512)
-            model = AutoModel.from_pretrained(model_name, cache_dir="/mnt/petrelfs/zhengzirui/social-simulation/models").to(device)
+            model = AutoModel.from_pretrained(model_name, cache_dir="./models").to(device)
             return tokenizer, model
         else:
             raise ValueError(f"Unknown model name: {model_name}")
