@@ -198,69 +198,6 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def refresh(self, agent_id: int):
-        try:
-            user_id = self._check_agent_userid(agent_id)
-            if not user_id:
-                return self._not_signup_error_message(agent_id)
-
-            # 从rec表中获取指定user_id的所有tweet_id
-            rec_query = "SELECT tweet_id FROM rec WHERE user_id = ?"
-            self._execute_db_command(rec_query, (user_id, ))
-            rec_results = self.db_cursor.fetchall()
-
-            tweet_ids = [row[0] for row in rec_results]
-            rec_tweet_ids = tweet_ids
-
-            # 如果tweet_id数量 >= self.refresh_tweet_count，则随机选择指定数量的tweet_id
-            if len(tweet_ids) >= self.refresh_tweet_count:
-                rec_tweet_ids = random.sample(tweet_ids,
-                                                   self.refresh_tweet_count)
-            
-            # 从following中去获取 tweet
-            # 更改SQL查询，令 refresh得到的 tweet 是这个用户关注的人的 tweet，排序按照点赞数
-            query_following_tweet = (
-                "SELECT tweet.tweet_id, tweet.user_id, tweet.content, tweet.created_at, tweet.num_likes "
-                "FROM tweet "
-                "JOIN follow ON tweet.user_id = follow.followee_id "
-                "WHERE follow.follower_id = ? "
-                "ORDER BY tweet.num_likes DESC  "  # ORDER BY tweet.num_likes DESC
-                "LIMIT ?")
-            self._execute_db_command(query_following_tweet, (
-                user_id,
-                self.following_tweet_count,
-            ))
-
-            following_tweets = self.db_cursor.fetchall()
-            following_tweets_ids = [row[0] for row in following_tweets]
-
-            selected_tweet_ids = following_tweets_ids + rec_tweet_ids
-
-            # 根据选定的tweet_id从tweet表中获取tweet详情
-            placeholders = ', '.join('?' for _ in selected_tweet_ids)
-            # 构造SQL查询字符串
-            tweet_query = (
-                f"SELECT tweet_id, user_id, content, created_at, num_likes, "
-                f"num_dislikes FROM tweet WHERE tweet_id IN ({placeholders})")
-            self._execute_db_command(tweet_query, selected_tweet_ids)
-            results = self.db_cursor.fetchall()
-            if not results:
-                return {"success": False, "message": "No tweets found."}
-            results_with_comments = self._add_comments_to_tweets(results)
-            # 记录操作到trace表
-            action_info = {}
-            trace_insert_query = (
-                "INSERT INTO trace (user_id, created_at, action, info) "
-                "VALUES (?, ?, ?, ?)")
-            self._execute_db_command(
-                trace_insert_query,
-                (user_id, current_time, ActionType.REFRESH.value,
-                 str(action_info)),
-                commit=True)
-            return {"success": True, "tweets": results_with_comments}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-
     async def update_rec_table(self):
         # Recsys(trace/user/post table), 结果是刷新了rec table
         user_table = fetch_table_from_db(self.db_cursor, 'user')
@@ -278,7 +215,7 @@ class Platform:
                 self.max_rec_post_len)
         elif self.recsys_type == RecsysType.TWHIN:
             new_rec_matrix = rec_sys_personalized_twh(
-                user_table, tweet_table, trace_table, rec_matrix,
+                user_table, post_table, trace_table, rec_matrix,
                 self.max_rec_tweet_len)
         elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
@@ -372,8 +309,8 @@ class Platform:
 
             # 确保相关内容此前未被该用户转发过
             retweet_check_query = (
-                "SELECT * FROM 'tweet' WHERE content LIKE ? AND user_id = ?")
-            self._execute_db_command(retweet_check_query, (orig_content,user_id ))
+                "SELECT * FROM 'post' WHERE content LIKE ? AND user_id = ?")
+            self.pl_utils._execute_db_command(retweet_check_query, (orig_content,user_id ))
             if self.db_cursor.fetchone():
                 # 该用户存在转发记录
                 return {

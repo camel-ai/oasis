@@ -64,22 +64,22 @@ def test_rec_sys_personalized_twhin():
         'user_id': 2,
         'bio': 'I like dogs'
     }]
-    tweet_table = [{
-        'tweet_id': '1',
+    post_table = [{
+        'post_id': '1',
         'user_id': 3,
         'content': 'I like dogs'
     }, {
-        'tweet_id': '2',
+        'post_id': '2',
         'user_id': 4,
         'content': 'I like cats'
     }]
     trace_table = []
     rec_matrix = [[None], [], []]
-    max_rec_tweet_len = 2  # 最大推荐长度设置为2
+    max_rec_post_len = 2  # 最大推荐长度设置为2
 
     expected = [None, ['1', '2'], ['1', '2']]
-    result = rec_sys_personalized_twh(user_table, tweet_table, trace_table,
-                                  rec_matrix, max_rec_tweet_len)
+    result = rec_sys_personalized_twh(user_table,post_table, trace_table,
+                                  rec_matrix, max_rec_post_len)
     assert result == expected
 
 
@@ -215,7 +215,7 @@ def test_rec_sys_personalized_sample_posts():
         if i == 2:
             assert result[i] == ['1', '2']
 
-def test_rec_sys_personalized_twhin_sample_tweets():
+def test_rec_sys_personalized_twhin_sample_posts():
     # 测试当推文数量大于最大推荐长度时的情况
     user_table = [{
         'user_id': 1,
@@ -224,34 +224,34 @@ def test_rec_sys_personalized_twhin_sample_tweets():
         'user_id': 2,
         'bio': 'I like dogs'
     }]
-    tweet_table = [{
-        'tweet_id': '1',
+    post_table = [{
+        'post_id': '1',
         'user_id': 3,
         'content': 'I like dogs'
     }, {
-        'tweet_id': '2',
+        'post_id': '2',
         'user_id': 4,
         'content': 'I like cats'
     }, {
-        'tweet_id': '3',
+        'post_id': '3',
         'user_id': 5,
         'content': 'I like birds'
     }]
     trace_table = []  # 在这个测试中未使用，但是为了完整性加入
     rec_matrix = [[None], [], []]  # 假设有两个用户
-    max_rec_tweet_len = 2  # 最大推荐长度设置为2
+    max_rec_post_len = 2  # 最大推荐长度设置为2
 
-    result = rec_sys_personalized_twh(user_table, tweet_table, trace_table,
-                                  rec_matrix, max_rec_tweet_len)
+    result = rec_sys_personalized_twh(user_table, post_table, trace_table,
+                                  rec_matrix, max_rec_post_len)
     print(result)
     # 验证第一个元素是None
     assert result[0] is None
     # 验证每个用户获得了2个推文ID
     for rec in result[1:]:
-        assert len(rec) == max_rec_tweet_len
+        assert len(rec) == max_rec_post_len
         # 验证推荐的推文ID确实存在于原始推文ID列表中
-        for tweet_id in rec:
-            assert tweet_id in ['1', '2', '3']
+        for post_id in rec:
+            assert post_id in ['1', '2', '3']
 
     # personalized 推荐应该是根据用户的bio进行推荐
     for i in range(1, len(result)):

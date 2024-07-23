@@ -12,7 +12,7 @@ def process_batch(model:AutoModel, tokenizer:AutoTokenizer, batch_texts:List[str
     outputs = model(**inputs)
     return outputs.pooler_output
 
-def generate_tweet_vector(model:AutoModel, tokenizer:AutoTokenizer, texts, batch_size):
+def generate_post_vector(model:AutoModel, tokenizer:AutoTokenizer, texts, batch_size):
     # 循环处理所有消息
     # 如果消息列表过大，采用batch的方式去处理。
     all_outputs = []
@@ -20,7 +20,7 @@ def generate_tweet_vector(model:AutoModel, tokenizer:AutoTokenizer, texts, batch
         batch_texts = texts[i:i+batch_size]
         batch_outputs = process_batch(model, tokenizer, batch_texts)
         all_outputs.append(batch_outputs)
-    all_outputs_tensor = torch.cat(all_outputs, dim=0) # num_tweets x dimension 
+    all_outputs_tensor = torch.cat(all_outputs, dim=0) # num_posts x dimension 
     return all_outputs_tensor.cpu()
 
 if __name__ == "__main__":
@@ -28,5 +28,5 @@ if __name__ == "__main__":
     texts = ["I'm using TwHIN-BERT! #TwHIN-BERT #NLP"] * 10000  # 这里用相同的消息重复10000次作为示例
     # 定义批量大小
     batch_size = 100
-    all_outputs_tensor = generate_tweet_vector(texts, batch_size)
+    all_outputs_tensor = generate_post_vector(texts, batch_size)
     print(all_outputs_tensor.shape)
