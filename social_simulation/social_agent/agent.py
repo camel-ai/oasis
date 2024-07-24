@@ -116,7 +116,7 @@ class SocialAgent:
                 args = json.loads(
                     response.choices[0].message.function_call.arguments)
                 print(f"Agent {self.agent_id} is performing "
-                      f"twitter action: {action_name} with args: {args}")
+                      f"action: {action_name} with args: {args}")
                 await getattr(self.env.action, action_name)(**args)
                 self.perform_agent_graph_action(action_name, args)
 
@@ -145,7 +145,7 @@ class SocialAgent:
                         name = function['name']
                         arguments = function['arguments']
                         print(f"Agent {self.agent_id} is performing "
-                              f"twitter action: {name} with args: {arguments}")
+                              f"action: {name} with args: {arguments}")
                         exec_functions.append({
                             'name': name,
                             'arguments': arguments
@@ -168,7 +168,7 @@ class SocialAgent:
                 except Exception as e:
                     print(Fore.LIGHTRED_EX + f"Agent {self.agent_id}, time " +
                           Style.BRIGHT + str(retry) + Style.RESET_ALL +
-                          f"\nError: {e} when performing twitter action:" +
+                          f"\nError: {e} when performing action:" +
                           f" {function['name']} with " +
                           f"args: {function['arguments']}\n" + Fore.RESET +
                           "=" * 20 + "\n")
