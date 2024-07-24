@@ -216,7 +216,7 @@ class Platform:
         elif self.recsys_type == RecsysType.TWHIN:
             new_rec_matrix = rec_sys_personalized_twh(
                 user_table, post_table, trace_table, rec_matrix,
-                self.max_rec_tweet_len)
+                self.max_rec_post_len)
         elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
                                             self.max_rec_post_len)
@@ -293,8 +293,8 @@ class Platform:
                 return {"success": False, "error": "Post not found."}
 
             prev_content = results[0][2]
-            if "original_tweet: " in prev_content:
-                orig_content = prev_content.split("original_tweet: ")[-1]
+            if "original_post: " in prev_content:
+                orig_content = prev_content.split("original_post: ")[-1]
             else:
                 orig_content = prev_content
             orig_content = f"%{orig_content}%"
@@ -308,9 +308,9 @@ class Platform:
                 f"original_post: {prev_content}")
 
             # 确保相关内容此前未被该用户转发过
-            retweet_check_query = (
+            repost_check_query = (
                 "SELECT * FROM 'post' WHERE content LIKE ? AND user_id = ?")
-            self.pl_utils._execute_db_command(retweet_check_query, (orig_content,user_id ))
+            self.pl_utils._execute_db_command(repost_check_query, (orig_content,user_id ))
             if self.db_cursor.fetchone():
                 # 该用户存在转发记录
                 return {
