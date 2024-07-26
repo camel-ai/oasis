@@ -26,7 +26,6 @@ class Platform:
 
     def __init__(self,
                  db_path: str,
-                 csv_path: str,
                  channel: Any,
                  sandbox_clock: Clock | None = None,
                  start_time: datetime | None = None,
@@ -35,7 +34,6 @@ class Platform:
                  recsys_type: str | RecsysType = "twitter",
                  refresh_post_count: int = 5):
         self.db_path = db_path
-        self.csv_path = csv_path
         # 未指定时钟时，默认platform的时间放大系数为60
         if sandbox_clock is None:
             sandbox_clock = Clock(60)
@@ -82,7 +80,7 @@ class Platform:
 
             if action == ActionType.EXIT:
                 if self.db_path == ":memory:":
-                    store_path = self.csv_path.split("/")[-1].split(".")[0] + ".db"
+                    store_path = "mocktwitter.db"
                     dst = sqlite3.connect(store_path)
                     with dst:
                         self.db.backup(dst)
