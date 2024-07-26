@@ -12,7 +12,7 @@ from social_simulation.social_platform.config import UserInfo
 from social_simulation.social_platform.platform import Platform
 
 parent_folder = osp.dirname(osp.abspath(__file__))
-test_db_filepath = osp.join(parent_folder, "test.db")
+test_db_filepath = osp.join(parent_folder, "test_hci.db")
 
 
 # 定义一个fixture来初始化数据库和Twitter实例
@@ -27,7 +27,7 @@ def setup_twitter():
 async def test_perform_action_by_hci(monkeypatch, setup_twitter):
     channel = Channel()
 
-    infra = Platform(test_db_filepath, channel, rec_update_time=1)
+    infra = Platform(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())
 
     inputs = iter(["Alice", "Ali", "a student"])
@@ -53,6 +53,7 @@ async def test_perform_action_by_hci(monkeypatch, setup_twitter):
         else:
             inputs = iter([i])
             monkeypatch.setattr('builtins.input', lambda _: next(inputs))
+        await infra.update_rec_table()
         result = await test_agent.perform_action_by_hci()
         assert result['success'] is True
 
