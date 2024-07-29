@@ -38,7 +38,7 @@ parser.add_argument(
 )
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-DEFAULT_DB_PATH = os.path.join(DATA_DIR, "mock_twitter.db")
+DEFAULT_DB_PATH = ":memory:"
 DEFAULT_CSV_PATH = os.path.join(DATA_DIR, "user_all_id_time.csv")
 
 
@@ -81,6 +81,7 @@ async def running(
     for timestep in range(num_timesteps):
         social_log.info(f"timestep:{timestep}")
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
+        await infra.update_rec_table()
         # 0.2 * timestep here means 12 minutes
         simulation_time_hour = start_hour + 0.2 * timestep
         for node_id, agent in agent_graph.get_agents():

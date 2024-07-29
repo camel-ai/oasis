@@ -29,29 +29,24 @@ class Platform:
                  channel: Any,
                  sandbox_clock: Clock | None = None,
                  start_time: datetime | None = None,
-                 rec_update_time: int = 20,
                  show_score: bool = False,
                  allow_self_rating: bool = True,
                  recsys_type: str | RecsysType = "twitter",
                  refresh_post_count: int = 5):
+        self.db_path = db_path
         # 未指定时钟时，默认platform的时间放大系数为60
         if sandbox_clock is None:
             sandbox_clock = Clock(60)
         if start_time is None:
             start_time = datetime.now()
-        create_db(db_path)
 
-        self.db = sqlite3.connect(db_path, check_same_thread=False)
-        self.db_cursor = self.db.cursor()
+        self.db, self.db_cursor = create_db(db_path)
+        self.db.execute("PRAGMA synchronous = OFF")
 
         self.channel = channel
         self.start_time = start_time
         self.sandbox_clock = sandbox_clock
 
-        # channel传进的操作数量
-        self.ope_cnt = -1
-        # 推荐系统缓存更新的时间间隔（以传进来的操作数为单位）
-        self.rec_update_time = rec_update_time
         self.recsys_type = RecsysType(recsys_type)
 
         # 是否要模拟显示类似reddit的那种点赞数减去点踩数作为分数
@@ -78,17 +73,17 @@ class Platform:
     async def running(self):
         while True:
             message_id, data = await self.channel.receive_from()
-            if message_id:
-                self.ope_cnt += 1
+
             agent_id, message, action = data
             action = ActionType(action)
 
-            if (self.ope_cnt % self.rec_update_time == 0
-                    and action != ActionType.REFRESH):
-                self.ope_cnt += 1
-                await self.update_rec_table()
-
             if action == ActionType.EXIT:
+                if self.db_path == ":memory:":
+                    store_path = "mocktwitter.db"
+                    dst = sqlite3.connect(store_path)
+                    with dst:
+                        self.db.backup(dst)
+
                 self.db_cursor.close()
                 self.db.close()
                 break

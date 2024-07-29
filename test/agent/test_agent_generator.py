@@ -44,7 +44,7 @@ def test_agent_generator():
 
 
 @pytest.mark.skip(reason="Now controllable agent is not supported")
-@pytest.mark.asyncio
+#@pytest.mark.asyncio
 async def test_generate_controllable(monkeypatch):
     agent_info_path = "./test/test_data/user_all_id_time.csv"
     channel = Channel()

@@ -18,7 +18,7 @@ from social_simulation.social_platform.config import UserInfo
 async def generate_agents(
     agent_info_path: str,
     channel: Channel,
-    num_agents: int,
+    num_agents: int = 26,
     model_random_seed: int = 42,
     cfgs: list[Any] | None = None,
 ) -> AgentGraph:

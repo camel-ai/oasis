@@ -13,7 +13,7 @@ from social_simulation.social_platform.config import UserInfo
 from social_simulation.social_platform.platform import Platform
 
 parent_folder = osp.dirname(osp.abspath(__file__))
-test_db_filepath = osp.join(parent_folder, "test.db")
+test_db_filepath = osp.join(parent_folder, "test_multi.db")
 
 
 @pytest.fixture
