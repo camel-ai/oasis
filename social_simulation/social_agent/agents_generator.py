@@ -110,15 +110,9 @@ async def generate_agents(
 
         # following_id_list = ast.literal_eval(
         #         agent_info["following_agentid_list"][agent_id])
-        following_id_list = random.randint(0, len(agent_info))
-        if len(following_id_list) != 0:
-            follow_tasks = [
-                agent.env.action.follow(following_id + 1)
-                for following_id in following_id_list
-            ]
-            await asyncio.gather(*follow_tasks)
-            for following_id in following_id_list:
-                agent_graph.add_edge(agent_id, following_id)
+        following_id = random.randint(0, len(agent_info))
+        await agent.env.action.follow(following_id + 1)
+        agent_graph.add_edge(agent_id, following_id)
 
         previous_posts = ast.literal_eval(
                 agent_info['previous_tweets'][agent_id])
