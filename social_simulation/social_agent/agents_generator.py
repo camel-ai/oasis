@@ -17,7 +17,8 @@ from social_simulation.social_platform.config import UserInfo
 
 async def generate_agents(
     agent_info_path: str,
-    channel: Channel,
+    twitter_channel: Channel,
+    inference_channel: Channel,
     num_agents: int = 26,
     model_random_seed: int = 42,
     cfgs: list[Any] | None = None,
@@ -51,6 +52,7 @@ async def generate_agents(
     random.shuffle(model_types)
     assert len(model_types) == num_agents
     agent_info = pd.read_csv(agent_info_path)
+    # agent_info = agent_info[:10000]
     assert len(model_types) == len(agent_info), \
         (f"Mismatch between the number of agents "
          f"and the number of models, with {len(agent_info)} "
@@ -88,17 +90,13 @@ async def generate_agents(
         )
 
         model_type: ModelType = model_types[agent_id]
-        model_config = model_config_dict[model_type]
+
         agent = SocialAgent(
             agent_id=agent_id,
             user_info=user_info,
-            channel=channel,
-            model_path=model_config.get("model_path", model_type.value),
-            server_url=model_config.get("server_url",
-                                        "http://10.140.0.144:8000/v1"),
-            stop_tokens=model_config.get("stop_tokens"),
+            twitter_channel=twitter_channel,
+            inference_channel=inference_channel,
             model_type=model_type,
-            temperature=model_temperatures[agent_id],
             agent_graph=agent_graph,
         )
 
@@ -110,9 +108,10 @@ async def generate_agents(
             agent_info["description"][agent_id],
         )
 
-        if agent_info["following_agentid_list"][agent_id] != "0":
-            following_id_list = ast.literal_eval(
-                agent_info["following_agentid_list"][agent_id])
+        # following_id_list = ast.literal_eval(
+        #         agent_info["following_agentid_list"][agent_id])
+        following_id_list = random.randint(0, len(agent_info))
+        if len(following_id_list) != 0:
             follow_tasks = [
                 agent.env.action.follow(following_id + 1)
                 for following_id in following_id_list
@@ -121,10 +120,9 @@ async def generate_agents(
             for following_id in following_id_list:
                 agent_graph.add_edge(agent_id, following_id)
 
-        if len(agent_info['previous_tweets']) != 0:
-            previous_posts = ast.literal_eval(
+        previous_posts = ast.literal_eval(
                 agent_info['previous_tweets'][agent_id])
-
+        if len(previous_posts) != 0:
             post_tasks = [
                 agent.env.action.create_post(post) for post in previous_posts
             ]

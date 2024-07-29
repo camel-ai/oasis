@@ -4,7 +4,7 @@ import random
 import sqlite3
 from datetime import datetime, timedelta
 from typing import Any
-
+import asyncio
 from social_simulation.clock.clock import Clock
 from social_simulation.social_platform.database import (
     create_db, fetch_rec_table_as_matrix, fetch_table_from_db)
@@ -114,6 +114,9 @@ class Platform:
                 await self.channel.send_to((message_id, agent_id, result))
             else:
                 raise ValueError(f"Action {action} is not supported")
+    
+    def run(self):
+        asyncio.run(self.running())
 
     # 注册
     async def sign_up(self, agent_id, user_message):
@@ -603,17 +606,17 @@ class Platform:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
                 return self.pl_utils._not_signup_error_message(agent_id)
-            # 检查是否已经存在关注记录
-            follow_check_query = ("SELECT * FROM follow WHERE follower_id = ? "
-                                  "AND followee_id = ?")
-            self.pl_utils._execute_db_command(follow_check_query,
-                                              (user_id, followee_id))
-            if self.db_cursor.fetchone():
-                # 已存在关注记录
-                return {
-                    "success": False,
-                    "error": "Follow record already exists."
-                }
+            # # 检查是否已经存在关注记录
+            # follow_check_query = ("SELECT * FROM follow WHERE follower_id = ? "
+            #                       "AND followee_id = ?")
+            # self.pl_utils._execute_db_command(follow_check_query,
+            #                                   (user_id, followee_id))
+            # if self.db_cursor.fetchone():
+            #     # 已存在关注记录
+            #     return {
+            #         "success": False,
+            #         "error": "Follow record already exists."
+            #     }
 
             # 在follow表中添加记录
             follow_insert_query = (
@@ -624,20 +627,20 @@ class Platform:
                 commit=True)
             follow_id = self.db_cursor.lastrowid  # 获取刚刚插入的关注记录的ID
 
-            # 更新user表中的following字段
-            user_update_query1 = (
-                "UPDATE user SET num_followings = num_followings + 1 "
-                "WHERE user_id = ?")
-            self.pl_utils._execute_db_command(user_update_query1, (user_id, ),
-                                              commit=True)
+            # # 更新user表中的following字段
+            # user_update_query1 = (
+            #     "UPDATE user SET num_followings = num_followings + 1 "
+            #     "WHERE user_id = ?")
+            # self.pl_utils._execute_db_command(user_update_query1, (user_id, ),
+            #                                   commit=True)
 
-            # 更新user表中的follower字段
-            user_update_query2 = (
-                "UPDATE user SET num_followers = num_followers + 1 "
-                "WHERE user_id = ?")
-            self.pl_utils._execute_db_command(user_update_query2,
-                                              (followee_id, ),
-                                              commit=True)
+            # # 更新user表中的follower字段
+            # user_update_query2 = (
+            #     "UPDATE user SET num_followers = num_followers + 1 "
+            #     "WHERE user_id = ?")
+            # self.pl_utils._execute_db_command(user_update_query2,
+            #                                   (followee_id, ),
+            #                                   commit=True)
 
             # 记录操作到trace表
             action_info = {"follow_id": follow_id}

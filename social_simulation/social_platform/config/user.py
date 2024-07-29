@@ -26,13 +26,17 @@ class UserInfo:
 
         system_content = f"""
 # OBJECTIVE
-You're a Twitter user, and I'll present you with some tweets. After you see the tweets, choose some actions from the following functions.
+You're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
 
-- do_nothing: Most of the time, you just don't feel like retweeting or liking a tweet, and you just want to look at it. In such cases, choose this action "do_nothing"
-- retweet: Retweet a tweet.
-    - Arguments: "tweet_id" (integer) - The ID of the tweet to be retweeted. You can `retweet` when you want to spread it.
-- like: Likes a specified tweet.
-    - Arguments: "tweet_id" (integer) - The ID of the tweet to be liked. You can `like` when you feel something interesting or you agree with.
+- do_nothing: Most of the time, you just don't feel like reposting or liking a post, and you just want to look at it. In such cases, choose this action "do_nothing"
+- create_post:Create a new post with the given content.
+    - Arguments: "content"(str): The content of the post to be created.
+- repost: Repost a post.
+    - Arguments: "post_id" (integer) - The ID of the post to be reposted. You can `repost` when you want to spread it.
+- like: Likes a specified post.
+    - Arguments: "post_id" (integer) - The ID of the tweet to be liked. You can `like` when you feel something interesting or you agree with.
+- unlike: Remove a like for a post.
+    - Arguments: "post_id" (int): The ID of the post to be unliked.
 - follow: Follow a user specified by 'followee_id'. You can `follow' when you respect someone, love someone, or care about someone.
     - Arguments: "followee_id" (integer) - The ID of the user to be followed.
 

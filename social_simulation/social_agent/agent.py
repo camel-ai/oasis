@@ -4,11 +4,10 @@ import inspect
 import json
 from typing import TYPE_CHECKING, Any
 import logging
-from camel.configs import ChatGPTConfig, OpenSourceConfig
 from camel.memories import (ChatHistoryMemory, MemoryRecord,
                             ScoreBasedContextCreator)
 from camel.messages import BaseMessage
-from camel.models import BaseModelBackend, ModelFactory
+from camel.utils import OpenAITokenCounter
 from camel.types import ModelType, OpenAIBackendRole
 from colorama import Fore, Style
 
@@ -35,48 +34,25 @@ class SocialAgent:
         self,
         agent_id: int,
         user_info: UserInfo,
-        channel: Channel,
-        model_path:
-        str = "/mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct",  # noqa
-        server_url: str = "http://10.140.0.144:8000/v1",
-        stop_tokens: list[str] = None,
+        twitter_channel: Channel,
+        inference_channel: Channel,
         model_type: ModelType = ModelType.LLAMA_3,
-        temperature: float = 0.0,
         agent_graph: "AgentGraph" = None,
     ):
         self.agent_id = agent_id
         self.user_info = user_info
-        self.channel = channel
-        self.env = SocialEnvironment(SocialAction(agent_id, channel))
+        self.twitter_channel = twitter_channel
+        self.inference_channel = inference_channel
+        self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
         self.system_message = BaseMessage.make_assistant_message(
             role_name="User",
             content=self.user_info.to_system_message(),
         )
         self.model_type = model_type
-
-        if model_type.is_open_source:
-            self.has_function_call = False
-            api_params = ChatGPTConfig(
-                temperature=temperature,
-                stop=stop_tokens,
-            )
-            model_config = OpenSourceConfig(
-                model_path=model_path,
-                server_url=server_url,
-                api_params=api_params,
-            )
-        else:
-            self.has_function_call = True
-            model_config = ChatGPTConfig(
-                temperature=temperature,
-                # tools=self.env.action.get_openai_function_list(),
-            )
-        self.model_backend: BaseModelBackend = ModelFactory.create(
-            model_type, model_config.__dict__)
-        self.model_token_limit = self.model_backend.token_limit
+        self.has_function_call = False
         context_creator = ScoreBasedContextCreator(
-            self.model_backend.token_counter,
-            self.model_token_limit,
+            OpenAITokenCounter(ModelType.GPT_3_5_TURBO),
+            4096,
         )
         self.memory = ChatHistoryMemory(context_creator, window_size=5)
         self.system_message = BaseMessage.make_assistant_message(
@@ -132,9 +108,11 @@ class SocialAgent:
                         "content": self.system_message.content
                     }] + openai_messages
 
-                response = self.model_backend.run(openai_messages)
-                agent_log.info(f"Agent {self.agent_id} response: {response}")
-                content = response.choices[0].message.content
+                message_id = await self.inference_channel.write_to_receive_queue(
+                    openai_messages)
+                message_id, content = await self.inference_channel.read_from_send_queue(message_id)
+                agent_log.info(f"Agent {self.agent_id} receve response: {content}")
+
                 try:
                     content_json = json.loads(content)
                     functions = content_json['functions']
@@ -153,12 +131,13 @@ class SocialAgent:
                         self.perform_agent_graph_action(name, arguments)
                     break
                 except Exception as e:
-                    print(Fore.LIGHTRED_EX + f"Agent {self.agent_id}, time " +
-                          Style.BRIGHT + str(retry) + Style.RESET_ALL +
-                          f"\nError: {e} when parsing response:{content}\n" +
-                          Fore.RESET + "=" * 20 + "\n")
-                    print(Fore.LIGHTBLUE_EX + "For DEBUG, Messages:",
-                          openai_messages, "\n" + Fore.RESET + "=" * 20 + "\n")
+                    # print(Fore.LIGHTRED_EX + f"Agent {self.agent_id}, time " +
+                    #       Style.BRIGHT + str(retry) + Style.RESET_ALL +
+                    #       f"\nError: {e} when parsing response:{content}\n" +
+                    #       Fore.RESET + "=" * 20 + "\n")
+                    # print(Fore.LIGHTBLUE_EX + "For DEBUG, Messages:",
+                    #       openai_messages, "\n" + Fore.RESET + "=" * 20 + "\n")
+                    agent_log.error(f"Agent {self.agent_id} error: {e}")
                     exec_functions = []
                     retry -= 1
             for function in exec_functions:
@@ -166,13 +145,16 @@ class SocialAgent:
                     await getattr(self.env.action,
                                   function['name'])(**function['arguments'])
                 except Exception as e:
-                    print(Fore.LIGHTRED_EX + f"Agent {self.agent_id}, time " +
-                          Style.BRIGHT + str(retry) + Style.RESET_ALL +
-                          f"\nError: {e} when performing twitter action:" +
-                          f" {function['name']} with " +
-                          f"args: {function['arguments']}\n" + Fore.RESET +
-                          "=" * 20 + "\n")
+                    # print(Fore.LIGHTRED_EX + f"Agent {self.agent_id}, time " +
+                    #       Style.BRIGHT + str(retry) + Style.RESET_ALL +
+                    #       f"\nError: {e} when performing twitter action:" +
+                    #       f" {function['name']} with " +
+                    #       f"args: {function['arguments']}\n" + Fore.RESET +
+                    #       "=" * 20 + "\n")
+                    agent_log.error(f"Agent {self.agent_id} error: {e}")
 
+        if retry == 0:
+            content = "I'm sorry, I cannot understand your request. " 
         agent_msg = BaseMessage.make_assistant_message(role_name="Assistant",
                                                        content=content)
         self.memory.write_record(
