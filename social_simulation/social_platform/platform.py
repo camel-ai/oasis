@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import random
 import sqlite3
 from datetime import datetime, timedelta
@@ -12,14 +13,14 @@ from social_simulation.social_platform.platform_utils import PlatformUtils
 from social_simulation.social_platform.recsys import (
     rec_sys_personalized_with_trace, rec_sys_random, rec_sys_reddit)
 from social_simulation.social_platform.typing import ActionType, RecsysType
-import logging
 
-twitter_log = logging.getLogger(name='social.twitter')
-twitter_log.setLevel('DEBUG')
-file_handler = logging.FileHandler('social.twitter.log')
+logger = logging.getLogger(name=__name__)
+logger.setLevel('DEBUG')
+file_handler = logging.FileHandler(f"{__name__}.log")
 file_handler.setLevel('DEBUG')
-file_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
-twitter_log.addHandler(file_handler)
+file_handler.setFormatter(
+    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+logger.addHandler(file_handler)
 
 
 class Platform:
@@ -143,7 +144,10 @@ class Platform:
             action_info = {"name": name, "user_name": user_name, "bio": bio}
             self.pl_utils._record_trace(user_id, ActionType.SIGNUP.value,
                                         action_info, current_time)
-            twitter_log.info(f"Trace inserted: user_id={user_id}, current_time={current_time}, action={ActionType.SIGNUP.value}, info={action_info}")
+            logger.info(f"Trace inserted: user_id={user_id}, "
+                        f"current_time={current_time}, "
+                        f"action={ActionType.SIGNUP.value}, "
+                        f"info={action_info}")
             return {"success": True, "user_id": user_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -223,15 +227,14 @@ class Platform:
         #                                           commit=True)
 
         # 批量插入更省时, 创建插入值列表
-        insert_values = [
-            (user_id, post_id) 
-            for user_id in range(1, len(new_rec_matrix)) 
-            for post_id in new_rec_matrix[user_id]]
+        insert_values = [(user_id, post_id)
+                         for user_id in range(1, len(new_rec_matrix))
+                         for post_id in new_rec_matrix[user_id]]
 
         # 批量插入到数据库
         self.pl_utils._execute_many_db_command(
-            "INSERT INTO rec (user_id, post_id) VALUES (?, ?)", 
-            insert_values, 
+            "INSERT INTO rec (user_id, post_id) VALUES (?, ?)",
+            insert_values,
             commit=True)
 
     async def create_post(self, agent_id: int, content: str):
@@ -254,7 +257,10 @@ class Platform:
             action_info = {"content": content, "post_id": post_id}
             self.pl_utils._record_trace(user_id, ActionType.CREATE_POST.value,
                                         action_info, current_time)
-            twitter_log.info(f"Trace inserted: user_id={user_id}, current_time={current_time}, action={ActionType.CREATE_POST.value}, info={action_info}")
+            logger.info(f"Trace inserted: user_id={user_id}, "
+                        f"current_time={current_time}, "
+                        f"action={ActionType.CREATE_POST.value}, "
+                        f"info={action_info}")
             return {"success": True, "post_id": post_id}
 
         except Exception as e:
@@ -643,7 +649,10 @@ class Platform:
             action_info = {"follow_id": follow_id}
             self.pl_utils._record_trace(user_id, ActionType.FOLLOW.value,
                                         action_info, current_time)
-            twitter_log.info(f"Trace inserted: user_id={user_id}, current_time={current_time}, action={ActionType.FOLLOW.value}, info={action_info}")
+            logger.info(f"Trace inserted: user_id={user_id}, "
+                        f"current_time={current_time}, "
+                        f"action={ActionType.FOLLOW.value}, "
+                        f"info={action_info}")
             return {"success": True, "follow_id": follow_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
