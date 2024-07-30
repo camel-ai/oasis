@@ -4,10 +4,12 @@ import random
 from datetime import datetime
 from math import log
 from typing import Any, Dict, List
-
+import torch
 import numpy as np
 # init model
 from sentence_transformers import SentenceTransformer
+
+import time
 
 from .typing import ActionType
 
@@ -16,6 +18,14 @@ try:
 except Exception as e:
     print(e)
     model = None
+
+# Move model to GPU if available
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if model is not None:
+    model.cuda(device)
+else:
+    print('Model not available, using random similarity.')
+    pass
 
 
 def rec_sys_random(user_table: List[Dict[str,
@@ -148,6 +158,7 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
     # 获取所有推文的ID
     post_ids = [post['post_id'] for post in post_table]
 
+    start_time = time.time()
     if len(post_ids) <= max_rec_post_len:
         # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
         new_rec_matrix = [post_ids] * (len(rec_matrix) - 1)
@@ -155,36 +166,56 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
     else:
         new_rec_matrix = [None]
         # 如果推文数量大于最大推荐数，每个用户随机获得personalized推文ID
-        for idx in range(1, len(rec_matrix)):
-            user_id = user_table[idx - 1]['user_id']
-            user_bio = user_table[idx - 1]['bio']
-            # filter out posts that belong to the user
-            available_post_contents = [(post['post_id'], post['content'])
-                                       for post in post_table
-                                       if post['user_id'] != user_id]
-            # calculate similarity between user bio and post text
-            post_scores = []
-            for post_id, post_content in available_post_contents:
-                if model is not None:
-                    user_embedding = model.encode(user_bio)
-                    post_embedding = model.encode(post_content)
-                    similarity = np.dot(user_embedding, post_embedding) / (
-                        np.linalg.norm(user_embedding) *
-                        np.linalg.norm(post_embedding))
-                else:
-                    similarity = random.random()
+        user_id = [user_table[i]['user_id'] for i in range(0, len(rec_matrix) - 1)]
+        user_bio = [user_table[i]['bio'] if user_table[i]['bio'] is not None else '' for i in
+                    range(0, len(rec_matrix) - 1)]
 
-                post_scores.append((post_id, similarity))
+        # filter out posts that belong to the user
+        available_post_contents = [(post['post_id'], post['content'])
+                                   for post in post_table
+                                   if post['user_id'] != user_id]
 
-            # sort posts by similarity
-            post_scores.sort(key=lambda x: x[1], reverse=True)
+        if model:
+            post_content = [post_content for _, post_content in available_post_contents]
+            user_bio = [user_bio] * len(post_content)
 
-            # extract post ids
-            rec_post_ids = [
-                post_id for post_id, _ in post_scores[:max_rec_post_len]
-            ]
-            new_rec_matrix.append(rec_post_ids)
+            user_embeddings = model.encode(user_bio,
+                                           convert_to_tensor=True,
+                                           device=device)
+            post_embeddings = model.encode(post_content,
+                                            convert_to_tensor=True,
+                                            device=device)
 
+            # Compute dot product similarity
+            dot_product = torch.matmul(user_embeddings, post_embeddings.T)
+
+            # Compute norm
+            user_norms = torch.norm(user_embeddings, dim=1)
+            post_norms = torch.norm(post_embeddings, dim=1)
+
+            # Compute cosine similarity
+            similarities = dot_product / (user_norms[:, None] * post_norms[None, :])
+
+            # Convert to list of tuples
+            post_scores = list(zip([post_id for post_id, _ in available_post_contents], similarities.tolist()))
+        else:
+            # Generate random similarities
+            post_scores = list(zip([post_id for post_id, _ in available_post_contents],
+                                   torch.rand(len(available_post_contents)).tolist()))
+
+
+        # sort posts by similarity
+        post_scores.sort(key=lambda x: x[1], reverse=True)
+
+        # extract post ids
+        rec_post_ids = [
+            post_id for post_id, _ in post_scores[:max_rec_post_len]
+        ]
+
+        new_rec_matrix.append(rec_post_ids)
+
+    end_time = time.time()
+    print(f'Personalized recommendation time: {end_time - start_time:.6f}s')
     return new_rec_matrix
 
 
@@ -295,6 +326,9 @@ def rec_sys_personalized_with_trace(
     Returns:
         List[List]: Updated recommendation matrix.
     """
+
+    start_time = time.time()
+
     # 获取所有推文的ID
     post_ids = [post['post_id'] for post in post_table]
     if len(post_ids) <= max_rec_post_len:
@@ -376,5 +410,6 @@ def rec_sys_personalized_with_trace(
                                                  swap_rate)
 
             new_rec_matrix.append(rec_post_ids)
-
+    end_time = time.time()
+    print(f'Personalized recommendation time: {end_time - start_time:.6f}s')
     return new_rec_matrix
