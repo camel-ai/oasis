@@ -10,7 +10,7 @@ from social_simulation.social_platform.database import (
     create_db, fetch_rec_table_as_matrix, fetch_table_from_db)
 from social_simulation.social_platform.platform_utils import PlatformUtils
 from social_simulation.social_platform.recsys import (
-    rec_sys_personalized_with_trace, rec_sys_random, rec_sys_reddit)
+    rec_sys_personalized_with_trace, rec_sys_random, rec_sys_reddit, rec_sys_personalized)
 from social_simulation.social_platform.typing import ActionType, RecsysType
 
 
@@ -197,9 +197,12 @@ class Platform:
                                             trace_table, rec_matrix,
                                             self.max_rec_post_len)
         elif self.recsys_type == RecsysType.TWITTER:
-            new_rec_matrix = rec_sys_personalized_with_trace(
-                user_table, post_table, trace_table, rec_matrix,
-                self.max_rec_post_len)
+            # new_rec_matrix = rec_sys_personalized_with_trace(
+            #     user_table, post_table, trace_table, rec_matrix,
+            #     self.max_rec_post_len)
+            new_rec_matrix = rec_sys_personalized(user_table, post_table,
+                                                    trace_table, rec_matrix,
+                                                    self.max_rec_post_len)
         elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
                                             self.max_rec_post_len)
