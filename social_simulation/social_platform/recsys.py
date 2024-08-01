@@ -157,32 +157,23 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
     """
     # 获取所有推文的ID
     post_ids = [post['post_id'] for post in post_table]
-
+    print(f'Running personalized recommendation for {len(user_table)} users......')
     start_time = time.time()
     if len(post_ids) <= max_rec_post_len:
-        # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
+        # If the number of posts is less than or equal to the maximum recommended length, each user gets all post IDs
         new_rec_matrix = [post_ids] * (len(rec_matrix) - 1)
         new_rec_matrix = [None] + new_rec_matrix
     else:
         new_rec_matrix = [None]
-        # 如果推文数量大于最大推荐数，每个用户随机获得personalized推文ID
-        user_id = [user_table[i]['user_id'] for i in range(0, len(rec_matrix) - 1)]
-        user_bio = [user_table[i]['bio'] if user_table[i]['bio'] is not None else '' for i in
-                    range(0, len(rec_matrix) - 1)]
-
-        # filter out posts that belong to the user
-        available_post_contents = [(post['post_id'], post['content'])
-                                   for post in post_table
-                                   if post['user_id'] != user_id]
+        # If the number of posts is greater than the maximum recommended length, each user gets personalized post IDs
+        user_bios = [user['bio'] if 'bio' in user and user['bio'] is not None else '' for user in user_table]
+        post_contents = [post['content'] for post in post_table]
 
         if model:
-            post_content = [post_content for _, post_content in available_post_contents]
-            user_bio = [user_bio] * len(post_content)
-
-            user_embeddings = model.encode(user_bio,
+            user_embeddings = model.encode(user_bios,
                                            convert_to_tensor=True,
                                            device=device)
-            post_embeddings = model.encode(post_content,
+            post_embeddings = model.encode(post_contents,
                                             convert_to_tensor=True,
                                             device=device)
 
@@ -196,23 +187,30 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
             # Compute cosine similarity
             similarities = dot_product / (user_norms[:, None] * post_norms[None, :])
 
-            # Convert to list of tuples
-            post_scores = list(zip([post_id for post_id, _ in available_post_contents], similarities.tolist()))
         else:
             # Generate random similarities
-            post_scores = list(zip([post_id for post_id, _ in available_post_contents],
-                                   torch.rand(len(available_post_contents)).tolist()))
+            similarities = torch.rand(len(user_table), len(post_table))
 
 
-        # sort posts by similarity
-        post_scores.sort(key=lambda x: x[1], reverse=True)
+        # Iterate through each user to generate personalized recommendations.
+        for user_index, user in enumerate(user_table):
+            # Filter out posts made by the current user.
+            filtered_post_indices = [
+                i for i, post in enumerate(post_table) if post['user_id'] != user['user_id']
+            ]
 
-        # extract post ids
-        rec_post_ids = [
-            post_id for post_id, _ in post_scores[:max_rec_post_len]
-        ]
+            user_similarities = similarities[user_index, filtered_post_indices]
 
-        new_rec_matrix.append(rec_post_ids)
+            # Get the corresponding post IDs for the filtered posts.
+            filtered_post_ids = [post_table[i]['post_id'] for i in filtered_post_indices]
+
+            # Determine the top posts based on the similarities, limited by max_rec_post_len.
+            _, top_indices = torch.topk(user_similarities, k=min(max_rec_post_len, len(filtered_post_ids)))
+
+            top_post_ids = [filtered_post_ids[i] for i in top_indices.tolist()]
+
+            # Append the top post IDs to the new recommendation matrix.
+            new_rec_matrix.append(top_post_ids)
 
     end_time = time.time()
     print(f'Personalized recommendation time: {end_time - start_time:.6f}s')
