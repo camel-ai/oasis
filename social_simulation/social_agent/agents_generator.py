@@ -43,7 +43,7 @@ async def generate_agents(
     model_types = []
     model_temperatures = []
     model_config_dict = {}
-    for i, cfg in enumerate(cfgs):
+    for _, cfg in enumerate(cfgs):
         model_type = ModelType(cfg["model_type"])
         model_config_dict[model_type] = cfg
         model_types.extend([model_type] * cfg["num"])
