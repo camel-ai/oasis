@@ -83,7 +83,11 @@ class SocialAgent:
 
         openai_messages, num_tokens = self.memory.get_context()
         content = ""
-
+        if not openai_messages:
+            openai_messages = [{
+                        "role": self.system_message.role_name,
+                        "content": self.system_message.content
+                    }]
         agent_log.info(f"Agent {self.agent_id} is running with prompt: {openai_messages}")
 
         if self.has_function_call:
