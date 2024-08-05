@@ -130,6 +130,18 @@ class SocialAgent:
         "arguments": {}
     }],
 }'''
+                if not content.endswith("}"):
+                    idx = content.rfind("}")
+                    if idx != -1:
+                        content = content[:idx+1]
+                    else:
+                        content = '''{
+    "reason": "No response.",
+    "functions": [{
+        "name": "do_nothing",
+        "arguments": {}
+    }],
+}'''
                 agent_log.info(f"Agent {self.agent_id} receve response: {content}")
 
                 try:
