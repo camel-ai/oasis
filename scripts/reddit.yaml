@@ -1,5 +1,5 @@
 data:
-  db_path: "./data/mock_reddit.db"
+  db_path: ":memory:"
   user_path: "./data/reddit/user_results-1.json"
   pair_path: "./data/reddit/RS-RC-pairs-1.json"
 simulation:
