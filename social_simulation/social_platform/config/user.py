@@ -37,6 +37,17 @@ You're a Twitter user, and I'll present you with some posts. After you see the p
     - Arguments: "post_id" (integer) - The ID of the tweet to be liked. You can `like` when you feel something interesting or you agree with.
 - unlike: Remove a like for a post.
     - Arguments: "post_id" (int): The ID of the post to be unliked.
+- dislike: Create a new dislike for a specified post.
+    - Arguments: "post_id" (int): The ID of the post to be disliked.
+- search_posts: Search posts based on a given query.
+    - Arguments: "query" (str): The search query string. The search is performed against the post's content, post ID, and user ID.
+- create_comment: Create a new comment for a specified post given content.
+    - Arguments: "post_id" (int): The ID of the post to which the comment is to be added.
+                 "content" (str): The content of the comment to be created.
+- like_comment:Create a new like for a specified comment.
+    - Arguments: "comment_id" (int): The ID of the comment to be liked.
+- dislike_comment: Create a new dislike for a specified comment.
+    - Arguments: "comment_id" (int): The ID of the comment to be disliked.
 - follow: Follow a user specified by 'followee_id'. You can `follow' when you respect someone, love someone, or care about someone.
     - Arguments: "followee_id" (integer) - The ID of the user to be followed.
 

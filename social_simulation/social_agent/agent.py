@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from datetime import datetime
+from genericpath import isfile
 import inspect
 import json
+import os
 from typing import TYPE_CHECKING, Any
 import logging
 from camel.memories import (ChatHistoryMemory, MemoryRecord,
@@ -19,10 +22,10 @@ from social_simulation.social_platform.config import UserInfo
 if TYPE_CHECKING:
     from social_simulation.social_agent import AgentGraph
 
-
 agent_log = logging.getLogger(name='social.agent')
 agent_log.setLevel('DEBUG')
-file_handler = logging.FileHandler('social.agent.log')
+now = datetime.now()
+file_handler = logging.FileHandler(f'./log/social.agent-{str(now)}.log')
 file_handler.setLevel('DEBUG')
 file_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
 agent_log.addHandler(file_handler)
@@ -35,7 +38,7 @@ class SocialAgent:
         agent_id: int,
         user_info: UserInfo,
         twitter_channel: Channel,
-        inference_channel: Channel,
+        inference_channel: Channel = None,
         model_type: ModelType = ModelType.LLAMA_3,
         agent_graph: "AgentGraph" = None,
     ):
@@ -60,7 +63,6 @@ class SocialAgent:
             content=self.user_info.to_system_message()  # system prompt
         )
         self.agent_graph = agent_graph
-        print(Fore.RED + f"{agent_id}: model type {model_type}" + Fore.RESET)
 
     async def perform_action_by_llm(self):
         # Get 5 random tweets:
@@ -117,13 +119,13 @@ class SocialAgent:
                     content_json = json.loads(content)
                     functions = content_json['functions']
                     reason = content_json['reason']
-                    print(f"Agent {self.agent_id} choose "
-                          f"{functions} \nbecause: {reason}.")
+                    # print(f"Agent {self.agent_id} choose "
+                    #       f"{functions} \nbecause: {reason}.")
                     for function in functions:
                         name = function['name']
                         arguments = function['arguments']
-                        print(f"Agent {self.agent_id} is performing "
-                              f"twitter action: {name} with args: {arguments}")
+                        # print(f"Agent {self.agent_id} is performing "
+                        #       f"twitter action: {name} with args: {arguments}")
                         exec_functions.append({
                             'name': name,
                             'arguments': arguments
@@ -154,7 +156,7 @@ class SocialAgent:
                     agent_log.error(f"Agent {self.agent_id} error: {e}")
 
         if retry == 0:
-            content = "I'm sorry, I cannot understand your request. " 
+            content = "No response." 
         agent_msg = BaseMessage.make_assistant_message(role_name="Assistant",
                                                        content=content)
         self.memory.write_record(
@@ -164,12 +166,14 @@ class SocialAgent:
         print('Please choose one function to perform:')
         function_list = self.env.action.get_openai_function_list()
         for i in range(len(function_list)):
-            print(f"{i}.", function_list[i].func.__name__, end=', ')
-        print()
+            # print(f"{i}.", function_list[i].func.__name__, end=', ')
+            agent_log.info(f"Agent {self.agent_id} function: {function_list[i].func.__name__}")
+        # print()
 
         selection = int(input("Enter your choice: "))
         if not 0 <= selection < len(function_list):
-            print("Invalid input. Please enter a number.")
+            # print("Invalid input. Please enter a number.")
+            agent_log.error(f"Agent {self.agent_id} invalid input.")
             return
         func = function_list[selection].func
 
@@ -182,7 +186,8 @@ class SocialAgent:
                     args.append(value)
                     break
                 except ValueError:
-                    print("Invalid input, please enter an integer.")
+                    # print("Invalid input, please enter an integer.")
+                    agent_log.error("Invalid input, please enter an integer.")
 
         result = await func(*args)
         return result
@@ -193,7 +198,8 @@ class SocialAgent:
             if function_list[i].func.__name__ == func_name:
                 func = function_list[i].func
                 result = await func(*args, **kwargs)
-                print(result)
+                # print(result)
+                agent_log.info(f"Agent {self.agent_id}: {result}")
                 return result
         raise ValueError(f"Function {func_name} not found in the list.")
 

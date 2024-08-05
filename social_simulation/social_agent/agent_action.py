@@ -17,7 +17,8 @@ class SocialAction:
             OpenAIFunction(func) for func in [
                 self.create_post, self.follow, self.unfollow, self.like, self.
                 unlike, self.search_posts, self.search_user, self.trend, self.
-                refresh, self.mute, self.unmute, self.repost, self.do_nothing
+                refresh, self.mute, self.unmute, self.repost, self.do_nothing,
+                self.create_comment, self.like_comment, self.dislike_comment
             ]
         ]
 
@@ -50,8 +51,8 @@ class SocialAction:
             {'success': True, 'user_id': 2}
         """
 
-        print(f"Agent {self.agent_id} is signing up with "
-              f"user_name: {user_name}, name: {name}, bio: {bio}")
+        # print(f"Agent {self.agent_id} is signing up with "
+        #       f"user_name: {user_name}, name: {name}, bio: {bio}")
         user_message = (user_name, name, bio)
         return await self.perform_action(user_message, ActionType.SIGNUP.value)
 

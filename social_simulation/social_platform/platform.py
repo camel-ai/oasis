@@ -16,7 +16,8 @@ import logging
 
 twitter_log = logging.getLogger(name='social.twitter')
 twitter_log.setLevel('DEBUG')
-file_handler = logging.FileHandler('social.twitter.log')
+now = datetime.now()
+file_handler = logging.FileHandler(f'./log/social.twitter-{str(now)}.log')
 file_handler.setLevel('DEBUG')
 file_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
 twitter_log.addHandler(file_handler)

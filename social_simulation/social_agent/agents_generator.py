@@ -196,7 +196,8 @@ async def gen_control_agents_with_data(
 
 async def generate_reddit_agents(
     agent_info_path: str,
-    channel: Channel,
+    twitter_channel: Channel,
+    inference_channel: Channel,
     agent_graph: AgentGraph | None = AgentGraph,
     agent_user_id_mapping: dict[int, int]
     | None = None,
@@ -227,7 +228,7 @@ async def generate_reddit_agents(
                              profile=profile)
 
         # controllable的agent_id全都在llm agent的agent_id的前面
-        agent = SocialAgent(i + control_user_num, user_info, channel)
+        agent = SocialAgent(i + control_user_num, user_info, twitter_channel, inference_channel)
 
         # Add agent to the agent graph
         agent_graph.add_agent(agent)

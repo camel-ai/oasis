@@ -2,20 +2,37 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+from genericpath import isfile
 import json
+import logging
 import os
 from datetime import datetime
+from typing import Any
 
 from colorama import Back
 from yaml import safe_load
 
 from social_simulation.clock.clock import Clock
+from social_simulation.inference.inference_manager import InferencerManager
 from social_simulation.social_agent.agents_generator import (
     gen_control_agents_with_data, generate_reddit_agents)
 from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.platform import Platform
 from social_simulation.social_platform.typing import ActionType
 from social_simulation.testing.show_db import print_db_contents
+
+
+social_log = logging.getLogger(name='social')
+social_log.setLevel('DEBUG')
+now = datetime.now()
+file_handler = logging.FileHandler(f'./log/social-{str(now)}.log', encoding='utf-8')
+file_handler.setLevel('DEBUG')
+file_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+social_log.addHandler(file_handler)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel('DEBUG')
+stream_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+social_log.addHandler(stream_handler)
 
 parser = argparse.ArgumentParser(description="Arguments for script.")
 parser.add_argument(
@@ -45,7 +62,7 @@ async def running(
     controllable_user: bool = True,
     allow_self_rating: bool = False,
     show_score: bool = True,
-    rec_update_time: int = 40,
+    inference_configs: dict[str, Any] | None = None,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     user_path = DEFAULT_USER_PATH if user_path is None else user_path
@@ -55,29 +72,36 @@ async def running(
 
     start_time = datetime.now()
     clock = Clock(k=clock_factor)
-    channel = Channel()
+    twitter_channel = Channel()
     infra = Platform(
         db_path,
-        channel,
+        twitter_channel,
         clock,
         start_time,
         allow_self_rating=allow_self_rating,
         show_score=show_score,
         recsys_type=recsys_type,
-        rec_update_time=rec_update_time,
     )
-    task = asyncio.create_task(infra.running())
+    inference_channel = Channel()
+    infere = InferencerManager(
+        inference_channel,
+        **inference_configs,
+    )
+    twitter_task = asyncio.create_task(infra.running())
+    inference_task = asyncio.create_task(infere.run())
+
     if not controllable_user:
         raise ValueError("Uncontrollable user is not supported")
     else:
         agent_graph, agent_user_id_mapping = \
             await gen_control_agents_with_data(
-                channel,
+                twitter_channel,
                 2,
             )
         agent_graph = await generate_reddit_agents(
             user_path,
-            channel,
+            twitter_channel,
+            inference_channel,
             agent_graph,
             agent_user_id_mapping,
         )
@@ -85,7 +109,10 @@ async def running(
         pairs = json.load(f)
 
     for timestep in range(num_timesteps):
-        print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
+        # print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
+        social_log.info(f"timestep:{timestep}.")
+        await infra.update_rec_table()
+        social_log.info("update rec table.")
         post_agent = agent_graph.get_agent(0)
         rate_agent = agent_graph.get_agent(1)
 
@@ -113,16 +140,19 @@ async def running(
                     pass
                 else:
                     raise ValueError("Unsupported value of 'group'")
+        tasks = []
+        for node_id, agent in agent_graph.get_agents():
 
-        for _, node_data in agent_graph.get_agents():
-            agent = node_data['agent']
             if agent.user_info.is_controllable is False:
-                await agent.perform_action_by_llm()
+                tasks.append(agent.perform_action_by_llm())
+        await asyncio.gather(*tasks)
 
-    await channel.write_to_receive_queue((None, None, ActionType.EXIT))
-    await task
+    await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
+    await infere.stop()
+    await twitter_task, inference_task
 
     print_db_contents(db_path)
+    social_log.info("Simulation finish!")
 
 
 if __name__ == "__main__":
@@ -132,6 +162,7 @@ if __name__ == "__main__":
             cfg = safe_load(f)
         data_params = cfg.get("data")
         simulation_params = cfg.get("simulation")
-        asyncio.run(running(**data_params, **simulation_params))
+        inference_params = cfg.get("inference")
+        asyncio.run(running(**data_params, **simulation_params, inference_configs=inference_params))
     else:
         asyncio.run(running())

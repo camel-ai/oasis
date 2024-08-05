@@ -62,6 +62,6 @@ class InferencerManager:
                     inference_log.info(f"Message {self.count} received")
             await asyncio.sleep(0.0001)
 
-    def running(self):
-        
-        asyncio.run(self.run())
+    async def stop(self):
+        for thread in self.threads:
+            thread.alive = False

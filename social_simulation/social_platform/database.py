@@ -126,7 +126,6 @@ def create_db(db_path: str | None = None):
         # Commit the changes:
         conn.commit()
 
-        print("All tables created successfully.")
     except sqlite3.Error as e:
         print(f"An error occurred while creating tables: {e}")
 

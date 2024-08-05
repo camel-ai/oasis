@@ -27,6 +27,7 @@ class InferenceThread:
         temperature: float = 0.0,
         shared_memory: SharedMemory = None
     ):
+        self.alive = True
         self.count = 0
         self.server_url = server_url
         self.model_type = model_type
@@ -47,7 +48,7 @@ class InferenceThread:
             self.shared_memory = shared_memory
 
     def run(self):
-        while True:
+        while self.alive:
             if self.shared_memory.Busy and not self.shared_memory.Working:
                 self.shared_memory.Working = True
                 response = self.model_backend.run(
