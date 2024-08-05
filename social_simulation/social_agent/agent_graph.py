@@ -16,7 +16,10 @@ class AgentGraph:
         self.agent_mappings[agent.agent_id] = agent
 
     def add_edge(self, agent_id_0: int, agent_id_1: int):
-        self.graph.add_edge(agent_id_0, agent_id_1)
+        try:
+            self.graph.add_edge(agent_id_0, agent_id_1)
+        except:
+            pass
 
     def remove_agent(self, agent: SocialAgent):
         self.graph.delete_vertices(agent.agent_id)
