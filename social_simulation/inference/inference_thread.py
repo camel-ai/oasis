@@ -51,9 +51,12 @@ class InferenceThread:
         while self.alive:
             if self.shared_memory.Busy and not self.shared_memory.Working:
                 self.shared_memory.Working = True
-                response = self.model_backend.run(
-                    self.shared_memory.Message)
-                self.shared_memory.Response = response.choices[0].message.content
+                try:
+                    response = self.model_backend.run(
+                        self.shared_memory.Message)
+                    self.shared_memory.Response = response.choices[0].message.content
+                except:
+                    self.shared_memory.Response = "No response."
                 self.shared_memory.Done = True
                 self.count += 1
                 thread_log.info(f"Thread {self.server_url}: {self.count} finished.")
