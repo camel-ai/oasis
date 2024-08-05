@@ -24,7 +24,7 @@ class InferenceThread:
         server_url: str = "http://10.140.0.144:8000/v1",
         stop_tokens: list[str] = None,
         model_type: ModelType = ModelType.LLAMA_3,
-        temperature: float = 0.0,
+        temperature: float = 0.5,
         shared_memory: SharedMemory = None
     ):
         self.alive = True

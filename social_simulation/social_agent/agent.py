@@ -117,6 +117,19 @@ class SocialAgent:
                 message_id = await self.inference_channel.write_to_receive_queue(
                     openai_messages)
                 message_id, content = await self.inference_channel.read_from_send_queue(message_id)
+
+                if not content.startswith("{"):
+                    idx = content.find("{")
+                    if idx != -1:
+                        content = content[idx:]
+                    else:
+                        content = '''{
+    "reason": "No response.",
+    "functions": [{
+        "name": "do_nothing",
+        "arguments": {}
+    }],
+}'''
                 agent_log.info(f"Agent {self.agent_id} receve response: {content}")
 
                 try:
