@@ -22,7 +22,7 @@ file_handler = logging.FileHandler(f'./log/social.twitter-{str(now)}.log')
 file_handler.setLevel('DEBUG')
 file_handler.setFormatter(
     logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
-logger.addHandler(file_handler)
+twitter_log.addHandler(file_handler)
 
 
 class Platform:
@@ -149,7 +149,7 @@ class Platform:
             action_info = {"name": name, "user_name": user_name, "bio": bio}
             self.pl_utils._record_trace(user_id, ActionType.SIGNUP.value,
                                         action_info, current_time)
-            logger.info(f"Trace inserted: user_id={user_id}, "
+            twitter_log.info(f"Trace inserted: user_id={user_id}, "
                         f"current_time={current_time}, "
                         f"action={ActionType.SIGNUP.value}, "
                         f"info={action_info}")
@@ -265,7 +265,7 @@ class Platform:
             action_info = {"content": content, "post_id": post_id}
             self.pl_utils._record_trace(user_id, ActionType.CREATE_POST.value,
                                         action_info, current_time)
-            logger.info(f"Trace inserted: user_id={user_id}, "
+            twitter_log.info(f"Trace inserted: user_id={user_id}, "
                         f"current_time={current_time}, "
                         f"action={ActionType.CREATE_POST.value}, "
                         f"info={action_info}")
@@ -657,7 +657,7 @@ class Platform:
             action_info = {"follow_id": follow_id}
             self.pl_utils._record_trace(user_id, ActionType.FOLLOW.value,
                                         action_info, current_time)
-            logger.info(f"Trace inserted: user_id={user_id}, "
+            twitter_log.info(f"Trace inserted: user_id={user_id}, "
                         f"current_time={current_time}, "
                         f"action={ActionType.FOLLOW.value}, "
                         f"info={action_info}")
