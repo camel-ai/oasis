@@ -87,7 +87,7 @@ class SocialAgent:
             openai_messages = [{
                         "role": self.system_message.role_name,
                         "content": self.system_message.content
-                    }]
+                    }] + user_msg.to_openai_message()
         agent_log.info(f"Agent {self.agent_id} is running with prompt: {openai_messages}")
 
         if self.has_function_call:
