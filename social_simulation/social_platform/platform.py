@@ -25,15 +25,17 @@ logger.addHandler(file_handler)
 
 class Platform:
 
-    def __init__(self,
-                 db_path: str,
-                 channel: Any,
-                 sandbox_clock: Clock | None = None,
-                 start_time: datetime | None = None,
-                 show_score: bool = False,
-                 allow_self_rating: bool = True,
-                 recsys_type: str | RecsysType = "twitter",
-                 refresh_post_count: int = 5):
+    def __init__(
+        self,
+        db_path: str,
+        channel: Any,
+        sandbox_clock: Clock | None = None,
+        start_time: datetime | None = None,
+        show_score: bool = False,
+        allow_self_rating: bool = True,
+        recsys_type: str | RecsysType = "twitter",
+        refresh_post_count: int = 5,
+    ):
         self.db_path = db_path
         # 未指定时钟时，默认platform的时间放大系数为60
         if sandbox_clock is None:

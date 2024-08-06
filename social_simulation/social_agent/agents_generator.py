@@ -12,7 +12,7 @@ from camel.types.enums import ModelType
 
 from social_simulation.social_agent import AgentGraph, SocialAgent
 from social_simulation.social_platform import Channel
-from social_simulation.social_platform.config import UserInfo
+from social_simulation.social_platform.config import Neo4jConfig, UserInfo
 
 
 async def generate_agents(
@@ -21,6 +21,7 @@ async def generate_agents(
     num_agents: int = 26,
     model_random_seed: int = 42,
     cfgs: list[Any] | None = None,
+    neo4j_config: Neo4jConfig | None = None,
 ) -> AgentGraph:
     """Generate and return a dictionary of agents from the agent
     information CSV file. Each agent is added to the database and
@@ -33,6 +34,8 @@ async def generate_agents(
         model_random_seed (int): Random seed to randomly assign model to
             each agent. (default: 42)
         cfgs (list, optional): List of configuration. (default: `None`)
+        neo4j_config (Neo4jConfig, optional): Neo4j graph database
+            configuration. (default: `None`)
 
     Returns:
         dict: A dictionary of agent IDs mapped to their respective agent
@@ -66,7 +69,10 @@ async def generate_agents(
     normalized_prob = np.round(normalized_prob, 2)
     prob_list: list[float] = normalized_prob.tolist()
 
-    agent_graph = AgentGraph()
+    agent_graph = AgentGraph() if neo4j_config is None else AgentGraph(
+        backend="neo4j",
+        neo4j_config=neo4j_config,
+    )
 
     async def setup_agent(agent_id: int):
         profile = {
