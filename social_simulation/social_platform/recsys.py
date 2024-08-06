@@ -22,7 +22,7 @@ except Exception as e:
 # Move model to GPU if available
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 if model is not None:
-    model.cuda(device)
+    model.to(device)
 else:
     print('Model not available, using random similarity.')
     pass
