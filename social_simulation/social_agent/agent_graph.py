@@ -91,7 +91,7 @@ class Neo4jHandler:
     def _add_and_return_edge(tx: Any, src_agent_id: int, dst_agent_id: int):
         query = """
         MATCH (a:Agent {id: $src_agent_id}), (b:Agent {id: $dst_agent_id})
-        CREATE (a)-[r:CONNECTED_TO]->(b)
+        CREATE (a)-[r:FOLLOW]->(b)
         RETURN r
         """
         result = tx.run(query,
@@ -104,7 +104,7 @@ class Neo4jHandler:
         query = """
         MATCH (a:Agent {id: $src_agent_id})
         MATCH (b:Agent {id: $dst_agent_id})
-        MATCH (a)-[r:CONNECTED_TO]->(b)
+        MATCH (a)-[r:FOLLOW]->(b)
         DELETE r
         RETURN count(r) AS deleted
         """
@@ -143,7 +143,7 @@ class Neo4jHandler:
     @staticmethod
     def _get_all_edges(tx: Any) -> list[tuple[int, int]]:
         query = """
-        MATCH (a:Agent)-[r:CONNECTED_TO]->(b:Agent)
+        MATCH (a:Agent)-[r:FOLLOW]->(b:Agent)
         RETURN a.id AS src_agent_id, b.id AS dst_agent_id
         """
         result = tx.run(query)
