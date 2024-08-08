@@ -37,6 +37,7 @@ class Platform:
                  recsys_type: str | RecsysType = "twitter",
                  refresh_post_count: int = 1,
                  max_rec_post_len: int = 50):
+
         self.db_path = db_path
         # 未指定时钟时，默认platform的时间放大系数为60
         if sandbox_clock is None:
