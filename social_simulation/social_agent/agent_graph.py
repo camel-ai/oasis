@@ -190,10 +190,10 @@ class AgentGraph:
         self.agent_mappings[agent.agent_id] = agent
 
     def add_edge(self, agent_id_0: int, agent_id_1: int):
-        if self.backend == "igraph":
+        try:
             self.graph.add_edge(agent_id_0, agent_id_1)
-        else:
-            self.graph.add_edge(agent_id_0, agent_id_1)
+        except:
+            pass
 
     def remove_agent(self, agent: SocialAgent):
         if self.backend == "igraph":

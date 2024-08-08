@@ -33,8 +33,6 @@ class MockChannel:
             # 验证搜索成功且找到至少一个匹配用户
             assert message[2]["success"] is True, "Trend should be successful"
             assert message[2]["posts"][0]["content"] == "Post 6"
-            assert message[2]["posts"][1]["content"] == "Post 5"
-            assert message[2]["posts"][2]["content"] == "Post 4"
             print(message[2]["posts"])
 
 

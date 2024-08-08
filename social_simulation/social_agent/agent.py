@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+from datetime import datetime
+from genericpath import isfile
 import inspect
 import json
-import logging
+import os
 from typing import TYPE_CHECKING, Any
-
-from camel.configs import ChatGPTConfig, OpenSourceConfig
+import logging
 from camel.memories import (ChatHistoryMemory, MemoryRecord,
                             ScoreBasedContextCreator)
 from camel.messages import BaseMessage
-from camel.models import BaseModelBackend, ModelFactory
+from camel.utils import OpenAITokenCounter
 from camel.types import ModelType, OpenAIBackendRole
 from colorama import Fore, Style
 
@@ -21,13 +22,14 @@ from social_simulation.social_platform.config import UserInfo
 if TYPE_CHECKING:
     from social_simulation.social_agent import AgentGraph
 
-logger = logging.getLogger(__name__)
-logger.setLevel('DEBUG')
-file_handler = logging.FileHandler(f"{__name__}.log")
+agent_log = logging.getLogger(name='social.agent')
+agent_log.setLevel('DEBUG')
+now = datetime.now()
+file_handler = logging.FileHandler(f'./log/social.agent-{str(now)}.log')
 file_handler.setLevel('DEBUG')
 file_handler.setFormatter(
     logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
-logger.addHandler(file_handler)
+agent_log.addHandler(file_handler)
 
 
 class SocialAgent:
@@ -36,48 +38,25 @@ class SocialAgent:
         self,
         agent_id: int,
         user_info: UserInfo,
-        channel: Channel,
-        model_path:
-        str = "/mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct",  # noqa
-        server_url: str = "http://10.140.0.144:8000/v1",
-        stop_tokens: list[str] = None,
+        twitter_channel: Channel,
+        inference_channel: Channel = None,
         model_type: ModelType = ModelType.LLAMA_3,
-        temperature: float = 0.0,
         agent_graph: "AgentGraph" = None,
     ):
         self.agent_id = agent_id
         self.user_info = user_info
-        self.channel = channel
-        self.env = SocialEnvironment(SocialAction(agent_id, channel))
+        self.twitter_channel = twitter_channel
+        self.inference_channel = inference_channel
+        self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
         self.system_message = BaseMessage.make_assistant_message(
             role_name="User",
             content=self.user_info.to_system_message(),
         )
         self.model_type = model_type
-
-        if model_type.is_open_source:
-            self.has_function_call = False
-            api_params = ChatGPTConfig(
-                temperature=temperature,
-                stop=stop_tokens,
-            )
-            model_config = OpenSourceConfig(
-                model_path=model_path,
-                server_url=server_url,
-                api_params=api_params,
-            )
-        else:
-            self.has_function_call = True
-            model_config = ChatGPTConfig(
-                temperature=temperature,
-                # tools=self.env.action.get_openai_function_list(),
-            )
-        self.model_backend: BaseModelBackend = ModelFactory.create(
-            model_type, model_config.__dict__)
-        self.model_token_limit = self.model_backend.token_limit
+        self.has_function_call = False
         context_creator = ScoreBasedContextCreator(
-            self.model_backend.token_counter,
-            self.model_token_limit,
+            OpenAITokenCounter(ModelType.GPT_3_5_TURBO),
+            4096,
         )
         self.memory = ChatHistoryMemory(context_creator, window_size=5)
         self.system_message = BaseMessage.make_assistant_message(
@@ -85,7 +64,6 @@ class SocialAgent:
             content=self.user_info.to_system_message()  # system prompt
         )
         self.agent_graph = agent_graph
-        print(Fore.RED + f"{agent_id}: model type {model_type}" + Fore.RESET)
 
     async def perform_action_by_llm(self):
         # Get 5 random tweets:
@@ -107,12 +85,16 @@ class SocialAgent:
         openai_messages, _ = self.memory.get_context()
         content = ""
 
-        logger.info(
-            f"Agent {self.agent_id} is running with prompt: {openai_messages}")
+        if not openai_messages:
+            openai_messages = [{
+                        "role": self.system_message.role_name,
+                        "content": self.system_message.content
+                    }] + [user_msg.to_openai_user_message()]
+        agent_log.info(f"Agent {self.agent_id} is running with prompt: {openai_messages}")
 
         if self.has_function_call:
             response = self.model_backend.run(openai_messages)
-            logger.info(f"Agent {self.agent_id} response: {response}")
+            agent_log.info(f"Agent {self.agent_id} response: {response}")
             if response.choices[0].message.function_call:
                 action_name = response.choices[0].message.function_call.name
                 args = json.loads(
@@ -134,20 +116,47 @@ class SocialAgent:
                         "content": self.system_message.content
                     }] + openai_messages
 
-                response = self.model_backend.run(openai_messages)
-                logger.info(f"Agent {self.agent_id} response: {response}")
-                content = response.choices[0].message.content
+                message_id = await self.inference_channel.write_to_receive_queue(
+                    openai_messages)
+                message_id, content = await self.inference_channel.read_from_send_queue(message_id)
+
+                if not content.startswith("{"):
+                    idx = content.find("{")
+                    if idx != -1:
+                        content = content[idx:]
+                    else:
+                        content = '''{
+    "reason": "No response.",
+    "functions": [{
+        "name": "do_nothing",
+        "arguments": {}
+    }],
+}'''
+                if not content.endswith("}"):
+                    idx = content.rfind("}")
+                    if idx != -1:
+                        content = content[:idx+1]
+                    else:
+                        content = '''{
+    "reason": "No response.",
+    "functions": [{
+        "name": "do_nothing",
+        "arguments": {}
+    }],
+}'''
+                agent_log.info(f"Agent {self.agent_id} receve response: {content}")
+
                 try:
                     content_json = json.loads(content)
                     functions = content_json['functions']
                     reason = content_json['reason']
-                    print(f"Agent {self.agent_id} choose "
-                          f"{functions} \nbecause: {reason}.")
+                    # print(f"Agent {self.agent_id} choose "
+                    #       f"{functions} \nbecause: {reason}.")
                     for function in functions:
                         name = function['name']
                         arguments = function['arguments']
-                        print(f"Agent {self.agent_id} is performing "
-                              f"twitter action: {name} with args: {arguments}")
+                        # print(f"Agent {self.agent_id} is performing "
+                        #       f"twitter action: {name} with args: {arguments}")
                         exec_functions.append({
                             'name': name,
                             'arguments': arguments
@@ -155,12 +164,13 @@ class SocialAgent:
                         self.perform_agent_graph_action(name, arguments)
                     break
                 except Exception as e:
-                    print(Fore.LIGHTRED_EX + f"Agent {self.agent_id}, time " +
-                          Style.BRIGHT + str(retry) + Style.RESET_ALL +
-                          f"\nError: {e} when parsing response:{content}\n" +
-                          Fore.RESET + "=" * 20 + "\n")
-                    print(Fore.LIGHTBLUE_EX + "For DEBUG, Messages:",
-                          openai_messages, "\n" + Fore.RESET + "=" * 20 + "\n")
+                    # print(Fore.LIGHTRED_EX + f"Agent {self.agent_id}, time " +
+                    #       Style.BRIGHT + str(retry) + Style.RESET_ALL +
+                    #       f"\nError: {e} when parsing response:{content}\n" +
+                    #       Fore.RESET + "=" * 20 + "\n")
+                    # print(Fore.LIGHTBLUE_EX + "For DEBUG, Messages:",
+                    #       openai_messages, "\n" + Fore.RESET + "=" * 20 + "\n")
+                    agent_log.error(f"Agent {self.agent_id} error: {e}")
                     exec_functions = []
                     retry -= 1
             for function in exec_functions:
@@ -168,13 +178,17 @@ class SocialAgent:
                     await getattr(self.env.action,
                                   function['name'])(**function['arguments'])
                 except Exception as e:
-                    print(Fore.LIGHTRED_EX + f"Agent {self.agent_id}, time " +
-                          Style.BRIGHT + str(retry) + Style.RESET_ALL +
-                          f"\nError: {e} when performing twitter action:" +
-                          f" {function['name']} with " +
-                          f"args: {function['arguments']}\n" + Fore.RESET +
-                          "=" * 20 + "\n")
+                    # print(Fore.LIGHTRED_EX + f"Agent {self.agent_id}, time " +
+                    #       Style.BRIGHT + str(retry) + Style.RESET_ALL +
+                    #       f"\nError: {e} when performing twitter action:" +
+                    #       f" {function['name']} with " +
+                    #       f"args: {function['arguments']}\n" + Fore.RESET +
+                    #       "=" * 20 + "\n")
+                    agent_log.error(f"Agent {self.agent_id} error: {e}")
+                    retry -= 1
 
+        if retry == 0:
+            content = "No response." 
         agent_msg = BaseMessage.make_assistant_message(role_name="Assistant",
                                                        content=content)
         self.memory.write_record(
@@ -184,12 +198,14 @@ class SocialAgent:
         print('Please choose one function to perform:')
         function_list = self.env.action.get_openai_function_list()
         for i in range(len(function_list)):
-            print(f"{i}.", function_list[i].func.__name__, end=', ')
-        print()
+            # print(f"{i}.", function_list[i].func.__name__, end=', ')
+            agent_log.info(f"Agent {self.agent_id} function: {function_list[i].func.__name__}")
+        # print()
 
         selection = int(input("Enter your choice: "))
         if not 0 <= selection < len(function_list):
-            print("Invalid input. Please enter a number.")
+            # print("Invalid input. Please enter a number.")
+            agent_log.error(f"Agent {self.agent_id} invalid input.")
             return
         func = function_list[selection].func
 
@@ -202,7 +218,8 @@ class SocialAgent:
                     args.append(value)
                     break
                 except ValueError:
-                    print("Invalid input, please enter an integer.")
+                    # print("Invalid input, please enter an integer.")
+                    agent_log.error("Invalid input, please enter an integer.")
 
         result = await func(*args)
         return result
@@ -213,7 +230,8 @@ class SocialAgent:
             if function_list[i].func.__name__ == func_name:
                 func = function_list[i].func
                 result = await func(*args, **kwargs)
-                print(result)
+                # print(result)
+                agent_log.info(f"Agent {self.agent_id}: {result}")
                 return result
         raise ValueError(f"Function {func_name} not found in the list.")
 
@@ -230,13 +248,13 @@ class SocialAgent:
             if followee_id is None:
                 return
             self.agent_graph.remove_edge(self.agent_id, followee_id)
-            logger.info(f"Agent {self.agent_id} unfollowed {followee_id}")
+            agent_log.info(f"Agent {self.agent_id} unfollowed {followee_id}")
         elif "follow" in action_name:
             followee_id: int | None = arguments.get("followee_id", None)
             if followee_id is None:
                 return
             self.agent_graph.add_edge(self.agent_id, followee_id)
-            logger.info(f"Agent {self.agent_id} followed {followee_id}")
+            agent_log.info(f"Agent {self.agent_id} followed {followee_id}")
 
     def __str__(self) -> str:
         return (f"{self.__class__.__name__}(agent_id={self.agent_id}, "

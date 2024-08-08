@@ -116,8 +116,12 @@ def rec_sys_reddit(post_table: List[Dict[str, Any]], rec_matrix: List[List],
         # 该推荐系统的时间复杂度是O(post_num * log max_rec_post_len)
         all_hot_score = []
         for post in post_table:
-            created_at_dt = datetime.strptime(post['created_at'],
-                                              "%Y-%m-%d %H:%M:%S.%f")
+            try:
+                created_at_dt = datetime.strptime(post['created_at'],
+                                                "%Y-%m-%d %H:%M:%S.%f")
+            except Exception:
+                created_at_dt = datetime.strptime(post['created_at'],
+                                                "%Y-%m-%d %H:%M:%S")
             hot_score = calculate_hot_score(post['num_likes'],
                                             post['num_dislikes'],
                                             created_at_dt)
@@ -135,6 +139,7 @@ def rec_sys_reddit(post_table: List[Dict[str, Any]], rec_matrix: List[List],
         new_rec_matrix = [None] + new_rec_matrix
 
     return new_rec_matrix
+
 
 
 def rec_sys_personalized(user_table: List[Dict[str, Any]],

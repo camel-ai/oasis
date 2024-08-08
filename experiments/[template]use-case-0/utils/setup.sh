@@ -1,1 +1,0 @@
-# 如果 platform 提供的 shell script 无法满足需求，可以在这里自定义

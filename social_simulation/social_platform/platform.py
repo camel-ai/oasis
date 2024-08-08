@@ -5,7 +5,7 @@ import random
 import sqlite3
 from datetime import datetime, timedelta
 from typing import Any
-
+import asyncio
 from social_simulation.clock.clock import Clock
 from social_simulation.social_platform.database import (
     create_db, fetch_rec_table_as_matrix, fetch_table_from_db)
@@ -14,28 +14,30 @@ from social_simulation.social_platform.recsys import (
     rec_sys_personalized_with_trace, rec_sys_random, rec_sys_reddit, rec_sys_personalized)
 from social_simulation.social_platform.typing import ActionType, RecsysType
 
-logger = logging.getLogger(name=__name__)
-logger.setLevel('DEBUG')
-file_handler = logging.FileHandler(f"{__name__}.log")
+
+twitter_log = logging.getLogger(name='social.twitter')
+twitter_log.setLevel('DEBUG')
+now = datetime.now()
+file_handler = logging.FileHandler(f'./log/social.twitter-{str(now)}.log')
 file_handler.setLevel('DEBUG')
 file_handler.setFormatter(
     logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
-logger.addHandler(file_handler)
+twitter_log.addHandler(file_handler)
 
 
 class Platform:
 
-    def __init__(
-        self,
-        db_path: str,
-        channel: Any,
-        sandbox_clock: Clock | None = None,
-        start_time: datetime | None = None,
-        show_score: bool = False,
-        allow_self_rating: bool = True,
-        recsys_type: str | RecsysType = "twitter",
-        refresh_post_count: int = 5,
-    ):
+    def __init__(self,
+                 db_path: str,
+                 channel: Any,
+                 sandbox_clock: Clock | None = None,
+                 start_time: datetime | None = None,
+                 show_score: bool = False,
+                 allow_self_rating: bool = True,
+                 recsys_type: str | RecsysType = "twitter",
+                 refresh_post_count: int = 1,
+                 max_rec_post_len: int = 50):
+
         self.db_path = db_path
         # 未指定时钟时，默认platform的时间放大系数为60
         if sandbox_clock is None:
@@ -43,7 +45,7 @@ class Platform:
         if start_time is None:
             start_time = datetime.now()
 
-        self.db, self.db_cursor = create_db(db_path)
+        self.db, self.db_cursor = create_db(self.db_path)
         self.db.execute("PRAGMA synchronous = OFF")
 
         self.channel = channel
@@ -62,13 +64,13 @@ class Platform:
         # 社交媒体内部推荐系统refresh一次返回的推文数量
         self.refresh_post_count = refresh_post_count
         # rec table(buffer)中每个用户的最大post数量
-        self.max_rec_post_len = 50
+        self.max_rec_post_len = max_rec_post_len
         # rec prob between random and personalized
         self.rec_prob = 0.7
 
         # platform内部定义的热搜规则参数
         self.trend_num_days = 7
-        self.trend_top_k = 10
+        self.trend_top_k = 1
 
         self.pl_utils = PlatformUtils(self.db, self.db_cursor, self.start_time,
                                       self.sandbox_clock, self.show_score)
@@ -82,8 +84,7 @@ class Platform:
 
             if action == ActionType.EXIT:
                 if self.db_path == ":memory:":
-                    store_path = "mocktwitter.db"
-                    dst = sqlite3.connect(store_path)
+                    dst = sqlite3.connect("mock.db")
                     with dst:
                         self.db.backup(dst)
 
@@ -117,6 +118,9 @@ class Platform:
                 await self.channel.send_to((message_id, agent_id, result))
             else:
                 raise ValueError(f"Action {action} is not supported")
+    
+    def run(self):
+        asyncio.run(self.running())
 
     # 注册
     async def sign_up(self, agent_id, user_message):
@@ -146,7 +150,7 @@ class Platform:
             action_info = {"name": name, "user_name": user_name, "bio": bio}
             self.pl_utils._record_trace(user_id, ActionType.SIGNUP.value,
                                         action_info, current_time)
-            logger.info(f"Trace inserted: user_id={user_id}, "
+            twitter_log.info(f"Trace inserted: user_id={user_id}, "
                         f"current_time={current_time}, "
                         f"action={ActionType.SIGNUP.value}, "
                         f"info={action_info}")
@@ -187,6 +191,7 @@ class Platform:
                 results)
             # 记录操作到trace表
             action_info = {"posts": results_with_comments}
+            twitter_log.info(action_info)
             self.pl_utils._record_trace(user_id, ActionType.REFRESH.value,
                                         action_info)
 
@@ -262,7 +267,7 @@ class Platform:
             action_info = {"content": content, "post_id": post_id}
             self.pl_utils._record_trace(user_id, ActionType.CREATE_POST.value,
                                         action_info, current_time)
-            logger.info(f"Trace inserted: user_id={user_id}, "
+            twitter_log.info(f"Trace inserted: user_id={user_id}, "
                         f"current_time={current_time}, "
                         f"action={ActionType.CREATE_POST.value}, "
                         f"info={action_info}")
@@ -614,7 +619,7 @@ class Platform:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
                 return self.pl_utils._not_signup_error_message(agent_id)
-            # 检查是否已经存在关注记录
+            # # 检查是否已经存在关注记录
             follow_check_query = ("SELECT * FROM follow WHERE follower_id = ? "
                                   "AND followee_id = ?")
             self.pl_utils._execute_db_command(follow_check_query,
@@ -654,7 +659,7 @@ class Platform:
             action_info = {"follow_id": follow_id}
             self.pl_utils._record_trace(user_id, ActionType.FOLLOW.value,
                                         action_info, current_time)
-            logger.info(f"Trace inserted: user_id={user_id}, "
+            twitter_log.info(f"Trace inserted: user_id={user_id}, "
                         f"current_time={current_time}, "
                         f"action={ActionType.FOLLOW.value}, "
                         f"info={action_info}")
