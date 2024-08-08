@@ -28,6 +28,7 @@ prance = "23.6.21.0"
 openapi-spec-validator = "0.7.1"
 slack_sdk = "3.31.0"
 pycairo = "1.26.1"
+neo4j = "5.23.0"
 camel-ai = { git = "https://github.com/zhangzaibin/camel-llama3.git", rev = "0d5c9dfa621a14b15f6425497be769215fcd8a05" }
 
 [build-system]
