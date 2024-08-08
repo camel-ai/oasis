@@ -83,9 +83,10 @@ class Platform:
             action = ActionType(action)
 
             if action == ActionType.EXIT:
-                # dst = sqlite3.connect(self.db_path)
-                # with dst:
-                #     self.db.backup(dst)
+                if self.db_path == ":memory:":
+                    dst = sqlite3.connect("mock.db")
+                    with dst:
+                        self.db.backup(dst)
 
                 self.db_cursor.close()
                 self.db.close()
