@@ -106,7 +106,7 @@ async def test_signup_and_create_post(setup_platform,
             "The number of posts should match the expected value.")
 
         conn.close()
-        print_db_contents(test_db_filepath)
+        # print_db_contents(test_db_filepath)
 
     finally:
         if os.path.exists(test_db_filepath):

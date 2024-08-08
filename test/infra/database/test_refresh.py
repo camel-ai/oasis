@@ -77,7 +77,7 @@ async def test_refresh(setup_platform):
         conn.commit()
 
         # 在测试开始之前，将post插入到post表中
-        conn = sqlite3.connect(test_db_filepath)
+        conn = platform.db
         cursor = conn.cursor()
 
         # 在测试开始之前，将60条推文用户插入到post表中
@@ -94,7 +94,7 @@ async def test_refresh(setup_platform):
                             "created_at) VALUES (?, ?, ?, ?)"),
                            (i, user_id, comment_content, created_at))
         conn.commit()
-        print_db_contents(test_db_filepath)
+        # print_db_contents(test_db_filepath)
         await platform.running()
         # 验证跟踪表(trace)是否正确记录了操作
         cursor.execute("SELECT * FROM trace WHERE action='refresh'")

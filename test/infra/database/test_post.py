@@ -115,7 +115,7 @@ async def test_create_repost_like_unlike_post(setup_platform):
         await platform.running()
 
         # 验证数据库中是否正确插入了数据
-        conn = sqlite3.connect(test_db_filepath)
+        conn = platform.db
         cursor = conn.cursor()
 
         # 验证推文表(post)是否正确插入了数据

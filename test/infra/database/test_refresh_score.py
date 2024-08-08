@@ -77,7 +77,7 @@ async def test_refresh(setup_platform):
         conn.commit()
 
         # 在测试开始之前，将post插入到post表中
-        conn = sqlite3.connect(test_db_filepath)
+        conn = platform.db
         cursor = conn.cursor()
 
         # 在测试开始之前，将60条推文用户插入到post表中
