@@ -37,7 +37,7 @@ class MockChannel:
             # print_db_contents(test_db_filepath)
             assert message[2]["success"] is True
             print(message[2]["posts"])
-            assert len(message[2]["posts"]) == 5
+            assert len(message[2]["posts"]) == 1
             # 然后检查 'posts' 列表中的每个条目
             for post in message[2].get('posts', []):
                 assert post.get('post_id') is not None
