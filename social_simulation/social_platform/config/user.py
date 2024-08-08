@@ -24,12 +24,12 @@ class UserInfo:
                 description_string = f"Your have profile: {user_profile}."
                 description = f"{name_string}\n{description_string}"
                 #print(self.profile['other_info'])
-                description += (
-                    f"You are a {self.profile['other_info']['gender']}, "
-                    f"{self.profile['other_info']['age']} years old, with an MBTI "
-                    f"personality type of {self.profile['other_info']['mbti']} from "
-                    f"{self.profile['other_info']['country']}."
-                )
+                # description += (
+                #     f"You are a {self.profile['other_info']['gender']}, "
+                #     f"{self.profile['other_info']['age']} years old, with an MBTI "
+                #     f"personality type of {self.profile['other_info']['mbti']} from "
+                #     f"{self.profile['other_info']['country']}."
+                # )
         system_content = f"""
 # OBJECTIVE
 You're a Twitter user, and I'll present you with some tweets. After you see the tweets, choose some actions from the following functions.
