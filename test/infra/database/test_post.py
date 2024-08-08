@@ -100,7 +100,7 @@ async def test_create_repost_like_unlike_post(setup_platform):
         platform = setup_platform
 
         # 在测试开始之前，将2个用户插入到user表中
-        conn = platform.db
+        conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
         cursor.execute(
             ("INSERT INTO user "

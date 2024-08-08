@@ -44,7 +44,7 @@ class Platform:
         if start_time is None:
             start_time = datetime.now()
 
-        self.db, self.db_cursor = create_db(":memory:")
+        self.db, self.db_cursor = create_db(self.db_path)
         self.db.execute("PRAGMA synchronous = OFF")
 
         self.channel = channel
@@ -82,9 +82,10 @@ class Platform:
             action = ActionType(action)
 
             if action == ActionType.EXIT:
-                dst = sqlite3.connect(self.db_path)
-                with dst:
-                    self.db.backup(dst)
+                if self.db_path == ":memory:":
+                    dst = sqlite3.connect("mock.db")
+                    with dst:
+                        self.db.backup(dst)
 
                 self.db_cursor.close()
                 self.db.close()
