@@ -14,7 +14,6 @@ from yaml import safe_load
 from social_simulation.clock.clock import Clock
 from social_simulation.social_agent.agents_generator import generate_agents
 from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.config import Neo4jConfig
 from social_simulation.social_platform.platform import Platform
 from social_simulation.social_platform.typing import ActionType
 
@@ -47,9 +46,6 @@ DEFAULT_CSV_PATH = os.path.join(DATA_DIR, "user_all_id_time.csv")
 
 async def running(
     db_path: str | None = DEFAULT_DB_PATH,
-    neo4j_username: str | None = None,
-    neo4j_password: str | None = None,
-    neo4j_uri: str | None = None,
     csv_path: str | None = DEFAULT_CSV_PATH,
     num_timesteps: int = 3,
     clock_factor: int = 60,
@@ -58,15 +54,6 @@ async def running(
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     csv_path = DEFAULT_CSV_PATH if csv_path is None else csv_path
-    neo4j_config = Neo4jConfig(
-        uri=neo4j_uri,
-        username=neo4j_username,
-        password=neo4j_password,
-    )
-    if not neo4j_config.is_valid():
-        neo4j_config = None
-        logger.warning("Neo4j config is not valid. "
-                       "Using igraph backend for social graph.")
     if os.path.exists(db_path):
         os.remove(db_path)
 

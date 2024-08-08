@@ -1,9 +1,6 @@
 data:
   db_path: null
   csv_path: null
-  neo4j_username: null
-  neo4j_password: null
-  neo4j_uri: null
 simulation:
   num_timesteps: 3
   clock_factor: 60
