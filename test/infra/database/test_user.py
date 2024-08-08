@@ -88,7 +88,7 @@ async def test_follow_user(setup_platform):
         platform = setup_platform
 
         # 在测试开始之前，将3个用户插入到user表中
-        conn = sqlite3.connect(test_db_filepath)
+        conn = platform.db
         cursor = conn.cursor()
         cursor.execute(
             ("INSERT INTO user "

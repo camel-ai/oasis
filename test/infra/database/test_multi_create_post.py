@@ -89,7 +89,7 @@ async def test_signup_and_create_post(setup_platform,
         await platform_instance.running()
 
         # 验证数据库中是否正确插入了数据
-        conn = sqlite3.connect(test_db_filepath)
+        conn = platform_instance.db
         cursor = conn.cursor()
 
         # 验证用户(user)表是否正确插入了数据

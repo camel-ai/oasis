@@ -72,7 +72,7 @@ async def test_search_user(setup_platform):
         platform = setup_platform
 
         # 在测试开始之前，将几个用户插入到user表中
-        conn = sqlite3.connect(test_db_filepath)
+        conn = platform.db
         cursor = conn.cursor()
         users_info = [(1, 1, "user1", "Alice", "Bio of Alice",
                        "2023-01-01 12:00:00", 10, 5),
