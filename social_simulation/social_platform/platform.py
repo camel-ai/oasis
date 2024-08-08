@@ -35,7 +35,8 @@ class Platform:
                  show_score: bool = False,
                  allow_self_rating: bool = True,
                  recsys_type: str | RecsysType = "twitter",
-                 refresh_post_count: int = 5):
+                 refresh_post_count: int = 1,
+                 max_rec_post_len: int = 50):
         self.db_path = db_path
         # 未指定时钟时，默认platform的时间放大系数为60
         if sandbox_clock is None:
@@ -43,7 +44,7 @@ class Platform:
         if start_time is None:
             start_time = datetime.now()
 
-        self.db, self.db_cursor = create_db(db_path)
+        self.db, self.db_cursor = create_db(":memory:")
         self.db.execute("PRAGMA synchronous = OFF")
 
         self.channel = channel
@@ -62,13 +63,13 @@ class Platform:
         # 社交媒体内部推荐系统refresh一次返回的推文数量
         self.refresh_post_count = refresh_post_count
         # rec table(buffer)中每个用户的最大post数量
-        self.max_rec_post_len = 50
+        self.max_rec_post_len = max_rec_post_len
         # rec prob between random and personalized
         self.rec_prob = 0.7
 
         # platform内部定义的热搜规则参数
         self.trend_num_days = 7
-        self.trend_top_k = 10
+        self.trend_top_k = 1
 
         self.pl_utils = PlatformUtils(self.db, self.db_cursor, self.start_time,
                                       self.sandbox_clock, self.show_score)
@@ -81,11 +82,9 @@ class Platform:
             action = ActionType(action)
 
             if action == ActionType.EXIT:
-                if self.db_path == ":memory:":
-                    store_path = "mocktwitter.db"
-                    dst = sqlite3.connect(store_path)
-                    with dst:
-                        self.db.backup(dst)
+                dst = sqlite3.connect(self.db_path)
+                with dst:
+                    self.db.backup(dst)
 
                 self.db_cursor.close()
                 self.db.close()
@@ -190,6 +189,7 @@ class Platform:
                 results)
             # 记录操作到trace表
             action_info = {"posts": results_with_comments}
+            twitter_log.info(action_info)
             self.pl_utils._record_trace(user_id, ActionType.REFRESH.value,
                                         action_info)
 
@@ -618,16 +618,16 @@ class Platform:
             if not user_id:
                 return self.pl_utils._not_signup_error_message(agent_id)
             # # 检查是否已经存在关注记录
-            # follow_check_query = ("SELECT * FROM follow WHERE follower_id = ? "
-            #                       "AND followee_id = ?")
-            # self.pl_utils._execute_db_command(follow_check_query,
-            #                                   (user_id, followee_id))
-            # if self.db_cursor.fetchone():
-            #     # 已存在关注记录
-            #     return {
-            #         "success": False,
-            #         "error": "Follow record already exists."
-            #     }
+            follow_check_query = ("SELECT * FROM follow WHERE follower_id = ? "
+                                  "AND followee_id = ?")
+            self.pl_utils._execute_db_command(follow_check_query,
+                                              (user_id, followee_id))
+            if self.db_cursor.fetchone():
+                # 已存在关注记录
+                return {
+                    "success": False,
+                    "error": "Follow record already exists."
+                }
 
             # 在follow表中添加记录
             follow_insert_query = (
@@ -638,20 +638,20 @@ class Platform:
                 commit=True)
             follow_id = self.db_cursor.lastrowid  # 获取刚刚插入的关注记录的ID
 
-            # # 更新user表中的following字段
-            # user_update_query1 = (
-            #     "UPDATE user SET num_followings = num_followings + 1 "
-            #     "WHERE user_id = ?")
-            # self.pl_utils._execute_db_command(user_update_query1, (user_id, ),
-            #                                   commit=True)
+            # 更新user表中的following字段
+            user_update_query1 = (
+                "UPDATE user SET num_followings = num_followings + 1 "
+                "WHERE user_id = ?")
+            self.pl_utils._execute_db_command(user_update_query1, (user_id, ),
+                                              commit=True)
 
-            # # 更新user表中的follower字段
-            # user_update_query2 = (
-            #     "UPDATE user SET num_followers = num_followers + 1 "
-            #     "WHERE user_id = ?")
-            # self.pl_utils._execute_db_command(user_update_query2,
-            #                                   (followee_id, ),
-            #                                   commit=True)
+            # 更新user表中的follower字段
+            user_update_query2 = (
+                "UPDATE user SET num_followers = num_followers + 1 "
+                "WHERE user_id = ?")
+            self.pl_utils._execute_db_command(user_update_query2,
+                                              (followee_id, ),
+                                              commit=True)
 
             # 记录操作到trace表
             action_info = {"follow_id": follow_id}

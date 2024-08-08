@@ -15,9 +15,8 @@ class SocialAction:
     def get_openai_function_list(self) -> list[OpenAIFunction]:
         return [
             OpenAIFunction(func) for func in [
-                self.create_post, self.follow, self.unfollow, self.like, self.
-                unlike, self.search_posts, self.search_user, self.trend, self.
-                refresh, self.mute, self.unmute, self.repost, self.do_nothing,
+                self.create_post, self.follow, self.like, self.search_posts,
+                self.search_user, self.trend, self.refresh, self.do_nothing,
                 self.create_comment, self.like_comment, self.dislike_comment
             ]
         ]

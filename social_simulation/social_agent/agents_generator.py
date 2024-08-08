@@ -8,8 +8,10 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from camel.types.enums import ModelType
 
+from camel.types import ModelType, OpenAIBackendRole
+from camel.messages import BaseMessage
+from camel.memories import MemoryRecord
 from social_simulation.social_agent import AgentGraph, SocialAgent
 from social_simulation.social_platform import Channel
 from social_simulation.social_platform.config import UserInfo
@@ -175,7 +177,11 @@ async def gen_control_agents_with_data(
         user_info = UserInfo(
             is_controllable=True,
             profile={'other_info': {
-                'user_profile': 'None'
+                'user_profile': 'None',
+                'gender': 'None',
+                'mbti': 'None',
+                'country': 'None',
+                'age': 'None'
             }},
         )
         # controllable的agent_id全都在llm agent的agent_id的前面
@@ -201,6 +207,9 @@ async def generate_reddit_agents(
     agent_graph: AgentGraph | None = AgentGraph,
     agent_user_id_mapping: dict[int, int]
     | None = None,
+    follow_post_agent: bool = False,
+    mute_post_agent: bool = False,
+    cfgs: list[Any] | None = None
 ) -> AgentGraph:
     if agent_user_id_mapping is None:
         agent_user_id_mapping = {}
@@ -212,23 +221,39 @@ async def generate_reddit_agents(
     with open(agent_info_path, 'r') as file:
         agent_info = json.load(file)
 
-    for i in range(len(agent_info)):
+    model_types = []
+
+    for _, cfg in enumerate(cfgs):
+        model_type = ModelType(cfg["model_type"])
+        model_types.extend([model_type] * cfg["num"])
+
+    async def process_agent(i):
         # Instantiate an agent
         profile = {
             'nodes': [],  # Relationships with other agents
             'edges': [],  # Relationship details
             'other_info': {},
         }
-
         # Update agent profile with additional information
-        profile['other_info']['user_profile'] = agent_info[i]['bio']
+        profile['other_info']['user_profile'] = agent_info[i]['persona']
+        profile['other_info']['mbti'] = agent_info[i]['mbti']
+        profile['other_info']['gender'] = agent_info[i]['gender']
+        profile['other_info']['age'] = agent_info[i]['age']
+        profile['other_info']['country'] = agent_info[i]['country']
 
-        user_info = UserInfo(name=agent_info[i]['nickname'],
-                             description=agent_info[i]['description'],
+        user_info = UserInfo(name=agent_info[i]['username'],
+                             description=agent_info[i]['bio'],
                              profile=profile)
 
-        # controllable的agent_id全都在llm agent的agent_id的前面
-        agent = SocialAgent(i + control_user_num, user_info, twitter_channel, inference_channel, agent_graph=agent_graph)
+        model_type: ModelType = model_types[i]
+        agent = SocialAgent(
+            agent_id=i+control_user_num,
+            user_info=user_info,
+            twitter_channel=twitter_channel,
+            inference_channel=inference_channel,
+            model_type=model_type,
+            agent_graph=agent_graph,
+        )
 
         # Add agent to the agent graph
         agent_graph.add_agent(agent)
@@ -236,11 +261,47 @@ async def generate_reddit_agents(
         # Sign up agent and add their information to the database
         # print(f"Signing up agent {agent_info['username'][i]}...")
         response = await agent.env.action.sign_up(
-            agent_info[i]['nickname'],
-            agent_info[i]['nickname'],
-            agent_info[i]['description'],
+            agent_info[i]['username'],
+            agent_info[i]['realname'],
+            agent_info[i]['bio'],
         )
         user_id = response['user_id']
         agent_user_id_mapping[i + control_user_num] = user_id
+
+        if follow_post_agent:
+            await agent.env.action.follow(1)
+            content = '''
+{
+    "reason": "He is my friend, and I would like to follow him on social media.",
+    "functions": [{
+        "name": "follow",
+        "arguments": {
+            "user_id": 1
+        }
+}
+'''
+            agent_msg = BaseMessage.make_assistant_message(
+                role_name="Assistant", content=content)
+            agent.memory.write_record(
+                MemoryRecord(agent_msg, OpenAIBackendRole.ASSISTANT))
+        elif mute_post_agent:
+            await agent.env.action.mute(1)
+            content = '''
+{
+    "reason": "He is my enemy, and I would like to mute him on social media.",
+    "functions": [{
+        "name": "mute",
+        "arguments": {
+            "user_id": 1
+        }
+}
+'''
+            agent_msg = BaseMessage.make_assistant_message(
+                role_name="Assistant", content=content)
+            agent.memory.write_record(
+                MemoryRecord(agent_msg, OpenAIBackendRole.ASSISTANT))
+
+    tasks = [process_agent(i) for i in range(len(agent_info))]
+    await asyncio.gather(*tasks)
 
     return agent_graph

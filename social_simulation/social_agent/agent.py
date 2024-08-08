@@ -185,6 +185,7 @@ class SocialAgent:
                     #       f"args: {function['arguments']}\n" + Fore.RESET +
                     #       "=" * 20 + "\n")
                     agent_log.error(f"Agent {self.agent_id} error: {e}")
+                    retry -= 1
 
         if retry == 0:
             content = "No response." 
