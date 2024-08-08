@@ -27,7 +27,7 @@ async def test_update_rec_table(setup_db):
         channel = Channel()
         infra = Platform(test_db_filepath, channel, recsys_type='reddit')
         # 在测试开始之前，将3个用户插入到user表中
-        conn = infra.db
+        conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
         cursor.execute(
             ("INSERT INTO user "
