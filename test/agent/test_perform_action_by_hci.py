@@ -30,8 +30,8 @@ async def test_perform_action_by_hci(monkeypatch, setup_twitter):
     # infra = Platform(test_db_filepath, channel)
     # task = asyncio.create_task(infra.running())
 
-    # inputs = iter(["Alice", "Ali", "a student"])
-    # monkeypatch.setattr('builtins.input', lambda _: next(inputs))
+    inputs = iter(["Alice", "Ali", "a student"])
+    monkeypatch.setattr('builtins.input', lambda _: next(inputs))
 
     agent_graph, _ = await generate_controllable_agents(channel, 1)
     test_agent = agent_graph.get_agent(0)
