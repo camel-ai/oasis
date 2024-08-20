@@ -160,6 +160,7 @@ class Neo4jHandler:
 
 
 class AgentGraph:
+    r"""AgentGraph class to manage the social graph of agents."""
 
     def __init__(
         self,

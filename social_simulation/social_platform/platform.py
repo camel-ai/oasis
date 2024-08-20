@@ -1,31 +1,36 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import random
 import sqlite3
+import sys
 from datetime import datetime, timedelta
 from typing import Any
-import asyncio
+
 from social_simulation.clock.clock import Clock
 from social_simulation.social_platform.database import (
     create_db, fetch_rec_table_as_matrix, fetch_table_from_db)
 from social_simulation.social_platform.platform_utils import PlatformUtils
-from social_simulation.social_platform.recsys import (
-    rec_sys_personalized_with_trace, rec_sys_random, rec_sys_reddit, rec_sys_personalized)
+from social_simulation.social_platform.recsys import (rec_sys_personalized,
+                                                      rec_sys_random,
+                                                      rec_sys_reddit)
 from social_simulation.social_platform.typing import ActionType, RecsysType
 
-
-twitter_log = logging.getLogger(name='social.twitter')
-twitter_log.setLevel('DEBUG')
-now = datetime.now()
-file_handler = logging.FileHandler(f'./log/social.twitter-{str(now)}.log')
-file_handler.setLevel('DEBUG')
-file_handler.setFormatter(
-    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
-twitter_log.addHandler(file_handler)
+if 'sphinx' not in sys.modules:
+    twitter_log = logging.getLogger(name='social.twitter')
+    twitter_log.setLevel('DEBUG')
+    now = datetime.now()
+    file_handler = logging.FileHandler(f'./log/social.twitter-{str(now)}.log')
+    file_handler.setLevel('DEBUG')
+    file_handler.setFormatter(
+        logging.Formatter(
+            '%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+    twitter_log.addHandler(file_handler)
 
 
 class Platform:
+    r"""Platform."""
 
     def __init__(self,
                  db_path: str,
@@ -118,7 +123,7 @@ class Platform:
                 await self.channel.send_to((message_id, agent_id, result))
             else:
                 raise ValueError(f"Action {action} is not supported")
-    
+
     def run(self):
         asyncio.run(self.running())
 
@@ -151,9 +156,9 @@ class Platform:
             self.pl_utils._record_trace(user_id, ActionType.SIGNUP.value,
                                         action_info, current_time)
             twitter_log.info(f"Trace inserted: user_id={user_id}, "
-                        f"current_time={current_time}, "
-                        f"action={ActionType.SIGNUP.value}, "
-                        f"info={action_info}")
+                             f"current_time={current_time}, "
+                             f"action={ActionType.SIGNUP.value}, "
+                             f"info={action_info}")
             return {"success": True, "user_id": user_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -215,8 +220,8 @@ class Platform:
             #     user_table, post_table, trace_table, rec_matrix,
             #     self.max_rec_post_len)
             new_rec_matrix = rec_sys_personalized(user_table, post_table,
-                                                    trace_table, rec_matrix,
-                                                    self.max_rec_post_len)
+                                                  trace_table, rec_matrix,
+                                                  self.max_rec_post_len)
         elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
                                             self.max_rec_post_len)
@@ -268,9 +273,9 @@ class Platform:
             self.pl_utils._record_trace(user_id, ActionType.CREATE_POST.value,
                                         action_info, current_time)
             twitter_log.info(f"Trace inserted: user_id={user_id}, "
-                        f"current_time={current_time}, "
-                        f"action={ActionType.CREATE_POST.value}, "
-                        f"info={action_info}")
+                             f"current_time={current_time}, "
+                             f"action={ActionType.CREATE_POST.value}, "
+                             f"info={action_info}")
             return {"success": True, "post_id": post_id}
 
         except Exception as e:
@@ -660,9 +665,9 @@ class Platform:
             self.pl_utils._record_trace(user_id, ActionType.FOLLOW.value,
                                         action_info, current_time)
             twitter_log.info(f"Trace inserted: user_id={user_id}, "
-                        f"current_time={current_time}, "
-                        f"action={ActionType.FOLLOW.value}, "
-                        f"info={action_info}")
+                             f"current_time={current_time}, "
+                             f"action={ActionType.FOLLOW.value}, "
+                             f"info={action_info}")
             return {"success": True, "follow_id": follow_id}
         except Exception as e:
             return {"success": False, "error": str(e)}

@@ -1,18 +1,17 @@
 from __future__ import annotations
 
-from datetime import datetime
-from genericpath import isfile
 import inspect
 import json
-import os
-from typing import TYPE_CHECKING, Any
 import logging
+import sys
+from datetime import datetime
+from typing import TYPE_CHECKING, Any
+
 from camel.memories import (ChatHistoryMemory, MemoryRecord,
                             ScoreBasedContextCreator)
 from camel.messages import BaseMessage
-from camel.utils import OpenAITokenCounter
 from camel.types import ModelType, OpenAIBackendRole
-from colorama import Fore, Style
+from camel.utils import OpenAITokenCounter
 
 from social_simulation.social_agent.agent_action import SocialAction
 from social_simulation.social_agent.agent_environment import SocialEnvironment
@@ -22,17 +21,20 @@ from social_simulation.social_platform.config import UserInfo
 if TYPE_CHECKING:
     from social_simulation.social_agent import AgentGraph
 
-agent_log = logging.getLogger(name='social.agent')
-agent_log.setLevel('DEBUG')
-now = datetime.now()
-file_handler = logging.FileHandler(f'./log/social.agent-{str(now)}.log')
-file_handler.setLevel('DEBUG')
-file_handler.setFormatter(
-    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
-agent_log.addHandler(file_handler)
+if 'sphinx' not in sys.modules:
+    agent_log = logging.getLogger(name='social.agent')
+    agent_log.setLevel('DEBUG')
+    now = datetime.now()
+    file_handler = logging.FileHandler(f'./log/social.agent-{str(now)}.log')
+    file_handler.setLevel('DEBUG')
+    file_handler.setFormatter(
+        logging.Formatter(
+            '%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+    agent_log.addHandler(file_handler)
 
 
 class SocialAgent:
+    r"""Social Agent."""
 
     def __init__(
         self,
@@ -87,10 +89,11 @@ class SocialAgent:
 
         if not openai_messages:
             openai_messages = [{
-                        "role": self.system_message.role_name,
-                        "content": self.system_message.content
-                    }] + [user_msg.to_openai_user_message()]
-        agent_log.info(f"Agent {self.agent_id} is running with prompt: {openai_messages}")
+                "role": self.system_message.role_name,
+                "content": self.system_message.content
+            }] + [user_msg.to_openai_user_message()]
+        agent_log.info(
+            f"Agent {self.agent_id} is running with prompt: {openai_messages}")
 
         if self.has_function_call:
             response = self.model_backend.run(openai_messages)
@@ -118,7 +121,8 @@ class SocialAgent:
 
                 message_id = await self.inference_channel.write_to_receive_queue(
                     openai_messages)
-                message_id, content = await self.inference_channel.read_from_send_queue(message_id)
+                message_id, content = await self.inference_channel.read_from_send_queue(
+                    message_id)
 
                 if not content.startswith("{"):
                     idx = content.find("{")
@@ -135,7 +139,7 @@ class SocialAgent:
                 if not content.endswith("}"):
                     idx = content.rfind("}")
                     if idx != -1:
-                        content = content[:idx+1]
+                        content = content[:idx + 1]
                     else:
                         content = '''{
     "reason": "No response.",
@@ -144,7 +148,8 @@ class SocialAgent:
         "arguments": {}
     }],
 }'''
-                agent_log.info(f"Agent {self.agent_id} receve response: {content}")
+                agent_log.info(
+                    f"Agent {self.agent_id} receve response: {content}")
 
                 try:
                     content_json = json.loads(content)
@@ -188,7 +193,7 @@ class SocialAgent:
                     retry -= 1
 
         if retry == 0:
-            content = "No response." 
+            content = "No response."
         agent_msg = BaseMessage.make_assistant_message(role_name="Assistant",
                                                        content=content)
         self.memory.write_record(
@@ -199,7 +204,9 @@ class SocialAgent:
         function_list = self.env.action.get_openai_function_list()
         for i in range(len(function_list)):
             # print(f"{i}.", function_list[i].func.__name__, end=', ')
-            agent_log.info(f"Agent {self.agent_id} function: {function_list[i].func.__name__}")
+            agent_log.info(
+                f"Agent {self.agent_id} function: {function_list[i].func.__name__}"
+            )
         # print()
 
         selection = int(input("Enter your choice: "))

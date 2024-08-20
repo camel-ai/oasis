@@ -2,6 +2,7 @@ from datetime import datetime
 
 
 class Clock:
+    r"""Clock used for the sandbox."""
 
     def __init__(self, k: int):
         self.real_start_time = datetime.now()
