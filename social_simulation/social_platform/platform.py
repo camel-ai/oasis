@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import asyncio
+import logging
 import random
 import sqlite3
+import sys
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -14,46 +17,47 @@ from social_simulation.social_platform.recsys import (
     rec_sys_personalized_twh)
 
 from social_simulation.social_platform.typing import ActionType, RecsysType
-import logging
 
-twitter_log = logging.getLogger(name='social.twitter')
-twitter_log.setLevel('DEBUG')
-file_handler = logging.FileHandler('social.twitter.log')
-file_handler.setLevel('DEBUG')
-file_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
-twitter_log.addHandler(file_handler)
+if 'sphinx' not in sys.modules:
+    twitter_log = logging.getLogger(name='social.twitter')
+    twitter_log.setLevel('DEBUG')
+    now = datetime.now()
+    file_handler = logging.FileHandler(f'./log/social.twitter-{str(now)}.log')
+    file_handler.setLevel('DEBUG')
+    file_handler.setFormatter(
+        logging.Formatter(
+            '%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+    twitter_log.addHandler(file_handler)
 
 
 class Platform:
+    r"""Platform."""
 
     def __init__(self,
                  db_path: str,
                  channel: Any,
                  sandbox_clock: Clock | None = None,
                  start_time: datetime | None = None,
-                 rec_update_time: int = 20,
                  show_score: bool = False,
                  allow_self_rating: bool = True,
                  recsys_type: str | RecsysType = "twitter",
-                 refresh_post_count: int = 5):
+                 refresh_post_count: int = 1,
+                 max_rec_post_len: int = 50):
+
+        self.db_path = db_path
         # 未指定时钟时，默认platform的时间放大系数为60
         if sandbox_clock is None:
             sandbox_clock = Clock(60)
         if start_time is None:
             start_time = datetime.now()
-        create_db(db_path)
 
-        self.db = sqlite3.connect(db_path, check_same_thread=False)
-        self.db_cursor = self.db.cursor()
+        self.db, self.db_cursor = create_db(self.db_path)
+        self.db.execute("PRAGMA synchronous = OFF")
 
         self.channel = channel
         self.start_time = start_time
         self.sandbox_clock = sandbox_clock
 
-        # channel传进的操作数量
-        self.ope_cnt = -1
-        # 推荐系统缓存更新的时间间隔（以传进来的操作数为单位）
-        self.rec_update_time = rec_update_time
         self.recsys_type = RecsysType(recsys_type)
 
         # 是否要模拟显示类似reddit的那种点赞数减去点踩数作为分数
@@ -66,13 +70,13 @@ class Platform:
         # 社交媒体内部推荐系统refresh一次返回的推文数量
         self.refresh_post_count = refresh_post_count
         # rec table(buffer)中每个用户的最大post数量
-        self.max_rec_post_len = 50
+        self.max_rec_post_len = max_rec_post_len
         # rec prob between random and personalized
         self.rec_prob = 0.7
 
         # platform内部定义的热搜规则参数
         self.trend_num_days = 7
-        self.trend_top_k = 10
+        self.trend_top_k = 1
 
         self.pl_utils = PlatformUtils(self.db, self.db_cursor, self.start_time,
                                       self.sandbox_clock, self.show_score)
@@ -80,17 +84,16 @@ class Platform:
     async def running(self):
         while True:
             message_id, data = await self.channel.receive_from()
-            if message_id:
-                self.ope_cnt += 1
+
             agent_id, message, action = data
             action = ActionType(action)
 
-            if (self.ope_cnt % self.rec_update_time == 0
-                    and action != ActionType.REFRESH):
-                self.ope_cnt += 1
-                await self.update_rec_table()
-
             if action == ActionType.EXIT:
+                if self.db_path == ":memory:":
+                    dst = sqlite3.connect("mock.db")
+                    with dst:
+                        self.db.backup(dst)
+
                 self.db_cursor.close()
                 self.db.close()
                 break
@@ -122,6 +125,9 @@ class Platform:
             else:
                 raise ValueError(f"Action {action} is not supported")
 
+    def run(self):
+        asyncio.run(self.running())
+
     # 注册
     async def sign_up(self, agent_id, user_message):
         user_name, name, bio = user_message
@@ -150,7 +156,10 @@ class Platform:
             action_info = {"name": name, "user_name": user_name, "bio": bio}
             self.pl_utils._record_trace(user_id, ActionType.SIGNUP.value,
                                         action_info, current_time)
-            twitter_log.info(f"Trace inserted: user_id={user_id}, current_time={current_time}, action={ActionType.SIGNUP.value}, info={action_info}")
+            twitter_log.info(f"Trace inserted: user_id={user_id}, "
+                             f"current_time={current_time}, "
+                             f"action={ActionType.SIGNUP.value}, "
+                             f"info={action_info}")
             return {"success": True, "user_id": user_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -191,6 +200,7 @@ class Platform:
                 results)
             # 记录操作到trace表
             action_info = {"posts": results_with_comments}
+            twitter_log.info(action_info)
             self.pl_utils._record_trace(user_id, ActionType.REFRESH.value,
                                         action_info)
 
@@ -237,15 +247,14 @@ class Platform:
         #                                           commit=True)
 
         # 批量插入更省时, 创建插入值列表
-        insert_values = [
-            (user_id, post_id) 
-            for user_id in range(1, len(new_rec_matrix)) 
-            for post_id in new_rec_matrix[user_id]]
+        insert_values = [(user_id, post_id)
+                         for user_id in range(1, len(new_rec_matrix))
+                         for post_id in new_rec_matrix[user_id]]
 
         # 批量插入到数据库
         self.pl_utils._execute_many_db_command(
-            "INSERT INTO rec (user_id, post_id) VALUES (?, ?)", 
-            insert_values, 
+            "INSERT INTO rec (user_id, post_id) VALUES (?, ?)",
+            insert_values,
             commit=True)
 
     async def create_post(self, agent_id: int, content: str):
@@ -268,7 +277,10 @@ class Platform:
             action_info = {"content": content, "post_id": post_id}
             self.pl_utils._record_trace(user_id, ActionType.CREATE_POST.value,
                                         action_info, current_time)
-            twitter_log.info(f"Trace inserted: user_id={user_id}, current_time={current_time}, action={ActionType.CREATE_POST.value}, info={action_info}")
+            twitter_log.info(f"Trace inserted: user_id={user_id}, "
+                             f"current_time={current_time}, "
+                             f"action={ActionType.CREATE_POST.value}, "
+                             f"info={action_info}")
             return {"success": True, "post_id": post_id}
 
         except Exception as e:
@@ -623,7 +635,7 @@ class Platform:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
                 return self.pl_utils._not_signup_error_message(agent_id)
-            # 检查是否已经存在关注记录
+            # # 检查是否已经存在关注记录
             follow_check_query = ("SELECT * FROM follow WHERE follower_id = ? "
                                   "AND followee_id = ?")
             self.pl_utils._execute_db_command(follow_check_query,
@@ -663,7 +675,10 @@ class Platform:
             action_info = {"follow_id": follow_id}
             self.pl_utils._record_trace(user_id, ActionType.FOLLOW.value,
                                         action_info, current_time)
-            twitter_log.info(f"Trace inserted: user_id={user_id}, current_time={current_time}, action={ActionType.FOLLOW.value}, info={action_info}")
+            twitter_log.info(f"Trace inserted: user_id={user_id}, "
+                             f"current_time={current_time}, "
+                             f"action={ActionType.FOLLOW.value}, "
+                             f"info={action_info}")
             return {"success": True, "follow_id": follow_id}
         except Exception as e:
             return {"success": False, "error": str(e)}

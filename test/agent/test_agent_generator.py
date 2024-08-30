@@ -19,12 +19,14 @@ if osp.exists(test_db_filepath):
 
 async def running():
     agent_info_path = "./test/test_data/user_all_id_time.csv"
-    channel = Channel()
-    infra = Platform(test_db_filepath, channel)
+    twitter_channel = Channel()
+    inferencer_channel = Channel()
+    infra = Platform(test_db_filepath, twitter_channel)
     task = asyncio.create_task(infra.running())
     agent_graph = await generate_agents(
         agent_info_path,
-        channel,
+        twitter_channel,
+        inferencer_channel,
         num_agents=26,
         cfgs=[{
             "model_type": ModelType.LLAMA_3,
@@ -34,7 +36,7 @@ async def running():
             "num": 6
         }],
     )
-    await channel.write_to_receive_queue((None, None, "exit"))
+    await twitter_channel.write_to_receive_queue((None, None, "exit"))
     await task
     assert agent_graph.get_num_nodes() == 26
 
@@ -44,20 +46,21 @@ def test_agent_generator():
 
 
 @pytest.mark.skip(reason="Now controllable agent is not supported")
-@pytest.mark.asyncio
+#@pytest.mark.asyncio
 async def test_generate_controllable(monkeypatch):
     agent_info_path = "./test/test_data/user_all_id_time.csv"
-    channel = Channel()
+    twitter_channel = Channel()
+    inferencer_channel = Channel()
     if osp.exists(test_db_filepath):
         os.remove(test_db_filepath)
-    infra = Platform(test_db_filepath, channel)
+    infra = Platform(test_db_filepath, twitter_channel)
     task = asyncio.create_task(infra.running())
     inputs = iter(["Alice", "Ali", "a student"])
     monkeypatch.setattr('builtins.input', lambda _: next(inputs))
     agent_graph, agent_user_id_mapping = await generate_controllable_agents(
-        channel, 1)
-    agent_graph = await generate_agents(agent_info_path, channel, agent_graph,
+        twitter_channel, 1)
+    agent_graph = await generate_agents(agent_info_path, twitter_channel, inferencer_channel, agent_graph,
                                         agent_user_id_mapping)
-    await channel.write_to_receive_queue((None, None, "exit"))
+    await twitter_channel.write_to_receive_queue((None, None, "exit"))
     await task
     assert agent_graph.get_num_nodes() == 27

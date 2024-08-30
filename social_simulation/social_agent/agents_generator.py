@@ -8,19 +8,23 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from camel.types.enums import ModelType
 
+from camel.types import ModelType, OpenAIBackendRole
+from camel.messages import BaseMessage
+from camel.memories import MemoryRecord
 from social_simulation.social_agent import AgentGraph, SocialAgent
 from social_simulation.social_platform import Channel
-from social_simulation.social_platform.config import UserInfo
+from social_simulation.social_platform.config import Neo4jConfig, UserInfo
 
 
 async def generate_agents(
     agent_info_path: str,
-    channel: Channel,
-    num_agents: int,
+    twitter_channel: Channel,
+    inference_channel: Channel,
+    num_agents: int = 26,
     model_random_seed: int = 42,
     cfgs: list[Any] | None = None,
+    neo4j_config: Neo4jConfig | None = None,
 ) -> AgentGraph:
     """Generate and return a dictionary of agents from the agent
     information CSV file. Each agent is added to the database and
@@ -33,6 +37,8 @@ async def generate_agents(
         model_random_seed (int): Random seed to randomly assign model to
             each agent. (default: 42)
         cfgs (list, optional): List of configuration. (default: `None`)
+        neo4j_config (Neo4jConfig, optional): Neo4j graph database
+            configuration. (default: `None`)
 
     Returns:
         dict: A dictionary of agent IDs mapped to their respective agent
@@ -42,7 +48,7 @@ async def generate_agents(
     model_types = []
     model_temperatures = []
     model_config_dict = {}
-    for i, cfg in enumerate(cfgs):
+    for _, cfg in enumerate(cfgs):
         model_type = ModelType(cfg["model_type"])
         model_config_dict[model_type] = cfg
         model_types.extend([model_type] * cfg["num"])
@@ -51,6 +57,7 @@ async def generate_agents(
     random.shuffle(model_types)
     assert len(model_types) == num_agents
     agent_info = pd.read_csv(agent_info_path)
+    # agent_info = agent_info[:10000]
     assert len(model_types) == len(agent_info), \
         (f"Mismatch between the number of agents "
          f"and the number of models, with {len(agent_info)} "
@@ -66,7 +73,10 @@ async def generate_agents(
     normalized_prob = np.round(normalized_prob, 2)
     prob_list: list[float] = normalized_prob.tolist()
 
-    agent_graph = AgentGraph()
+    agent_graph = AgentGraph() if neo4j_config is None else AgentGraph(
+        backend="neo4j",
+        neo4j_config=neo4j_config,
+    )
 
     async def setup_agent(agent_id: int):
         profile = {
@@ -88,17 +98,13 @@ async def generate_agents(
         )
 
         model_type: ModelType = model_types[agent_id]
-        model_config = model_config_dict[model_type]
+
         agent = SocialAgent(
             agent_id=agent_id,
             user_info=user_info,
-            channel=channel,
-            model_path=model_config.get("model_path", model_type.value),
-            server_url=model_config.get("server_url",
-                                        "http://10.140.0.144:8000/v1"),
-            stop_tokens=model_config.get("stop_tokens"),
+            twitter_channel=twitter_channel,
+            inference_channel=inference_channel,
             model_type=model_type,
-            temperature=model_temperatures[agent_id],
             agent_graph=agent_graph,
         )
 
@@ -110,21 +116,15 @@ async def generate_agents(
             agent_info["description"][agent_id],
         )
 
-        if agent_info["following_agentid_list"][agent_id] != "0":
-            following_id_list = ast.literal_eval(
-                agent_info["following_agentid_list"][agent_id])
-            follow_tasks = [
-                agent.env.action.follow(following_id + 1)
-                for following_id in following_id_list
-            ]
-            await asyncio.gather(*follow_tasks)
-            for following_id in following_id_list:
-                agent_graph.add_edge(agent_id, following_id)
+        # following_id_list = ast.literal_eval(
+        #         agent_info["following_agentid_list"][agent_id])
+        following_id = random.randint(0, len(agent_info))
+        await agent.env.action.follow(following_id + 1)
+        agent_graph.add_edge(agent_id, following_id)
 
-        if len(agent_info['previous_tweets']) != 0:
-            previous_posts = ast.literal_eval(
+        previous_posts = ast.literal_eval(
                 agent_info['previous_tweets'][agent_id])
-
+        if len(previous_posts) != 0:
             post_tasks = [
                 agent.env.action.create_post(post) for post in previous_posts
             ]
@@ -150,7 +150,7 @@ async def generate_controllable_agents(
             }},
         )
         # controllable的agent_id全都在llm agent的agent_id的前面
-        agent = SocialAgent(i, user_info, channel)
+        agent = SocialAgent(i, user_info, channel, agent_graph=agent_graph)
         # Add agent to the agent graph
         agent_graph.add_agent(agent)
 
@@ -183,11 +183,15 @@ async def gen_control_agents_with_data(
         user_info = UserInfo(
             is_controllable=True,
             profile={'other_info': {
-                'user_profile': 'None'
+                'user_profile': 'None',
+                'gender': 'None',
+                'mbti': 'None',
+                'country': 'None',
+                'age': 'None'
             }},
         )
         # controllable的agent_id全都在llm agent的agent_id的前面
-        agent = SocialAgent(i, user_info, channel)
+        agent = SocialAgent(i, user_info, channel, agent_graph=agent_graph)
         # Add agent to the agent graph
         agent_graph.add_agent(agent)
 
@@ -204,10 +208,14 @@ async def gen_control_agents_with_data(
 
 async def generate_reddit_agents(
     agent_info_path: str,
-    channel: Channel,
+    twitter_channel: Channel,
+    inference_channel: Channel,
     agent_graph: AgentGraph | None = AgentGraph,
     agent_user_id_mapping: dict[int, int]
     | None = None,
+    follow_post_agent: bool = False,
+    mute_post_agent: bool = False,
+    cfgs: list[Any] | None = None
 ) -> AgentGraph:
     if agent_user_id_mapping is None:
         agent_user_id_mapping = {}
@@ -219,23 +227,39 @@ async def generate_reddit_agents(
     with open(agent_info_path, 'r') as file:
         agent_info = json.load(file)
 
-    for i in range(len(agent_info)):
+    model_types = []
+
+    for _, cfg in enumerate(cfgs):
+        model_type = ModelType(cfg["model_type"])
+        model_types.extend([model_type] * cfg["num"])
+
+    async def process_agent(i):
         # Instantiate an agent
         profile = {
             'nodes': [],  # Relationships with other agents
             'edges': [],  # Relationship details
             'other_info': {},
         }
-
         # Update agent profile with additional information
-        profile['other_info']['user_profile'] = agent_info[i]['bio']
+        profile['other_info']['user_profile'] = agent_info[i]['persona']
+        profile['other_info']['mbti'] = agent_info[i]['mbti']
+        profile['other_info']['gender'] = agent_info[i]['gender']
+        profile['other_info']['age'] = agent_info[i]['age']
+        profile['other_info']['country'] = agent_info[i]['country']
 
-        user_info = UserInfo(name=agent_info[i]['nickname'],
-                             description=agent_info[i]['description'],
+        user_info = UserInfo(name=agent_info[i]['username'],
+                             description=agent_info[i]['bio'],
                              profile=profile)
 
-        # controllable的agent_id全都在llm agent的agent_id的前面
-        agent = SocialAgent(i + control_user_num, user_info, channel)
+        model_type: ModelType = model_types[i]
+        agent = SocialAgent(
+            agent_id=i+control_user_num,
+            user_info=user_info,
+            twitter_channel=twitter_channel,
+            inference_channel=inference_channel,
+            model_type=model_type,
+            agent_graph=agent_graph,
+        )
 
         # Add agent to the agent graph
         agent_graph.add_agent(agent)
@@ -243,11 +267,47 @@ async def generate_reddit_agents(
         # Sign up agent and add their information to the database
         # print(f"Signing up agent {agent_info['username'][i]}...")
         response = await agent.env.action.sign_up(
-            agent_info[i]['nickname'],
-            agent_info[i]['nickname'],
-            agent_info[i]['description'],
+            agent_info[i]['username'],
+            agent_info[i]['realname'],
+            agent_info[i]['bio'],
         )
         user_id = response['user_id']
         agent_user_id_mapping[i + control_user_num] = user_id
+
+        if follow_post_agent:
+            await agent.env.action.follow(1)
+            content = '''
+{
+    "reason": "He is my friend, and I would like to follow him on social media.",
+    "functions": [{
+        "name": "follow",
+        "arguments": {
+            "user_id": 1
+        }
+}
+'''
+            agent_msg = BaseMessage.make_assistant_message(
+                role_name="Assistant", content=content)
+            agent.memory.write_record(
+                MemoryRecord(agent_msg, OpenAIBackendRole.ASSISTANT))
+        elif mute_post_agent:
+            await agent.env.action.mute(1)
+            content = '''
+{
+    "reason": "He is my enemy, and I would like to mute him on social media.",
+    "functions": [{
+        "name": "mute",
+        "arguments": {
+            "user_id": 1
+        }
+}
+'''
+            agent_msg = BaseMessage.make_assistant_message(
+                role_name="Assistant", content=content)
+            agent.memory.write_record(
+                MemoryRecord(agent_msg, OpenAIBackendRole.ASSISTANT))
+
+    tasks = [process_agent(i) for i in range(len(agent_info))]
+    await asyncio.gather(*tasks)
 
     return agent_graph

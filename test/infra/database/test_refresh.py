@@ -37,7 +37,7 @@ class MockChannel:
             # 验证搜索成功且找到至少一个匹配用户
             # print_db_contents(test_db_filepath)
             assert message[2]["success"] is True
-            assert len(message[2]["posts"]) == 5
+            assert len(message[2]["posts"]) == 1
             print(message[2]["posts"])
             # 然后检查 'posts' 列表中的每个条目
             for post in message[2].get('posts', []):

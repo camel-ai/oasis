@@ -53,4 +53,4 @@ class Channel:
                 if message:
                     return message  # 返回找到的消息
 
-            await asyncio.sleep(0.1)  # 暂时挂起，避免紧密循环
+            await asyncio.sleep(0.001)  # 暂时挂起，避免紧密循环

@@ -4,11 +4,13 @@ import random
 from datetime import datetime
 from math import log
 from typing import Any, Dict, List
-from .typing import ActionType, RecsysType
+import torchfrom .typing import ActionType, RecsysType
 import numpy as np
 from yaml import safe_load
 import torch
 from sentence_transformers import SentenceTransformer
+
+import time
 from transformers import AutoTokenizer, AutoModel
 from .process_recsys_posts import generate_post_vector
 from sklearn.metrics.pairwise import cosine_similarity
@@ -44,6 +46,14 @@ def get_recsys_model(recsys_type:str=None):
         return None
     else:
         raise ValueError(f"Unknown recsys type: {recsys_type}")
+# Move model to GPU if available
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if model is not None:
+    model.to(device)
+else:
+    print('Model not available, using random similarity.')
+    pass
+
 
 def rec_sys_random(user_table: List[Dict[str,
                                          Any]], post_table: List[Dict[str,
@@ -137,8 +147,12 @@ def rec_sys_reddit(post_table: List[Dict[str, Any]], rec_matrix: List[List],
         # 该推荐系统的时间复杂度是O(post_num * log max_rec_post_len)
         all_hot_score = []
         for post in post_table:
-            created_at_dt = datetime.strptime(post['created_at'],
-                                              "%Y-%m-%d %H:%M:%S.%f")
+            try:
+                created_at_dt = datetime.strptime(post['created_at'],
+                                                "%Y-%m-%d %H:%M:%S.%f")
+            except Exception:
+                created_at_dt = datetime.strptime(post['created_at'],
+                                                "%Y-%m-%d %H:%M:%S")
             hot_score = calculate_hot_score(post['num_likes'],
                                             post['num_dislikes'],
                                             created_at_dt)
@@ -181,44 +195,63 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
 
     # 获取所有推文的ID
     post_ids = [post['post_id'] for post in post_table]
-
+    print(f'Running personalized recommendation for {len(user_table)} users......')
+    start_time = time.time()
     if len(post_ids) <= max_rec_post_len:
-        # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
+        # If the number of posts is less than or equal to the maximum recommended length, each user gets all post IDs
         new_rec_matrix = [post_ids] * (len(rec_matrix) - 1)
         new_rec_matrix = [None] + new_rec_matrix
     else:
         new_rec_matrix = [None]
-        # 如果推文数量大于最大推荐数，每个用户随机获得personalized推文ID
-        for idx in range(1, len(rec_matrix)):
-            user_id = user_table[idx - 1]['user_id']
-            user_bio = user_table[idx - 1]['bio']
-            # filter out posts that belong to the user
-            available_post_contents = [(post['post_id'], post['content'])
-                                       for post in post_table
-                                       if post['user_id'] != user_id]
-            # calculate similarity between user bio and post text
-            post_scores = []
-            for post_id, post_content in available_post_contents:
-                if model is not None:
-                    user_embedding = model.encode(user_bio)
-                    post_embedding = model.encode(post_content)
-                    similarity = np.dot(user_embedding, post_embedding) / (
-                        np.linalg.norm(user_embedding) *
-                        np.linalg.norm(post_embedding))
-                else:
-                    similarity = random.random()
+        # If the number of posts is greater than the maximum recommended length, each user gets personalized post IDs
+        user_bios = [user['bio'] if 'bio' in user and user['bio'] is not None else '' for user in user_table]
+        post_contents = [post['content'] for post in post_table]
 
-                post_scores.append((post_id, similarity))
+        if model:
+            user_embeddings = model.encode(user_bios,
+                                           convert_to_tensor=True,
+                                           device=device)
+            post_embeddings = model.encode(post_contents,
+                                            convert_to_tensor=True,
+                                            device=device)
 
-            # sort posts by similarity
-            post_scores.sort(key=lambda x: x[1], reverse=True)
+            # Compute dot product similarity
+            dot_product = torch.matmul(user_embeddings, post_embeddings.T)
 
-            # extract post ids
-            rec_post_ids = [
-                post_id for post_id, _ in post_scores[:max_rec_post_len]
+            # Compute norm
+            user_norms = torch.norm(user_embeddings, dim=1)
+            post_norms = torch.norm(post_embeddings, dim=1)
+
+            # Compute cosine similarity
+            similarities = dot_product / (user_norms[:, None] * post_norms[None, :])
+
+        else:
+            # Generate random similarities
+            similarities = torch.rand(len(user_table), len(post_table))
+
+
+        # Iterate through each user to generate personalized recommendations.
+        for user_index, user in enumerate(user_table):
+            # Filter out posts made by the current user.
+            filtered_post_indices = [
+                i for i, post in enumerate(post_table) if post['user_id'] != user['user_id']
             ]
-            new_rec_matrix.append(rec_post_ids)
 
+            user_similarities = similarities[user_index, filtered_post_indices]
+
+            # Get the corresponding post IDs for the filtered posts.
+            filtered_post_ids = [post_table[i]['post_id'] for i in filtered_post_indices]
+
+            # Determine the top posts based on the similarities, limited by max_rec_post_len.
+            _, top_indices = torch.topk(user_similarities, k=min(max_rec_post_len, len(filtered_post_ids)))
+
+            top_post_ids = [filtered_post_ids[i] for i in top_indices.tolist()]
+
+            # Append the top post IDs to the new recommendation matrix.
+            new_rec_matrix.append(top_post_ids)
+
+    end_time = time.time()
+    print(f'Personalized recommendation time: {end_time - start_time:.6f}s')
     return new_rec_matrix
 
 def rec_sys_personalized_twh(
@@ -386,6 +419,9 @@ def rec_sys_personalized_with_trace(
     Returns:
         List[List]: Updated recommendation matrix.
     """
+
+    start_time = time.time()
+
     # 获取所有推文的ID
     post_ids = [post['post_id'] for post in post_table]
     if len(post_ids) <= max_rec_post_len:
@@ -467,5 +503,6 @@ def rec_sys_personalized_with_trace(
                                                  swap_rate)
 
             new_rec_matrix.append(rec_post_ids)
-
+    end_time = time.time()
+    print(f'Personalized recommendation time: {end_time - start_time:.6f}s')
     return new_rec_matrix

@@ -2,34 +2,33 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import logging
 import os
 import random
 from datetime import datetime
 from typing import Any
-
+import logging
+import threading
 from colorama import Back
 from yaml import safe_load
-
 from social_simulation.clock.clock import Clock
+from social_simulation.inference.inference_manager import InferencerManager
 from social_simulation.social_agent.agents_generator import generate_agents
 from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.config import Neo4jConfig
 from social_simulation.social_platform.platform import Platform
 from social_simulation.social_platform.typing import ActionType
 
-logger = logging.getLogger("twitter_simulation")
-logger.setLevel('DEBUG')
-file_handler = logging.FileHandler("twitter_simulation.log")
+
+social_log = logging.getLogger(name='social')
+social_log.setLevel('DEBUG')
+
+file_handler = logging.FileHandler('social.log')
 file_handler.setLevel('DEBUG')
-file_handler.setFormatter(
-    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
-logger.addHandler(file_handler)
+file_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+social_log.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel('DEBUG')
-stream_handler.setFormatter(
-    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
-logger.addHandler(stream_handler)
+stream_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+social_log.addHandler(stream_handler)
 
 parser = argparse.ArgumentParser(description="Arguments for script.")
 parser.add_argument(
@@ -47,46 +46,42 @@ DEFAULT_CSV_PATH = os.path.join(DATA_DIR, "user_all_id_time.csv")
 
 async def running(
     db_path: str | None = DEFAULT_DB_PATH,
-    neo4j_username: str | None = None,
-    neo4j_password: str | None = None,
-    neo4j_uri: str | None = None,
     csv_path: str | None = DEFAULT_CSV_PATH,
     num_timesteps: int = 3,
     clock_factor: int = 60,
     recsys_type: str = "twitter",
     model_configs: dict[str, Any] | None = None,
+    inference_configs: dict[str, Any] | None = None,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     csv_path = DEFAULT_CSV_PATH if csv_path is None else csv_path
-    neo4j_config = Neo4jConfig(
-        uri=neo4j_uri,
-        username=neo4j_username,
-        password=neo4j_password,
-    )
-    if not neo4j_config.is_valid():
-        neo4j_config = None
-        logger.warning("Neo4j config is not valid. "
-                       "Using igraph backend for social graph.")
     if os.path.exists(db_path):
         os.remove(db_path)
 
     start_time = datetime.now()
-    logger.info(f"Start time: {start_time}")
+    social_log.info(f"Start time: {start_time}")
     clock = Clock(k=clock_factor)
-    channel = Channel()
+    twitter_channel = Channel()
     infra = Platform(
         db_path,
-        channel,
+        twitter_channel,
         clock,
         start_time,
         recsys_type=recsys_type,
     )
-    task = asyncio.create_task(infra.running())
+    inference_channel = Channel()
+    infere = InferencerManager(
+        inference_channel,
+        **inference_configs,
+    )
+    twitter_task = asyncio.create_task(infra.running())
+    inference_task = asyncio.create_task(infere.run())
 
     model_configs = model_configs or {}
     agent_graph = await generate_agents(
         agent_info_path=csv_path,
-        channel=channel,
+        twitter_channel=twitter_channel,
+        inference_channel=inference_channel,
         **model_configs,
     )
     # agent_graph.visualize("initial_social_graph.png")
@@ -94,24 +89,27 @@ async def running(
     start_hour = 1
 
     for timestep in range(num_timesteps):
-        logger.info(f"timestep:{timestep}")
+        social_log.info(f"timestep:{timestep}")
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
-        await infra.update_rec_table()
+        #await infra.update_rec_table()
         # 0.2 * timestep here means 12 minutes
         simulation_time_hour = start_hour + 0.2 * timestep
-        for _, agent in agent_graph.get_agents():
+        tasks = []
+        for node_id, agent in agent_graph.get_agents():
             if agent.user_info.is_controllable is False:
                 agent_ac_prob = random.random()
                 threshold = agent.user_info.profile['other_info'][
                     'active_threshold'][int(simulation_time_hour % 24)]
                 if agent_ac_prob < threshold:
-                    await agent.perform_action_by_llm()
+                    tasks.append(agent.perform_action_by_llm())
             else:
                 await agent.perform_action_by_hci()
+        
+        await asyncio.gather(*tasks)
         # agent_graph.visualize(f"timestep_{timestep}_social_graph.png")
 
-    await channel.write_to_receive_queue((None, None, ActionType.EXIT))
-    await task
+    await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
+    await twitter_task, inference_task
 
 
 if __name__ == "__main__":
@@ -122,13 +120,15 @@ if __name__ == "__main__":
         data_params = cfg.get("data")
         simulation_params = cfg.get("simulation")
         model_configs = cfg.get("model")
+        inference_configs = cfg.get("inference")
 
         asyncio.run(
             running(
                 **data_params,
                 **simulation_params,
                 model_configs=model_configs,
+                inference_configs=inference_configs
             ))
     else:
         asyncio.run(running())
-    logger.info("Simulation finished.")
+    social_log.info("Simulation finished.")

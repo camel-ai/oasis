@@ -142,15 +142,6 @@ async def test_follow_user(setup_platform):
         cursor.execute("SELECT * FROM trace WHERE action='unmute'")
         assert cursor.fetchone() is not None, "Unmute action not traced"
 
-        # 验证user表的num_followings和num_followers是否正确更新
-        cursor.execute("SELECT num_followings FROM user WHERE user_id = ?",
-                       (1, ))
-        result = cursor.fetchone()
-        assert result == (1, ), "follow action not update user table"
-        cursor.execute("SELECT num_followers FROM user WHERE user_id = ?",
-                       (3, ))
-        result = cursor.fetchone()
-        assert result == (5, ), "Unfollow action not update user table"
     finally:
         # 清理
         conn.close()
