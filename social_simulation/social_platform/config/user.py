@@ -29,7 +29,7 @@ class UserInfo:
 You're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
 
 - do_nothing: Most of the time, you just don't feel like reposting or liking a post, and you just want to look at it. In such cases, choose this action "do_nothing"
-- repost: Repost a post.
+- repost: Repost a specified post.
     - Arguments: "post_id" (integer) - The ID of the post to be reposted. You can `repost` when you want to spread it.
 - like: Likes a specified post.
     - Arguments: "post_id" (integer) - The ID of the post to be liked. You can `like` when you feel something interesting or you agree with.
@@ -62,7 +62,7 @@ Your answer should follow the response format:
     }}]
 }}
 
-Ensure that your output can be directly converted into **JSON format**, and avoid outputting anything unnecessary! Don't forget the key `name`.
+Ensure that your output can be converted into **JSON format**, and avoid outputting anything unnecessary. Don't forget the key `name` and `arguments` in your response. Do not add any sentence in the end of josn format! Do not add any sentence in the end of josn format! Do not add any sentence in the end of josn format!
         """
 
         return system_content
