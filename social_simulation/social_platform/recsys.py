@@ -28,9 +28,13 @@ twhin_tokenizer, twhin_model = None, None
 tfidf_vectorizer = TfidfVectorizer()
 # prepare the twhin model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base",model_max_length=512 ) # TODO change the pretrained_model_path
-twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base").to(device)
-STmodel = SentenceTransformer('/mnt/petrelfs/zhengzirui/social-simulation/models/models--sentence-transformers--paraphrase-MiniLM-L6-v2/snapshots/3bf4ae7445aa77c8daaef06518dd78baffff53c9').to(device)
+# twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base",model_max_length=512 ) # TODO change the pretrained_model_path
+# twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base").to(device)
+# STmodel = SentenceTransformer('/mnt/petrelfs/zhengzirui/social-simulation/models/models--sentence-transformers--paraphrase-MiniLM-L6-v2/snapshots/3bf4ae7445aa77c8daaef06518dd78baffff53c9').to(device)
+
+twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="Twitter/twhin-bert-base",model_max_length=512 ) # TODO change the pretrained_model_path
+twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
+
 
 # 每个用户的所有历史推特和最近一条推特
 user_previous_post_all = {}
