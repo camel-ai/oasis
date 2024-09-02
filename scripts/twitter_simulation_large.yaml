@@ -1,17 +1,17 @@
 data:
   db_path: ":memory:"
-  csv_path: "data/False_Business_0.csv"
+  csv_path: "data/topics/False_Business_0.csv"
 simulation:
   num_timesteps: 30
   clock_factor: 60
-  recsys_type: "twitter"
+  recsys_type: "twhin-bert"
 model:
-  num_agents: 94800
+  num_agents: 79
   model_random_seed: 42
   cfgs:
     - model_type: "llama-3"
-      num: 94800
-      server_url: "http://10.140.0144:8000/v1" # eg, http://10.160.2.154:8000/v1
+      num: 79
+      server_url: "http://10.140.1.173:8096/v1" # eg, http://10.160.2.154:8000/v1
       model_path: "LLM-Research/Meta-Llama-3-8B-Instruct"
       stop_tokens: ["<|eot_id|>", "<|end_of_text|>"]
       temperature: 0.0
@@ -20,7 +20,7 @@ inference:
   model_path: "LLM-Research/Meta-Llama-3-8B-Instruct"
   stop_tokens: ["<|eot_id|>", "<|end_of_text|>"]
   server_url:
-    - host: "10.140.0.144"
-      ports: [8002, 8003, 8005, 8006, 8007, 8008, 8011, 8009, 8010, 8014, 8012, 8013, 8017, 8015, 8016, 8020, 8018, 8019]
     - host: "10.140.1.173"
-      ports: [8021, 8001, 8027, 8003, 8028, 8025, 8006, 8007, 8008, 8009, 8023, 8011]
+      ports: [8096]
+    # - host: "10.140.1.173"
+    #   ports: [8021, 8001, 8027, 8003, 8028, 8025, 8006, 8007, 8008, 8009, 8023, 8011]

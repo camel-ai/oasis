@@ -124,30 +124,30 @@ class SocialAgent:
                 message_id, content = await self.inference_channel.read_from_send_queue(
                     message_id)
 
-                if not content.startswith("{"):
-                    idx = content.find("{")
-                    if idx != -1:
-                        content = content[idx:]
-                    else:
-                        content = '''{
-    "reason": "No response.",
-    "functions": [{
-        "name": "do_nothing",
-        "arguments": {}
-    }],
-}'''
-                if not content.endswith("}"):
-                    idx = content.rfind("}")
-                    if idx != -1:
-                        content = content[:idx + 1]
-                    else:
-                        content = '''{
-    "reason": "No response.",
-    "functions": [{
-        "name": "do_nothing",
-        "arguments": {}
-    }],
-}'''
+#                 if not content.startswith("{"):
+#                     idx = content.find("{")
+#                     if idx != -1:
+#                         content = content[idx:]
+#                     else:
+#                         content = '''{
+#     "reason": "No response.",
+#     "functions": [{
+#         "name": "do_nothing",
+#         "arguments": {}
+#     }],
+# }'''
+#                 if not content.endswith("}"):
+#                     idx = content.rfind("}")
+#                     if idx != -1:
+#                         content = content[:idx + 1]
+#                     else:
+#                         content = '''{
+#     "reason": "No response.",
+#     "functions": [{
+#         "name": "do_nothing",
+#         "arguments": {}
+#     }],
+# }'''
                 agent_log.info(
                     f"Agent {self.agent_id} receve response: {content}")
 

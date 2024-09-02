@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Any
 
 from colorama import Back
+import pandas as pd
 from yaml import safe_load
 
 from social_simulation.clock.clock import Clock
@@ -82,7 +83,7 @@ async def running(
         recsys_type=recsys_type,
     )
     task = asyncio.create_task(infra.running())
-
+    all_topic_df = pd.read_csv("data/label_clean_v7.csv")
     model_configs = model_configs or {}
     agent_graph = await generate_agents(
         agent_info_path=csv_path,
@@ -91,14 +92,26 @@ async def running(
     )
     # agent_graph.visualize("initial_social_graph.png")
 
-    start_hour = 1
+    # 从label_clean_v7中把开始时间读出来
+    try:
+        if "False" in csv_path or "True" in csv_path:
+            if "-" not in csv_path:
+                topic_name = csv_path.split("/")[-1].split(".")[0]
+            else:
+                topic_name = csv_path.split("/")[-1].split(".")[0].split("-")[0]
+            start_time = all_topic_df[all_topic_df["topic_name"]==topic_name]["start_time"].item().split(" ")[1]
+            start_hour = int(start_time.split(":")[0]) + float(int(start_time.split(":")[1])/60)
+    except:
+        print("No real-world data, let start_hour be 13")
+        start_hour = 13
 
-    for timestep in range(num_timesteps):
+    for timestep in range(1, num_timesteps+1):
+        os.environ["SANDBOX_TIME"] = str(timestep*3)
         logger.info(f"timestep:{timestep}")
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         await infra.update_rec_table()
         # 0.2 * timestep here means 12 minutes
-        simulation_time_hour = start_hour + 0.2 * timestep
+        simulation_time_hour = start_hour + 0.05 * timestep
         for _, agent in agent_graph.get_agents():
             if agent.user_info.is_controllable is False:
                 agent_ac_prob = random.random()
@@ -116,6 +129,7 @@ async def running(
 
 if __name__ == "__main__":
     args = parser.parse_args()
+    os.environ["SANDBOX_TIME"] = str(0)
     if os.path.exists(args.config_path):
         with open(args.config_path, "r") as f:
             cfg = safe_load(f)

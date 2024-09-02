@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import random
 import sqlite3
 import sys
@@ -45,18 +46,24 @@ class Platform:
                  max_rec_post_len: int = 50):
 
         self.db_path = db_path
-        # 未指定时钟时，默认platform的时间放大系数为60
-        if sandbox_clock is None:
-            sandbox_clock = Clock(60)
-        if start_time is None:
-            start_time = datetime.now()
+        self.recsys_type = recsys_type
+        if self.recsys_type == "reddit":
+            # 未指定时钟时，默认platform的时间放大系数为60
+            if sandbox_clock is None:
+                sandbox_clock = Clock(60)
+            if start_time is None:
+                start_time = datetime.now()
+            self.start_time = start_time
+            self.sandbox_clock = sandbox_clock
+        else:
+            self.start_time = 0
+            self.sandbox_clock = None
 
         self.db, self.db_cursor = create_db(self.db_path)
         self.db.execute("PRAGMA synchronous = OFF")
 
         self.channel = channel
-        self.start_time = start_time
-        self.sandbox_clock = sandbox_clock
+
 
         self.recsys_type = RecsysType(recsys_type)
 
@@ -131,8 +138,11 @@ class Platform:
     # 注册
     async def sign_up(self, agent_id, user_message):
         user_name, name, bio = user_message
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == "reddit":
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
             if self.pl_utils._check_agent_userid(agent_id):
                 user_id = self.pl_utils._check_agent_userid(agent_id)
@@ -166,8 +176,11 @@ class Platform:
 
     async def refresh(self, agent_id: int):
         # output不变，执行内容是从rec table取特定id的tweet
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == "reddit":
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
@@ -202,7 +215,7 @@ class Platform:
             action_info = {"posts": results_with_comments}
             twitter_log.info(action_info)
             self.pl_utils._record_trace(user_id, ActionType.REFRESH.value,
-                                        action_info)
+                                        action_info, current_time)
 
             return {"success": True, "posts": results_with_comments}
         except Exception as e:
@@ -224,8 +237,24 @@ class Platform:
                 user_table, post_table, trace_table, rec_matrix,
                 self.max_rec_post_len)
         elif self.recsys_type == RecsysType.TWHIN:
+            latest_post_time = post_table[-1]["created_at"]
+            post_query = (
+                "SELECT COUNT(*) "
+                "FROM post "
+                "WHERE created_at = ?"
+            )
+
+            # 得到新发出的post条数，从而进行逐步更新
+            self.pl_utils._execute_db_command(
+                post_query,
+                (latest_post_time,)
+            )
+            result = self.db_cursor.fetchone()
+            latest_post_count = result[0]
+            if not latest_post_count:
+                return {"success": False, "message": "Fail to get latest posts count"}
             new_rec_matrix = rec_sys_personalized_twh(
-                user_table, post_table, trace_table, rec_matrix,
+                user_table, post_table, latest_post_count, trace_table, rec_matrix,
                 self.max_rec_post_len)
         elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
@@ -258,8 +287,11 @@ class Platform:
             commit=True)
 
     async def create_post(self, agent_id: int, content: str):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == "reddit":
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
@@ -287,7 +319,11 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def repost(self, agent_id: int, post_id: int):
-        current_time = datetime.now()
+        if self.recsys_type == "reddit":
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
@@ -351,8 +387,11 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def like(self, agent_id: int, post_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == "reddit":
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
@@ -448,8 +487,11 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def dislike(self, agent_id: int, post_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == "reddit":
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
@@ -629,8 +671,11 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def follow(self, agent_id: int, followee_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == "reddit":
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
@@ -735,8 +780,11 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def mute(self, agent_id: int, mutee_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == "reddit":
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
@@ -802,14 +850,20 @@ class Platform:
         """
         Get the top K trending posts in the last num_days days.
         """
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == "reddit":
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
                 return self.pl_utils._not_signup_error_message(agent_id)
             # 计算搜索的起始时间
-            start_time = current_time - timedelta(days=self.trend_num_days)
+            if self.recsys_type == "reddit":
+                start_time = current_time - timedelta(days=self.trend_num_days)
+            else:
+                start_time = int(current_time) - self.trend_num_days
 
             # 构建SQL查询语句
             sql_query = """
@@ -844,8 +898,11 @@ class Platform:
 
     async def create_comment(self, agent_id: int, comment_message: tuple):
         post_id, content = comment_message
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == "reddit":
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
@@ -872,8 +929,11 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def like_comment(self, agent_id: int, comment_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == "reddit":
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
@@ -980,8 +1040,11 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def dislike_comment(self, agent_id: int, comment_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == "reddit":
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
             user_id = self.pl_utils._check_agent_userid(agent_id)
             if not user_id:
