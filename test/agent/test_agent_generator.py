@@ -23,6 +23,7 @@ async def running():
     inferencer_channel = Channel()
     infra = Platform(test_db_filepath, twitter_channel)
     task = asyncio.create_task(infra.running())
+    os.environ["SANDBOX_TIME"] = "0"
     agent_graph = await generate_agents(
         agent_info_path,
         twitter_channel,

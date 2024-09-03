@@ -84,6 +84,17 @@ else:
     print('Model not available, using random similarity.')
     pass
 
+# 重置全局变量
+def reset_globals():
+    global user_previous_post_all, user_previous_post, user_profiles, t_items, u_items, date_score, fans_score
+    user_previous_post_all = {}
+    user_previous_post = {}
+    user_profiles = []
+    t_items = {}
+    u_items = {}
+    date_score = []
+    fans_score = []
+
 
 def rec_sys_random(user_table: List[Dict[str,
                                          Any]], post_table: List[Dict[str,
@@ -397,21 +408,19 @@ def rec_sys_personalized_twh(
     max_rec_post_len: int,
     # source_post_indexs: List[int],
     recall_only: bool = False,
-    rec_post_count: int=2,
     enable_like_score: bool = False
 ) -> List[List]:
     # 设置一些全局变量，减少时间消耗
     global date_score, fans_score, t_items, u_items, user_previous_post, user_previous_post_all, user_profiles
     # 获取 uid: follower_count dict
-    # 这里还是需要保证agent注册时按顺序来的，存在user_id=agent_id+1的关系 乱序注册这里就会有问题
     # 只更新一次，除非要加入中途介入新用户的功能。
-    if (not u_items):
-        u_items = {user['agent_id'] + 1: user["num_followers"] for user in user_table}
-    if not user_previous_post_all:
+    if (not u_items) or len(u_items) != len(user_table):
+        u_items = {user['user_id']: user["num_followers"] for user in user_table}
+    if not user_previous_post_all or len(user_previous_post_all) != len(user_table):
         # 每个user都要有一个历史推特列表
         user_previous_post_all = {index: [] for index in range(len(user_table))}
         user_previous_post = {index: "" for index in range(len(user_table))}
-    if not user_profiles:
+    if not user_profiles or len(user_profiles) != len(user_table):
         for user in user_table:
             if user['bio'] == None:
                 user_profiles.append('This user does not have profile')
@@ -466,13 +475,14 @@ def rec_sys_personalized_twh(
                 # 直接使用最新推特替换profile的方法会导致推荐系统向已经转发了该推特的用户重复推送其他转发了该推特的repost
                 # user_profiles[post_user_index] = user_previous_post[post_user_index]
                 # 这里改为向user char的最后加上对于Recent post的内容介绍
-                update_profile = f"# Recent post:{user_previous_post[post_user_index]}"
-                # 如果没有更新 recent post，加上这一段
-                if "# Recent post:" not in user_profiles[post_user_index]:
-                    user_profiles[post_user_index] += update_profile
-                # 如果profile中有recent post，但不是该用户最新发的推，将其置换掉
-                elif update_profile not in user_profiles[post_user_index]:
-                    user_profiles[post_user_index] = user_profiles[post_user_index].split("# Recent post:")[0] + update_profile
+                update_profile = f" # Recent post:{user_previous_post[post_user_index]}"
+                if user_previous_post[post_user_index] != "":
+                    # 如果没有更新 recent post，加上这一段
+                    if "# Recent post:" not in user_profiles[post_user_index]:
+                        user_profiles[post_user_index] += update_profile
+                    # 如果profile中有recent post，但不是该用户最新发的推，将其置换掉
+                    elif update_profile not in user_profiles[post_user_index]:
+                        user_profiles[post_user_index] = user_profiles[post_user_index].split("# Recent post:")[0] + update_profile
 
             except:
                 print("update previous post failed")
@@ -513,8 +523,8 @@ def rec_sys_personalized_twh(
                     import pdb;pdb.set_trace()
             rec_ids = get_recommendations(user_index, cosine_similarities, t_items, scores, top_n=max_rec_post_len)
             rec_ids = [item for item, _ in rec_ids]
-            # 取得分最高的前rec_post_count条
-            new_rec_ids = rec_ids[0:rec_post_count]
+            # 取得分最高的前max_rec_post_len条
+            new_rec_ids = rec_ids[0:max_rec_post_len]
             new_rec_matrix.append(new_rec_ids)
        
     return new_rec_matrix

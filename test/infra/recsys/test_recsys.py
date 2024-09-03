@@ -1,6 +1,6 @@
 from social_simulation.social_platform.recsys import (
     rec_sys_personalized, rec_sys_personalized_with_trace, rec_sys_random,
-    rec_sys_reddit, rec_sys_personalized_twh)
+    rec_sys_reddit, rec_sys_personalized_twh, reset_globals)
 
 
 def test_rec_sys_random_all_posts():
@@ -59,26 +59,40 @@ def test_rec_sys_personalized_twhin():
     # 测试当推文数量小于等于最大推荐长度时的情况
     user_table = [{
         'user_id': 1,
-        'bio': 'I like cats'
+        'bio': 'I like cats',
+        'num_followers': 3
     }, {
         'user_id': 2,
-        'bio': 'I like dogs'
+        'bio': 'I like dogs',
+        'num_followers': 5
+    }, {
+        'user_id': 3,
+        'bio': '',
+        'num_followers': 5
+    }, {
+        'user_id': 4,
+        'bio': '',
+        'num_followers': 5
     }]
     post_table = [{
         'post_id': '1',
         'user_id': 3,
-        'content': 'I like dogs'
+        'content': 'I like dogs',
+        "created_at": "0"
     }, {
         'post_id': '2',
         'user_id': 4,
-        'content': 'I like cats'
+        'content': 'I like cats',
+        "created_at": "0"
     }]
     trace_table = []
-    rec_matrix = [[None], [], []]
+    rec_matrix = [[None], [], [], [], []]
     max_rec_post_len = 2  # 最大推荐长度设置为2
+    latest_post_count = len(post_table)
+    expected = [None, ['1', '2'], ['1', '2'], ['1', '2'], ['1', '2']]
 
-    expected = [None, ['1', '2'], ['1', '2']]
-    result = rec_sys_personalized_twh(user_table,post_table, trace_table,
+    reset_globals()
+    result = rec_sys_personalized_twh(user_table,post_table,latest_post_count, trace_table,
                                   rec_matrix, max_rec_post_len)
     assert result == expected
 
@@ -219,29 +233,47 @@ def test_rec_sys_personalized_twhin_sample_posts():
     # 测试当推文数量大于最大推荐长度时的情况
     user_table = [{
         'user_id': 1,
-        'bio': 'I like cats'
+        'bio': 'I like cats',
+        'num_followers': 3
     }, {
         'user_id': 2,
-        'bio': 'I like dogs'
+        'bio': 'I like dogs',
+        'num_followers': 3
+    }, {
+        'user_id': 3,
+        'bio': '',
+        'num_followers': 3
+    }, {
+        'user_id': 4,
+        'bio': '',
+        'num_followers': 3
+    }, {
+        'user_id': 5,
+        'bio': '',
+        'num_followers': 3
     }]
     post_table = [{
         'post_id': '1',
         'user_id': 3,
-        'content': 'I like dogs'
+        'content': 'I like dogs',
+        "created_at": "0"
     }, {
         'post_id': '2',
         'user_id': 4,
-        'content': 'I like cats'
+        'content': 'I like cats',
+        "created_at": "0"
     }, {
         'post_id': '3',
         'user_id': 5,
-        'content': 'I like birds'
+        'content': 'I like birds',
+        "created_at": "0"
     }]
     trace_table = []  # 在这个测试中未使用，但是为了完整性加入
-    rec_matrix = [[None], [], []]  # 假设有两个用户
+    rec_matrix = [[None], [], [],[], [],[]]  # 假设有5个用户
     max_rec_post_len = 2  # 最大推荐长度设置为2
-
-    result = rec_sys_personalized_twh(user_table, post_table, trace_table,
+    latest_post_count = len(post_table)
+    reset_globals()    
+    result = rec_sys_personalized_twh(user_table, post_table, latest_post_count, trace_table,
                                   rec_matrix, max_rec_post_len)
     print(result)
     # 验证第一个元素是None

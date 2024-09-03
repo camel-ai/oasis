@@ -41,7 +41,7 @@ class Platform:
                  start_time: datetime | None = None,
                  show_score: bool = False,
                  allow_self_rating: bool = True,
-                 recsys_type: str | RecsysType = "twitter",
+                 recsys_type: str | RecsysType = "reddit",
                  refresh_post_count: int = 1,
                  max_rec_post_len: int = 50):
 
@@ -267,13 +267,6 @@ class Platform:
         sql_query = "DELETE FROM rec"
         # 使用封装好的_execute_db_command函数执行SQL语句
         self.pl_utils._execute_db_command(sql_query, commit=True)
-        # for user_id in range(1, len(new_rec_matrix)):
-        #     for post_id in new_rec_matrix[user_id]:
-        #         sql_query = (
-        #             "INSERT INTO rec (user_id, post_id) VALUES (?, ?)")
-        #         self.pl_utils._execute_db_command(sql_query,
-        #                                           (user_id, post_id),
-        #                                           commit=True)
 
         # 批量插入更省时, 创建插入值列表
         insert_values = [(user_id, post_id)
@@ -863,7 +856,7 @@ class Platform:
             if self.recsys_type == "reddit":
                 start_time = current_time - timedelta(days=self.trend_num_days)
             else:
-                start_time = int(current_time) - self.trend_num_days
+                start_time = int(current_time) - self.trend_num_days*24*60
 
             # 构建SQL查询语句
             sql_query = """
