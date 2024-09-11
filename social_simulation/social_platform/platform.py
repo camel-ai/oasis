@@ -144,15 +144,7 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
-            if self.pl_utils._check_agent_userid(agent_id):
-                user_id = self.pl_utils._check_agent_userid(agent_id)
-                return {
-                    "success":
-                    False,
-                    "error":
-                    (f"Agent {agent_id} have already signed up with user "
-                     f"id: {user_id}")
-                }
+
             # 插入用户记录
             user_insert_query = (
                 "INSERT INTO user (agent_id, user_name, name, bio, created_at,"
@@ -161,7 +153,7 @@ class Platform:
                 user_insert_query,
                 (agent_id, user_name, name, bio, current_time, 0, 0),
                 commit=True)
-            user_id = self.db_cursor.lastrowid
+            user_id = agent_id
             # 准备trace记录的信息
             action_info = {"name": name, "user_name": user_name, "bio": bio}
             self.pl_utils._record_trace(user_id, ActionType.SIGNUP.value,
@@ -182,9 +174,7 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 从rec表中获取指定user_id的所有post_id
             rec_query = "SELECT post_id FROM rec WHERE user_id = ?"
@@ -270,7 +260,7 @@ class Platform:
 
         # 批量插入更省时, 创建插入值列表
         insert_values = [(user_id, post_id)
-                         for user_id in range(1, len(new_rec_matrix))
+                         for user_id in range(len(new_rec_matrix))
                          for post_id in new_rec_matrix[user_id]]
 
         # 批量插入到数据库
@@ -286,9 +276,7 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 插入推文记录
             post_insert_query = (
@@ -318,9 +306,7 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 查询要转发的推特内容
             sql_query = (
@@ -379,16 +365,14 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def like(self, agent_id: int, post_id: int):
+    async def like_post(self, agent_id: int, post_id: int):
         if self.recsys_type == "reddit":
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 检查是否已经存在点赞记录
             like_check_query = (
                 "SELECT * FROM 'like' WHERE post_id = ? AND user_id = ?")
@@ -433,9 +417,7 @@ class Platform:
 
     async def unlike(self, agent_id: int, post_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 检查是否已经存在点赞记录
             like_check_query = (
@@ -479,16 +461,14 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def dislike(self, agent_id: int, post_id: int):
+    async def dislike_post(self, agent_id: int, post_id: int):
         if self.recsys_type == "reddit":
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 检查是否已经存在dislike记录
             like_check_query = (
                 "SELECT * FROM 'dislike' WHERE post_id = ? AND user_id = ?")
@@ -534,9 +514,7 @@ class Platform:
 
     async def undo_dislike(self, agent_id: int, post_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 检查是否已经存在dislike记录
             like_check_query = (
@@ -583,9 +561,7 @@ class Platform:
 
     async def search_posts(self, agent_id: int, query: str):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 更新SQL查询，以便同时根据content、post_id和user_id进行搜索
             # 注意：CAST是必要的，因为post_id和user_id是整数类型，而搜索的query是字符串类型
             sql_query = (
@@ -620,9 +596,7 @@ class Platform:
 
     async def search_user(self, agent_id: int, query: str):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             sql_query = (
                 "SELECT user_id, user_name, name, bio, created_at, "
                 "num_followings, num_followers "
@@ -670,9 +644,7 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # # 检查是否已经存在关注记录
             follow_check_query = ("SELECT * FROM follow WHERE follower_id = ? "
                                   "AND followee_id = ?")
@@ -723,9 +695,7 @@ class Platform:
 
     async def unfollow(self, agent_id: int, followee_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 检查是否存在关注记录，并获取其ID
             follow_check_query = (
                 "SELECT follow_id FROM follow WHERE follower_id = ? AND "
@@ -779,9 +749,7 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 检查是否已经存在禁言记录
             mute_check_query = ("SELECT * FROM mute WHERE muter_id = ? AND "
                                 "mutee_id = ?")
@@ -812,9 +780,7 @@ class Platform:
 
     async def unmute(self, agent_id: int, mutee_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 检查是否存在指定的禁言记录，并获取mute_id
             mute_check_query = (
                 "SELECT mute_id FROM mute WHERE muter_id = ? AND mutee_id = ?")
@@ -849,9 +815,7 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 计算搜索的起始时间
             if self.recsys_type == "reddit":
                 start_time = current_time - timedelta(days=self.trend_num_days)
@@ -897,9 +861,7 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 插入评论记录
             comment_insert_query = (
@@ -928,9 +890,7 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 检查是否已经存在点赞记录
             like_check_query = (
@@ -982,9 +942,7 @@ class Platform:
 
     async def unlike_comment(self, agent_id: int, comment_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 检查是否已经存在点赞记录
             like_check_query = (
@@ -1039,9 +997,7 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 检查是否已经存在不喜欢记录
             dislike_check_query = (
@@ -1094,9 +1050,7 @@ class Platform:
 
     async def undo_dislike_comment(self, agent_id: int, comment_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 检查是否已经存在不喜欢记录
             dislike_check_query = (
@@ -1143,9 +1097,7 @@ class Platform:
 
     async def do_nothing(self, agent_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 记录操作到trace表
             action_info = {}

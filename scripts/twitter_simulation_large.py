@@ -96,6 +96,7 @@ async def running(
         agent_info_path=csv_path,
         twitter_channel=twitter_channel,
         inference_channel=inference_channel,
+        recsys_type = recsys_type,
         **model_configs,
     )
     # agent_graph.visualize("initial_social_graph.png")

@@ -21,6 +21,7 @@ async def generate_agents(
     agent_info_path: str,
     twitter_channel: Channel,
     inference_channel: Channel,
+    recsys_type: str = "twitter",
     num_agents: int = 26,
     model_random_seed: int = 42,
     cfgs: list[Any] | None = None,
@@ -78,7 +79,14 @@ async def generate_agents(
         neo4j_config=neo4j_config,
     )
 
-    async def setup_agent(agent_id: int):
+    agent_graph = []
+    sign_up_list = []
+    follow_list = []
+    user_update1 = []
+    user_update2 = []
+    post_list = []
+
+    for agent_id in range(len(agent_info)):
         profile = {
             'nodes': [],
             'edges': [],
@@ -95,6 +103,7 @@ async def generate_agents(
             name=agent_info['username'][agent_id],
             description=agent_info['description'][agent_id],
             profile=profile,
+            recsys_type = recsys_type,
         )
 
         model_type: ModelType = model_types[agent_id]
@@ -110,28 +119,59 @@ async def generate_agents(
 
         agent_graph.add_agent(agent)
 
-        await agent.env.action.sign_up(
-            agent_info["username"][agent_id],
-            agent_info["name"][agent_id],
-            agent_info["description"][agent_id],
-        )
+        sign_up_list.append((agent_id, agent_id, agent_info["username"][agent_id], agent_info["name"][agent_id], agent_info["description"][agent_id], start_time, 0, 0))
 
-        # following_id_list = ast.literal_eval(
-        #         agent_info["following_agentid_list"][agent_id])
-        following_id = random.randint(0, len(agent_info))
-        await agent.env.action.follow(following_id + 1)
-        agent_graph.add_edge(agent_id, following_id)
-
+        following_id_list = ast.literal_eval(
+                agent_info["following_agentid_list"][agent_id])
+        if len(following_id_list) != 0:
+            for follow_id in following_id_list:
+                follow_list.append((agent_id, follow_id, start_time))
+                user_update1.append((agent_id,))
+                user_update2.append((follow_id,))
+                agent_graph.add_edge(agent_id, following_id)
+        
         previous_posts = ast.literal_eval(
                 agent_info['previous_tweets'][agent_id])
         if len(previous_posts) != 0:
-            post_tasks = [
-                agent.env.action.create_post(post) for post in previous_posts
-            ]
-            await asyncio.gather(*post_tasks)
+            for post in previous_posts:
+                post_list.append((agent_id, post, start_time, 0, 0))
 
-    tasks = [setup_agent(i) for i in range(len(agent_info))]
-    await asyncio.gather(*tasks)
+    generate_log.info('agent gegenerate finished.')
+
+    user_insert_query = (
+                "INSERT INTO user (agent_id, agent_id, user_name, name, bio, created_at,"
+                " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+    twitter.pl_utils._execute_many_db_command(user_insert_query, sign_up_list, commit=True)
+
+    generate_log.info('twitter sign up finished.')
+
+    follow_insert_query = (
+                    "INSERT INTO follow (follower_id, followee_id, created_at) "
+                    "VALUES (?, ?, ?)")
+    twitter.pl_utils._execute_many_db_command(follow_insert_query, follow_list, commit=True)
+
+    generate_log.info('twitter follow finished.')
+
+    user_update_query1 = (
+                    "UPDATE user SET num_followings = num_followings + 1 "
+                    "WHERE user_id = ?")
+    twitter.pl_utils._execute_many_db_command(user_update_query1, user_update1, commit=True)
+
+    generate_log.info('twitter user update finished.')
+
+    user_update_query2 = (
+                    "UPDATE user SET num_followers = num_followers + 1 "
+                    "WHERE user_id = ?")
+    twitter.pl_utils._execute_many_db_command(user_update_query2, user_update2, commit=True)
+
+    generate_log.info('twitter followee update finished.')
+
+    post_insert_query = (
+                "INSERT INTO post (user_id, content, created_at, num_likes, "
+                "num_dislikes) VALUES (?, ?, ?, ?, ?)")
+    twitter.pl_utils._execute_many_db_command(post_insert_query, post_list, commit=True)
+
+    generate_log.info('twitter creat post finished.')
 
     return agent_graph
 
@@ -148,6 +188,7 @@ async def generate_controllable_agents(
             profile={'other_info': {
                 'user_profile': 'None'
             }},
+            recsys_type = "reddit",
         )
         # controllable的agent_id全都在llm agent的agent_id的前面
         agent = SocialAgent(i, user_info, channel, agent_graph=agent_graph)
@@ -189,6 +230,7 @@ async def gen_control_agents_with_data(
                 'country': 'None',
                 'age': 'None'
             }},
+            recsys_type = "reddit",
         )
         # controllable的agent_id全都在llm agent的agent_id的前面
         agent = SocialAgent(i, user_info, channel, agent_graph=agent_graph)
@@ -249,7 +291,8 @@ async def generate_reddit_agents(
 
         user_info = UserInfo(name=agent_info[i]['username'],
                              description=agent_info[i]['bio'],
-                             profile=profile)
+                             profile=profile,
+                             recsys_type="reddit")
 
         model_type: ModelType = model_types[i]
         agent = SocialAgent(

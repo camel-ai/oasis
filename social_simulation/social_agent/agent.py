@@ -66,6 +66,12 @@ class SocialAgent:
             content=self.user_info.to_system_message()  # system prompt
         )
         self.agent_graph = agent_graph
+        self.test_prompt = """
+    
+Helen is a successful writer who usually writes popular western novels. Now, she has an idea for a new novel that could really make a big impact. If it works out, it could greatly improve her career. But if it fails, she will have spent a lot of time and effort for nothing.
+
+What do you think Helen should do?
+"""
 
     async def perform_action_by_llm(self):
         # Get 5 random tweets:
@@ -124,30 +130,6 @@ class SocialAgent:
                 message_id, content = await self.inference_channel.read_from_send_queue(
                     message_id)
 
-#                 if not content.startswith("{"):
-#                     idx = content.find("{")
-#                     if idx != -1:
-#                         content = content[idx:]
-#                     else:
-#                         content = '''{
-#     "reason": "No response.",
-#     "functions": [{
-#         "name": "do_nothing",
-#         "arguments": {}
-#     }],
-# }'''
-#                 if not content.endswith("}"):
-#                     idx = content.rfind("}")
-#                     if idx != -1:
-#                         content = content[:idx + 1]
-#                     else:
-#                         content = '''{
-#     "reason": "No response.",
-#     "functions": [{
-#         "name": "do_nothing",
-#         "arguments": {}
-#     }],
-# }'''
                 agent_log.info(
                     f"Agent {self.agent_id} receve response: {content}")
 
@@ -155,13 +137,11 @@ class SocialAgent:
                     content_json = json.loads(content)
                     functions = content_json['functions']
                     reason = content_json['reason']
-                    # print(f"Agent {self.agent_id} choose "
-                    #       f"{functions} \nbecause: {reason}.")
+
                     for function in functions:
                         name = function['name']
                         arguments = function['arguments']
-                        # print(f"Agent {self.agent_id} is performing "
-                        #       f"twitter action: {name} with args: {arguments}")
+
                         exec_functions.append({
                             'name': name,
                             'arguments': arguments
@@ -169,12 +149,6 @@ class SocialAgent:
                         self.perform_agent_graph_action(name, arguments)
                     break
                 except Exception as e:
-                    # print(Fore.LIGHTRED_EX + f"Agent {self.agent_id}, time " +
-                    #       Style.BRIGHT + str(retry) + Style.RESET_ALL +
-                    #       f"\nError: {e} when parsing response:{content}\n" +
-                    #       Fore.RESET + "=" * 20 + "\n")
-                    # print(Fore.LIGHTBLUE_EX + "For DEBUG, Messages:",
-                    #       openai_messages, "\n" + Fore.RESET + "=" * 20 + "\n")
                     agent_log.error(f"Agent {self.agent_id} error: {e}")
                     exec_functions = []
                     retry -= 1
@@ -183,12 +157,6 @@ class SocialAgent:
                     await getattr(self.env.action,
                                   function['name'])(**function['arguments'])
                 except Exception as e:
-                    # print(Fore.LIGHTRED_EX + f"Agent {self.agent_id}, time " +
-                    #       Style.BRIGHT + str(retry) + Style.RESET_ALL +
-                    #       f"\nError: {e} when performing twitter action:" +
-                    #       f" {function['name']} with " +
-                    #       f"args: {function['arguments']}\n" + Fore.RESET +
-                    #       "=" * 20 + "\n")
                     agent_log.error(f"Agent {self.agent_id} error: {e}")
                     retry -= 1
 
@@ -199,19 +167,42 @@ class SocialAgent:
         self.memory.write_record(
             MemoryRecord(agent_msg, OpenAIBackendRole.ASSISTANT))
 
+    async def perform_test(self):
+        """
+        doing test for all agents.
+        """
+        # user conduct test to agent
+        user_msg = BaseMessage.make_user_message(
+            role_name="User",
+            content=("You are a twitter user."))
+        self.memory.write_record(MemoryRecord(user_msg,
+                                              OpenAIBackendRole.USER))
+
+        openai_messages, num_tokens = self.memory.get_context()
+
+        openai_messages = [{
+            "role": self.system_message.role_name,
+            "content": self.system_message.content.split("# RESPONSE FORMAT")[0]
+        }] + openai_messages + [{"role": 'user', "content": self.test_prompt}]
+        agent_log.info(f'Agent {self.agent_id}: {openai_messages}')
+
+        message_id = await self.inference_channel.write_to_receive_queue(
+                    openai_messages)
+        message_id, content = await self.inference_channel.read_from_send_queue(message_id)
+        agent_log.info(f"Agent {self.agent_id} receve response: {content}")
+        return {"user_id": self.agent_id, "prompt": openai_messages, "content": content}
+
     async def perform_action_by_hci(self) -> Any:
         print('Please choose one function to perform:')
         function_list = self.env.action.get_openai_function_list()
         for i in range(len(function_list)):
-            # print(f"{i}.", function_list[i].func.__name__, end=', ')
             agent_log.info(
                 f"Agent {self.agent_id} function: {function_list[i].func.__name__}"
             )
-        # print()
 
         selection = int(input("Enter your choice: "))
         if not 0 <= selection < len(function_list):
-            # print("Invalid input. Please enter a number.")
+
             agent_log.error(f"Agent {self.agent_id} invalid input.")
             return
         func = function_list[selection].func
@@ -225,7 +216,6 @@ class SocialAgent:
                     args.append(value)
                     break
                 except ValueError:
-                    # print("Invalid input, please enter an integer.")
                     agent_log.error("Invalid input, please enter an integer.")
 
         result = await func(*args)
@@ -237,7 +227,6 @@ class SocialAgent:
             if function_list[i].func.__name__ == func_name:
                 func = function_list[i].func
                 result = await func(*args, **kwargs)
-                # print(result)
                 agent_log.info(f"Agent {self.agent_id}: {result}")
                 return result
         raise ValueError(f"Function {func_name} not found in the list.")

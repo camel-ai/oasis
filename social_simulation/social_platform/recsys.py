@@ -15,10 +15,12 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sentence_transformers import SentenceTransformer
 import os
 import time
+import logging
 from transformers import AutoTokenizer, AutoModel
 from .process_recsys_posts import generate_post_vector
 from sklearn.metrics.pairwise import cosine_similarity
-
+rec_log = logging.getLogger(name='social.rec')
+rec_log.setLevel('DEBUG')
 
 # 先设置为None，后续再在recsys函数里赋一次值
 model = None
@@ -433,8 +435,8 @@ def rec_sys_personalized_twh(
             # 获取 {post_id: content} dict，只更新最新发出的推特
             t_items[post['post_id']] = post['content']
             # 更新用户发出的历史推特
-            user_previous_post_all[post['user_id']-1].append(post['content'])
-            user_previous_post[post['user_id']-1] = post['content']
+            user_previous_post_all[post['user_id']].append(post['content'])
+            user_previous_post[post['user_id']] = post['content']
             # 获取所有推文的创建时间，根据时间远近来赋分, 需要注意的是这种算法最多只能跑90个时间步
             date_score.append(np.log( (271.8 - (current_time - int(post['created_at'])))/100))
             # 获取post的受众群体数量, 根据粉丝数量来赋分
@@ -449,24 +451,18 @@ def rec_sys_personalized_twh(
         # 与之前like的内容计算相似度，先收集trace中的like post id
         like_post_ids_all = []
         for user in user_table:
-            user_id = user['agent_id'] + 1
+            user_id = user['agent_id']
             like_post_ids = get_like_post_id(user_id, ActionType.LIKE.value, trace_table)
             like_post_ids_all.append(like_post_ids)
          
     scores = date_score_np * fans_score_np
-    
+    new_rec_matrix = []
     if len(post_table) <= max_rec_post_len:
         # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
         tids = [t['post_id'] for t in post_table]
-        rec_matrix = [tids] * (len(rec_matrix) - 1)
-        rec_ids_matrix = [None] + rec_matrix
-        new_rec_matrix = []
-        for index, rec_ids in enumerate(rec_ids_matrix[1:]):
-            new_rec_matrix.append(rec_ids)
-        new_rec_matrix = [None] + new_rec_matrix
+        new_rec_matrix = [tids] * (len(rec_matrix))
 
     else: 
-        new_rec_matrix = [None]
         # 如果推文数量大于最大推荐数，每个用户随机获得personalized推文ID
 
         # 这里需要过一遍所有user，去更新他的profile，是一个比较耗时的操作
@@ -488,7 +484,10 @@ def rec_sys_personalized_twh(
                 print("update previous post failed")
         
         corpus = user_profiles + list(t_items.values())
+        tweet_vector_start_t = time.time()
         all_post_vector_list = generate_post_vector(twhin_model, twhin_tokenizer, corpus, batch_size=1000)
+        tweet_vector_end_t = time.time()
+        rec_log.info(f"twhin model cost time: {tweet_vector_end_t-tweet_vector_start_t}")
         user_vector = all_post_vector_list[:len(user_profiles)]
         posts_vector = all_post_vector_list[len(user_profiles):]
 
@@ -512,20 +511,25 @@ def rec_sys_personalized_twh(
         get_similar_start_t = time.time()
         cosine_similarities = cosine_similarity(user_vector, posts_vector)
         get_similar_end_t = time.time()
-        print(Back.LIGHTBLUE_EX + f"get cosine_similarity time:{get_similar_end_t-get_similar_start_t}" + Back.RESET)
-        for user_index, profile in enumerate(user_profiles):
-            if enable_like_score:
+        rec_log.info(f"get cosine_similarity time: {get_similar_end_t-get_similar_start_t}")
+        if enable_like_score:
+            for user_index, profile in enumerate(user_profiles):
                 user_like_posts_vector = like_posts_vectors[user_index]
                 like_scores = calculate_like_similarity(user_like_posts_vector, posts_vector)
                 try:
                     scores = scores + like_scores
                 except:
                     import pdb;pdb.set_trace()
-            rec_ids = get_recommendations(user_index, cosine_similarities, t_items, scores, top_n=max_rec_post_len)
-            rec_ids = [item for item, _ in rec_ids]
-            # 取得分最高的前max_rec_post_len条
-            new_rec_ids = rec_ids[0:max_rec_post_len]
-            new_rec_matrix.append(new_rec_ids)
+
+        cosine_similarities = cosine_similarities * scores
+        cosine_similarities = torch.tensor(cosine_similarities)
+        value, indices = torch.topk(cosine_similarities, max_rec_tweet_len, dim=1, largest=True, sorted=True)
+
+        matrix_list = indices.cpu().numpy()
+        post_list = list(items.keys())
+        for rec_ids in matrix_list:
+            rec_ids = [post_list[i] for i in rec_ids]
+            new_rec_matrix.append(rec_ids)
        
     return new_rec_matrix
 
