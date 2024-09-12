@@ -12,7 +12,7 @@ class UserInfo:
     is_controllable: bool = False
 
     def to_system_message(self) -> str:
-        if self.recsys_type == "twitter":
+        if self.recsys_type != "reddit":
             return self.to_twitter_system_message()
         else:
             return self.to_reddit_system_message()

@@ -79,7 +79,7 @@ async def generate_agents(
         neo4j_config=neo4j_config,
     )
 
-    agent_graph = []
+    # agent_graph = []
     sign_up_list = []
     follow_list = []
     user_update1 = []
@@ -128,7 +128,7 @@ async def generate_agents(
                 follow_list.append((agent_id, follow_id, start_time))
                 user_update1.append((agent_id,))
                 user_update2.append((follow_id,))
-                agent_graph.add_edge(agent_id, following_id)
+                agent_graph.add_edge(agent_id, follow_id)
         
         previous_posts = ast.literal_eval(
                 agent_info['previous_tweets'][agent_id])
@@ -136,42 +136,42 @@ async def generate_agents(
             for post in previous_posts:
                 post_list.append((agent_id, post, start_time, 0, 0))
 
-    generate_log.info('agent gegenerate finished.')
+    # generate_log.info('agent gegenerate finished.')
 
     user_insert_query = (
                 "INSERT INTO user (agent_id, agent_id, user_name, name, bio, created_at,"
                 " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
     twitter.pl_utils._execute_many_db_command(user_insert_query, sign_up_list, commit=True)
 
-    generate_log.info('twitter sign up finished.')
+    # generate_log.info('twitter sign up finished.')
 
     follow_insert_query = (
                     "INSERT INTO follow (follower_id, followee_id, created_at) "
                     "VALUES (?, ?, ?)")
     twitter.pl_utils._execute_many_db_command(follow_insert_query, follow_list, commit=True)
 
-    generate_log.info('twitter follow finished.')
+    # generate_log.info('twitter follow finished.')
 
     user_update_query1 = (
                     "UPDATE user SET num_followings = num_followings + 1 "
                     "WHERE user_id = ?")
     twitter.pl_utils._execute_many_db_command(user_update_query1, user_update1, commit=True)
 
-    generate_log.info('twitter user update finished.')
+    # generate_log.info('twitter user update finished.')
 
     user_update_query2 = (
                     "UPDATE user SET num_followers = num_followers + 1 "
                     "WHERE user_id = ?")
     twitter.pl_utils._execute_many_db_command(user_update_query2, user_update2, commit=True)
 
-    generate_log.info('twitter followee update finished.')
+    # generate_log.info('twitter followee update finished.')
 
     post_insert_query = (
                 "INSERT INTO post (user_id, content, created_at, num_likes, "
                 "num_dislikes) VALUES (?, ?, ?, ?, ?)")
     twitter.pl_utils._execute_many_db_command(post_insert_query, post_list, commit=True)
 
-    generate_log.info('twitter creat post finished.')
+    # generate_log.info('twitter creat post finished.')
 
     return agent_graph
 
