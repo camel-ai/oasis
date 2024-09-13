@@ -13,7 +13,7 @@ from camel.types import ModelType, OpenAIBackendRole
 from camel.messages import BaseMessage
 from camel.memories import MemoryRecord
 from social_simulation.social_agent import AgentGraph, SocialAgent
-from social_simulation.social_platform import Channel
+from social_simulation.social_platform import Channel, Platform
 from social_simulation.social_platform.config import Neo4jConfig, UserInfo
 
 
@@ -22,6 +22,7 @@ async def generate_agents(
     twitter_channel: Channel,
     inference_channel: Channel,
     recsys_type: str = "twitter",
+    twitter: Platform = None,
     num_agents: int = 26,
     model_random_seed: int = 42,
     cfgs: list[Any] | None = None,
