@@ -141,7 +141,13 @@ What do you think Helen should do?
                     for function in functions:
                         name = function['name']
                         arguments = function['arguments']
-
+                        if name != "do_nothing":
+                            arguments = function['arguments']
+                        else:
+                            # do_nothing的成功率很低
+                            # 经常会丢掉argument导致retry拉满
+                            # 比较浪费时间，在这里手动补上
+                            arguments = {}
                         exec_functions.append({
                             'name': name,
                             'arguments': arguments

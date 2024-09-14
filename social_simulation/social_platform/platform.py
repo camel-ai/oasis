@@ -43,10 +43,11 @@ class Platform:
                  allow_self_rating: bool = True,
                  recsys_type: str | RecsysType = "reddit",
                  refresh_post_count: int = 1,
-                 max_rec_post_len: int = 50):
+                 max_rec_post_len: int = 2):
 
         self.db_path = db_path
         self.recsys_type = recsys_type
+        # import pdb; pdb.set_trace()
         if self.recsys_type == "reddit":
             # 未指定时钟时，默认platform的时间放大系数为60
             if sandbox_clock is None:
@@ -138,7 +139,8 @@ class Platform:
     # 注册
     async def sign_up(self, agent_id, user_message):
         user_name, name, bio = user_message
-        if self.recsys_type == "reddit":
+        import pdb; pdb.set_trace()
+        if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
@@ -168,7 +170,7 @@ class Platform:
 
     async def refresh(self, agent_id: int):
         # output不变，执行内容是从rec table取特定id的tweet
-        if self.recsys_type == "reddit":
+        if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
@@ -270,7 +272,8 @@ class Platform:
             commit=True)
 
     async def create_post(self, agent_id: int, content: str):
-        if self.recsys_type == "reddit":
+        
+        if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
@@ -300,7 +303,7 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def repost(self, agent_id: int, post_id: int):
-        if self.recsys_type == "reddit":
+        if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
@@ -366,7 +369,7 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def like_post(self, agent_id: int, post_id: int):
-        if self.recsys_type == "reddit":
+        if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
@@ -462,7 +465,7 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def dislike_post(self, agent_id: int, post_id: int):
-        if self.recsys_type == "reddit":
+        if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
@@ -638,7 +641,7 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def follow(self, agent_id: int, followee_id: int):
-        if self.recsys_type == "reddit":
+        if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
@@ -743,7 +746,7 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def mute(self, agent_id: int, mutee_id: int):
-        if self.recsys_type == "reddit":
+        if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
@@ -809,7 +812,7 @@ class Platform:
         """
         Get the top K trending posts in the last num_days days.
         """
-        if self.recsys_type == "reddit":
+        if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
@@ -817,7 +820,7 @@ class Platform:
         try:
             user_id = agent_id
             # 计算搜索的起始时间
-            if self.recsys_type == "reddit":
+            if self.recsys_type == RecsysType.REDDIT:
                 start_time = current_time - timedelta(days=self.trend_num_days)
             else:
                 start_time = int(current_time) - self.trend_num_days*24*60
@@ -855,7 +858,7 @@ class Platform:
 
     async def create_comment(self, agent_id: int, comment_message: tuple):
         post_id, content = comment_message
-        if self.recsys_type == "reddit":
+        if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
@@ -884,7 +887,7 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def like_comment(self, agent_id: int, comment_id: int):
-        if self.recsys_type == "reddit":
+        if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
@@ -991,7 +994,7 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def dislike_comment(self, agent_id: int, comment_id: int):
-        if self.recsys_type == "reddit":
+        if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:

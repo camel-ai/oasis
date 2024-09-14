@@ -523,10 +523,10 @@ def rec_sys_personalized_twh(
 
         cosine_similarities = cosine_similarities * scores
         cosine_similarities = torch.tensor(cosine_similarities)
-        value, indices = torch.topk(cosine_similarities, max_rec_tweet_len, dim=1, largest=True, sorted=True)
+        value, indices = torch.topk(cosine_similarities, max_rec_post_len, dim=1, largest=True, sorted=True)
 
         matrix_list = indices.cpu().numpy()
-        post_list = list(items.keys())
+        post_list = list(t_items.keys())
         for rec_ids in matrix_list:
             rec_ids = [post_list[i] for i in rec_ids]
             new_rec_matrix.append(rec_ids)

@@ -59,7 +59,10 @@ async def running(
     if os.path.exists(db_path):
         os.remove(db_path)
 
-    start_time = datetime.now()
+    if recsys_type == "reddit":
+        start_time = datetime.now()
+    else:
+        start_time = 0
     social_log.info(f"Start time: {start_time}")
     clock = Clock(k=clock_factor)
     twitter_channel = Channel()
@@ -85,8 +88,8 @@ async def running(
                 topic_name = csv_path.split("/")[-1].split(".")[0]
             else:
                 topic_name = csv_path.split("/")[-1].split(".")[0].split("-")[0]
-            start_time = all_topic_df[all_topic_df["topic_name"]==topic_name]["start_time"].item().split(" ")[1]
-            start_hour = int(start_time.split(":")[0]) + float(int(start_time.split(":")[1])/60)
+            source_post_time = all_topic_df[all_topic_df["topic_name"]==topic_name]["start_time"].item().split(" ")[1]
+            start_hour = int(source_post_time.split(":")[0]) + float(int(source_post_time.split(":")[1])/60)
     except:
         print("No real-world data, let start_hour be 13")
         start_hour = 13
@@ -96,21 +99,21 @@ async def running(
         agent_info_path=csv_path,
         twitter_channel=twitter_channel,
         inference_channel=inference_channel,
+        start_time = start_time,
         recsys_type = recsys_type,
         twitter = infra,
         **model_configs,
     )
     # agent_graph.visualize("initial_social_graph.png")
 
-    start_hour = 1
 
     for timestep in range(1, num_timesteps+1):
         os.environ["SANDBOX_TIME"] = str(timestep*3)
         social_log.info(f"timestep:{timestep}")
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         await infra.update_rec_table()
-        # 0.2 * timestep here means 12 minutes
-        simulation_time_hour = start_hour + 0.2 * timestep
+        # 0.05 * timestep here means 3 minutes / timestep
+        simulation_time_hour = start_hour + 0.05 * timestep
         tasks = []
         for node_id, agent in agent_graph.get_agents():
             if agent.user_info.is_controllable is False:

@@ -21,6 +21,7 @@ async def generate_agents(
     agent_info_path: str,
     twitter_channel: Channel,
     inference_channel: Channel,
+    start_time,
     recsys_type: str = "twitter",
     twitter: Platform = None,
     num_agents: int = 26,
@@ -237,12 +238,15 @@ async def gen_control_agents_with_data(
         agent = SocialAgent(i, user_info, channel, agent_graph=agent_graph)
         # Add agent to the agent graph
         agent_graph.add_agent(agent)
-
+        user_name='momo'
+        name='momo'
+        bio='None.'
         response = await agent.env.action.sign_up(
-            user_name='momo',
-            name='momo',
-            bio='None.',
+            user_name,
+            name,
+            bio
         )
+        import pdb; pdb.set_trace()
         user_id = response['user_id']
         agent_user_id_mapping[i] = user_id
 
@@ -313,7 +317,7 @@ async def generate_reddit_agents(
         response = await agent.env.action.sign_up(
             agent_info[i]['username'],
             agent_info[i]['realname'],
-            agent_info[i]['bio'],
+            agent_info[i]['bio']
         )
         user_id = response['user_id']
         agent_user_id_mapping[i + control_user_num] = user_id
