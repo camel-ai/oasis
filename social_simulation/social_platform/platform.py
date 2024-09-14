@@ -139,7 +139,6 @@ class Platform:
     # 注册
     async def sign_up(self, agent_id, user_message):
         user_name, name, bio = user_message
-        import pdb; pdb.set_trace()
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)

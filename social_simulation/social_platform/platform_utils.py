@@ -112,7 +112,7 @@ class PlatformUtils:
         # 传入current_time，使得比如post table的created_at和trace表中时间一模一样
 
         # 如果只有trace表需要记录时间，将进入_record_trace作为trace记录的时间
-        if current_time is None and self.sandbox_clock:
+        if self.sandbox_clock:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:

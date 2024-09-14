@@ -246,7 +246,6 @@ async def gen_control_agents_with_data(
             name,
             bio
         )
-        import pdb; pdb.set_trace()
         user_id = response['user_id']
         agent_user_id_mapping[i] = user_id
 
