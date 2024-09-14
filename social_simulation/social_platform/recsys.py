@@ -121,12 +121,10 @@ def rec_sys_random(user_table: List[Dict[str,
 
     if len(post_ids) <= max_rec_post_len:
         # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
-        new_rec_matrix = [post_ids] * (len(rec_matrix) - 1)
-        new_rec_matrix = [None] + new_rec_matrix
+        new_rec_matrix = [post_ids] * len(rec_matrix)
     else:
-        new_rec_matrix = [None]
         # 如果推文数量大于最大推荐数，每个用户随机获得指定数量的推文ID
-        for _ in range(1, len(rec_matrix)):
+        for _ in range(len(rec_matrix)):
             new_rec_matrix.append(random.sample(post_ids, max_rec_post_len))
 
     return new_rec_matrix
@@ -185,8 +183,7 @@ def rec_sys_reddit(post_table: List[Dict[str, Any]], rec_matrix: List[List],
 
     if len(post_ids) <= max_rec_post_len:
         # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
-        new_rec_matrix = [post_ids] * (len(rec_matrix) - 1)
-        new_rec_matrix = [None] + new_rec_matrix
+        new_rec_matrix = [post_ids] * len(rec_matrix)
     else:
         # 该推荐系统的时间复杂度是O(post_num * log max_rec_post_len)
         all_hot_score = []
@@ -208,10 +205,8 @@ def rec_sys_reddit(post_table: List[Dict[str, Any]], rec_matrix: List[List],
                                    key=lambda x: x[0])
         top_post_ids = [post_id for _, post_id in top_posts]
 
-        new_rec_matrix = [None]
         # 如果推文数量大于最大推荐数，每个用户随机获得指定数量的推文ID
-        new_rec_matrix = [top_post_ids] * (len(rec_matrix) - 1)
-        new_rec_matrix = [None] + new_rec_matrix
+        new_rec_matrix = [top_post_ids] * len(rec_matrix)
 
     return new_rec_matrix
 
@@ -243,10 +238,8 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
     start_time = time.time()
     if len(post_ids) <= max_rec_post_len:
         # If the number of posts is less than or equal to the maximum recommended length, each user gets all post IDs
-        new_rec_matrix = [post_ids] * (len(rec_matrix) - 1)
-        new_rec_matrix = [None] + new_rec_matrix
+        new_rec_matrix = [post_ids] * len(rec_matrix)
     else:
-        new_rec_matrix = [None]
         # If the number of posts is greater than the maximum recommended length, each user gets personalized post IDs
         user_bios = [user['bio'] if 'bio' in user and user['bio'] is not None else '' for user in user_table]
         post_contents = [post['content'] for post in post_table]
@@ -296,64 +289,6 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
 
     end_time = time.time()
     print(f'Personalized recommendation time: {end_time - start_time:.6f}s')
-    return new_rec_matrix
-
-def rec_sys_personalized_twh_old(
-    user_table: List[Dict[str, Any]],
-    post_table: List[Dict[str, Any]],
-    trace_table: List[Dict[str, Any]],
-    rec_matrix: List[List],
-    max_rec_post_len: int,
-) -> List[List]:
-    # 获取所有post的ID
-    post_ids = [post['post_id'] for post in post_table]
-    # 获取 id: content dict
-    items = {post['post_id']: post['content'] for post in post_table}
-    global model, twhin_tokenizer, twhin_model
-    # 载入模型
-    if model == None or twhin_tokenizer == None:
-        model = get_recsys_model(recsys_type="twhin-bert")
-        (twhin_tokenizer, twhin_model)  = model
-
-    if len(post_ids) <= max_rec_post_len:
-        # 如果post数量小于等于最大推荐数，每个用户获得所有post ID
-        rec_matrix = [post_ids] * (len(rec_matrix) - 1)
-        rec_ids_matrix = [None] + rec_matrix
-        new_rec_matrix = []
-        for index, rec_ids in enumerate(rec_ids_matrix[1:]):
-            new_rec_matrix.append(rec_ids)
-        new_rec_matrix = [None] + new_rec_matrix
-
-    else: 
-        new_rec_matrix = [None]
-        # 如果post数量大于最大推荐数，每个用户随机获得personalized post ID
-        user_profiles = [user['bio'] for user in user_table]
-        user_profiles = [profile if profile is not None else 'This user does not have profile' for profile in user_profiles]
-        
-        # user_id - 1 = agent_id
-        # 获取每个用户最近发的一条post，根据其进行推荐
-        user_previous_post =  {post['user_id']-1: post['content'] for post in post_table} 
-        # user_profiles.update(user_previous_post)
-        # print(len(user_previous_post))
-        for post_user_index in user_previous_post:
-            try:
-                user_profiles[post_user_index] = user_previous_post[post_user_index]
-            except:
-                print("update previous post failed")
-
-        corpus = user_profiles + list(items.values())
-        
-        all_post_vector = generate_post_vector(twhin_model, twhin_tokenizer, corpus, batch_size=1000) 
-        all_post_vector_list = [all_post_vector[i] for i in range(all_post_vector.size(0))] 
-        user_vector = all_post_vector_list[:len(user_profiles)]
-        item_vector = all_post_vector_list[len(user_profiles):]
-        cosine_similarities = cosine_similarity(user_vector, item_vector)
-
-        for user_index, profile in enumerate(user_profiles):
-            rec_items = get_recommendations(user_index, cosine_similarities, items, top_k=max_rec_post_len)
-            new_rec_ids = [item for item, _ in rec_items]
-            new_rec_matrix.append(new_rec_ids)
-
     return new_rec_matrix
 
 
@@ -479,7 +414,6 @@ def rec_sys_personalized_twh(
                     # 如果profile中有recent post，但不是该用户最新发的推，将其置换掉
                     elif update_profile not in user_profiles[post_user_index]:
                         user_profiles[post_user_index] = user_profiles[post_user_index].split("# Recent post:")[0] + update_profile
-
             except:
                 print("update previous post failed")
         
