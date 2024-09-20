@@ -375,7 +375,11 @@ def rec_sys_personalized_twh(
             # 获取所有推文的创建时间，根据时间远近来赋分, 需要注意的是这种算法最多只能跑90个时间步
             date_score.append(np.log( (271.8 - (current_time - int(post['created_at'])))/100))
             # 获取post的受众群体数量, 根据粉丝数量来赋分
-            fans_score.append(np.log(u_items[post['user_id']] + 1) / np.log(1000))
+            try:
+                fans_score.append(np.log(u_items[post['user_id']] + 1) / np.log(1000))
+            except Exception as e:
+                print(e)
+                import pdb;pdb.set_trace()
 
     date_score_np = np.array(date_score)
     # fan_score [0.8, 2.x]

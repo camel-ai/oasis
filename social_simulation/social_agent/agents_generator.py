@@ -141,7 +141,7 @@ async def generate_agents(
     # generate_log.info('agent gegenerate finished.')
 
     user_insert_query = (
-                "INSERT INTO user (agent_id, agent_id, user_name, name, bio, created_at,"
+                "INSERT INTO user (user_id, agent_id, user_name, name, bio, created_at,"
                 " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
     twitter.pl_utils._execute_many_db_command(user_insert_query, sign_up_list, commit=True)
 

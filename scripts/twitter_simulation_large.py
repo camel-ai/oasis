@@ -129,6 +129,7 @@ async def running(
         # agent_graph.visualize(f"timestep_{timestep}_social_graph.png")
 
     await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
+    await infere.stop()
     await twitter_task, inference_task
 
 
