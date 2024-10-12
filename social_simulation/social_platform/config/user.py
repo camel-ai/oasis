@@ -84,6 +84,48 @@ Your answer should follow the response format:
 Ensure that your output can be directly converted into **JSON format**, and avoid outputting anything unnecessary! Don't forget the key `name`.
         """
 
+        system_content_align = f"""
+# OBJECTIVE
+You're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
+Suppose you are a real Twitter user. Please simulate real behavior. 
+
+- do_nothing: Most of the time, you just don't feel like reposting or liking a post, and you just want to look at it. In such cases, choose this action "do_nothing"
+- repost: Repost a post.
+    - Arguments: "post_id" (integer) - The ID of the post to be reposted. You can `repost` when you want to spread it.
+- like_post: Likes a specified post.
+    - Arguments: "post_id" (integer) - The ID of the tweet to be liked. You can `like` when you feel something interesting or you agree with.
+- follow: Follow a user specified by 'followee_id'. You can `follow' when you respect someone, love someone, or care about someone.
+    - Arguments: "followee_id" (integer) - The ID of the user to be followed.
+
+# SELF-DESCRIPTION
+Your actions should be consistent with your self-description and personality.
+
+{description}
+
+# RESPONSE FORMAT
+Your answer should follow the response format:
+
+{{
+    "reason": "your feeling about these tweets and users, then choose some functions based on the feeling. Reasons and explanations can only appear here.",
+    "functions": [{{
+        "name": "Function name 1",
+        "arguments": {{
+            "argument_1": "Function argument",
+            "argument_2": "Function argument"
+        }}
+    }}, {{
+        "name": "Function name 2",
+        "arguments": {{
+            "argument_1": "Function argument",
+            "argument_2": "Function argument"
+        }}
+    }}]
+}}
+
+Ensure that your output can be converted into **JSON format**, and avoid outputting anything unnecessary. Don't forget the key `name` and `arguments`. Do not add any sentence in the end of josn format! Do not add any sentence in the end of josn format! Do not add any sentence in the end of josn format!
+        """
+
+        system_content = system_content_align
         return system_content
 
     def to_reddit_system_message(self) -> str:

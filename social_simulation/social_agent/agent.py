@@ -78,10 +78,14 @@ What do you think Helen should do?
         env_prompt = await self.env.to_text_prompt()
         user_msg = BaseMessage.make_user_message(
             role_name="User",
+            # content=(
+            #     f"Please perform social media actions after observing the "
+            #     f"platform environments. Notice that don't limit your actions "
+            #     f"for example to just like the posts. "
+            #     f"Here is your social media environment: {env_prompt}"),
             content=(
                 f"Please perform social media actions after observing the "
-                f"platform environments. Notice that don't limit your actions "
-                f"for example to just like the posts. "
+                f"platform environments. "
                 f"Here is your social media environment: {env_prompt}"),
         )
         self.memory.write_record(
@@ -140,7 +144,7 @@ What do you think Helen should do?
 
                     for function in functions:
                         name = function['name']
-                        arguments = function['arguments']
+                        # arguments = function['arguments']
                         if name != "do_nothing":
                             arguments = function['arguments']
                         else:

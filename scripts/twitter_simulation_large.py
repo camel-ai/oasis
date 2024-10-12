@@ -72,6 +72,9 @@ async def running(
         clock,
         start_time,
         recsys_type=recsys_type,
+        refresh_post_count = 2,
+        max_rec_post_len = 2
+
     )
     inference_channel = Channel()
     infere = InferencerManager(
@@ -110,7 +113,8 @@ async def running(
     for timestep in range(1, num_timesteps+1):
         os.environ["SANDBOX_TIME"] = str(timestep*3)
         social_log.info(f"timestep:{timestep}")
-        print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
+        db_file = db_path.split("/")[-1]
+        print(Back.GREEN + f"DB:{db_file} timestep:{timestep}" + Back.RESET)
         await infra.update_rec_table()
         # 0.05 * timestep here means 3 minutes / timestep
         simulation_time_hour = start_hour + 0.05 * timestep

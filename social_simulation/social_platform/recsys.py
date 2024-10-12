@@ -382,7 +382,7 @@ def rec_sys_personalized_twh(
                 import pdb;pdb.set_trace()
 
     date_score_np = np.array(date_score)
-    # fan_score [0.8, 2.x]
+    # fan_score [1, 2.x]
     fans_score_np = np.array(fans_score)
     fans_score_np = np.where(fans_score_np < 1, 1, fans_score_np)
 
