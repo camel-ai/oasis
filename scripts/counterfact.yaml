@@ -1,8 +1,8 @@
 data:
-  db_path: "./experiments/results_analysis/politics_3600_wo_follow_mute.db"
   user_path: "./data/experiment_dataset/user_data/user_data_3600.json"
-  pair_path: "./data/experiment_dataset/agent_3600/politics.json"
-  exp_info_filename: "./experiments/results_analysis/politics_3600_wo_follow_mute.json"
+  pair_path: "./data/experiment_dataset/agent_3600/counterfact.json"
+  db_path: "./experiments/reddit/Uncensored_user_counterfact.db"
+  exp_info_filename: "./experiments/reddit/Uncensored_user_counterfact.json"
 simulation:
   recsys_type: "reddit"
   controllable_user: true
@@ -20,14 +20,14 @@ model:
   cfgs:
     - model_type: "llama-3"
       num: 3600
-      server_url: "http://10.140.0.184:8096/v1" # eg, http://10.160.2.154:8000/v1
-      model_path: "LLM-Research/Meta-Llama-3-8B-Instruct"
+      server_url: "http://10.109.10.49:8080/v1" # eg, http://10.160.2.154:8000/v1
+      model_path: "/ibex/user/yangz0h/open_source_llm/llama-3"
       stop_tokens: []
       temperature: 0.0
 inference:
   model_type: "llama-3"
-  model_path: "LLM-Research/Meta-Llama-3-8B-Instruct"
+  model_path: "Orenguteng/Llama-3-8B-Lexi-Uncensored"
   stop_tokens: ["<|eot_id|>", "<|end_of_text|>"]
   server_url:
     - host: "10.140.0.184"
-      ports: [8096]
+      ports: [8021, 8001, 8027, 8003, 8028, 8025, 8006, 8007, 8008, 8009, 8023, 8011]

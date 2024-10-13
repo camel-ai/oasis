@@ -15,7 +15,7 @@ class SocialAction:
     def get_openai_function_list(self) -> list[OpenAIFunction]:
         return [
             OpenAIFunction(func) for func in [
-                self.create_post, self.follow, self.like, self.search_posts,
+                self.create_post, self.follow, self.like_post, self.dislike_post, self.search_posts,
                 self.search_user, self.trend, self.refresh, self.do_nothing,
                 self.create_comment, self.like_comment, self.dislike_comment
             ]
@@ -150,7 +150,7 @@ class SocialAction:
         """
         return await self.perform_action(post_id, ActionType.REPOST.value)
 
-    async def like(self, post_id: int):
+    async def like_post(self, post_id: int):
         r"""Create a new like for a specified post.
 
         This method invokes an asynchronous action to create a new like for a
@@ -174,7 +174,7 @@ class SocialAction:
             Attempting to like a post that the user has already liked will
             result in a failure.
         """
-        return await self.perform_action(post_id, ActionType.LIKE.value)
+        return await self.perform_action(post_id, ActionType.LIKE_POST.value)
 
     async def unlike(self, post_id: int):
         """Remove a like for a post.
@@ -199,7 +199,7 @@ class SocialAction:
         """
         return await self.perform_action(post_id, ActionType.UNLIKE.value)
 
-    async def dislike(self, post_id: int):
+    async def dislike_post(self, post_id: int):
         r"""Create a new dislike for a specified post.
 
         This method invokes an asynchronous action to create a new dislike for
@@ -223,7 +223,7 @@ class SocialAction:
             Attempting to dislike a post that the user has already liked will
             result in a failure.
         """
-        return await self.perform_action(post_id, ActionType.DISLIKE.value)
+        return await self.perform_action(post_id, ActionType.DISLIKE_POST.value)
 
     async def undo_dislike(self, post_id: int):
         """Remove a dislike for a post.

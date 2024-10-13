@@ -26,7 +26,7 @@ def setup_db():
 async def test_update_rec_table(setup_db):
     try:
         channel = Channel()
-        infra = Platform(test_db_filepath, channel)
+        infra = Platform(test_db_filepath, channel, recsys_type="twhin-bert")
         # 在测试开始之前，将3个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
@@ -51,7 +51,7 @@ async def test_update_rec_table(setup_db):
         for i in range(1, 61):  # 生成60条post
             user_id = i % 3 + 1  # 循环使用用户ID 1, 2, 3
             content = f"Post content for post {i}"  # 简单生成不同的内容
-            created_at = datetime.now()
+            created_at = "0"
             num_likes = random.randint(0, 100)  # 随机生成点赞数
 
             cursor.execute(("INSERT INTO post "
@@ -71,7 +71,8 @@ async def test_update_rec_table(setup_db):
             posts = cursor.fetchall()  # 获取所有记录
             # ! Number of available posts for recommendation =
             # total posts - posts from current user !
-            assert len(posts) == 40, f"User {user_id} doesn't have 40 posts."
+            # 实际上推特里是可以看到自己发的推文的
+            assert len(posts) == 50, f"User {user_id} doesn't have 50 posts."
             post_ids = [post[0] for post in posts]
             is_unique = len(post_ids) == len(set(post_ids))
             print(set(post_ids))

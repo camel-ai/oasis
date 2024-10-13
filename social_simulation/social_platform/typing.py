@@ -7,9 +7,9 @@ class ActionType(Enum):
     SEARCH_USER = "search_user"
     SEARCH_POSTS = "search_posts"
     CREATE_POST = "create_post"
-    LIKE = "like"
+    LIKE_POST = "like_post"
     UNLIKE = "unlike"
-    DISLIKE = "dislike"
+    DISLIKE = "dislike_post"
     UNDO_DISLIKE = "undo_dislike"
     FOLLOW = "follow"
     UNFOLLOW = "unfollow"
@@ -29,5 +29,6 @@ class ActionType(Enum):
 
 class RecsysType(Enum):
     TWITTER = "twitter"
+    TWHIN = "twhin-bert"
     REDDIT = "reddit"
     RANDOM = "random"

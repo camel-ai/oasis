@@ -1,32 +1,29 @@
 data:
-  db_path: null
-  csv_path: null
-  neo4j_username: null
-  neo4j_password: null
-  neo4j_uri: null
+  db_path: data/twitter/test.db
+  csv_path: data/topics/False_Business_0.csv
 simulation:
-  num_timesteps: 3
+  num_timesteps: 5
   clock_factor: 60
   recsys_type: "twitter"
 model:
-  num_agents: 26
+  num_agents: 79
   model_random_seed: 42
   cfgs:
     - model_type: "llama-3"
-      num: 16
-      server_url: "http://{ip address}:{port number}/v1" # eg, http://10.160.2.154:8000/v1
-      model_path: "/your/path/to/llama-3"
+      num: 79
+      server_url: "http://10.140.0.184:8004/v1" # eg, http://10.160.2.154:8000/v1
+      model_path: "/mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct"
       stop_tokens: []
       temperature: 0.0
     - model_type: "internlm-chat-20b"
-      num: 5
+      num: 0
       server_url: "http://{ip address}:{port number}/v1"
       model_path: "/your/path/to/internlm-chat-20b"
       stop_tokens:
         - "<eoa>"
       temperature: 0.0
     - model_type: "Qwen-7B-Chat"
-      num: 5
+      num: 0
       server_url: "http://{ip address}:{port number}/v1"
       model_path: "/your/path/to/Qwen-7B-Chat"
       stop_tokens:

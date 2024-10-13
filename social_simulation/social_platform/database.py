@@ -202,14 +202,14 @@ def fetch_rec_table_as_matrix(cursor: sqlite3.Cursor) -> List[List[int]]:
         if user_id in user_posts:
             user_posts[user_id].append(post_id)
     # 将字典转换为矩阵形式
-    matrix = [None] + [user_posts[user_id] for user_id in user_ids]
+    matrix = [user_posts[user_id] for user_id in user_ids]
     return matrix
 
 
 def insert_matrix_into_rec_table(cursor: sqlite3.Cursor,
                                  matrix: List[List[int]]) -> None:
     # 遍历matrix，跳过索引0的占位符
-    for user_id, post_ids in enumerate(matrix[1:], start=1):
+    for user_id, post_ids in enumerate(matrix):
         for post_id in post_ids:
             # 对每个user_id和post_id的组合，插入到rec表中
             cursor.execute("INSERT INTO rec (user_id, post_id) VALUES (?, ?)",

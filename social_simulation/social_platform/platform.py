@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import random
 import sqlite3
 import sys
@@ -12,9 +13,10 @@ from social_simulation.clock.clock import Clock
 from social_simulation.social_platform.database import (
     create_db, fetch_rec_table_as_matrix, fetch_table_from_db)
 from social_simulation.social_platform.platform_utils import PlatformUtils
-from social_simulation.social_platform.recsys import (rec_sys_personalized,
-                                                      rec_sys_random,
-                                                      rec_sys_reddit)
+from social_simulation.social_platform.recsys import (
+    rec_sys_personalized_with_trace, rec_sys_random, rec_sys_reddit,
+    rec_sys_personalized_twh)
+
 from social_simulation.social_platform.typing import ActionType, RecsysType
 
 if 'sphinx' not in sys.modules:
@@ -39,23 +41,31 @@ class Platform:
                  start_time: datetime | None = None,
                  show_score: bool = False,
                  allow_self_rating: bool = True,
-                 recsys_type: str | RecsysType = "twitter",
-                 refresh_post_count: int = 1,
-                 max_rec_post_len: int = 50):
+                 recsys_type: str | RecsysType = "reddit",
+                 refresh_rec_post_count: int = 1,
+                 max_rec_post_len: int = 2,
+                 following_post_count = 3):
 
         self.db_path = db_path
-        # 未指定时钟时，默认platform的时间放大系数为60
-        if sandbox_clock is None:
-            sandbox_clock = Clock(60)
-        if start_time is None:
-            start_time = datetime.now()
+        self.recsys_type = recsys_type
+        # import pdb; pdb.set_trace()
+        if self.recsys_type == "reddit":
+            # 未指定时钟时，默认platform的时间放大系数为60
+            if sandbox_clock is None:
+                sandbox_clock = Clock(60)
+            if start_time is None:
+                start_time = datetime.now()
+            self.start_time = start_time
+            self.sandbox_clock = sandbox_clock
+        else:
+            self.start_time = 0
+            self.sandbox_clock = None
 
         self.db, self.db_cursor = create_db(self.db_path)
         self.db.execute("PRAGMA synchronous = OFF")
 
         self.channel = channel
-        self.start_time = start_time
-        self.sandbox_clock = sandbox_clock
+
 
         self.recsys_type = RecsysType(recsys_type)
 
@@ -67,7 +77,9 @@ class Platform:
         self.allow_self_rating = allow_self_rating
 
         # 社交媒体内部推荐系统refresh一次返回的推文数量
-        self.refresh_post_count = refresh_post_count
+        self.refresh_rec_post_count = refresh_rec_post_count
+        # 从关注用户发出post中根据like数排行一次返回的推文数量
+        self.following_post_count = following_post_count
         # rec table(buffer)中每个用户的最大post数量
         self.max_rec_post_len = max_rec_post_len
         # rec prob between random and personalized
@@ -130,18 +142,13 @@ class Platform:
     # 注册
     async def sign_up(self, agent_id, user_message):
         user_name, name, bio = user_message
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
-            if self.pl_utils._check_agent_userid(agent_id):
-                user_id = self.pl_utils._check_agent_userid(agent_id)
-                return {
-                    "success":
-                    False,
-                    "error":
-                    (f"Agent {agent_id} have already signed up with user "
-                     f"id: {user_id}")
-                }
+
             # 插入用户记录
             user_insert_query = (
                 "INSERT INTO user (agent_id, user_name, name, bio, created_at,"
@@ -150,7 +157,7 @@ class Platform:
                 user_insert_query,
                 (agent_id, user_name, name, bio, current_time, 0, 0),
                 commit=True)
-            user_id = self.db_cursor.lastrowid
+            user_id = agent_id
             # 准备trace记录的信息
             action_info = {"name": name, "user_name": user_name, "bio": bio}
             self.pl_utils._record_trace(user_id, ActionType.SIGNUP.value,
@@ -164,11 +171,14 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def refresh(self, agent_id: int):
+        # output不变，执行内容是从rec table取特定id的tweet
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
-
+            user_id = agent_id
             # 从rec表中获取指定user_id的所有post_id
             rec_query = "SELECT post_id FROM rec WHERE user_id = ?"
             self.pl_utils._execute_db_command(rec_query, (user_id, ))
@@ -177,10 +187,30 @@ class Platform:
             post_ids = [row[0] for row in rec_results]
             selected_post_ids = post_ids
 
-            # 如果post_id数量 >= self.refresh_post_count，则随机选择指定数量的post_id
-            if len(post_ids) >= self.refresh_post_count:
-                selected_post_ids = random.sample(post_ids,
-                                                  self.refresh_post_count)
+            # 如果post_id数量 >= self.refresh_rec_post_count，则随机选择指定数量的post_id
+            if len(selected_post_ids) >= self.refresh_rec_post_count:
+                selected_post_ids = random.sample(selected_post_ids,
+                                                  self.refresh_rec_post_count)
+            
+            if self.recsys_type != RecsysType.REDDIT:
+                # 从following中去获取post (in network)
+                # 更改SQL查询，令refresh得到的 post 是这个用户关注的人的 post，排序按照推特的点赞数
+                query_following_post = (
+                    "SELECT post.post_id, post.user_id, post.content, post.created_at, post.num_likes "
+                    "FROM post "
+                    "JOIN follow ON post.user_id = follow.followee_id "
+                    "WHERE follow.follower_id = ? "
+                    "ORDER BY post.num_likes DESC  "  # ORDER BY post.num_likes DESC
+                    "LIMIT ?")
+                self.pl_utils._execute_db_command(query_following_post, (
+                    user_id,
+                    self.following_post_count,
+                ))
+
+                following_posts = self.db_cursor.fetchall()
+                following_posts_ids = [row[0] for row in following_posts]
+                
+                selected_post_ids = following_posts_ids + selected_post_ids
 
             # 根据选定的post_id从post表中获取post详情
             placeholders = ', '.join('?' for _ in selected_post_ids)
@@ -198,7 +228,7 @@ class Platform:
             action_info = {"posts": results_with_comments}
             twitter_log.info(action_info)
             self.pl_utils._record_trace(user_id, ActionType.REFRESH.value,
-                                        action_info)
+                                        action_info, current_time)
 
             return {"success": True, "posts": results_with_comments}
         except Exception as e:
@@ -216,12 +246,29 @@ class Platform:
                                             trace_table, rec_matrix,
                                             self.max_rec_post_len)
         elif self.recsys_type == RecsysType.TWITTER:
-            # new_rec_matrix = rec_sys_personalized_with_trace(
-            #     user_table, post_table, trace_table, rec_matrix,
-            #     self.max_rec_post_len)
-            new_rec_matrix = rec_sys_personalized(user_table, post_table,
-                                                  trace_table, rec_matrix,
-                                                  self.max_rec_post_len)
+            new_rec_matrix = rec_sys_personalized_with_trace(
+                user_table, post_table, trace_table, rec_matrix,
+                self.max_rec_post_len)
+        elif self.recsys_type == RecsysType.TWHIN:
+            latest_post_time = post_table[-1]["created_at"]
+            post_query = (
+                "SELECT COUNT(*) "
+                "FROM post "
+                "WHERE created_at = ?"
+            )
+
+            # 得到新发出的post条数，从而进行逐步更新
+            self.pl_utils._execute_db_command(
+                post_query,
+                (latest_post_time,)
+            )
+            result = self.db_cursor.fetchone()
+            latest_post_count = result[0]
+            if not latest_post_count:
+                return {"success": False, "message": "Fail to get latest posts count"}
+            new_rec_matrix = rec_sys_personalized_twh(
+                user_table, post_table, latest_post_count, trace_table, rec_matrix,
+                self.max_rec_post_len)
         elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
                                             self.max_rec_post_len)
@@ -233,17 +280,10 @@ class Platform:
         sql_query = "DELETE FROM rec"
         # 使用封装好的_execute_db_command函数执行SQL语句
         self.pl_utils._execute_db_command(sql_query, commit=True)
-        # for user_id in range(1, len(new_rec_matrix)):
-        #     for post_id in new_rec_matrix[user_id]:
-        #         sql_query = (
-        #             "INSERT INTO rec (user_id, post_id) VALUES (?, ?)")
-        #         self.pl_utils._execute_db_command(sql_query,
-        #                                           (user_id, post_id),
-        #                                           commit=True)
 
         # 批量插入更省时, 创建插入值列表
         insert_values = [(user_id, post_id)
-                         for user_id in range(1, len(new_rec_matrix))
+                         for user_id in range(len(new_rec_matrix))
                          for post_id in new_rec_matrix[user_id]]
 
         # 批量插入到数据库
@@ -253,12 +293,14 @@ class Platform:
             commit=True)
 
     async def create_post(self, agent_id: int, content: str):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 插入推文记录
             post_insert_query = (
@@ -282,11 +324,13 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def repost(self, agent_id: int, post_id: int):
-        current_time = datetime.now()
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 查询要转发的推特内容
             sql_query = (
@@ -299,21 +343,27 @@ class Platform:
             if not results:
                 return {"success": False, "error": "Post not found."}
 
-            orig_content = results[0][2]
-            orig_like = results[0][-1]
-            orig_user_id = results[0][1]
+            prev_content = results[0][2]
+            if "original_post: " in prev_content:
+                orig_content = prev_content.split("original_post: ")[-1]
+            else:
+                orig_content = prev_content
+            orig_content = f"%{orig_content}%"
+            prev_like = results[0][-1]
+            prev_user_id = results[0][1]
+            
 
             # 转发的推特标识一下是从哪个user转的，方便判断
             repost_content = (
-                f"user{user_id} repost from user{str(orig_user_id)}. "
-                f"original_post: {orig_content}")
+                f"user{user_id} repost from user{str(prev_user_id)}. "
+                f"original_post: {prev_content}")
 
-            # 确保此前未转发过
-            repost_check_query = ("SELECT * FROM 'post' WHERE content LIKE ? ")
-            self.pl_utils._execute_db_command(repost_check_query,
-                                              (repost_content, ))
+            # 确保相关内容此前未被该用户转发过
+            repost_check_query = (
+                "SELECT * FROM 'post' WHERE content LIKE ? AND user_id = ?")
+            self.pl_utils._execute_db_command(repost_check_query, (orig_content,user_id ))
             if self.db_cursor.fetchone():
-                # 已存在转发记录
+                # 该用户存在转发记录
                 return {
                     "success": False,
                     "error": "Repost record already exists."
@@ -326,7 +376,7 @@ class Platform:
 
             self.pl_utils._execute_db_command(
                 post_insert_query,
-                (user_id, repost_content, current_time, orig_like),
+                (user_id, repost_content, current_time, prev_like),
                 commit=True)
 
             post_id = self.db_cursor.lastrowid
@@ -339,13 +389,14 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def like(self, agent_id: int, post_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+    async def like_post(self, agent_id: int, post_id: int):
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 检查是否已经存在点赞记录
             like_check_query = (
                 "SELECT * FROM 'like' WHERE post_id = ? AND user_id = ?")
@@ -390,9 +441,7 @@ class Platform:
 
     async def unlike(self, agent_id: int, post_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 检查是否已经存在点赞记录
             like_check_query = (
@@ -436,13 +485,14 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def dislike(self, agent_id: int, post_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+    async def dislike_post(self, agent_id: int, post_id: int):
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 检查是否已经存在dislike记录
             like_check_query = (
                 "SELECT * FROM 'dislike' WHERE post_id = ? AND user_id = ?")
@@ -488,9 +538,7 @@ class Platform:
 
     async def undo_dislike(self, agent_id: int, post_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 检查是否已经存在dislike记录
             like_check_query = (
@@ -537,9 +585,7 @@ class Platform:
 
     async def search_posts(self, agent_id: int, query: str):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 更新SQL查询，以便同时根据content、post_id和user_id进行搜索
             # 注意：CAST是必要的，因为post_id和user_id是整数类型，而搜索的query是字符串类型
             sql_query = (
@@ -574,9 +620,7 @@ class Platform:
 
     async def search_user(self, agent_id: int, query: str):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             sql_query = (
                 "SELECT user_id, user_name, name, bio, created_at, "
                 "num_followings, num_followers "
@@ -618,12 +662,13 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def follow(self, agent_id: int, followee_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # # 检查是否已经存在关注记录
             follow_check_query = ("SELECT * FROM follow WHERE follower_id = ? "
                                   "AND followee_id = ?")
@@ -674,9 +719,7 @@ class Platform:
 
     async def unfollow(self, agent_id: int, followee_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 检查是否存在关注记录，并获取其ID
             follow_check_query = (
                 "SELECT follow_id FROM follow WHERE follower_id = ? AND "
@@ -724,12 +767,13 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def mute(self, agent_id: int, mutee_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 检查是否已经存在禁言记录
             mute_check_query = ("SELECT * FROM mute WHERE muter_id = ? AND "
                                 "mutee_id = ?")
@@ -760,9 +804,7 @@ class Platform:
 
     async def unmute(self, agent_id: int, mutee_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 检查是否存在指定的禁言记录，并获取mute_id
             mute_check_query = (
                 "SELECT mute_id FROM mute WHERE muter_id = ? AND mutee_id = ?")
@@ -791,14 +833,18 @@ class Platform:
         """
         Get the top K trending posts in the last num_days days.
         """
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
             # 计算搜索的起始时间
-            start_time = current_time - timedelta(days=self.trend_num_days)
+            if self.recsys_type == RecsysType.REDDIT:
+                start_time = current_time - timedelta(days=self.trend_num_days)
+            else:
+                start_time = int(current_time) - self.trend_num_days*24*60
 
             # 构建SQL查询语句
             sql_query = """
@@ -833,12 +879,13 @@ class Platform:
 
     async def create_comment(self, agent_id: int, comment_message: tuple):
         post_id, content = comment_message
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 插入评论记录
             comment_insert_query = (
@@ -861,12 +908,13 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def like_comment(self, agent_id: int, comment_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 检查是否已经存在点赞记录
             like_check_query = (
@@ -918,9 +966,7 @@ class Platform:
 
     async def unlike_comment(self, agent_id: int, comment_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 检查是否已经存在点赞记录
             like_check_query = (
@@ -969,12 +1015,13 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def dislike_comment(self, agent_id: int, comment_id: int):
-        current_time = self.sandbox_clock.time_transfer(
-            datetime.now(), self.start_time)
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 检查是否已经存在不喜欢记录
             dislike_check_query = (
@@ -1027,9 +1074,7 @@ class Platform:
 
     async def undo_dislike_comment(self, agent_id: int, comment_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 检查是否已经存在不喜欢记录
             dislike_check_query = (
@@ -1076,9 +1121,7 @@ class Platform:
 
     async def do_nothing(self, agent_id: int):
         try:
-            user_id = self.pl_utils._check_agent_userid(agent_id)
-            if not user_id:
-                return self.pl_utils._not_signup_error_message(agent_id)
+            user_id = agent_id
 
             # 记录操作到trace表
             action_info = {}

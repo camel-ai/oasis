@@ -63,4 +63,6 @@ python scripts/twitter_simulation.py --config_path scripts/twitter_openai.yaml
 python scripts/twitter_simulation.py --config_path scripts/twitter_opensource.yaml
 # or
 python scripts/reddit_simulation.py --config_path scripts/reddit.yaml
+# or
+python scripts/twitter_simulation_large.py --config_path scripts/twitter_simulation_large.yaml
 ```

@@ -9,6 +9,7 @@ from typing import Any
 import logging
 import threading
 from colorama import Back
+import pandas as pd
 from yaml import safe_load
 from social_simulation.clock.clock import Clock
 from social_simulation.inference.inference_manager import InferencerManager
@@ -58,7 +59,10 @@ async def running(
     if os.path.exists(db_path):
         os.remove(db_path)
 
-    start_time = datetime.now()
+    if recsys_type == "reddit":
+        start_time = datetime.now()
+    else:
+        start_time = 0
     social_log.info(f"Start time: {start_time}")
     clock = Clock(k=clock_factor)
     twitter_channel = Channel()
@@ -68,6 +72,9 @@ async def running(
         clock,
         start_time,
         recsys_type=recsys_type,
+        refresh_rec_post_count = 2,
+        max_rec_post_len = 2,
+        following_post_count = 3
     )
     inference_channel = Channel()
     infere = InferencerManager(
@@ -76,24 +83,41 @@ async def running(
     )
     twitter_task = asyncio.create_task(infra.running())
     inference_task = asyncio.create_task(infere.run())
+    
+    all_topic_df = pd.read_csv("data/label_clean_v7.csv")
+    try:
+        if "False" in csv_path or "True" in csv_path:
+            if "-" not in csv_path:
+                topic_name = csv_path.split("/")[-1].split(".")[0]
+            else:
+                topic_name = csv_path.split("/")[-1].split(".")[0].split("-")[0]
+            source_post_time = all_topic_df[all_topic_df["topic_name"]==topic_name]["start_time"].item().split(" ")[1]
+            start_hour = int(source_post_time.split(":")[0]) + float(int(source_post_time.split(":")[1])/60)
+    except:
+        print("No real-world data, let start_hour be 13")
+        start_hour = 13
 
     model_configs = model_configs or {}
     agent_graph = await generate_agents(
         agent_info_path=csv_path,
         twitter_channel=twitter_channel,
         inference_channel=inference_channel,
+        start_time = start_time,
+        recsys_type = recsys_type,
+        twitter = infra,
         **model_configs,
     )
     # agent_graph.visualize("initial_social_graph.png")
 
-    start_hour = 1
 
-    for timestep in range(num_timesteps):
+    for timestep in range(1, num_timesteps+1):
+        os.environ["SANDBOX_TIME"] = str(timestep*3)
         social_log.info(f"timestep:{timestep}")
-        print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
-        #await infra.update_rec_table()
-        # 0.2 * timestep here means 12 minutes
-        simulation_time_hour = start_hour + 0.2 * timestep
+        db_file = db_path.split("/")[-1]
+        print(Back.GREEN + f"DB:{db_file} timestep:{timestep}" + Back.RESET)
+        await infra.update_rec_table()
+        # 0.05 * timestep here means 3 minutes / timestep
+        simulation_time_hour = start_hour + 0.05 * timestep
         tasks = []
         for node_id, agent in agent_graph.get_agents():
             if agent.user_info.is_controllable is False:
@@ -109,11 +133,13 @@ async def running(
         # agent_graph.visualize(f"timestep_{timestep}_social_graph.png")
 
     await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
+    await infere.stop()
     await twitter_task, inference_task
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
+    os.environ["SANDBOX_TIME"] = str(0)
     if os.path.exists(args.config_path):
         with open(args.config_path, "r") as f:
             cfg = safe_load(f)
