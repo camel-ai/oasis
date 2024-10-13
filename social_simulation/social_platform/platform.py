@@ -211,6 +211,7 @@ class Platform:
                 following_posts_ids = [row[0] for row in following_posts]
                 
                 selected_post_ids = following_posts_ids + selected_post_ids
+                selected_post_ids = list(set(selected_post_ids))
 
             # 根据选定的post_id从post表中获取post详情
             placeholders = ', '.join('?' for _ in selected_post_ids)

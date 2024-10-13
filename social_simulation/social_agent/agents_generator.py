@@ -125,12 +125,13 @@ async def generate_agents(
 
         following_id_list = ast.literal_eval(
                 agent_info["following_agentid_list"][agent_id])
-        if len(following_id_list) != 0:
-            for follow_id in following_id_list:
-                follow_list.append((agent_id, follow_id, start_time))
-                user_update1.append((agent_id,))
-                user_update2.append((follow_id,))
-                agent_graph.add_edge(agent_id, follow_id)
+        if type(following_id_list) != int:
+            if len(following_id_list) != 0:
+                for follow_id in following_id_list:
+                    follow_list.append((agent_id, follow_id, start_time))
+                    user_update1.append((agent_id,))
+                    user_update2.append((follow_id,))
+                    agent_graph.add_edge(agent_id, follow_id)
         
         previous_posts = ast.literal_eval(
                 agent_info['previous_tweets'][agent_id])
