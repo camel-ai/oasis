@@ -4,7 +4,7 @@ import logging
 
 table_log = logging.getLogger(name='table')
 table_log.setLevel('DEBUG')
-now = datetime.now()
+now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # 修改这里
 file_handler = logging.FileHandler(f'./log/table-{str(now)}.log', encoding='utf-8')
 file_handler.setLevel('DEBUG')
 file_handler.setFormatter(logging.Formatter('%(message)s'))

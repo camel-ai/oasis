@@ -20,8 +20,8 @@ from social_simulation.social_platform.typing import ActionType, RecsysType
 if 'sphinx' not in sys.modules:
     twitter_log = logging.getLogger(name='social.twitter')
     twitter_log.setLevel('DEBUG')
-    now = datetime.now()
-    file_handler = logging.FileHandler(f'./log/social.twitter-{str(now)}.log')
+    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    file_handler = logging.FileHandler(f'./log/social.twitter-{now}.log')
     file_handler.setLevel('DEBUG')
     file_handler.setFormatter(
         logging.Formatter(
