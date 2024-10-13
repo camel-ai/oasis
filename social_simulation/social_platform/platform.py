@@ -42,8 +42,9 @@ class Platform:
                  show_score: bool = False,
                  allow_self_rating: bool = True,
                  recsys_type: str | RecsysType = "reddit",
-                 refresh_post_count: int = 1,
-                 max_rec_post_len: int = 2):
+                 refresh_rec_post_count: int = 1,
+                 max_rec_post_len: int = 2,
+                 following_post_count = 3):
 
         self.db_path = db_path
         self.recsys_type = recsys_type
@@ -76,7 +77,9 @@ class Platform:
         self.allow_self_rating = allow_self_rating
 
         # 社交媒体内部推荐系统refresh一次返回的推文数量
-        self.refresh_post_count = refresh_post_count
+        self.refresh_rec_post_count = refresh_rec_post_count
+        # 从关注用户发出post中根据like数排行一次返回的推文数量
+        self.following_post_count = following_post_count
         # rec table(buffer)中每个用户的最大post数量
         self.max_rec_post_len = max_rec_post_len
         # rec prob between random and personalized
@@ -176,7 +179,6 @@ class Platform:
             current_time = os.environ["SANDBOX_TIME"]
         try:
             user_id = agent_id
-
             # 从rec表中获取指定user_id的所有post_id
             rec_query = "SELECT post_id FROM rec WHERE user_id = ?"
             self.pl_utils._execute_db_command(rec_query, (user_id, ))
@@ -185,10 +187,30 @@ class Platform:
             post_ids = [row[0] for row in rec_results]
             selected_post_ids = post_ids
 
-            # 如果post_id数量 >= self.refresh_post_count，则随机选择指定数量的post_id
-            if len(post_ids) >= self.refresh_post_count:
-                selected_post_ids = random.sample(post_ids,
-                                                  self.refresh_post_count)
+            # 如果post_id数量 >= self.refresh_rec_post_count，则随机选择指定数量的post_id
+            if len(selected_post_ids) >= self.refresh_rec_post_count:
+                selected_post_ids = random.sample(selected_post_ids,
+                                                  self.refresh_rec_post_count)
+            
+            if self.recsys_type != RecsysType.REDDIT:
+                # 从following中去获取post (in network)
+                # 更改SQL查询，令refresh得到的 post 是这个用户关注的人的 post，排序按照推特的点赞数
+                query_following_post = (
+                    "SELECT post.post_id, post.user_id, post.content, post.created_at, post.num_likes "
+                    "FROM post "
+                    "JOIN follow ON post.user_id = follow.followee_id "
+                    "WHERE follow.follower_id = ? "
+                    "ORDER BY post.num_likes DESC  "  # ORDER BY post.num_likes DESC
+                    "LIMIT ?")
+                self.pl_utils._execute_db_command(query_following_post, (
+                    user_id,
+                    self.following_post_count,
+                ))
+
+                following_posts = self.db_cursor.fetchall()
+                following_posts_ids = [row[0] for row in following_posts]
+                
+                selected_post_ids = following_posts_ids + selected_post_ids
 
             # 根据选定的post_id从post表中获取post详情
             placeholders = ', '.join('?' for _ in selected_post_ids)

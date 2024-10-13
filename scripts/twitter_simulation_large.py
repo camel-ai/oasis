@@ -72,9 +72,9 @@ async def running(
         clock,
         start_time,
         recsys_type=recsys_type,
-        refresh_post_count = 2,
-        max_rec_post_len = 2
-
+        refresh_rec_post_count = 2,
+        max_rec_post_len = 2,
+        following_post_count = 3
     )
     inference_channel = Channel()
     infere = InferencerManager(
