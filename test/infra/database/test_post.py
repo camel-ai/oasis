@@ -30,7 +30,7 @@ class MockChannel:
             return ('id_', (2, 1, "like_post"))
         elif self.call_count == 3:
             self.call_count += 1
-            return ('id_', (2, 1, "unlike"))
+            return ('id_', (2, 1, "unlike_post"))
         elif self.call_count == 4:
             self.call_count += 1
             return ('id_', (1, 1, "dislike_post"))
@@ -39,7 +39,7 @@ class MockChannel:
             return ('id_', (2, 1, "dislike_post"))
         elif self.call_count == 6:
             self.call_count += 1
-            return ('id_', (2, 1, "undo_dislike"))
+            return ('id_', (2, 1, "undo_dislike_post"))
         # 调用返回转推操作的指令
         elif self.call_count == 7:
             self.call_count += 1
@@ -151,23 +151,23 @@ async def test_create_repost_like_unlike_post(setup_platform):
         cursor.execute("SELECT * FROM trace WHERE action='repost'")
         assert cursor.fetchone() is not None, "Repost action not traced"
 
-        cursor.execute("SELECT * FROM trace WHERE action='like'")
+        cursor.execute("SELECT * FROM trace WHERE action='like_post'")
         results = cursor.fetchall()
         assert results is not None, "Like post action not traced"
         assert len(results) == 2
 
-        cursor.execute("SELECT * FROM trace WHERE action='unlike'")
+        cursor.execute("SELECT * FROM trace WHERE action='unlike_post'")
         results = cursor.fetchall()
         assert results is not None, "Unlike post action not traced"
         assert results[0][0] == 2  # `user_id`
         assert results[0][-1] == '{"post_id": 1, "like_id": 2}'
 
-        cursor.execute("SELECT * FROM trace WHERE action='dislike'")
+        cursor.execute("SELECT * FROM trace WHERE action='dislike_post'")
         results = cursor.fetchall()
         assert results is not None, "Dislike post action not traced"
         assert len(results) == 2
 
-        cursor.execute("SELECT * FROM trace WHERE action='undo_dislike'")
+        cursor.execute("SELECT * FROM trace WHERE action='undo_dislike_post'")
         results = cursor.fetchall()
         assert results is not None, "Undo dislike post action not traced"
         assert results[0][0] == 2  # `user_id`

@@ -122,9 +122,10 @@ async def generate_agents(
         agent_graph.add_agent(agent)
         num_followings = 0
         num_followers = 0
-        if agent_info["following_count"]:
+        # print('agent_info["following_count"]', agent_info["following_count"])
+        if not agent_info["following_count"].empty:
             num_followings = agent_info["following_count"][agent_id]
-        if agent_info["followers_count"]:
+        if not agent_info["followers_count"].empty:
             num_followers = agent_info["followers_count"][agent_id]
                     
 
@@ -161,7 +162,7 @@ async def generate_agents(
     twitter.pl_utils._execute_many_db_command(follow_insert_query, follow_list, commit=True)
 
     # 数据里面有following_count和followers_count就直接用，不用额外更新
-    if not (agent_info["following_count"] and agent_info["followers_count"]):
+    if not (agent_info["following_count"].empty and agent_info["followers_count"].empty):
         user_update_query1 = (
                         "UPDATE user SET num_followings = num_followings + 1 "
                         "WHERE user_id = ?")

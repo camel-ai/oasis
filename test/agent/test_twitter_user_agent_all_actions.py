@@ -75,10 +75,11 @@ async def test_agents_actions(setup_twitter):
     await asyncio.sleep(random.uniform(0, 0.1))
 
     return_message = await action_agent.env.action.like_post(1)
+    print(return_message)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.action.unlike(1)
+    return_message = await action_agent.env.action.unlike_post(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
@@ -86,7 +87,7 @@ async def test_agents_actions(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.action.undo_dislike(1)
+    return_message = await action_agent.env.action.undo_dislike_post(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
