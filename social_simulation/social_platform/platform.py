@@ -282,7 +282,7 @@ class Platform:
         self.pl_utils._execute_db_command(sql_query, commit=True)
 
         # 批量插入更省时, 创建插入值列表
-        insert_values = [(user_id, post_id)
+        insert_values = [(user_id + 1, post_id)
                          for user_id in range(len(new_rec_matrix))
                          for post_id in new_rec_matrix[user_id]]
 

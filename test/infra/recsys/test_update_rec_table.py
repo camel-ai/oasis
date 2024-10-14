@@ -60,6 +60,8 @@ async def test_update_rec_table(setup_db):
                            (user_id, content, created_at, num_likes))
         conn.commit()
 
+        os.environ["SANDBOX_TIME"] = '1'
+
         task = asyncio.create_task(infra.running())
         await channel.write_to_receive_queue(
             (None, None, ActionType.UPDATE_REC_TABLE))
