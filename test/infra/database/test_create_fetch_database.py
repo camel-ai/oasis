@@ -327,7 +327,7 @@ def test_rec_operations():
     assert record[0] == 2
     assert record[1] == 3
 
-    assert fetch_rec_table_as_matrix(cursor) == [None, [3], [2, 3]]
+    assert fetch_rec_table_as_matrix(cursor) == [[3], [2, 3]]
     # Delete the rec
     cursor.execute("DELETE FROM rec WHERE user_id = 2 AND post_id = 2")
     conn.commit()

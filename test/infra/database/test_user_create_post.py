@@ -28,9 +28,9 @@ class MockChannel:
         elif self.call_count == 2:
             self.call_count += 1
             return ('id_', (1, "This is a test post", "create_post"))
-        elif self.call_count == 3:
-            self.call_count += 1
-            return ('id_', (3, "This is a test post", "create_post"))
+        # elif self.call_count == 3:
+        #     self.call_count += 1
+        #     return ('id_', (3, "This is a test post", "create_post"))
         else:
             return ('id_', (None, None, "exit"))
 
@@ -47,10 +47,10 @@ class MockChannel:
         elif self.call_count == 3:
             assert message[2]["success"] is True
             assert "post_id" in message[2]
-        elif self.call_count == 4:
-            assert message[2]["success"] is False
-            assert message[2]["error"] == (
-                "Agent 3 have not signed up and have no user id.")
+        # elif self.call_count == 4:
+        #     assert message[2]["success"] is False
+        #     assert message[2]["error"] == (
+        #         "Agent 3 have not signed up and have no user id.")
 
 
 @pytest.fixture

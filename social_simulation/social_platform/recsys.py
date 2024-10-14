@@ -118,7 +118,7 @@ def rec_sys_random(user_table: List[Dict[str,
     """
     # 获取所有推文的ID
     post_ids = [post['post_id'] for post in post_table]
-
+    new_rec_matrix = []
     if len(post_ids) <= max_rec_post_len:
         # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
         new_rec_matrix = [post_ids] * len(rec_matrix)
@@ -236,6 +236,7 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
     post_ids = [post['post_id'] for post in post_table]
     print(f'Running personalized recommendation for {len(user_table)} users......')
     start_time = time.time()
+    new_rec_matrix = []
     if len(post_ids) <= max_rec_post_len:
         # If the number of posts is less than or equal to the maximum recommended length, each user gets all post IDs
         new_rec_matrix = [post_ids] * len(rec_matrix)
@@ -391,7 +392,7 @@ def rec_sys_personalized_twh(
         like_post_ids_all = []
         for user in user_table:
             user_id = user['agent_id']
-            like_post_ids = get_like_post_id(user_id, ActionType.LIKE.value, trace_table)
+            like_post_ids = get_like_post_id(user_id, ActionType.LIKE_POST.value, trace_table)
             like_post_ids_all.append(like_post_ids)
          
     scores = date_score_np * fans_score_np
@@ -582,13 +583,12 @@ def rec_sys_personalized_with_trace(
     start_time = time.time()
 
     # 获取所有推文的ID
+    new_rec_matrix = []
     post_ids = [post['post_id'] for post in post_table]
     if len(post_ids) <= max_rec_post_len:
         # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
         new_rec_matrix = [post_ids] * (len(rec_matrix) - 1)
-        new_rec_matrix = [None] + new_rec_matrix
     else:
-        new_rec_matrix = [None]
         # 如果推文数量大于最大推荐数，每个用户随机获得personalized推文ID
         for idx in range(1, len(rec_matrix)):
             user_id = user_table[idx - 1]['user_id']
@@ -600,7 +600,7 @@ def rec_sys_personalized_with_trace(
 
             # filter out like-trace and dislike-trace
             like_trace_contents = get_trace_contents(user_id,
-                                                     ActionType.LIKE.value,
+                                                     ActionType.LIKE_POST.value,
                                                      post_table, trace_table)
             dislike_trace_contents = get_trace_contents(
                 user_id, ActionType.UNLIKE.value, post_table, trace_table)

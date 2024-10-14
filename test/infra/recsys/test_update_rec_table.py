@@ -34,22 +34,22 @@ async def test_update_rec_table(setup_db):
             ("INSERT INTO user "
              "(agent_id, user_name, bio, num_followings, num_followers) "
              "VALUES (?, ?, ?, ?, ?)"),
-            (1, "user1", "This is test bio for user1", 0, 0))
+            (0, "user1", "This is test bio for user1", 0, 0))
         cursor.execute(
             ("INSERT INTO user "
              "(agent_id, user_name, bio, num_followings, num_followers) "
              "VALUES (?, ?, ?, ?, ?)"),
-            (2, "user2", "This is test bio for user2", 2, 4))
+            (1, "user2", "This is test bio for user2", 2, 4))
         cursor.execute(
             ("INSERT INTO user "
              "(agent_id, user_name, bio, num_followings, num_followers) "
              "VALUES (?, ?, ?, ?, ?)"),
-            (3, "user3", "This is test bio for user3", 3, 5))
+            (2, "user3", "This is test bio for user3", 3, 5))
         conn.commit()
 
         # 在测试开始之前，将60条推文用户插入到post表中
-        for i in range(1, 61):  # 生成60条post
-            user_id = i % 3 + 1  # 循环使用用户ID 1, 2, 3
+        for i in range(60):  # 生成60条post
+            user_id = i % 3  # 循环使用用户ID 0, 1, 2
             content = f"Post content for post {i}"  # 简单生成不同的内容
             created_at = "0"
             num_likes = random.randint(0, 100)  # 随机生成点赞数
@@ -66,7 +66,7 @@ async def test_update_rec_table(setup_db):
         await channel.write_to_receive_queue((None, None, ActionType.EXIT))
         await task
 
-        for i in range(1, 4):
+        for i in range(3):
             cursor.execute("SELECT post_id FROM rec WHERE user_id = ?", (i, ))
             posts = cursor.fetchall()  # 获取所有记录
             # ! Number of available posts for recommendation =

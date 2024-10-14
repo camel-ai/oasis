@@ -28,6 +28,8 @@ async def running():
         agent_info_path,
         twitter_channel,
         inferencer_channel,
+        twitter = infra,
+        start_time=0,
         num_agents=26,
         cfgs=[{
             "model_type": ModelType.LLAMA_3,

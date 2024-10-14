@@ -24,16 +24,16 @@ class MockChannel:
         # 第二次调用返回点赞操作的指令
         elif self.call_count == 1:
             self.call_count += 1
-            return ('id_', (1, 1, "like"))
+            return ('id_', (1, 1, "like_post"))
         elif self.call_count == 2:
             self.call_count += 1
-            return ('id_', (2, 1, "like"))
+            return ('id_', (2, 1, "like_post"))
         elif self.call_count == 3:
             self.call_count += 1
-            return ('id_', (1, 1, "dislike"))
+            return ('id_', (1, 1, "dislike_post"))
         elif self.call_count == 4:
             self.call_count += 1
-            return ('id_', (2, 1, "dislike"))
+            return ('id_', (2, 1, "dislike_post"))
         # 返回退出指令
         else:
             return ('id_', (None, None, "exit"))

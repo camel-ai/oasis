@@ -32,10 +32,11 @@ class MockChannel:
 
     async def send_to(self, message):
         self.messages.append(message)  # 存储消息以便后续断言
-        # 对搜索用户的结果进行断言
+        # 对refresh的结果进行断言
         if self.call_count == 2:
-            # 验证搜索成功且找到至少一个匹配用户
+            # 验证refresh成功
             # print_db_contents(test_db_filepath)
+            print(self.messages)
             assert message[2]["success"] is True
             assert len(message[2]["posts"]) == 1
             print(message[2]["posts"])
@@ -73,7 +74,7 @@ async def test_refresh(setup_platform):
         cursor.execute(
             ("INSERT INTO user (user_id, agent_id, user_name, bio, "
              "num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?)"),
-            (1, 1, "user1", "This is test bio for user 1", 0, 0))
+            (0, 0, "user1", "This is test bio for user 1", 0, 0))
         conn.commit()
 
         # 在测试开始之前，将post插入到post表中
@@ -81,8 +82,8 @@ async def test_refresh(setup_platform):
         cursor = conn.cursor()
 
         # 在测试开始之前，将60条推文用户插入到post表中
-        for i in range(1, 61):  # 生成60条post
-            user_id = i % 3 + 1  # 循环使用用户ID 1, 2, 3
+        for i in range(60):  # 生成60条post
+            user_id = i % 3  # 循环使用用户ID 0, 1, 2
             content = f"Post content for post {i}"  # 简单生成不同的内容
             comment_content = f"Comment content for post {i}"
             created_at = datetime.now()
@@ -98,7 +99,7 @@ async def test_refresh(setup_platform):
         await platform.running()
         # 验证跟踪表(trace)是否正确记录了操作
         cursor.execute("SELECT * FROM trace WHERE action='refresh'")
-        assert cursor.fetchone() is not None, "trend action not traced"
+        assert cursor.fetchone() is not None, "refresh action not traced"
 
     finally:
         conn.close()

@@ -120,17 +120,25 @@ async def generate_agents(
         )
 
         agent_graph.add_agent(agent)
+        num_followings = 0
+        num_followers = 0
+        if agent_info["following_count"]:
+            num_followings = agent_info["following_count"][agent_id]
+        if agent_info["followers_count"]:
+            num_followers = agent_info["followers_count"][agent_id]
+                    
 
-        sign_up_list.append((agent_id, agent_id, agent_info["username"][agent_id], agent_info["name"][agent_id], agent_info["description"][agent_id], start_time, 0, 0))
+        sign_up_list.append((agent_id, agent_id, agent_info["username"][agent_id], agent_info["name"][agent_id], agent_info["description"][agent_id], start_time, num_followings, num_followers))
 
         following_id_list = ast.literal_eval(
                 agent_info["following_agentid_list"][agent_id])
-        if len(following_id_list) != 0:
-            for follow_id in following_id_list:
-                follow_list.append((agent_id, follow_id, start_time))
-                user_update1.append((agent_id,))
-                user_update2.append((follow_id,))
-                agent_graph.add_edge(agent_id, follow_id)
+        if type(following_id_list) != int:
+            if len(following_id_list) != 0:
+                for follow_id in following_id_list:
+                    follow_list.append((agent_id, follow_id, start_time))
+                    user_update1.append((agent_id,))
+                    user_update2.append((follow_id,))
+                    agent_graph.add_edge(agent_id, follow_id)
         
         previous_posts = ast.literal_eval(
                 agent_info['previous_tweets'][agent_id])
@@ -145,26 +153,24 @@ async def generate_agents(
                 " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
     twitter.pl_utils._execute_many_db_command(user_insert_query, sign_up_list, commit=True)
 
-    # generate_log.info('twitter sign up finished.')
+
 
     follow_insert_query = (
                     "INSERT INTO follow (follower_id, followee_id, created_at) "
                     "VALUES (?, ?, ?)")
     twitter.pl_utils._execute_many_db_command(follow_insert_query, follow_list, commit=True)
 
-    # generate_log.info('twitter follow finished.')
+    # 数据里面有following_count和followers_count就直接用，不用额外更新
+    if not (agent_info["following_count"] and agent_info["followers_count"]):
+        user_update_query1 = (
+                        "UPDATE user SET num_followings = num_followings + 1 "
+                        "WHERE user_id = ?")
+        twitter.pl_utils._execute_many_db_command(user_update_query1, user_update1, commit=True)
 
-    user_update_query1 = (
-                    "UPDATE user SET num_followings = num_followings + 1 "
-                    "WHERE user_id = ?")
-    twitter.pl_utils._execute_many_db_command(user_update_query1, user_update1, commit=True)
-
-    # generate_log.info('twitter user update finished.')
-
-    user_update_query2 = (
-                    "UPDATE user SET num_followers = num_followers + 1 "
-                    "WHERE user_id = ?")
-    twitter.pl_utils._execute_many_db_command(user_update_query2, user_update2, commit=True)
+        user_update_query2 = (
+                        "UPDATE user SET num_followers = num_followers + 1 "
+                        "WHERE user_id = ?")
+        twitter.pl_utils._execute_many_db_command(user_update_query2, user_update2, commit=True)
 
     # generate_log.info('twitter followee update finished.')
 
