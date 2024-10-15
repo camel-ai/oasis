@@ -90,8 +90,8 @@ What do you think Helen should do?
         )
         self.memory.write_record(
             MemoryRecord(
-                user_msg,
-                OpenAIBackendRole.USER,
+                message=user_msg,
+                role_at_backend=OpenAIBackendRole.USER,
             ))
 
         openai_messages, _ = self.memory.get_context()
@@ -175,7 +175,9 @@ What do you think Helen should do?
         agent_msg = BaseMessage.make_assistant_message(role_name="Assistant",
                                                        content=content)
         self.memory.write_record(
-            MemoryRecord(agent_msg, OpenAIBackendRole.ASSISTANT))
+            MemoryRecord(
+                message=agent_msg, 
+                role_at_backend=OpenAIBackendRole.ASSISTANT))
 
     async def perform_test(self):
         """
