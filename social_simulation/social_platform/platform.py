@@ -151,11 +151,11 @@ class Platform:
 
             # 插入用户记录
             user_insert_query = (
-                "INSERT INTO user (agent_id, user_name, name, bio, created_at,"
-                " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?)")
+                "INSERT INTO user (user_id, agent_id, user_name, name, bio, created_at,"
+                " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
             self.pl_utils._execute_db_command(
                 user_insert_query,
-                (agent_id, user_name, name, bio, current_time, 0, 0),
+                (agent_id, agent_id, user_name, name, bio, current_time, 0, 0),
                 commit=True)
             user_id = agent_id
             # 准备trace记录的信息
@@ -282,7 +282,7 @@ class Platform:
         self.pl_utils._execute_db_command(sql_query, commit=True)
 
         # 批量插入更省时, 创建插入值列表
-        insert_values = [(user_id + 1, post_id)
+        insert_values = [(user_id, post_id)
                          for user_id in range(len(new_rec_matrix))
                          for post_id in new_rec_matrix[user_id]]
 

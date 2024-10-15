@@ -26,7 +26,7 @@ class MockChannel:
             return ('id_', (None, None, ActionType.UPDATE_REC_TABLE))
         if self.call_count == 1:
             self.call_count += 1
-            return ('id_', (1, None, ActionType.REFRESH))
+            return ('id_', (0, None, ActionType.REFRESH))
         else:
             return ('id_', (None, None, ActionType.EXIT))
 
@@ -35,7 +35,7 @@ class MockChannel:
         # 对refresh的结果进行断言
         if self.call_count == 2:
             # 验证refresh成功
-            print_db_contents(test_db_filepath)
+            # print_db_contents(test_db_filepath)
             print(self.messages)
             assert message[2]["success"] is True
             assert len(message[2]["posts"]) == 1
@@ -74,7 +74,7 @@ async def test_refresh(setup_platform):
         cursor.execute(
             ("INSERT INTO user (user_id, agent_id, user_name, bio, "
              "num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?)"),
-            (1, 1, "user1", "This is test bio for user 1", 0, 0))
+            (0, 0, "user0", "This is test bio for user 0", 0, 0))
         conn.commit()
 
         # 在测试开始之前，将post插入到post表中
@@ -83,9 +83,9 @@ async def test_refresh(setup_platform):
 
         # 在测试开始之前，将60条推文用户插入到post表中
         for i in range(60):  # 生成60条post
-            user_id = (i % 3) + 1  # 循环使用用户ID 0, 1, 2
-            content = f"Post content for post {i+1}"  # 简单生成不同的内容
-            comment_content = f"Comment content for post {i+1}"
+            user_id = i % 3  # 循环使用用户ID 0, 1, 2
+            content = f"Post content for post {i}"  # 简单生成不同的内容
+            comment_content = f"Comment content for post {i}"
             created_at = datetime.now()
 
             cursor.execute(("INSERT INTO post (user_id, content, created_at, "
