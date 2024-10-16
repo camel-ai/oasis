@@ -11,6 +11,7 @@ from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.platform import Platform
 from social_simulation.social_platform.typing import ActionType
 from social_simulation.testing.show_db import print_db_contents
+from social_simulation.social_platform.recsys import reset_globals
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -26,25 +27,29 @@ def setup_db():
 async def test_update_rec_table(setup_db):
     try:
         channel = Channel()
-        infra = Platform(test_db_filepath, channel, recsys_type="twhin-bert")
+        recsys_type = "twhin-bert"
+        infra = Platform(test_db_filepath, channel, recsys_type=recsys_type,
+                         refresh_rec_post_count=50, max_rec_post_len=50)
+        if recsys_type == "twhin-bert":
+            reset_globals()
         # 在测试开始之前，将3个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
         cursor.execute(
             ("INSERT INTO user "
-             "(agent_id, user_name, bio, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"),
-            (0, "user1", "This is test bio for user1", 0, 0))
+             "(user_id, agent_id, user_name, bio, num_followings, num_followers) "
+             "VALUES (?, ?, ?, ?, ?, ?)"),
+            (0, 0, "user1", "This is test bio for user1", 0, 0))
         cursor.execute(
             ("INSERT INTO user "
-             "(agent_id, user_name, bio, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"),
-            (1, "user2", "This is test bio for user2", 2, 4))
+             "(user_id, agent_id, user_name, bio, num_followings, num_followers) "
+             "VALUES (?, ?, ?, ?, ?, ?)"),
+            (1, 1, "user2", "This is test bio for user2", 2, 4))
         cursor.execute(
             ("INSERT INTO user "
-             "(agent_id, user_name, bio, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"),
-            (2, "user3", "This is test bio for user3", 3, 5))
+             "(user_id, agent_id, user_name, bio, num_followings, num_followers) "
+             "VALUES (?, ?, ?, ?, ?, ?)"),
+            (2, 2, "user3", "This is test bio for user3", 3, 5))
         conn.commit()
 
         # 在测试开始之前，将60条推文用户插入到post表中
@@ -60,7 +65,7 @@ async def test_update_rec_table(setup_db):
                            (user_id, content, created_at, num_likes))
         conn.commit()
 
-        os.environ["SANDBOX_TIME"] = '1'
+        os.environ["SANDBOX_TIME"] = '0'
 
         task = asyncio.create_task(infra.running())
         await channel.write_to_receive_queue(
