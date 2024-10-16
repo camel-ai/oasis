@@ -396,7 +396,6 @@ def rec_sys_personalized_twh(
             user_id = user['agent_id']
             like_post_ids = get_like_post_id(user_id, ActionType.LIKE_POST.value, trace_table)
             like_post_ids_all.append(like_post_ids)
-         
     scores = date_score_np * fans_score_np
     new_rec_matrix = []
     if len(post_table) <= max_rec_post_len:
