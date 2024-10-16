@@ -14,7 +14,7 @@ keywords = [
 repository = "https://github.com/camel-ai/social-simulation.git"
 
 [tool.poetry.dependencies]
-python = ">=3.9"
+python = ">=3.10.0,<3.12"
 pandas = "2.2.2"
 igraph = "0.11.6"
 cairocffi = "1.7.1"
