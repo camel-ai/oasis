@@ -95,6 +95,7 @@ async def running(
         max_rec_post_len=max_rec_post_len
     )
     inference_channel = Channel()
+    print('inference_configs:', inference_configs)
     infere = InferencerManager(
         inference_channel,
         **inference_configs,

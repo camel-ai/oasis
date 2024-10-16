@@ -32,21 +32,33 @@ class InferenceThread:
         self.count = 0
         self.server_url = server_url
         self.model_type = model_type
-        api_params = ChatGPTConfig(
-            temperature=temperature,
-            stop=stop_tokens,
-        )
-        model_config = OpenSourceConfig(
-            model_path=model_path,
-            server_url=server_url,
-            api_params=api_params,
-        )
-        print('model_config.as_dict()', model_config.as_dict())
+        # api_params = ChatGPTConfig(
+        #     temperature=temperature,
+        #     stop=stop_tokens,
+        # )
+        # model_config = OpenSourceConfig(
+        #     model_path=model_path,
+        #     server_url=server_url,
+        #     api_params=api_params,
+        # )
+        # model_config_dict = model_config.as_dict()
+        # print('model_config_dict:', model_config_dict)
+        # del model_config_dict['api_params']['tools']
+        # del model_config_dict['api_params']['tool_choice']
+        # self.model_backend: BaseModelBackend = ModelFactory.create(
+        #     model_platform=model_platform_type, 
+        #     model_type=model_type, 
+        #     model_config_dict=model_config_dict,
+        # )
+        print('server_url:', server_url)
         self.model_backend: BaseModelBackend = ModelFactory.create(
-            model_platform=model_platform_type, 
-            model_type=model_type, 
-            model_config_dict=model_config.as_dict(),
+            model_platform=ModelPlatformType.VLLM, 
+            model_type= "llama-3", 
+            model_config_dict={"temperature": 0.0},
+            url = 'vllm',
+            api_key = server_url
         )
+        print('self.model_backend._url:', self.model_backend._url)
         if shared_memory is None:
             self.shared_memory = SharedMemory()
         else:
@@ -61,7 +73,7 @@ class InferenceThread:
                         self.shared_memory.Message)
                     self.shared_memory.Response = response.choices[0].message.content
                 except Exception as e:
-                    print('exception:', str(e))
+                    print('Exception:', str(e))
                     exit()
                     self.shared_memory.Response = "No response."
                 self.shared_memory.Done = True

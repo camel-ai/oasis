@@ -135,7 +135,7 @@ What do you think Helen should do?
                     message_id)
 
                 agent_log.info(
-                    f"Agent {self.agent_id} receve response: {content}")
+                    f"Agent {self.agent_id} receive response: {content}")
 
                 try:
                     content_json = json.loads(content)
@@ -201,7 +201,7 @@ What do you think Helen should do?
         message_id = await self.inference_channel.write_to_receive_queue(
                     openai_messages)
         message_id, content = await self.inference_channel.read_from_send_queue(message_id)
-        agent_log.info(f"Agent {self.agent_id} receve response: {content}")
+        agent_log.info(f"Agent {self.agent_id} receive response: {content}")
         return {"user_id": self.agent_id, "prompt": openai_messages, "content": content}
 
     async def perform_action_by_hci(self) -> Any:
