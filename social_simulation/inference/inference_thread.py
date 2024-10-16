@@ -50,15 +50,15 @@ class InferenceThread:
         #     model_type=model_type, 
         #     model_config_dict=model_config_dict,
         # )
-        print('server_url:', server_url)
+        # print('server_url:', server_url)
         self.model_backend: BaseModelBackend = ModelFactory.create(
             model_platform=ModelPlatformType.VLLM, 
             model_type= "llama-3", 
             model_config_dict={"temperature": 0.0},
             url = 'vllm',
-            api_key = server_url
+            api_key = server_url # because of CAMEL bug here, will fix when CAMEL upgrade.
         )
-        print('self.model_backend._url:', self.model_backend._url)
+        # print('self.model_backend._url:', self.model_backend._url)
         if shared_memory is None:
             self.shared_memory = SharedMemory()
         else:
@@ -73,8 +73,7 @@ class InferenceThread:
                         self.shared_memory.Message)
                     self.shared_memory.Response = response.choices[0].message.content
                 except Exception as e:
-                    print('Exception:', str(e))
-                    exit()
+                    print('Receive Response Exception:', str(e))
                     self.shared_memory.Response = "No response."
                 self.shared_memory.Done = True
                 self.count += 1
