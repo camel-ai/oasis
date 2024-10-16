@@ -151,11 +151,11 @@ class Platform:
 
             # 插入用户记录
             user_insert_query = (
-                "INSERT INTO user (agent_id, user_name, name, bio, created_at,"
-                " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?)")
+                "INSERT INTO user (user_id, agent_id, user_name, name, bio, created_at,"
+                " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
             self.pl_utils._execute_db_command(
                 user_insert_query,
-                (agent_id, user_name, name, bio, current_time, 0, 0),
+                (agent_id, agent_id, user_name, name, bio, current_time, 0, 0),
                 commit=True)
             user_id = agent_id
             # 准备trace记录的信息
@@ -186,7 +186,6 @@ class Platform:
 
             post_ids = [row[0] for row in rec_results]
             selected_post_ids = post_ids
-
             # 如果post_id数量 >= self.refresh_rec_post_count，则随机选择指定数量的post_id
             if len(selected_post_ids) >= self.refresh_rec_post_count:
                 selected_post_ids = random.sample(selected_post_ids,
@@ -402,7 +401,7 @@ class Platform:
             like_check_query = (
                 "SELECT * FROM 'like' WHERE post_id = ? AND user_id = ?")
             self.pl_utils._execute_db_command(like_check_query,
-                                              (post_id, user_id))
+                                                (post_id, user_id))
             if self.db_cursor.fetchone():
                 # 已存在点赞记录
                 return {
@@ -421,26 +420,26 @@ class Platform:
             post_update_query = (
                 "UPDATE post SET num_likes = num_likes + 1 WHERE post_id = ?")
             self.pl_utils._execute_db_command(post_update_query, (post_id, ),
-                                              commit=True)
+                                                commit=True)
 
             # 在like表中添加记录
             like_insert_query = (
                 "INSERT INTO 'like' (post_id, user_id, created_at) "
                 "VALUES (?, ?, ?)")
             self.pl_utils._execute_db_command(like_insert_query,
-                                              (post_id, user_id, current_time),
-                                              commit=True)
+                                                (post_id, user_id, current_time),
+                                                commit=True)
             like_id = self.db_cursor.lastrowid  # 获取刚刚插入的点赞记录的ID
 
             # 记录操作到trace表
             action_info = {"post_id": post_id, "like_id": like_id}
-            self.pl_utils._record_trace(user_id, ActionType.LIKE.value,
+            self.pl_utils._record_trace(user_id, ActionType.LIKE_POST.value,
                                         action_info, current_time)
             return {"success": True, "like_id": like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def unlike(self, agent_id: int, post_id: int):
+    async def unlike_post(self, agent_id: int, post_id: int):
         try:
             user_id = agent_id
 
@@ -480,7 +479,7 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"post_id": post_id, "like_id": like_id}
-            self.pl_utils._record_trace(user_id, ActionType.UNLIKE.value,
+            self.pl_utils._record_trace(user_id, ActionType.UNLIKE_POST.value,
                                         action_info)
             return {"success": True, "like_id": like_id}
         except Exception as e:
@@ -531,13 +530,13 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"post_id": post_id, "dislike_id": dislike_id}
-            self.pl_utils._record_trace(user_id, ActionType.DISLIKE.value,
+            self.pl_utils._record_trace(user_id, ActionType.DISLIKE_POST.value,
                                         action_info, current_time)
             return {"success": True, "dislike_id": dislike_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def undo_dislike(self, agent_id: int, post_id: int):
+    async def undo_dislike_post(self, agent_id: int, post_id: int):
         try:
             user_id = agent_id
 
@@ -578,7 +577,7 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"post_id": post_id, "dislike_id": dislike_id}
-            self.pl_utils._record_trace(user_id, ActionType.UNDO_DISLIKE.value,
+            self.pl_utils._record_trace(user_id, ActionType.UNDO_DISLIKE_POST.value,
                                         action_info)
             return {"success": True, "dislike_id": dislike_id}
         except Exception as e:

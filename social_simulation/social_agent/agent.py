@@ -67,7 +67,7 @@ class SocialAgent:
         )
         self.agent_graph = agent_graph
         self.test_prompt = """
-    
+
 Helen is a successful writer who usually writes popular western novels. Now, she has an idea for a new novel that could really make a big impact. If it works out, it could greatly improve her career. But if it fails, she will have spent a lot of time and effort for nothing.
 
 What do you think Helen should do?

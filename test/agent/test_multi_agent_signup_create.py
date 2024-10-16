@@ -11,6 +11,8 @@ from social_simulation.social_agent.agent import SocialAgent
 from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.config import UserInfo
 from social_simulation.social_platform.platform import Platform
+from social_simulation.testing.show_db import print_db_contents
+
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test_multi.db")
@@ -68,7 +70,7 @@ async def test_agents_posting(setup_platform):
     # 验证数据库中是否正确插入了数据
     conn = sqlite3.connect(test_db_filepath)
     cursor = conn.cursor()
-
+    print_db_contents(test_db_filepath)
     # 验证用户(user)表是否正确插入了数据
     cursor.execute("SELECT * FROM user")
     users = cursor.fetchall()
