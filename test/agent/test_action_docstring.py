@@ -1,6 +1,6 @@
 from typing import List
 
-from camel.functions import OpenAIFunction
+from camel.toolkits import OpenAIFunction
 
 from social_simulation.social_agent.agent import SocialAction
 
