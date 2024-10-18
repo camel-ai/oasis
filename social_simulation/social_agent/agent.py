@@ -42,8 +42,9 @@ class SocialAgent:
         user_info: UserInfo,
         twitter_channel: Channel,
         inference_channel: Channel = None,
-        model_type: ModelType = ModelType.LLAMA_3,
+        model_type: ModelType ='llama-3',
         agent_graph: "AgentGraph" = None,
+        action_space_prompt : str = None
     ):
         self.agent_id = agent_id
         self.user_info = user_info
@@ -52,7 +53,7 @@ class SocialAgent:
         self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
         self.system_message = BaseMessage.make_assistant_message(
             role_name="User",
-            content=self.user_info.to_system_message(),
+            content=self.user_info.to_system_message(action_space_prompt),
         )
         self.model_type = model_type
         self.has_function_call = False
@@ -63,7 +64,7 @@ class SocialAgent:
         self.memory = ChatHistoryMemory(context_creator, window_size=5)
         self.system_message = BaseMessage.make_assistant_message(
             role_name="system",
-            content=self.user_info.to_system_message()  # system prompt
+            content=self.user_info.to_system_message(action_space_prompt)  # system prompt
         )
         self.agent_graph = agent_graph
         self.test_prompt = """

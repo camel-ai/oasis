@@ -1,7 +1,7 @@
 data:
   db_path: "./experiments/results_analysis/all_3600_wo_follow_mute.db"
-  user_path: "./data/experiment_dataset/user_data/user_data_3600.json"
-  pair_path: "./data/experiment_dataset/agent_3600/all_topics.json"
+  user_path: "/ibex/user/yangz0h/experiment_dataset/user_data/user_data_3600.json"
+  pair_path: "/ibex/user/yangz0h/experiment_dataset/agent_3600/all_topics.json"
   exp_info_filename: "./experiments/results_analysis/all_3600_wo_follow_mute.json"
 simulation:
   recsys_type: "reddit"

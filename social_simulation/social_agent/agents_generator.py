@@ -268,6 +268,7 @@ async def generate_reddit_agents(
     | None = None,
     follow_post_agent: bool = False,
     mute_post_agent: bool = False,
+    action_space_prompt : str = None,
     cfgs: list[Any] | None = None
 ) -> AgentGraph:
     if agent_user_id_mapping is None:
@@ -313,6 +314,7 @@ async def generate_reddit_agents(
             inference_channel=inference_channel,
             model_type=model_type,
             agent_graph=agent_graph,
+            action_space_prompt=action_space_prompt
         )
 
         # Add agent to the agent graph

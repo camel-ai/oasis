@@ -39,7 +39,7 @@ class InferencerManager:
                 thread = InferenceThread(model_path=model_path,
                                          server_url=_url,
                                          stop_tokens=stop_tokens,
-                                         model_type=ModelType(model_type),
+                                         model_type=model_type,
                                          temperature=0.0,
                                          shared_memory=shared_memory)
                 self.threads.append(thread)
