@@ -72,7 +72,8 @@ async def running(
     mute_post_agent: bool = True,
     model_configs: dict[str, Any] | None = None,
     inference_configs: dict[str, Any] | None = None,
-    init_comment_score: int = 0
+    refresh_rec_post_count: int = 10,
+    action_space_file_path: str = None
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     user_path = DEFAULT_USER_PATH if user_path is None else user_path
@@ -84,6 +85,9 @@ async def running(
     start_time = datetime(2024, 8, 6, 8, 0)
     clock = Clock(k=clock_factor)
     twitter_channel = Channel()
+    with open(action_space_file_path, 'r', encoding='utf-8') as file:
+        action_space_prompt = file.read()
+
     infra = Platform(
         db_path,
         twitter_channel,
@@ -92,7 +96,8 @@ async def running(
         allow_self_rating=allow_self_rating,
         show_score=show_score,
         recsys_type=recsys_type,
-        max_rec_post_len=max_rec_post_len
+        max_rec_post_len=max_rec_post_len,
+        refresh_rec_post_count=refresh_rec_post_count
     )
     inference_channel = Channel()
     print('inference_configs:', inference_configs)
@@ -119,7 +124,7 @@ async def running(
             agent_user_id_mapping,
             follow_post_agent,
             mute_post_agent,
-            **model_configs,
+            action_space_prompt,
         )
     with open(pair_path, "r") as f:
         pairs = json.load(f)
@@ -149,38 +154,28 @@ async def running(
                 response = await post_agent.perform_action_by_data(
                     'create_post', content=content)
                 post_id = response['post_id']
-                # for i in range(1, 11):
-                #     key_name = f"RC_{i}"
-                #     if key_name not in pairs[rs_rc_index]:
-                #         break
-                #     response = await post_agent.perform_action_by_data(
-                #         'create_comment',
-                #         post_id=post_id,
-                #         content=pairs[rs_rc_index][key_name]["body"])
-                #     comment_id = response['comment_id']
+                for i in range(1, 11):
+                    key_name = f"RC_{i}"
+                    if key_name not in pairs[rs_rc_index]:
+                        break
+                    response = await post_agent.perform_action_by_data(
+                        'create_comment',
+                        post_id=post_id,
+                        content=pairs[rs_rc_index][key_name]["body"])
+                    comment_id = response['comment_id']
 
-                    # if pairs[rs_rc_index][key_name]["group"] == 'up':
-                    #     await rate_agent.perform_action_by_data(
-                    #         'like_comment', comment_id)
-                    #     exp_info['up_comment_id'].append(comment_id)
-                    # elif pairs[rs_rc_index][key_name]["group"] == 'down':
-                    #     await rate_agent.perform_action_by_data(
-                    #         'dislike_comment', comment_id)
-                    #     exp_info['down_comment_id'].append(comment_id)
-                    # elif pairs[rs_rc_index][key_name]["group"] == 'control':
-                    #     exp_info['control_comment_id'].append(comment_id)
-                    # else:
-                    #     raise ValueError("Unsupported value of 'group'")
-                if init_comment_score == 1:
-                    await rate_agent.perform_action_by_data(
-                        'like', post_id)
-                elif init_comment_score == -1:
-                    await rate_agent.perform_action_by_data(
-                        'dislike', post_id)
-                elif init_comment_score == 0:
-                    pass
-                else:
-                    raise ValueError(f"Unsupported value of init_comment_score: {init_comment_score}")
+                    if pairs[rs_rc_index][key_name]["group"] == 'up':
+                        await rate_agent.perform_action_by_data(
+                            'like_comment', comment_id)
+                        exp_info['up_comment_id'].append(comment_id)
+                    elif pairs[rs_rc_index][key_name]["group"] == 'down':
+                        await rate_agent.perform_action_by_data(
+                            'dislike_comment', comment_id)
+                        exp_info['down_comment_id'].append(comment_id)
+                    elif pairs[rs_rc_index][key_name]["group"] == 'control':
+                        exp_info['control_comment_id'].append(comment_id)
+                    else:
+                        raise ValueError("Unsupported value of 'group'")
 
         tasks = [export_data(i) for i in range(round_post_num)]
         await asyncio.gather(*tasks)

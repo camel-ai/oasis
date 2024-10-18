@@ -49,7 +49,6 @@ DEFAULT_DB_PATH = os.path.join(DATA_DIR, "mock_reddit.db")
 DEFAULT_USER_PATH = os.path.join(DATA_DIR, "reddit",
                                  "filter_user_results.json")
 DEFAULT_PAIR_PATH = os.path.join(DATA_DIR, "reddit", "RS-RC-pairs.json")
-DEFAULT_EXP_PATH = os.path.join(DATA_DIR, "reddit", "exp_info.json")
 
 ROUND_POST_NUM = 20
 
@@ -58,7 +57,6 @@ async def running(
     db_path: str | None = DEFAULT_DB_PATH,
     user_path: str | None = DEFAULT_USER_PATH,
     pair_path: str | None = DEFAULT_PAIR_PATH,
-    exp_info_filename: str | None = DEFAULT_EXP_PATH,
     round_post_num: str | None = ROUND_POST_NUM,
     num_timesteps: int = 3,
     clock_factor: int = 60,
@@ -79,7 +77,6 @@ async def running(
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     user_path = DEFAULT_USER_PATH if user_path is None else user_path
     pair_path = DEFAULT_PAIR_PATH if pair_path is None else pair_path
-    exp_info_filename = DEFAULT_EXP_PATH if exp_info_filename is None else exp_info_filename
     if os.path.exists(db_path):
         os.remove(db_path)
 
@@ -126,16 +123,9 @@ async def running(
             follow_post_agent,
             mute_post_agent,
             action_space_prompt,
-            **model_configs,
         )
     with open(pair_path, "r") as f:
         pairs = json.load(f)
-
-    exp_info = {
-        "up_comment_id": [],
-        "down_comment_id": [],
-        "control_comment_id": []
-    }
 
     for timestep in range(num_timesteps):
         os.environ['TIME_STAMP'] = str(timestep+1)
@@ -196,8 +186,6 @@ async def running(
     await infere.stop()
     await twitter_task, inference_task
 
-    with open(exp_info_filename, 'w') as f:
-        json.dump(exp_info, f, indent=4)
     social_log.info("Simulation finish!")
 
 

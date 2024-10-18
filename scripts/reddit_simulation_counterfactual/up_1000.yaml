@@ -1,7 +1,7 @@
 data:
-  user_path: "/ibex/user/yangz0h/experiment_dataset/user_data/user_data_100.json"
-  pair_path: "/ibex/user/yangz0h/experiment_dataset/agent_36/couterfact.json"
-  db_path: "./experiments/reddit_simulation_counterfactual/counterfactual_100_up.db"
+  user_path: "/ibex/user/yangz0h/experiment_dataset/user_data/user_data_1000.json"
+  pair_path: "/ibex/user/yangz0h/experiment_dataset/agent_360/couterfact.json"
+  db_path: "./experiments/reddit_simulation_counterfactual/counterfactual_1000_up.db"
 
 simulation:
   recsys_type: "reddit"
@@ -12,8 +12,8 @@ simulation:
   clock_factor: 10
 
   num_timesteps: 30
-  max_rec_post_len: 50
-  round_post_num: 30
+  max_rec_post_len: 500
+  round_post_num: 300
   follow_post_agent: False
   mute_post_agent: False
   refresh_rec_post_count: 5

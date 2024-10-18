@@ -269,7 +269,7 @@ async def generate_reddit_agents(
     follow_post_agent: bool = False,
     mute_post_agent: bool = False,
     action_space_prompt : str = None,
-    cfgs: list[Any] | None = None
+    model_type : str = 'llama-3'
 ) -> AgentGraph:
     if agent_user_id_mapping is None:
         agent_user_id_mapping = {}
@@ -280,12 +280,6 @@ async def generate_reddit_agents(
 
     with open(agent_info_path, 'r') as file:
         agent_info = json.load(file)
-
-    model_types = []
-
-    for _, cfg in enumerate(cfgs):
-        model_type = ModelType(cfg["model_type"])
-        model_types.extend([model_type] * cfg["num"])
 
     async def process_agent(i):
         # Instantiate an agent
@@ -305,8 +299,7 @@ async def generate_reddit_agents(
                              description=agent_info[i]['bio'],
                              profile=profile,
                              recsys_type="reddit")
-
-        model_type: ModelType = model_types[i]
+    
         agent = SocialAgent(
             agent_id=i+control_user_num,
             user_info=user_info,

@@ -42,7 +42,7 @@ class SocialAgent:
         user_info: UserInfo,
         twitter_channel: Channel,
         inference_channel: Channel = None,
-        model_type: ModelType ='llama-3',
+        model_type: str ='llama-3',
         agent_graph: "AgentGraph" = None,
         action_space_prompt : str = None
     ):
