@@ -11,13 +11,13 @@ class UserInfo:
     recsys_type: str = "twitter",
     is_controllable: bool = False
 
-    def to_system_message(self) -> str:
+    def to_system_message(self, action_space_prompt: str = None) -> str:
         if self.recsys_type != "reddit":
-            return self.to_twitter_system_message()
+            return self.to_twitter_system_message(action_space_prompt)
         else:
-            return self.to_reddit_system_message()
+            return self.to_reddit_system_message(action_space_prompt)
     
-    def to_twitter_system_message(self) -> str:
+    def to_twitter_system_message(self, action_space_prompt: str = None) -> str:
         name_string = ""
         description_string = ""
         if self.name is not None:
@@ -32,7 +32,8 @@ class UserInfo:
                 description_string = f"Your have profile: {user_profile}."
                 description = f"{name_string}\n{description_string}"
 
-        system_content = f"""
+        if not action_space_prompt:
+            action_space_prompt = f"""
 # OBJECTIVE
 You're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
 
@@ -55,7 +56,8 @@ You're a Twitter user, and I'll present you with some posts. After you see the p
     - Arguments: "comment_id" (integer) - The ID of the comment to be liked. Use `like_comment` to show agreement or appreciation for a comment.
 - dislike_comment: Dislikes a specified comment.
     - Arguments: "comment_id" (integer) - The ID of the comment to be disliked. Use `dislike_comment` when you disagree with a comment or find it unhelpful.
-
+"""
+        system_content = action_space_prompt + f"""
 # SELF-DESCRIPTION
 Your actions should be consistent with your self-description and personality.
 
@@ -83,7 +85,7 @@ Your answer should follow the response format:
 
 Ensure that your output can be directly converted into **JSON format**, and avoid outputting anything unnecessary! Don't forget the key `name`.
         """
-
+        # system_content 和 system_content_align 是不是重复了？这里可能需要重新检查一下
         system_content_align = f"""
 # OBJECTIVE
 You're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
@@ -128,7 +130,7 @@ Ensure that your output can be converted into **JSON format**, and avoid outputt
         system_content = system_content_align
         return system_content
 
-    def to_reddit_system_message(self) -> str:
+    def to_reddit_system_message(self, action_space_prompt: str = None) -> str:
         name_string = ""
         description_string = ""
         if self.name is not None:
@@ -149,9 +151,10 @@ Ensure that your output can be converted into **JSON format**, and avoid outputt
                     f"personality type of {self.profile['other_info']['mbti']} from "
                     f"{self.profile['other_info']['country']}."
                 )
-        system_content = f"""
+        if not action_space_prompt:
+            action_space_prompt = f"""
 # OBJECTIVE
-You're a Twitter user, and I'll present you with some tweets. After you see the tweets, choose some actions from the following functions.
+You're a Reddit user, and I'll present you with some tweets. After you see the tweets, choose some actions from the following functions.
 
 - like_comment: Likes a specified comment.
     - Arguments: "comment_id" (integer) - The ID of the comment to be liked. Use `like_comment` to show agreement or appreciation for a comment.
@@ -176,6 +179,8 @@ You're a Twitter user, and I'll present you with some tweets. After you see the 
         "post_id" (integer) - The ID of the post to comment on.
         "content" (str) - The content of the comment.
         Use `create_comment` to engage in conversations or share your thoughts on a tweet.
+"""
+        system_content = action_space_prompt + f"""
 
 # SELF-DESCRIPTION
 Your actions should be consistent with your self-description and personality.
@@ -203,6 +208,5 @@ Your answer should follow the response format:
 }}
 
 Ensure that your output can be directly converted into **JSON format**, and avoid outputting anything unnecessary! Don't forget the key `name`.
-        """
-
+"""     
         return system_content

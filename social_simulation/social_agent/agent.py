@@ -42,8 +42,9 @@ class SocialAgent:
         user_info: UserInfo,
         twitter_channel: Channel,
         inference_channel: Channel = None,
-        model_type: ModelType = ModelType.LLAMA_3,
+        model_type: str ='llama-3',
         agent_graph: "AgentGraph" = None,
+        action_space_prompt : str = None
     ):
         self.agent_id = agent_id
         self.user_info = user_info
@@ -52,7 +53,7 @@ class SocialAgent:
         self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
         self.system_message = BaseMessage.make_assistant_message(
             role_name="User",
-            content=self.user_info.to_system_message(),
+            content=self.user_info.to_system_message(action_space_prompt),
         )
         self.model_type = model_type
         self.has_function_call = False
@@ -63,11 +64,11 @@ class SocialAgent:
         self.memory = ChatHistoryMemory(context_creator, window_size=5)
         self.system_message = BaseMessage.make_assistant_message(
             role_name="system",
-            content=self.user_info.to_system_message()  # system prompt
+            content=self.user_info.to_system_message(action_space_prompt)  # system prompt
         )
         self.agent_graph = agent_graph
         self.test_prompt = """
-    
+
 Helen is a successful writer who usually writes popular western novels. Now, she has an idea for a new novel that could really make a big impact. If it works out, it could greatly improve her career. But if it fails, she will have spent a lot of time and effort for nothing.
 
 What do you think Helen should do?
@@ -90,8 +91,8 @@ What do you think Helen should do?
         )
         self.memory.write_record(
             MemoryRecord(
-                user_msg,
-                OpenAIBackendRole.USER,
+                message=user_msg,
+                role_at_backend=OpenAIBackendRole.USER,
             ))
 
         openai_messages, _ = self.memory.get_context()
@@ -135,7 +136,7 @@ What do you think Helen should do?
                     message_id)
 
                 agent_log.info(
-                    f"Agent {self.agent_id} receve response: {content}")
+                    f"Agent {self.agent_id} receive response: {content}")
 
                 try:
                     content_json = json.loads(content)
@@ -175,7 +176,9 @@ What do you think Helen should do?
         agent_msg = BaseMessage.make_assistant_message(role_name="Assistant",
                                                        content=content)
         self.memory.write_record(
-            MemoryRecord(agent_msg, OpenAIBackendRole.ASSISTANT))
+            MemoryRecord(
+                message=agent_msg, 
+                role_at_backend=OpenAIBackendRole.ASSISTANT))
 
     async def perform_test(self):
         """
@@ -199,7 +202,7 @@ What do you think Helen should do?
         message_id = await self.inference_channel.write_to_receive_queue(
                     openai_messages)
         message_id, content = await self.inference_channel.read_from_send_queue(message_id)
-        agent_log.info(f"Agent {self.agent_id} receve response: {content}")
+        agent_log.info(f"Agent {self.agent_id} receive response: {content}")
         return {"user_id": self.agent_id, "prompt": openai_messages, "content": content}
 
     async def perform_action_by_hci(self) -> Any:

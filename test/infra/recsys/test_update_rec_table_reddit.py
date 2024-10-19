@@ -9,6 +9,7 @@ import pytest
 from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.platform import Platform
 from social_simulation.social_platform.typing import ActionType
+from social_simulation.testing.show_db import print_db_contents
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -25,7 +26,8 @@ def setup_db():
 async def test_update_rec_table(setup_db):
     try:
         channel = Channel()
-        infra = Platform(test_db_filepath, channel, recsys_type='reddit')
+        infra = Platform(
+            test_db_filepath, channel, recsys_type='reddit', max_rec_post_len = 50)
         # 在测试开始之前，将3个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
@@ -33,17 +35,17 @@ async def test_update_rec_table(setup_db):
             ("INSERT INTO user "
              "(agent_id, user_name, bio, num_followings, num_followers) "
              "VALUES (?, ?, ?, ?, ?)"),
-            (1, "user1", "This is test bio for user1", 0, 0))
+            (0, "user1", "This is test bio for user1", 0, 0))
         cursor.execute(
             ("INSERT INTO user "
              "(agent_id, user_name, bio, num_followings, num_followers) "
              "VALUES (?, ?, ?, ?, ?)"),
-            (2, "user2", "This is test bio for user2", 2, 4))
+            (1, "user2", "This is test bio for user2", 2, 4))
         cursor.execute(
             ("INSERT INTO user "
              "(agent_id, user_name, bio, num_followings, num_followers) "
              "VALUES (?, ?, ?, ?, ?)"),
-            (3, "user3", "This is test bio for user3", 3, 5))
+            (2, "user3", "This is test bio for user3", 3, 5))
         conn.commit()
 
         # 在测试开始之前，将60条推文用户插入到post表中
@@ -65,7 +67,9 @@ async def test_update_rec_table(setup_db):
         await channel.write_to_receive_queue((None, None, ActionType.EXIT))
         await task
 
-        for i in range(1, 4):
+        # print_db_contents(test_db_filepath)
+
+        for i in range(3):
             cursor.execute("SELECT post_id FROM rec WHERE user_id = ?", (i, ))
             posts = cursor.fetchall()  # 获取所有记录
             assert len(posts) == 50, f"User {user_id} doesn't have 50 posts."

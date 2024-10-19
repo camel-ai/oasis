@@ -137,7 +137,7 @@ def test_rec_sys_random_sample_posts():
 
     result = rec_sys_random(user_table, post_table, trace_table, rec_matrix,
                             max_rec_post_len)
-    print(result)
+    # print(result)
 
     # 验证每个用户获得了2个推文ID
     for rec in result:
@@ -174,7 +174,7 @@ def test_rec_sys_reddit_sample_posts():
     max_rec_post_len = 3  # 最大推荐长度设置为2
 
     result = rec_sys_reddit(post_table, rec_matrix, max_rec_post_len)
-    print(result)
+    # print(result)
     # 验证每个用户获得了2个推文ID
     for rec in result:
         assert len(rec) == max_rec_post_len
@@ -211,7 +211,7 @@ def test_rec_sys_personalized_sample_posts():
 
     result = rec_sys_personalized(user_table, post_table, trace_table,
                                   rec_matrix, max_rec_post_len)
-    print(result)
+    # print(result)
 
     # 验证每个用户获得了2个推文ID
     for rec in result:
@@ -274,7 +274,7 @@ def test_rec_sys_personalized_twhin_sample_posts():
     reset_globals()    
     result = rec_sys_personalized_twh(user_table, post_table, latest_post_count, trace_table,
                                   rec_matrix, max_rec_post_len)
-    print(result)
+    # print(result)
 
     # 验证每个用户获得了2个推文ID
     for rec in result:
@@ -329,7 +329,7 @@ def test_rec_sys_personalized_with_trace_sample_posts():
                                              trace_table, rec_matrix,
                                              max_rec_post_len)
 
-    print(result)
+    # print(result)
 
     # 验证每个用户获得了2个推文ID
     for rec in result:

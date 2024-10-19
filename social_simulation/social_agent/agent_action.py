@@ -1,6 +1,6 @@
 from typing import Any
 
-from camel.functions import OpenAIFunction
+from camel.toolkits import OpenAIFunction
 
 from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.typing import ActionType
@@ -15,7 +15,8 @@ class SocialAction:
     def get_openai_function_list(self) -> list[OpenAIFunction]:
         return [
             OpenAIFunction(func) for func in [
-                self.create_post, self.follow, self.like_post, self.dislike_post, self.search_posts,
+                self.create_post, self.follow, self.like_post, self.unlike_post,
+                self.dislike_post, self.undo_dislike_post, self.search_posts,
                 self.search_user, self.trend, self.refresh, self.do_nothing,
                 self.create_comment, self.like_comment, self.dislike_comment
             ]
@@ -176,7 +177,7 @@ class SocialAction:
         """
         return await self.perform_action(post_id, ActionType.LIKE_POST.value)
 
-    async def unlike(self, post_id: int):
+    async def unlike_post(self, post_id: int):
         """Remove a like for a post.
 
         This method removes a like from the database, identified by the
@@ -197,7 +198,7 @@ class SocialAction:
             Attempting to remove a like for a post that the user has not
             previously liked will result in a failure.
         """
-        return await self.perform_action(post_id, ActionType.UNLIKE.value)
+        return await self.perform_action(post_id, ActionType.UNLIKE_POST.value)
 
     async def dislike_post(self, post_id: int):
         r"""Create a new dislike for a specified post.
@@ -225,7 +226,7 @@ class SocialAction:
         """
         return await self.perform_action(post_id, ActionType.DISLIKE_POST.value)
 
-    async def undo_dislike(self, post_id: int):
+    async def undo_dislike_post(self, post_id: int):
         """Remove a dislike for a post.
 
         This method removes a dislike from the database, identified by the
@@ -247,7 +248,7 @@ class SocialAction:
             previously liked will result in a failure.
         """
         return await self.perform_action(post_id,
-                                         ActionType.UNDO_DISLIKE.value)
+                                         ActionType.UNDO_DISLIKE_POST.value)
 
     async def search_posts(self, query: str):
         r"""Search posts based on a given query.

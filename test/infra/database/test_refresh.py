@@ -26,7 +26,7 @@ class MockChannel:
             return ('id_', (None, None, ActionType.UPDATE_REC_TABLE))
         if self.call_count == 1:
             self.call_count += 1
-            return ('id_', (1, None, ActionType.REFRESH))
+            return ('id_', (0, None, ActionType.REFRESH))
         else:
             return ('id_', (None, None, ActionType.EXIT))
 
@@ -74,7 +74,7 @@ async def test_refresh(setup_platform):
         cursor.execute(
             ("INSERT INTO user (user_id, agent_id, user_name, bio, "
              "num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?)"),
-            (0, 0, "user1", "This is test bio for user 1", 0, 0))
+            (0, 0, "user0", "This is test bio for user 0", 0, 0))
         conn.commit()
 
         # 在测试开始之前，将post插入到post表中
@@ -95,7 +95,7 @@ async def test_refresh(setup_platform):
                             "created_at) VALUES (?, ?, ?, ?)"),
                            (i, user_id, comment_content, created_at))
         conn.commit()
-        print_db_contents(test_db_filepath)
+        # print_db_contents(test_db_filepath)
         await platform.running()
         # 验证跟踪表(trace)是否正确记录了操作
         cursor.execute("SELECT * FROM trace WHERE action='refresh'")

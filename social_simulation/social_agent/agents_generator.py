@@ -122,9 +122,10 @@ async def generate_agents(
         agent_graph.add_agent(agent)
         num_followings = 0
         num_followers = 0
-        if agent_info["following_count"]:
+        # print('agent_info["following_count"]', agent_info["following_count"])
+        if not agent_info["following_count"].empty:
             num_followings = agent_info["following_count"][agent_id]
-        if agent_info["followers_count"]:
+        if not agent_info["followers_count"].empty:
             num_followers = agent_info["followers_count"][agent_id]
                     
 
@@ -161,7 +162,7 @@ async def generate_agents(
     twitter.pl_utils._execute_many_db_command(follow_insert_query, follow_list, commit=True)
 
     # 数据里面有following_count和followers_count就直接用，不用额外更新
-    if not (agent_info["following_count"] and agent_info["followers_count"]):
+    if not (agent_info["following_count"].empty and agent_info["followers_count"].empty):
         user_update_query1 = (
                         "UPDATE user SET num_followings = num_followings + 1 "
                         "WHERE user_id = ?")
@@ -267,7 +268,8 @@ async def generate_reddit_agents(
     | None = None,
     follow_post_agent: bool = False,
     mute_post_agent: bool = False,
-    cfgs: list[Any] | None = None
+    action_space_prompt : str = None,
+    model_type : str = 'llama-3'
 ) -> AgentGraph:
     if agent_user_id_mapping is None:
         agent_user_id_mapping = {}
@@ -278,12 +280,6 @@ async def generate_reddit_agents(
 
     with open(agent_info_path, 'r') as file:
         agent_info = json.load(file)
-
-    model_types = []
-
-    for _, cfg in enumerate(cfgs):
-        model_type = ModelType(cfg["model_type"])
-        model_types.extend([model_type] * cfg["num"])
 
     async def process_agent(i):
         # Instantiate an agent
@@ -303,8 +299,7 @@ async def generate_reddit_agents(
                              description=agent_info[i]['bio'],
                              profile=profile,
                              recsys_type="reddit")
-
-        model_type: ModelType = model_types[i]
+    
         agent = SocialAgent(
             agent_id=i+control_user_num,
             user_info=user_info,
@@ -312,6 +307,7 @@ async def generate_reddit_agents(
             inference_channel=inference_channel,
             model_type=model_type,
             agent_graph=agent_graph,
+            action_space_prompt=action_space_prompt
         )
 
         # Add agent to the agent graph

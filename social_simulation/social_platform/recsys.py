@@ -33,7 +33,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base",model_max_length=512 ) # TODO change the pretrained_model_path
 # twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base").to(device)
 # STmodel = SentenceTransformer('/mnt/petrelfs/zhengzirui/social-simulation/models/models--sentence-transformers--paraphrase-MiniLM-L6-v2/snapshots/3bf4ae7445aa77c8daaef06518dd78baffff53c9').to(device)
-
+# twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="/ibex/user/yangz0h/open_source_llm/twhin-bert-base",model_max_length=512 ) # TODO change the pretrained_model_path
+# twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="/ibex/user/yangz0h/open_source_llm/twhin-bert-base").to(device)
 twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="Twitter/twhin-bert-base",model_max_length=512 ) # TODO change the pretrained_model_path
 twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
 
@@ -380,7 +381,8 @@ def rec_sys_personalized_twh(
                 fans_score.append(np.log(u_items[post['user_id']] + 1) / np.log(1000))
             except Exception as e:
                 print(e)
-                import pdb;pdb.set_trace()
+                import pdb;
+                # pdb.set_trace()
 
     date_score_np = np.array(date_score)
     # fan_score [1, 2.x]
@@ -394,7 +396,6 @@ def rec_sys_personalized_twh(
             user_id = user['agent_id']
             like_post_ids = get_like_post_id(user_id, ActionType.LIKE_POST.value, trace_table)
             like_post_ids_all.append(like_post_ids)
-         
     scores = date_score_np * fans_score_np
     new_rec_matrix = []
     if len(post_table) <= max_rec_post_len:
@@ -603,7 +604,7 @@ def rec_sys_personalized_with_trace(
                                                      ActionType.LIKE_POST.value,
                                                      post_table, trace_table)
             dislike_trace_contents = get_trace_contents(
-                user_id, ActionType.UNLIKE.value, post_table, trace_table)
+                user_id, ActionType.UNLIKE_POST.value, post_table, trace_table)
             # calculate similarity between user bio and post text
             post_scores = []
             for post_id, post_content in available_post_contents:

@@ -49,7 +49,6 @@ DEFAULT_DB_PATH = os.path.join(DATA_DIR, "mock_reddit.db")
 DEFAULT_USER_PATH = os.path.join(DATA_DIR, "reddit",
                                  "filter_user_results.json")
 DEFAULT_PAIR_PATH = os.path.join(DATA_DIR, "reddit", "RS-RC-pairs.json")
-DEFAULT_EXP_PATH = os.path.join(DATA_DIR, "reddit", "exp_info.json")
 
 ROUND_POST_NUM = 20
 
@@ -58,7 +57,6 @@ async def running(
     db_path: str | None = DEFAULT_DB_PATH,
     user_path: str | None = DEFAULT_USER_PATH,
     pair_path: str | None = DEFAULT_PAIR_PATH,
-    exp_info_filename: str | None = DEFAULT_EXP_PATH,
     round_post_num: str | None = ROUND_POST_NUM,
     num_timesteps: int = 3,
     clock_factor: int = 60,
@@ -72,18 +70,22 @@ async def running(
     mute_post_agent: bool = True,
     model_configs: dict[str, Any] | None = None,
     inference_configs: dict[str, Any] | None = None,
-    init_comment_score: int = 0
+    init_post_score: int = 0,
+    refresh_rec_post_count: int = 10,
+    action_space_file_path: str = None
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     user_path = DEFAULT_USER_PATH if user_path is None else user_path
     pair_path = DEFAULT_PAIR_PATH if pair_path is None else pair_path
-    exp_info_filename = DEFAULT_EXP_PATH if exp_info_filename is None else exp_info_filename
     if os.path.exists(db_path):
         os.remove(db_path)
 
     start_time = datetime(2024, 8, 6, 8, 0)
     clock = Clock(k=clock_factor)
     twitter_channel = Channel()
+    with open(action_space_file_path, 'r', encoding='utf-8') as file:
+        action_space_prompt = file.read()
+
     infra = Platform(
         db_path,
         twitter_channel,
@@ -92,9 +94,11 @@ async def running(
         allow_self_rating=allow_self_rating,
         show_score=show_score,
         recsys_type=recsys_type,
-        max_rec_post_len=max_rec_post_len
+        max_rec_post_len=max_rec_post_len,
+        refresh_rec_post_count=refresh_rec_post_count
     )
     inference_channel = Channel()
+    print('inference_configs:', inference_configs)
     infere = InferencerManager(
         inference_channel,
         **inference_configs,
@@ -118,22 +122,16 @@ async def running(
             agent_user_id_mapping,
             follow_post_agent,
             mute_post_agent,
-            **model_configs,
+            action_space_prompt,
         )
     with open(pair_path, "r") as f:
         pairs = json.load(f)
-
-    exp_info = {
-        "up_comment_id": [],
-        "down_comment_id": [],
-        "control_comment_id": []
-    }
 
     for timestep in range(num_timesteps):
         os.environ['TIME_STAMP'] = str(timestep+1)
         if timestep == 0:
             start_time_0 = datetime.now()
-        # print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
+        print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         social_log.info(f"timestep:{timestep + 1}.")
         
         post_agent = agent_graph.get_agent(0)
@@ -148,38 +146,17 @@ async def running(
                 response = await post_agent.perform_action_by_data(
                     'create_post', content=content)
                 post_id = response['post_id']
-                # for i in range(1, 11):
-                #     key_name = f"RC_{i}"
-                #     if key_name not in pairs[rs_rc_index]:
-                #         break
-                #     response = await post_agent.perform_action_by_data(
-                #         'create_comment',
-                #         post_id=post_id,
-                #         content=pairs[rs_rc_index][key_name]["body"])
-                #     comment_id = response['comment_id']
 
-                    # if pairs[rs_rc_index][key_name]["group"] == 'up':
-                    #     await rate_agent.perform_action_by_data(
-                    #         'like_comment', comment_id)
-                    #     exp_info['up_comment_id'].append(comment_id)
-                    # elif pairs[rs_rc_index][key_name]["group"] == 'down':
-                    #     await rate_agent.perform_action_by_data(
-                    #         'dislike_comment', comment_id)
-                    #     exp_info['down_comment_id'].append(comment_id)
-                    # elif pairs[rs_rc_index][key_name]["group"] == 'control':
-                    #     exp_info['control_comment_id'].append(comment_id)
-                    # else:
-                    #     raise ValueError("Unsupported value of 'group'")
-                if init_comment_score == 1:
+                if init_post_score == 1:
                     await rate_agent.perform_action_by_data(
-                        'like', post_id)
-                elif init_comment_score == -1:
+                        'like_post', post_id)
+                elif init_post_score == -1:
                     await rate_agent.perform_action_by_data(
-                        'dislike', post_id)
-                elif init_comment_score == 0:
+                        'dislike_post', post_id)
+                elif init_post_score == 0:
                     pass
                 else:
-                    raise ValueError(f"Unsupported value of init_comment_score: {init_comment_score}")
+                    raise ValueError(f"Unsupported value of init_post_score: {init_post_score}")
 
         tasks = [export_data(i) for i in range(round_post_num)]
         await asyncio.gather(*tasks)
@@ -209,8 +186,6 @@ async def running(
     await infere.stop()
     await twitter_task, inference_task
 
-    with open(exp_info_filename, 'w') as f:
-        json.dump(exp_info, f, indent=4)
     social_log.info("Simulation finish!")
 
 
