@@ -52,6 +52,7 @@ def create_db(db_path: str | None = None):
         db_path = get_db_path()
 
     # Connect to the database:
+    print('db_path', db_path)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 

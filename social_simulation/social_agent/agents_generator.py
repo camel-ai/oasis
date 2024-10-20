@@ -268,8 +268,9 @@ async def generate_reddit_agents(
     | None = None,
     follow_post_agent: bool = False,
     mute_post_agent: bool = False,
-    action_space_prompt : str = None,
-    model_type : str = 'llama-3'
+    action_space_prompt: str = None,
+    model_type: str = 'llama-3',
+    is_openai_model: bool = True
 ) -> AgentGraph:
     if agent_user_id_mapping is None:
         agent_user_id_mapping = {}
@@ -299,7 +300,7 @@ async def generate_reddit_agents(
                              description=agent_info[i]['bio'],
                              profile=profile,
                              recsys_type="reddit")
-    
+
         agent = SocialAgent(
             agent_id=i+control_user_num,
             user_info=user_info,
@@ -307,7 +308,8 @@ async def generate_reddit_agents(
             inference_channel=inference_channel,
             model_type=model_type,
             agent_graph=agent_graph,
-            action_space_prompt=action_space_prompt
+            action_space_prompt=action_space_prompt,
+            is_openai_model=is_openai_model
         )
 
         # Add agent to the agent graph

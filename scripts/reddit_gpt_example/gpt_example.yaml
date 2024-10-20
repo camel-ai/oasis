@@ -1,0 +1,26 @@
+data:
+  user_path: "./data/reddit/user_data_36.json"
+  pair_path: "./data/reddit/counterfactual_36.json"
+  db_path: "./experiments/reddit_simulation_counterfactual/counterfactual_36_gpt.db"
+
+simulation:
+  recsys_type: "reddit"
+  controllable_user: true
+  allow_self_rating: false
+  show_score: true
+  activate_prob: 0.2
+  clock_factor: 10
+
+  num_timesteps: 2
+  max_rec_post_len: 50
+  round_post_num: 30
+  follow_post_agent: False
+  mute_post_agent: False
+  refresh_rec_post_count: 5
+
+  init_post_score: 0
+  action_space_file_path: './scripts/reddit_simulation_counterfactual/action_space_prompt.txt'
+
+inference:
+  model_type: "gpt-4"
+  is_openai_model: True

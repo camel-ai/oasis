@@ -10,8 +10,11 @@ from typing import TYPE_CHECKING, Any
 from camel.memories import (ChatHistoryMemory, MemoryRecord,
                             ScoreBasedContextCreator)
 from camel.messages import BaseMessage
-from camel.types import ModelType, OpenAIBackendRole
+from camel.types import ModelType, ModelPlatformType, OpenAIBackendRole
 from camel.utils import OpenAITokenCounter
+from camel.models import ModelFactory
+from camel.configs import ChatGPTConfig
+from camel.agents import ChatAgent
 
 from social_simulation.social_agent.agent_action import SocialAction
 from social_simulation.social_agent.agent_environment import SocialEnvironment
@@ -42,9 +45,10 @@ class SocialAgent:
         user_info: UserInfo,
         twitter_channel: Channel,
         inference_channel: Channel = None,
-        model_type: str ='llama-3',
+        model_type: str = 'llama-3',
         agent_graph: "AgentGraph" = None,
-        action_space_prompt : str = None
+        action_space_prompt: str = None,
+        is_openai_model: bool = False
     ):
         self.agent_id = agent_id
         self.user_info = user_info
@@ -56,7 +60,18 @@ class SocialAgent:
             content=self.user_info.to_system_message(action_space_prompt),
         )
         self.model_type = model_type
-        self.has_function_call = False
+        self.is_openai_model = is_openai_model
+        if self.is_openai_model:
+            model_config = ChatGPTConfig(
+                tools=self.env.action.get_openai_function_list(),
+                temperature=0.5,
+            )
+            self.model_backend = ModelFactory.create(
+                model_platform=ModelPlatformType.OPENAI,
+                model_type=ModelType(model_type),
+                model_config_dict=model_config.as_dict(),
+            )
+
         context_creator = ScoreBasedContextCreator(
             OpenAITokenCounter(ModelType.GPT_3_5_TURBO),
             4096,
@@ -106,17 +121,22 @@ What do you think Helen should do?
         agent_log.info(
             f"Agent {self.agent_id} is running with prompt: {openai_messages}")
 
-        if self.has_function_call:
-            response = self.model_backend.run(openai_messages)
-            agent_log.info(f"Agent {self.agent_id} response: {response}")
-            if response.choices[0].message.function_call:
-                action_name = response.choices[0].message.function_call.name
-                args = json.loads(
-                    response.choices[0].message.function_call.arguments)
-                print(f"Agent {self.agent_id} is performing "
-                      f"action: {action_name} with args: {args}")
-                await getattr(self.env.action, action_name)(**args)
-                self.perform_agent_graph_action(action_name, args)
+        if self.is_openai_model:
+            try:
+                response = self.model_backend.run(openai_messages)
+                agent_log.info(f"Agent {self.agent_id} response: {response}")
+                content = response
+                for tool_call in response.choices[0].message.tool_calls:
+                    action_name = tool_call.function.name
+                    args = json.loads(
+                        tool_call.function.arguments)
+                    print(f"Agent {self.agent_id} is performing "
+                        f"action: {action_name} with args: {args}")
+                    await getattr(self.env.action, action_name)(**args)
+                    self.perform_agent_graph_action(action_name, args)
+            except Exception as e:
+                print(e)
+                content = "No response."
 
         else:
             retry = 5
@@ -171,13 +191,13 @@ What do you think Helen should do?
                     agent_log.error(f"Agent {self.agent_id} error: {e}")
                     retry -= 1
 
-        if retry == 0:
-            content = "No response."
+            if retry == 0:
+                content = "No response."
         agent_msg = BaseMessage.make_assistant_message(role_name="Assistant",
                                                        content=content)
         self.memory.write_record(
             MemoryRecord(
-                message=agent_msg, 
+                message=agent_msg,
                 role_at_backend=OpenAIBackendRole.ASSISTANT))
 
     async def perform_test(self):
