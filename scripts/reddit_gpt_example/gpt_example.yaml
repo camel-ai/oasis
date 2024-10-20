@@ -19,7 +19,7 @@ simulation:
   refresh_rec_post_count: 5
 
   init_post_score: 0
-  action_space_file_path: './scripts/reddit_simulation_counterfactual/action_space_prompt.txt'
+  action_space_file_path: './scripts/reddit_gpt_example/action_space_prompt.txt'
 
 inference:
   model_type: "gpt-4"
