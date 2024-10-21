@@ -443,5 +443,12 @@ camel-llama3/
 configs/
 data/
 models/
-*.sh
+# *.sh
 # visualization/
+
+ana.py
+
+# Personlized change
+social_simulation/social_platform/recsys.py
+social_simulation/social_platform/config/user.py
+vllm.sh

@@ -35,8 +35,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # STmodel = SentenceTransformer('/mnt/petrelfs/zhengzirui/social-simulation/models/models--sentence-transformers--paraphrase-MiniLM-L6-v2/snapshots/3bf4ae7445aa77c8daaef06518dd78baffff53c9').to(device)
 # twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="/ibex/user/yangz0h/open_source_llm/twhin-bert-base",model_max_length=512 ) # TODO change the pretrained_model_path
 # twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="/ibex/user/yangz0h/open_source_llm/twhin-bert-base").to(device)
-twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="Twitter/twhin-bert-base",model_max_length=512 ) # TODO change the pretrained_model_path
-twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
+# twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="Twitter/twhin-bert-base",model_max_length=512 ) # TODO change the pretrained_model_path
+# twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
+twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base",model_max_length=512 ) # TODO change the pretrained_model_path
+twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base").to(device)
 
 
 # 每个用户的所有历史推特和最近一条推特
@@ -396,7 +398,8 @@ def rec_sys_personalized_twh(
             user_id = user['agent_id']
             like_post_ids = get_like_post_id(user_id, ActionType.LIKE_POST.value, trace_table)
             like_post_ids_all.append(like_post_ids)
-    scores = date_score_np * fans_score_np
+    #ßscores = date_score_np * fans_score_np
+    scores = date_score_np
     new_rec_matrix = []
     if len(post_table) <= max_rec_post_len:
         # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID

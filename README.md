@@ -47,7 +47,7 @@ Deploying open source models with vLLM, using llama3 as an example:
 
 ```bash
 ifconfig -a # get your ip address
-python -m vllm.entrypoints.openai.api_server --model /your/path/to/llama3-8b-instruct # get your port number
+python -m vllm.entrypoints.openai.api_server --model /your/path/to/llama3-8b-instruct --served-model-name llama-3 # get your port number
 ```
 
 ### Step 4: Modify the Configuration File

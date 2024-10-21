@@ -84,8 +84,9 @@ async def running(
     twitter_task = asyncio.create_task(infra.running())
     inference_task = asyncio.create_task(infere.run())
     
-    all_topic_df = pd.read_csv("data/label_clean_v7.csv")
+    
     try:
+        all_topic_df = pd.read_csv("data/label_clean_v7.csv")
         if "False" in csv_path or "True" in csv_path:
             if "-" not in csv_path:
                 topic_name = csv_path.split("/")[-1].split(".")[0]
