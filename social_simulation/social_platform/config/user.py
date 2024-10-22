@@ -127,7 +127,7 @@ Your answer should follow the response format:
 Ensure that your output can be converted into **JSON format**, and avoid outputting anything unnecessary. Don't forget the key `name` and `arguments`. Do not add any sentence in the end of josn format! Do not add any sentence in the end of josn format! Do not add any sentence in the end of josn format!
         """
 
-        system_content = system_content_align
+        #system_content = system_content_align
         return system_content
 
     def to_reddit_system_message(self, action_space_prompt: str = None) -> str:

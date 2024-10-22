@@ -83,7 +83,6 @@ async def running(
         recsys_type=recsys_type,
     )
     task = asyncio.create_task(infra.running())
-    all_topic_df = pd.read_csv("data/label_clean_v7.csv")
     model_configs = model_configs or {}
     agent_graph = await generate_agents(
         agent_info_path=csv_path,
@@ -93,7 +92,9 @@ async def running(
     # agent_graph.visualize("initial_social_graph.png")
 
     # 从label_clean_v7中把开始时间读出来
+    # TODO this part is not good. We do not have data/label_clean_v7.csv
     try:
+        all_topic_df = pd.read_csv("data/label_clean_v7.csv")
         if "False" in csv_path or "True" in csv_path:
             if "-" not in csv_path:
                 topic_name = csv_path.split("/")[-1].split(".")[0]
