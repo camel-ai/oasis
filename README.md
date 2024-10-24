@@ -213,13 +213,11 @@ python scripts/reddit_simulation_counterfactual/reddit_simulation_counterfactual
 
 ### For Twitter Simluation:
 
-- Large-scale agents simulation
+- Customizing temporal feature
 
-Large-scale agent simulations contain too many actions; therefore, we need to increase `self.rec_update_time` in `twitter/twitter.py` to trade-off. Approximately set it to **20** when simulating **80** agents. So when you simulate thousands of agents, set a larger `self.rec_update_time`
+When simulating on generated users, you can customizing temporal feature in `social_simulation/social_agent/agents_generator.py` by modifying `profile['other_info']['active_threshold']`. For example, you can set it to all 1 if you believe that the generated users should be active the entire time.
 
-- Time feature simulation
-
-Simulating time features requires crawling a large number of historical tweets from Twitter. Therefore, if you are simulating other scenarios and large-scale users, we recommend using the pre-defined activation level instead of time feature v1.2.
+- TIPS for Group Polarization
 
 ### For Reddit Simluation:
 - Reddit recommendation system
