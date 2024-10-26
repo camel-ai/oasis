@@ -207,7 +207,7 @@ python scripts/reddit_simulation_align_with_human/reddit_simulation_align_with_h
 python scripts/reddit_simulation_counterfactual/reddit_simulation_counterfactual.py --config_path scripts/reddit_simulation_counterfactual/control_100.yaml
 # or
 '''some twitter scripts needed here'''
-# one case in align_with_real_world
+# one case in align_with_real_world, The ‘user_char’ field in the dataset we have open-sourced has been replaced with  ‘description’ to ensure privacy protection.
 python scripts/twitter_simulation/twitter_simulation_large.py --config_path "scripts/twitter_simulation/align_with_real_world/yaml_200/sub1/False_Business_0.yaml"
 ```
 
