@@ -433,6 +433,16 @@ datasets_test/
 evaluation_data/
 camel_data/
 time_data/
+data/
+!data/twitter_dataset/anonymous_topic_200_1h/False_Business_0.csv
+!data/twitter_dataset/all_topics.csv
+!data/twitter_dataset/real_world_prop_data/real_data_depth/False_Business_0_time.pkl
+!data/twitter_dataset/real_world_prop_data/real_data_depth/False_Business_0.pkl
+!data/twitter_dataset/real_world_prop_data/real_data_max_breadth/False_Business_0_time.pkl
+!data/twitter_dataset/real_world_prop_data/real_data_max_breadth/False_Business_0.pkl
+!data/twitter_dataset/real_world_prop_data/real_data_scale/False_Business_0_time.pkl
+!data/twitter_dataset/real_world_prop_data/real_data_scale/False_Business_0.pkl
+all_topics(not filtered).csv
 
 # check_time_feature in misinformation spreading
 check_time_feature/
@@ -441,7 +451,6 @@ check_time_feature/
 prompt_engineering/
 camel-llama3/
 configs/
-data/
 models/
 # *.sh
 # visualization/
@@ -452,3 +461,4 @@ ana.py
 social_simulation/social_platform/recsys.py
 social_simulation/social_platform/config/user.py
 vllm.sh
+
