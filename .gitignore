@@ -442,6 +442,7 @@ data/
 !data/twitter_dataset/real_world_prop_data/real_data_max_breadth/False_Business_0.pkl
 !data/twitter_dataset/real_world_prop_data/real_data_scale/False_Business_0_time.pkl
 !data/twitter_dataset/real_world_prop_data/real_data_scale/False_Business_0.pkl
+all_topics(not filtered).csv
 
 # check_time_feature in misinformation spreading
 check_time_feature/
