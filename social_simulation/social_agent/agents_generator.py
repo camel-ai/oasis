@@ -25,6 +25,7 @@ async def generate_agents(
     recsys_type: str = "twitter",
     twitter: Platform = None,
     num_agents: int = 26,
+    action_space_prompt: str = None,
     model_random_seed: int = 42,
     cfgs: list[Any] | None = None,
     neo4j_config: Neo4jConfig | None = None,
@@ -37,6 +38,7 @@ async def generate_agents(
         agent_info_path (str): The file path to the agent information CSV file.
         channel (Channel): Information channel.
         num_agents (int): Number of agents.
+        action_space_prompt (str): determine the action space of agents.
         model_random_seed (int): Random seed to randomly assign model to
             each agent. (default: 42)
         cfgs (list, optional): List of configuration. (default: `None`)
@@ -117,6 +119,7 @@ async def generate_agents(
             inference_channel=inference_channel,
             model_type=model_type,
             agent_graph=agent_graph,
+            action_space_prompt = action_space_prompt
         )
 
         agent_graph.add_agent(agent)
@@ -129,7 +132,9 @@ async def generate_agents(
             num_followers = agent_info["followers_count"][agent_id]
                     
 
-        sign_up_list.append((agent_id, agent_id, agent_info["username"][agent_id], agent_info["name"][agent_id], agent_info["description"][agent_id], start_time, num_followings, num_followers))
+        sign_up_list.append((agent_id, agent_id, agent_info["username"][agent_id], 
+                             agent_info["name"][agent_id], agent_info["description"][agent_id],
+                             start_time, num_followings, num_followers))
 
         following_id_list = ast.literal_eval(
                 agent_info["following_agentid_list"][agent_id])
@@ -161,7 +166,6 @@ async def generate_agents(
                     "VALUES (?, ?, ?)")
     twitter.pl_utils._execute_many_db_command(follow_insert_query, follow_list, commit=True)
 
-    # 数据里面有following_count和followers_count就直接用，不用额外更新
     if not (agent_info["following_count"].empty and agent_info["followers_count"].empty):
         user_update_query1 = (
                         "UPDATE user SET num_followings = num_followings + 1 "

@@ -1,0 +1,29 @@
+data:
+  db_path: data/simu_db/yaml_200/False_Politics_20.db
+  csv_path: data/twitter_dataset/anonymous_topic_200_1h/False_Politics_20.csv
+simulation:
+  num_timesteps: 30
+  clock_factor: 60
+  recsys_type: twhin-bert
+model:
+  num_agents: 261
+  model_random_seed: 42
+  cfgs:
+  - model_type: llama-3
+    num: 261
+    server_url: http://10.140.1.67:8096/v1
+    model_path: llama-3
+    stop_tokens:
+    - <|eot_id|>
+    - <|end_of_text|>
+    temperature: 0.0
+inference:
+  model_type: llama-3
+  model_path: llama-3
+  stop_tokens:
+  - <|eot_id|>
+  - <|end_of_text|>
+  server_url:
+  - host: 10.140.1.67
+    ports:
+    - 8096
