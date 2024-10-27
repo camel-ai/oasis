@@ -8,8 +8,8 @@ from social_simulation.social_agent.agent import SocialAction
 def test_transfer_to_openai_function():
     action_funcs: List[OpenAIFunction] = [
         OpenAIFunction(func) for func in [
-            SocialAction.sign_up, SocialAction.refresh,
-            SocialAction.create_post, SocialAction.like_post, SocialAction.unlike_post,
+            SocialAction.sign_up, SocialAction.refresh, SocialAction.
+            create_post, SocialAction.like_post, SocialAction.unlike_post,
             SocialAction.dislike_post, SocialAction.undo_dislike_post,
             SocialAction.search_posts, SocialAction.search_user,
             SocialAction.follow, SocialAction.unfollow, SocialAction.mute,

@@ -1,11 +1,12 @@
-from datetime import datetime
-import sqlite3
 import logging
+import sqlite3
+from datetime import datetime
 
 table_log = logging.getLogger(name='table')
 table_log.setLevel('DEBUG')
 now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # 修改这里
-file_handler = logging.FileHandler(f'./log/table-{str(now)}.log', encoding='utf-8')
+file_handler = logging.FileHandler(f'./log/table-{str(now)}.log',
+                                   encoding='utf-8')
 file_handler.setLevel('DEBUG')
 file_handler.setFormatter(logging.Formatter('%(message)s'))
 table_log.addHandler(file_handler)
@@ -13,6 +14,7 @@ stream_handler = logging.StreamHandler()
 stream_handler.setLevel('DEBUG')
 stream_handler.setFormatter(logging.Formatter('%(message)s'))
 table_log.addHandler(stream_handler)
+
 
 def print_db_contents(db_file):
     # 连接到SQLite数据库

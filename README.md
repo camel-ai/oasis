@@ -30,7 +30,6 @@ ______________________________________________________________________
 
 ### Key Features
 
-
 📈 Scalability: OASIS supports simulations of up to one million agents, enabling studies of social media dynamics at a scale comparable to real-world platforms.
 
 📲 ️Dynamic Environments: Adapts to real-time changes in social networks and content, mirroring the fluid dynamics of platforms like Twitter and Reddit for authentic simulation experiences.
@@ -42,6 +41,7 @@ ______________________________________________________________________
 ## 🔧 Installation
 
 ### Step 1: Clone the Repository
+
 ```bash
 git clone https://github.com/camel-ai/social-simulation.git
 
@@ -52,21 +52,21 @@ cd social-simulation
 
 Please choose one of the following methods to set up your environment. You only need to follow one of these methods.
 
-* Option 1: Using Conda (Linux & macOS & windows)
+- Option 1: Using Conda (Linux & macOS & windows)
 
 ```bash
 conda create --name oasis python=3.10
 conda activate oasis
 ```
 
-* Option 2: Using venv (Linux & macOS)
+- Option 2: Using venv (Linux & macOS)
 
 ```bash
 python -m venv oasis-venv
 source oasis-venv/bin/activate
 ```
 
-* Option 3: Using venv (Windows)
+- Option 3: Using venv (Windows)
 
 ```bash
 python -m venv oasis-venv
@@ -81,14 +81,13 @@ pip install --upgrade pip setuptools
 pip install -e .  # This will install dependencies as specified in pyproject.toml
 ```
 
-
 ## 🏃Quickstart (For OpenAI Models)
 
 ### Step 1: Set Up Environment Variables
+
 First, you need to add your OpenAI API key to the system's environment variables. You can obtain your OpenAI API key from [here](https://platform.openai.com/api-keys). Note that the method for doing this will vary depending on your operating system and the shell you are using.
 
-
-* For Bash shell (Linux, macOS, Git Bash on Windows):**
+- For Bash shell (Linux, macOS, Git Bash on Windows):\*\*
 
 ```bash
 # Export your OpenAI API key
@@ -96,7 +95,7 @@ export OPENAI_API_KEY=<insert your OpenAI API key>
 OPENAI_API_BASE_URL=<inert your OpenAI API BASE URL>  #(Should you utilize an OpenAI proxy service, kindly specify this)
 ```
 
-* For Windows Command Prompt:**
+- For Windows Command Prompt:\*\*
 
 ```cmd
 REM export your OpenAI API key
@@ -104,7 +103,7 @@ set OPENAI_API_KEY=<insert your OpenAI API key>
 set OPENAI_API_BASE_URL=<inert your OpenAI API BASE URL>  #(Should you utilize an OpenAI proxy service, kindly specify this)
 ```
 
-* For Windows PowerShell:**
+- For Windows PowerShell:\*\*
 
 ```powershell
 # Export your OpenAI API key
@@ -115,34 +114,45 @@ $env:OPENAI_API_BASE_URL="<inert your OpenAI API BASE URL>"  #(Should you utiliz
 Replace `<insert your OpenAI API key>` with your actual OpenAI API key in each case. Make sure there are no spaces around the `=` sign.
 
 ### Step 2: Modify the Configuration File (Optional)
+
 If adjustments to the settings are necessary, you can specify the parameters in the `scripts/reddit_gpt_example/gpt_example.yaml` file. Explanations for each parameter are provided in the comments within the YAML file.
 
 To import your own user and post data, please refer to the JSON file format located in the `/data/reddit/` directory of this repository. Then, update the `user_path` and `pair_path` in the YAML file to point to your data files.
 
 ### Step 3: Run the Main Program
+
 ```bash
 python scripts/reddit_gpt_example/reddit_simulation_gpt.py --config_path scripts/reddit_gpt_example/gpt_example.yaml
 # or
 '''A twitter script needed'''
 ```
+
 ## 📘 Comprehensive Guide (For Open Source Models)
+
 We assume that users are conducting large-scale experiments on a Slurm workload manager cluster. Below, we provide the commands for running experiments with open-source models on the Slurm cluster. The steps for running these experiments on a local machine are similar.
 
 ### Step 1: Donwload Open Source Models
+
 Taking the download of LLaMA-3 from Hugging Face as an example:
+
 ```bash
 pip install huggingface_hub
 
 huggingface-cli download --resume-download "meta-llama/Meta-Llama-3-8B-Instruct" --local-dir "YOUR_LOCAL_MODEL_DIRECTORY" --local-dir-use-symlinks False --resume-download --token "YOUR_HUGGING_FACE_TOKEN"
 ```
+
 Note: Please replace "YOUR_LOCAL_MODEL_DIRECTORY" with your actual directory path where you wish to save the model and "YOUR_HUGGING_FACE_TOKEN" with your Hugging Face token. Obtain your token at https://huggingface.co/settings/tokens.
 
 ### Step 2: Request GPUs and Get Information
+
 Ensure that the GPU memory you're requesting is sufficient for deploying the open-source model you've downloaded. Taking the application for an A100 GPU as an example:
+
 ```bash
 salloc --ntasks=1 --mem=100G --time=11:00:00 --gres=gpu:a100:1
 ```
+
 Next, obtain and record the information of that node. Please ensure that the IP address of the GPU server can be accessed by your network, such as within the school's internet.
+
 ```bash
 srun --ntasks=1 --mem=100G --time=11:00:00 --gres=gpu:a100:1 bash -c 'ifconfig -a'
 """
@@ -153,7 +163,7 @@ eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
        RX packets 100  bytes 123456 (123.4 KB)
        RX errors 0  dropped 0  overruns 0  frame 0
        TX packets 100  bytes 654321 (654.3 KB)
-       TX errors 0  dropped 0 overruns 0  carrier 0  collisions 
+       TX errors 0  dropped 0 overruns 0  carrier 0  collisions
 """
 
 srun --ntasks=1 --mem=100G --time=11:00:00 --gres=gpu:a100:1 bash -c 'echo $CUDA_VISIBLE_DEVICES'
@@ -161,11 +171,13 @@ srun --ntasks=1 --mem=100G --time=11:00:00 --gres=gpu:a100:1 bash -c 'echo $CUDA
 Example output: 0
 """
 ```
+
 Document the IP address associated with the eth0 interface, which, in this example, is `10.109.1.8`. Additionally, note the identifier of the available GPU, which in this case is `0`.
 
 ### Step 2: Deploying vLLM
 
 Based on the IP address and GPU identifier from step 1, modify the hosts and gpus variables in the deploy.py file, for example:
+
 ```bash
 if __name__ == '__main__':
     host = '10.109.1.8'  # Input your IP address
@@ -181,13 +193,17 @@ if __name__ == '__main__':
         check_port_open(host, ports[0][i])
     t.join()
 ```
+
 Next, run the `deploy.py` script.
+
 ```bash
 srun --ntasks=1 --time=11:00:00 --gres=gpu:a100:1 bash -c 'python deploy.py'
 ```
+
 ### Step 3: Modify the Configuration File
 
 Before the simulation begins, you need to enter your model name, model path, host, and ports into the corresponding yaml file in the experiment script such as `scripts\reddit_simulation_align_with_human\business_3600.yaml`. An example of what to write is:
+
 ```bash
 inference:
   model_type: 'YOUR_LOCAL_MODEL_NAME'  # eg. 'llama-3'
@@ -197,10 +213,13 @@ inference:
     - host: "10.109.1.8"
       ports: [8002, 8003, 8005]  # posts here is align with `port for i in gpus for port in ports[i]` in `deploy.py`
 ```
+
 Additionally, you can modify other settings related to data and experimental details in the yaml file. For instructions on this part, refer to `scripts\reddit_gpt_example\gpt_example.yaml`.
 
 ### Step 4: Run the Main Program
+
 You need to open a new terminal and then run:
+
 ```bash
 python scripts/reddit_simulation_align_with_human/reddit_simulation_align_with_human.py --config_path scripts/reddit_simulation_align_with_human/business_3600.yaml
 # or
@@ -222,6 +241,7 @@ When simulating on generated users, you can customizing temporal feature in `soc
 - TIPS for Group Polarization
 
 ### For Reddit Simluation:
+
 - Reddit recommendation system
 
 The Reddit recommendation system is highly time-sensitive. Currently, one time step in the `reddit_simulation_xxx.py`simulates approximately two hours in the agent world, so essentially, new posts are recommended at every time step. To ensure that all posts made by controllable users can be seen by other agents, it is recommended that `the number of agents` × `activate_prob` > `max_rec_post_len` > `round_post_num`.
@@ -236,6 +256,7 @@ The Reddit recommendation system is highly time-sensitive. Currently, one time s
 To be supplemented after the release on arXiv.
 
 ## 🙌 Acknowledgment
+
 We would like to thank XXX for designing the logo of our project.
 
 ## 🖺 License
@@ -243,24 +264,26 @@ We would like to thank XXX for designing the logo of our project.
 The source code is licensed under Apache 2.0.
 
 ## 🥂 Contributing to OASIS 🌏
+
 We greatly appreciate your interest in contributing to our open-source initiative. To ensure a smooth collaboration and the success of contributions, we adhere to a set of contributing guidelines similar to those established by CAMEL. For a comprehensive understanding of the steps involved in contributing to our project, please refer to the CAMEL contributing guidelines [here](https://github.com/camel-ai/camel/blob/master/CONTRIBUTING.md). 🤝🚀
 
 An essential part of contributing involves not only submitting new features with accompanying tests (and, ideally, examples) but also ensuring that these contributions pass our automated pytest suite. This approach helps us maintain the project's quality and reliability by verifying compatibility and functionality.
 
 ## 📬 Contact
+
 If you're keen on exploring new research opportunities or discoveries with our platform and wish to dive deeper or suggest new features, we're here to talk. Feel free to get in touch for more details at camel.ai.team@gmail.com.
 
-[python-image]: https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg
-[python-url]: https://docs.python.org/3.10/
+[discord-image]: https://img.shields.io/badge/Discord-CAMEL--AI-7289da?logo=discord&logoColor=white&color=7289da
+[discord-url]: https://discord.gg/CNcNpquyDc
 [pytest-image]: https://github.com/camel-ai/camel/actions/workflows/pytest_package.yml/badge.svg
 [pytest-url]: https://github.com/camel-ai/social-simulation/actions/workflows/pytest_package.yml
+[python-image]: https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg
+[python-url]: https://docs.python.org/3.10/
+[slack-image]: https://img.shields.io/badge/Slack-CAMEL--AI-blueviolet?logo=slack
+[slack-url]: https://join.slack.com/t/camel-kwr1314/shared_invite/zt-1vy8u9lbo-ZQmhIAyWSEfSwLCl2r2eKA
 [star-image]: https://img.shields.io/github/stars/camel-ai/social-simulation?label=stars&logo=github&color=brightgreen
 [star-url]: https://github.com/camel-ai/social-simulation/stargazers
-[slack-url]: https://join.slack.com/t/camel-kwr1314/shared_invite/zt-1vy8u9lbo-ZQmhIAyWSEfSwLCl2r2eKA
-[slack-image]: https://img.shields.io/badge/Slack-CAMEL--AI-blueviolet?logo=slack
-[discord-url]: https://discord.gg/CNcNpquyDc
-[discord-image]: https://img.shields.io/badge/Discord-CAMEL--AI-7289da?logo=discord&logoColor=white&color=7289da
-[wechat-url]: https://ghli.org/camel/wechat.png
-[wechat-image]: https://img.shields.io/badge/WeChat-CamelAIOrg-brightgreen?logo=wechat&logoColor=white
-[twitter-url]: https://twitter.com/CamelAIOrg
 [twitter-image]: https://img.shields.io/twitter/follow/CamelAIOrg?style=social&color=brightgreen&logo=twitter
+[twitter-url]: https://twitter.com/CamelAIOrg
+[wechat-image]: https://img.shields.io/badge/WeChat-CamelAIOrg-brightgreen?logo=wechat&logoColor=white
+[wechat-url]: https://ghli.org/camel/wechat.png

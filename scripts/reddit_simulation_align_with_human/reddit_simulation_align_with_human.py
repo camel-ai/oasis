@@ -2,15 +2,13 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-from genericpath import isfile
 import json
 import logging
 import os
-from datetime import datetime, timedelta
 import random
+from datetime import datetime, timedelta
 from typing import Any
 
-from colorama import Back
 from yaml import safe_load
 
 from social_simulation.clock.clock import Clock
@@ -20,19 +18,20 @@ from social_simulation.social_agent.agents_generator import (
 from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.platform import Platform
 from social_simulation.social_platform.typing import ActionType
-from social_simulation.testing.show_db import print_db_contents
-
 
 social_log = logging.getLogger(name='social')
 social_log.setLevel('DEBUG')
 now = datetime.now()
-file_handler = logging.FileHandler(f'./log/social-{str(now)}.log', encoding='utf-8')
+file_handler = logging.FileHandler(f'./log/social-{str(now)}.log',
+                                   encoding='utf-8')
 file_handler.setLevel('DEBUG')
-file_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+file_handler.setFormatter(
+    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
 social_log.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel('DEBUG')
-stream_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+stream_handler.setFormatter(
+    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
 social_log.addHandler(stream_handler)
 
 parser = argparse.ArgumentParser(description="Arguments for script.")
@@ -54,27 +53,25 @@ DEFAULT_EXP_PATH = os.path.join(DATA_DIR, "reddit", "exp_info.json")
 ROUND_POST_NUM = 20
 
 
-async def running(
-    db_path: str | None = DEFAULT_DB_PATH,
-    user_path: str | None = DEFAULT_USER_PATH,
-    pair_path: str | None = DEFAULT_PAIR_PATH,
-    exp_info_filename: str | None = DEFAULT_EXP_PATH,
-    round_post_num: str | None = ROUND_POST_NUM,
-    num_timesteps: int = 3,
-    clock_factor: int = 60,
-    recsys_type: str = "reddit",
-    controllable_user: bool = True,
-    allow_self_rating: bool = False,
-    show_score: bool = True,
-    max_rec_post_len: int = 20,
-    activate_prob: float = 0.1,
-    follow_post_agent: bool = False,
-    mute_post_agent: bool = True,
-    model_configs: dict[str, Any] | None = None,
-    inference_configs: dict[str, Any] | None = None,
-    refresh_rec_post_count: int = 10,
-    action_space_file_path: str = None
-) -> None:
+async def running(db_path: str | None = DEFAULT_DB_PATH,
+                  user_path: str | None = DEFAULT_USER_PATH,
+                  pair_path: str | None = DEFAULT_PAIR_PATH,
+                  exp_info_filename: str | None = DEFAULT_EXP_PATH,
+                  round_post_num: str | None = ROUND_POST_NUM,
+                  num_timesteps: int = 3,
+                  clock_factor: int = 60,
+                  recsys_type: str = "reddit",
+                  controllable_user: bool = True,
+                  allow_self_rating: bool = False,
+                  show_score: bool = True,
+                  max_rec_post_len: int = 20,
+                  activate_prob: float = 0.1,
+                  follow_post_agent: bool = False,
+                  mute_post_agent: bool = True,
+                  model_configs: dict[str, Any] | None = None,
+                  inference_configs: dict[str, Any] | None = None,
+                  refresh_rec_post_count: int = 10,
+                  action_space_file_path: str = None) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     user_path = DEFAULT_USER_PATH if user_path is None else user_path
     pair_path = DEFAULT_PAIR_PATH if pair_path is None else pair_path
@@ -88,17 +85,15 @@ async def running(
     with open(action_space_file_path, 'r', encoding='utf-8') as file:
         action_space_prompt = file.read()
 
-    infra = Platform(
-        db_path,
-        twitter_channel,
-        clock,
-        start_time,
-        allow_self_rating=allow_self_rating,
-        show_score=show_score,
-        recsys_type=recsys_type,
-        max_rec_post_len=max_rec_post_len,
-        refresh_rec_post_count=refresh_rec_post_count
-    )
+    infra = Platform(db_path,
+                     twitter_channel,
+                     clock,
+                     start_time,
+                     allow_self_rating=allow_self_rating,
+                     show_score=show_score,
+                     recsys_type=recsys_type,
+                     max_rec_post_len=max_rec_post_len,
+                     refresh_rec_post_count=refresh_rec_post_count)
     inference_channel = Channel()
     print('inference_configs:', inference_configs)
     infere = InferencerManager(
@@ -136,12 +131,12 @@ async def running(
     }
 
     for timestep in range(num_timesteps):
-        os.environ['TIME_STAMP'] = str(timestep+1)
+        os.environ['TIME_STAMP'] = str(timestep + 1)
         if timestep == 0:
             start_time_0 = datetime.now()
         # print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         social_log.info(f"timestep:{timestep + 1}.")
-        
+
         post_agent = agent_graph.get_agent(0)
         rate_agent = agent_graph.get_agent(1)
 
@@ -196,10 +191,10 @@ async def running(
             two_hours_in_seconds = timedelta(hours=2).total_seconds()
 
             # 计算两个小时除以时间差（以秒为单位）
-            clock_factor = two_hours_in_seconds / time_difference.total_seconds()
+            clock_factor = two_hours_in_seconds / time_difference.total_seconds(
+            )
             clock.k = clock_factor
             social_log.info(f'clock_factor: {clock_factor}')
-
 
     await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
     await infere.stop()
@@ -212,7 +207,7 @@ async def running(
 
 if __name__ == "__main__":
     args = parser.parse_args()
-  
+
     if os.path.exists(args.config_path):
         with open(args.config_path, "r") as f:
             cfg = safe_load(f)
@@ -221,12 +216,10 @@ if __name__ == "__main__":
         model_configs = cfg.get("model")
         inference_params = cfg.get("inference")
 
-        asyncio.run(
-            running(
-                **data_params,
-                **simulation_params,
-                model_configs=model_configs,
-                inference_configs=inference_params
-            ), debug=True)
+        asyncio.run(running(**data_params,
+                            **simulation_params,
+                            model_configs=model_configs,
+                            inference_configs=inference_params),
+                    debug=True)
     else:
         asyncio.run(running())

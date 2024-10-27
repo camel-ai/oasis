@@ -1,7 +1,5 @@
-import analysis_score
 import analysis_prob
-import analysis_user
-
+import analysis_score
 
 if __name__ == "__main__":
     folder_path = (

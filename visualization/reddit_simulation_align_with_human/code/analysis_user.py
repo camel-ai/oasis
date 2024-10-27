@@ -1,7 +1,7 @@
 import sqlite3
+
 import matplotlib.pyplot as plt
 import numpy as np
-from datetime import datetime
 
 
 def main(db_path):
@@ -16,8 +16,8 @@ def main(db_path):
 
     # 修改查询：返回用户ID，并排除ID为0和1的用户
     query = '''
-    SELECT u.user_id, 
-        COALESCE(l.likes, 0) AS likes, 
+    SELECT u.user_id,
+        COALESCE(l.likes, 0) AS likes,
         COALESCE(d.dislikes, 0) AS dislikes
     FROM user u
     LEFT JOIN (
@@ -59,15 +59,25 @@ def main(db_path):
     width = 0.35
 
     # 绘制条形图
-    bars1 = ax.bar(x - width/2, likes, width, label='Likes', color='blue')
-    bars2 = ax.bar(x + width/2, dislikes, width, label='Dislikes', color='red')
+    bars1 = ax.bar(x - width / 2, likes, width, label='Likes', color='blue')
+    bars2 = ax.bar(x + width / 2,
+                   dislikes,
+                   width,
+                   label='Dislikes',
+                   color='red')
 
     # 添加均值和方差线条
     ax.axhline(likes_mean, color='blue', linestyle='dashed', linewidth=1)
-    ax.text(0, likes_mean * 1.1, f'Mean: {likes_mean:.2f}, Var: {likes_var:.2f}', color='blue')
+    ax.text(0,
+            likes_mean * 1.1,
+            f'Mean: {likes_mean:.2f}, Var: {likes_var:.2f}',
+            color='blue')
 
     ax.axhline(dislikes_mean, color='red', linestyle='dashed', linewidth=1)
-    ax.text(0, dislikes_mean * 1.1, f'Mean: {dislikes_mean:.2f}, Var: {dislikes_var:.2f}', color='red')
+    ax.text(0,
+            dislikes_mean * 1.1,
+            f'Mean: {dislikes_mean:.2f}, Var: {dislikes_var:.2f}',
+            color='red')
 
     # 调整y轴的上限，以便清晰显示均值和方差线
     y_max = max(max(likes), max(dislikes)) * 1.2
@@ -90,7 +100,5 @@ def main(db_path):
 
 
 if __name__ == "__main__":
-    main(db_path=(
-            './experiments/reddit_herding_effect/results_analysis/'
-            'result_data/mock_reddit_06-30_06-33-29.db'
-        ))
+    main(db_path=('./experiments/reddit_herding_effect/results_analysis/'
+                  'result_data/mock_reddit_06-30_06-33-29.db'))

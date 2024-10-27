@@ -28,4 +28,3 @@ inference:
   server_url:
     - host: "10.109.1.8"
       ports: [8002, 8003, 8005]
-  

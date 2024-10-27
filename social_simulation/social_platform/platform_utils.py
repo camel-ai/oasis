@@ -1,6 +1,6 @@
 import json
-from datetime import datetime
 import os
+from datetime import datetime
 
 
 class PlatformUtils:
@@ -26,7 +26,7 @@ class PlatformUtils:
         if commit:
             self.db.commit()
         return self.db_cursor
-    
+
     def _execute_many_db_command(self, command, args_list, commit=False):
         self.db_cursor.executemany(command, args_list)
         if commit:
@@ -117,7 +117,7 @@ class PlatformUtils:
                 datetime.now(), self.start_time)
         else:
             current_time = os.environ["SANDBOX_TIME"]
-            
+
         trace_insert_query = (
             "INSERT INTO trace (user_id, created_at, action, info) "
             "VALUES (?, ?, ?, ?)")

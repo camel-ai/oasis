@@ -20,8 +20,8 @@ class SocialAction:
                 self.search_posts, self.search_user, self.trend, self.refresh,
                 self.do_nothing, self.create_comment, self.like_comment,
                 self.dislike_comment, self.unlike_comment,
-                self.undo_dislike_comment, self.follow,
-                self.unfollow, self.mute, self.unmute
+                self.undo_dislike_comment, self.follow, self.unfollow,
+                self.mute, self.unmute
             ]
         ]
 
@@ -227,7 +227,8 @@ class SocialAction:
             Attempting to dislike a post that the user has already liked will
             result in a failure.
         """
-        return await self.perform_action(post_id, ActionType.DISLIKE_POST.value)
+        return await self.perform_action(post_id,
+                                         ActionType.DISLIKE_POST.value)
 
     async def undo_dislike_post(self, post_id: int):
         """Remove a dislike for a post.

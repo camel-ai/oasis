@@ -9,7 +9,6 @@ import pytest
 from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.platform import Platform
 from social_simulation.social_platform.typing import ActionType
-from social_simulation.testing.show_db import print_db_contents
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -26,8 +25,10 @@ def setup_db():
 async def test_update_rec_table(setup_db):
     try:
         channel = Channel()
-        infra = Platform(
-            test_db_filepath, channel, recsys_type='reddit', max_rec_post_len = 50)
+        infra = Platform(test_db_filepath,
+                         channel,
+                         recsys_type='reddit',
+                         max_rec_post_len=50)
         # 在测试开始之前，将3个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()

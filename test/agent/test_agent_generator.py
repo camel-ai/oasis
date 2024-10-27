@@ -28,7 +28,7 @@ async def running():
         agent_info_path,
         twitter_channel,
         inferencer_channel,
-        twitter = infra,
+        twitter=infra,
         start_time=0,
         num_agents=111,
         cfgs=[{
@@ -62,7 +62,8 @@ async def test_generate_controllable(monkeypatch):
     monkeypatch.setattr('builtins.input', lambda _: next(inputs))
     agent_graph, agent_user_id_mapping = await generate_controllable_agents(
         twitter_channel, 1)
-    agent_graph = await generate_agents(agent_info_path, twitter_channel, inferencer_channel, agent_graph,
+    agent_graph = await generate_agents(agent_info_path, twitter_channel,
+                                        inferencer_channel, agent_graph,
                                         agent_user_id_mapping)
     await twitter_channel.write_to_receive_queue((None, None, "exit"))
     await task

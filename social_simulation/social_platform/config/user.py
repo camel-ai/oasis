@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -16,8 +15,9 @@ class UserInfo:
             return self.to_twitter_system_message(action_space_prompt)
         else:
             return self.to_reddit_system_message(action_space_prompt)
-    
-    def to_twitter_system_message(self, action_space_prompt: str = None) -> str:
+
+    def to_twitter_system_message(self,
+                                  action_space_prompt: str = None) -> str:
         name_string = ""
         description_string = ""
         if self.name is not None:
@@ -33,7 +33,7 @@ class UserInfo:
                 description = f"{name_string}\n{description_string}"
 
         if not action_space_prompt:
-            action_space_prompt = f"""
+            action_space_prompt = """
 # OBJECTIVE
 You're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
 
@@ -107,10 +107,9 @@ Ensure that your output can be directly converted into **JSON format**, and avoi
                     f"You are a {self.profile['other_info']['gender']}, "
                     f"{self.profile['other_info']['age']} years old, with an MBTI "
                     f"personality type of {self.profile['other_info']['mbti']} from "
-                    f"{self.profile['other_info']['country']}."
-                )
+                    f"{self.profile['other_info']['country']}.")
         if not action_space_prompt:
-            action_space_prompt = f"""
+            action_space_prompt = """
 # OBJECTIVE
 You're a Reddit user, and I'll present you with some tweets. After you see the tweets, choose some actions from the following functions.
 
@@ -166,5 +165,5 @@ Your answer should follow the response format:
 }}
 
 Ensure that your output can be directly converted into **JSON format**, and avoid outputting anything unnecessary! Don't forget the key `name`.
-"""     
+"""
         return system_content

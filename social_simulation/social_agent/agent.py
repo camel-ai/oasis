@@ -7,14 +7,13 @@ import sys
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+from camel.configs import ChatGPTConfig
 from camel.memories import (ChatHistoryMemory, MemoryRecord,
                             ScoreBasedContextCreator)
 from camel.messages import BaseMessage
-from camel.types import ModelType, ModelPlatformType, OpenAIBackendRole
-from camel.utils import OpenAITokenCounter
 from camel.models import ModelFactory
-from camel.configs import ChatGPTConfig
-from camel.agents import ChatAgent
+from camel.types import ModelPlatformType, ModelType, OpenAIBackendRole
+from camel.utils import OpenAITokenCounter
 
 from social_simulation.social_agent.agent_action import SocialAction
 from social_simulation.social_agent.agent_environment import SocialEnvironment
@@ -39,17 +38,15 @@ if 'sphinx' not in sys.modules:
 class SocialAgent:
     r"""Social Agent."""
 
-    def __init__(
-        self,
-        agent_id: int,
-        user_info: UserInfo,
-        twitter_channel: Channel,
-        inference_channel: Channel = None,
-        model_type: str = 'llama-3',
-        agent_graph: "AgentGraph" = None,
-        action_space_prompt: str = None,
-        is_openai_model: bool = False
-    ):
+    def __init__(self,
+                 agent_id: int,
+                 user_info: UserInfo,
+                 twitter_channel: Channel,
+                 inference_channel: Channel = None,
+                 model_type: str = 'llama-3',
+                 agent_graph: "AgentGraph" = None,
+                 action_space_prompt: str = None,
+                 is_openai_model: bool = False):
         self.agent_id = agent_id
         self.user_info = user_info
         self.twitter_channel = twitter_channel
@@ -79,7 +76,8 @@ class SocialAgent:
         self.memory = ChatHistoryMemory(context_creator, window_size=5)
         self.system_message = BaseMessage.make_assistant_message(
             role_name="system",
-            content=self.user_info.to_system_message(action_space_prompt)  # system prompt
+            content=self.user_info.to_system_message(
+                action_space_prompt)  # system prompt
         )
         self.agent_graph = agent_graph
         self.test_prompt = """
@@ -128,10 +126,9 @@ What do you think Helen should do?
                 content = response
                 for tool_call in response.choices[0].message.tool_calls:
                     action_name = tool_call.function.name
-                    args = json.loads(
-                        tool_call.function.arguments)
+                    args = json.loads(tool_call.function.arguments)
                     print(f"Agent {self.agent_id} is performing "
-                        f"action: {action_name} with args: {args}")
+                          f"action: {action_name} with args: {args}")
                     await getattr(self.env.action, action_name)(**args)
                     self.perform_agent_graph_action(action_name, args)
             except Exception as e:
@@ -196,9 +193,8 @@ What do you think Helen should do?
         agent_msg = BaseMessage.make_assistant_message(role_name="Assistant",
                                                        content=content)
         self.memory.write_record(
-            MemoryRecord(
-                message=agent_msg,
-                role_at_backend=OpenAIBackendRole.ASSISTANT))
+            MemoryRecord(message=agent_msg,
+                         role_at_backend=OpenAIBackendRole.ASSISTANT))
 
     async def perform_test(self):
         """
@@ -206,24 +202,33 @@ What do you think Helen should do?
         """
         # user conduct test to agent
         user_msg = BaseMessage.make_user_message(
-            role_name="User",
-            content=("You are a twitter user."))
+            role_name="User", content=("You are a twitter user."))
         self.memory.write_record(MemoryRecord(user_msg,
                                               OpenAIBackendRole.USER))
 
         openai_messages, num_tokens = self.memory.get_context()
 
         openai_messages = [{
-            "role": self.system_message.role_name,
-            "content": self.system_message.content.split("# RESPONSE FORMAT")[0]
-        }] + openai_messages + [{"role": 'user', "content": self.test_prompt}]
+            "role":
+            self.system_message.role_name,
+            "content":
+            self.system_message.content.split("# RESPONSE FORMAT")[0]
+        }] + openai_messages + [{
+            "role": 'user',
+            "content": self.test_prompt
+        }]
         agent_log.info(f'Agent {self.agent_id}: {openai_messages}')
 
         message_id = await self.inference_channel.write_to_receive_queue(
-                    openai_messages)
-        message_id, content = await self.inference_channel.read_from_send_queue(message_id)
+            openai_messages)
+        message_id, content = await self.inference_channel.read_from_send_queue(
+            message_id)
         agent_log.info(f"Agent {self.agent_id} receive response: {content}")
-        return {"user_id": self.agent_id, "prompt": openai_messages, "content": content}
+        return {
+            "user_id": self.agent_id,
+            "prompt": openai_messages,
+            "content": content
+        }
 
     async def perform_action_by_hci(self) -> Any:
         print('Please choose one function to perform:')

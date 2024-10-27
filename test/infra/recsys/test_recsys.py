@@ -1,6 +1,7 @@
 from social_simulation.social_platform.recsys import (
-    rec_sys_personalized, rec_sys_personalized_with_trace, rec_sys_random,
-    rec_sys_reddit, rec_sys_personalized_twh, reset_globals)
+    rec_sys_personalized, rec_sys_personalized_twh,
+    rec_sys_personalized_with_trace, rec_sys_random, rec_sys_reddit,
+    reset_globals)
 
 
 def test_rec_sys_random_all_posts():
@@ -8,7 +9,7 @@ def test_rec_sys_random_all_posts():
     user_table = [{'user_id': 0}, {'user_id': 1}]
     post_table = [{'post_id': '1'}, {'post_id': '2'}]
     trace_table = []
-    rec_matrix = [ [], []]
+    rec_matrix = [[], []]
     max_rec_post_len = 2  # 最大推荐长度设置为2
 
     expected = [['1', '2'], ['1', '2']]
@@ -20,10 +21,10 @@ def test_rec_sys_random_all_posts():
 def test_rec_sys_reddit_all_posts():
     # 测试当推文数量小于等于最大推荐长度时的情况
     post_table = [{'post_id': '1'}, {'post_id': '2'}]
-    rec_matrix = [ [], []]
+    rec_matrix = [[], []]
     max_rec_post_len = 2  # 最大推荐长度设置为2
 
-    expected = [ ['1', '2'], ['1', '2']]
+    expected = [['1', '2'], ['1', '2']]
     result = rec_sys_reddit(post_table, rec_matrix, max_rec_post_len)
     assert result == expected
 
@@ -47,13 +48,14 @@ def test_rec_sys_personalized_all_posts():
         'content': 'I like cats'
     }]
     trace_table = []
-    rec_matrix = [ [], []]
+    rec_matrix = [[], []]
     max_rec_post_len = 2  # 最大推荐长度设置为2
 
-    expected = [ ['1', '2'], ['1', '2']]
+    expected = [['1', '2'], ['1', '2']]
     result = rec_sys_personalized(user_table, post_table, trace_table,
                                   rec_matrix, max_rec_post_len)
     assert result == expected
+
 
 def test_rec_sys_personalized_twhin():
     # 测试当推文数量小于等于最大推荐长度时的情况
@@ -86,15 +88,17 @@ def test_rec_sys_personalized_twhin():
         "created_at": "0"
     }]
     trace_table = []
-    rec_matrix = [ [], [], [], []]
+    rec_matrix = [[], [], [], []]
     max_rec_post_len = 2  # 最大推荐长度设置为2
     latest_post_count = len(post_table)
     expected = [['1', '2'], ['1', '2'], ['1', '2'], ['1', '2']]
 
     reset_globals()
-    result = rec_sys_personalized_twh(user_table,post_table,latest_post_count, trace_table,
-                                  rec_matrix, max_rec_post_len)
+    result = rec_sys_personalized_twh(user_table, post_table,
+                                      latest_post_count, trace_table,
+                                      rec_matrix, max_rec_post_len)
     assert result == expected
+
 
 '''
 # 这个rec没用过，不测了
@@ -126,6 +130,7 @@ def test_rec_sys_personalized_with_trace_all_posts():
                                              max_rec_post_len)
     assert result == expected
 '''
+
 
 def test_rec_sys_random_sample_posts():
     # 测试当推文数量大于最大推荐长度时的情况
@@ -170,7 +175,7 @@ def test_rec_sys_reddit_sample_posts():
         'num_dislikes': 50,
         'created_at': "2024-06-27 13:00:00.321009"
     }]
-    rec_matrix = [ [], []]  # 假设有两个用户
+    rec_matrix = [[], []]  # 假设有两个用户
     max_rec_post_len = 3  # 最大推荐长度设置为2
 
     result = rec_sys_reddit(post_table, rec_matrix, max_rec_post_len)
@@ -228,6 +233,7 @@ def test_rec_sys_personalized_sample_posts():
         if i == 1:
             assert result[i] == ['1', '2']
 
+
 def test_rec_sys_personalized_twhin_sample_posts():
     # 测试当推文数量大于最大推荐长度时的情况
     user_table = [{
@@ -268,12 +274,13 @@ def test_rec_sys_personalized_twhin_sample_posts():
         "created_at": "0"
     }]
     trace_table = []  # 在这个测试中未使用，但是为了完整性加入
-    rec_matrix = [[], [],[], [],[]]  # 假设有5个用户
+    rec_matrix = [[], [], [], [], []]  # 假设有5个用户
     max_rec_post_len = 2  # 最大推荐长度设置为2
     latest_post_count = len(post_table)
-    reset_globals()    
-    result = rec_sys_personalized_twh(user_table, post_table, latest_post_count, trace_table,
-                                  rec_matrix, max_rec_post_len)
+    reset_globals()
+    result = rec_sys_personalized_twh(user_table, post_table,
+                                      latest_post_count, trace_table,
+                                      rec_matrix, max_rec_post_len)
     # print(result)
 
     # 验证每个用户获得了2个推文ID
@@ -290,6 +297,7 @@ def test_rec_sys_personalized_twhin_sample_posts():
 
         if i == 1:
             assert result[i] == ['1', '2']
+
 
 def test_rec_sys_personalized_with_trace_sample_posts():
     # 测试当推文数量大于最大推荐长度时的情况
@@ -322,7 +330,7 @@ def test_rec_sys_personalized_with_trace_sample_posts():
         'post_id': '2',
         'action': 'like_post'
     }]
-    rec_matrix = [ [], []]  # 假设有两个用户
+    rec_matrix = [[], []]  # 假设有两个用户
     max_rec_post_len = 2  # 最大推荐长度设置为2
 
     result = rec_sys_personalized_with_trace(user_table, post_table,

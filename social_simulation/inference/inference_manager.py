@@ -2,8 +2,6 @@ import asyncio
 import logging
 import threading
 
-from camel.types.enums import ModelType
-
 from social_simulation.inference.inference_thread import (InferenceThread,
                                                           SharedMemory)
 

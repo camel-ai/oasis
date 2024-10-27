@@ -14,9 +14,8 @@ from social_simulation.social_platform.database import (
     create_db, fetch_rec_table_as_matrix, fetch_table_from_db)
 from social_simulation.social_platform.platform_utils import PlatformUtils
 from social_simulation.social_platform.recsys import (
-    rec_sys_personalized_with_trace, rec_sys_random, rec_sys_reddit,
-    rec_sys_personalized_twh)
-
+    rec_sys_personalized_twh, rec_sys_personalized_with_trace, rec_sys_random,
+    rec_sys_reddit)
 from social_simulation.social_platform.typing import ActionType, RecsysType
 
 if 'sphinx' not in sys.modules:
@@ -44,7 +43,7 @@ class Platform:
                  recsys_type: str | RecsysType = "reddit",
                  refresh_rec_post_count: int = 1,
                  max_rec_post_len: int = 2,
-                 following_post_count = 3):
+                 following_post_count=3):
 
         self.db_path = db_path
         self.recsys_type = recsys_type
@@ -65,7 +64,6 @@ class Platform:
         self.db.execute("PRAGMA synchronous = OFF")
 
         self.channel = channel
-
 
         self.recsys_type = RecsysType(recsys_type)
 
@@ -152,7 +150,8 @@ class Platform:
             # 插入用户记录
             user_insert_query = (
                 "INSERT INTO user (user_id, agent_id, user_name, name, bio, created_at,"
-                " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+                " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            )
             self.pl_utils._execute_db_command(
                 user_insert_query,
                 (agent_id, agent_id, user_name, name, bio, current_time, 0, 0),
@@ -190,7 +189,7 @@ class Platform:
             if len(selected_post_ids) >= self.refresh_rec_post_count:
                 selected_post_ids = random.sample(selected_post_ids,
                                                   self.refresh_rec_post_count)
-            
+
             if self.recsys_type != RecsysType.REDDIT:
                 # 从following中去获取post (in network)
                 # 更改SQL查询，令refresh得到的 post 是这个用户关注的人的 post，排序按照推特的点赞数
@@ -208,7 +207,7 @@ class Platform:
 
                 following_posts = self.db_cursor.fetchall()
                 following_posts_ids = [row[0] for row in following_posts]
-                
+
                 selected_post_ids = following_posts_ids + selected_post_ids
                 selected_post_ids = list(set(selected_post_ids))
 
@@ -251,24 +250,23 @@ class Platform:
                 self.max_rec_post_len)
         elif self.recsys_type == RecsysType.TWHIN:
             latest_post_time = post_table[-1]["created_at"]
-            post_query = (
-                "SELECT COUNT(*) "
-                "FROM post "
-                "WHERE created_at = ?"
-            )
+            post_query = ("SELECT COUNT(*) "
+                          "FROM post "
+                          "WHERE created_at = ?")
 
             # 得到新发出的post条数，从而进行逐步更新
-            self.pl_utils._execute_db_command(
-                post_query,
-                (latest_post_time,)
-            )
+            self.pl_utils._execute_db_command(post_query, (latest_post_time, ))
             result = self.db_cursor.fetchone()
             latest_post_count = result[0]
             if not latest_post_count:
-                return {"success": False, "message": "Fail to get latest posts count"}
-            new_rec_matrix = rec_sys_personalized_twh(
-                user_table, post_table, latest_post_count, trace_table, rec_matrix,
-                self.max_rec_post_len)
+                return {
+                    "success": False,
+                    "message": "Fail to get latest posts count"
+                }
+            new_rec_matrix = rec_sys_personalized_twh(user_table, post_table,
+                                                      latest_post_count,
+                                                      trace_table, rec_matrix,
+                                                      self.max_rec_post_len)
         elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
                                             self.max_rec_post_len)
@@ -293,7 +291,7 @@ class Platform:
             commit=True)
 
     async def create_post(self, agent_id: int, content: str):
-        
+
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -351,7 +349,6 @@ class Platform:
             orig_content = f"%{orig_content}%"
             prev_like = results[0][-1]
             prev_user_id = results[0][1]
-            
 
             # 转发的推特标识一下是从哪个user转的，方便判断
             repost_content = (
@@ -361,7 +358,8 @@ class Platform:
             # 确保相关内容此前未被该用户转发过
             repost_check_query = (
                 "SELECT * FROM 'post' WHERE content LIKE ? AND user_id = ?")
-            self.pl_utils._execute_db_command(repost_check_query, (orig_content,user_id ))
+            self.pl_utils._execute_db_command(repost_check_query,
+                                              (orig_content, user_id))
             if self.db_cursor.fetchone():
                 # 该用户存在转发记录
                 return {
@@ -401,7 +399,7 @@ class Platform:
             like_check_query = (
                 "SELECT * FROM 'like' WHERE post_id = ? AND user_id = ?")
             self.pl_utils._execute_db_command(like_check_query,
-                                                (post_id, user_id))
+                                              (post_id, user_id))
             if self.db_cursor.fetchone():
                 # 已存在点赞记录
                 return {
@@ -420,15 +418,15 @@ class Platform:
             post_update_query = (
                 "UPDATE post SET num_likes = num_likes + 1 WHERE post_id = ?")
             self.pl_utils._execute_db_command(post_update_query, (post_id, ),
-                                                commit=True)
+                                              commit=True)
 
             # 在like表中添加记录
             like_insert_query = (
                 "INSERT INTO 'like' (post_id, user_id, created_at) "
                 "VALUES (?, ?, ?)")
             self.pl_utils._execute_db_command(like_insert_query,
-                                                (post_id, user_id, current_time),
-                                                commit=True)
+                                              (post_id, user_id, current_time),
+                                              commit=True)
             like_id = self.db_cursor.lastrowid  # 获取刚刚插入的点赞记录的ID
 
             # 记录操作到trace表
@@ -577,7 +575,8 @@ class Platform:
 
             # 记录操作到trace表
             action_info = {"post_id": post_id, "dislike_id": dislike_id}
-            self.pl_utils._record_trace(user_id, ActionType.UNDO_DISLIKE_POST.value,
+            self.pl_utils._record_trace(user_id,
+                                        ActionType.UNDO_DISLIKE_POST.value,
                                         action_info)
             return {"success": True, "dislike_id": dislike_id}
         except Exception as e:
@@ -844,7 +843,7 @@ class Platform:
             if self.recsys_type == RecsysType.REDDIT:
                 start_time = current_time - timedelta(days=self.trend_num_days)
             else:
-                start_time = int(current_time) - self.trend_num_days*24*60
+                start_time = int(current_time) - self.trend_num_days * 24 * 60
 
             # 构建SQL查询语句
             sql_query = """
