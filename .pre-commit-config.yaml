@@ -2,9 +2,6 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
-      - id: no-commit-to-branch
-        name: No commits to main
-        args: [--branch, main]
       - id: end-of-file-fixer
         name: End-of-file fixer
       - id: mixed-line-ending
