@@ -2,8 +2,8 @@ from typing import Any
 
 from camel.toolkits import OpenAIFunction
 
-from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.typing import ActionType
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.typing import ActionType
 
 
 class SocialAction:

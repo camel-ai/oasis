@@ -2,8 +2,7 @@ import asyncio
 import logging
 import threading
 
-from social_simulation.inference.inference_thread import (InferenceThread,
-                                                          SharedMemory)
+from oasis.inference.inference_thread import InferenceThread, SharedMemory
 
 inference_log = logging.getLogger(name="inference")
 inference_log.setLevel("DEBUG")

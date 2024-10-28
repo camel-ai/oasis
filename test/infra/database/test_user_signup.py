@@ -4,7 +4,7 @@ import sqlite3
 
 import pytest
 
-from social_simulation.social_platform.platform import Platform
+from oasis.social_platform.platform import Platform
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")

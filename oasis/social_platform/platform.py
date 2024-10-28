@@ -9,14 +9,15 @@ import sys
 from datetime import datetime, timedelta
 from typing import Any
 
-from social_simulation.clock.clock import Clock
-from social_simulation.social_platform.database import (
-    create_db, fetch_rec_table_as_matrix, fetch_table_from_db)
-from social_simulation.social_platform.platform_utils import PlatformUtils
-from social_simulation.social_platform.recsys import (
-    rec_sys_personalized_twh, rec_sys_personalized_with_trace, rec_sys_random,
-    rec_sys_reddit)
-from social_simulation.social_platform.typing import ActionType, RecsysType
+from oasis.clock.clock import Clock
+from oasis.social_platform.database import (create_db,
+                                            fetch_rec_table_as_matrix,
+                                            fetch_table_from_db)
+from oasis.social_platform.platform_utils import PlatformUtils
+from oasis.social_platform.recsys import (rec_sys_personalized_twh,
+                                          rec_sys_personalized_with_trace,
+                                          rec_sys_random, rec_sys_reddit)
+from oasis.social_platform.typing import ActionType, RecsysType
 
 if "sphinx" not in sys.modules:
     twitter_log = logging.getLogger(name="social.twitter")

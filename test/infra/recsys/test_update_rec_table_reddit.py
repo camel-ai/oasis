@@ -6,9 +6,9 @@ from datetime import datetime
 
 import pytest
 
-from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.platform import Platform
-from social_simulation.social_platform.typing import ActionType
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import ActionType
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")

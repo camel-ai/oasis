@@ -12,12 +12,12 @@ import pandas as pd
 from colorama import Back
 from yaml import safe_load
 
-from social_simulation.clock.clock import Clock
-from social_simulation.social_agent.agents_generator import generate_agents
-from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.config import Neo4jConfig
-from social_simulation.social_platform.platform import Platform
-from social_simulation.social_platform.typing import ActionType
+from oasis.clock.clock import Clock
+from oasis.social_agent.agents_generator import generate_agents
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.config import Neo4jConfig
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import ActionType
 
 logger = logging.getLogger("twitter_simulation")
 logger.setLevel("DEBUG")

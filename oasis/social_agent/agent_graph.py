@@ -5,8 +5,8 @@ from typing import Any, Literal
 import igraph as ig
 from neo4j import GraphDatabase
 
-from social_simulation.social_agent.agent import SocialAgent
-from social_simulation.social_platform.config import Neo4jConfig
+from oasis.social_agent.agent import SocialAgent
+from oasis.social_platform.config import Neo4jConfig
 
 
 class Neo4jHandler:

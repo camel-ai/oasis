@@ -6,10 +6,10 @@ import os.path as osp
 import pytest
 from camel.types import ModelType
 
-from social_simulation.social_agent.agents_generator import (
-    generate_agents, generate_controllable_agents)
-from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.platform import Platform
+from oasis.social_agent.agents_generator import (generate_agents,
+                                                 generate_controllable_agents)
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.platform import Platform
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")

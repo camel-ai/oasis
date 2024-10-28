@@ -13,12 +13,12 @@ import pandas as pd
 from colorama import Back
 from yaml import safe_load
 
-from social_simulation.clock.clock import Clock
-from social_simulation.inference.inference_manager import InferencerManager
-from social_simulation.social_agent.agents_generator import generate_agents
-from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.platform import Platform
-from social_simulation.social_platform.typing import ActionType
+from oasis.clock.clock import Clock
+from oasis.inference.inference_manager import InferencerManager
+from oasis.social_agent.agents_generator import generate_agents
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import ActionType
 
 social_log = logging.getLogger(name="social")
 social_log.setLevel("DEBUG")

@@ -2,7 +2,7 @@ from typing import List
 
 from camel.toolkits import OpenAIFunction
 
-from social_simulation.social_agent.agent import SocialAction
+from oasis.social_agent.agent import SocialAction
 
 
 def test_transfer_to_openai_function():

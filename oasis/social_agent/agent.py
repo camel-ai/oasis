@@ -15,13 +15,13 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType, OpenAIBackendRole
 from camel.utils import OpenAITokenCounter
 
-from social_simulation.social_agent.agent_action import SocialAction
-from social_simulation.social_agent.agent_environment import SocialEnvironment
-from social_simulation.social_platform import Channel
-from social_simulation.social_platform.config import UserInfo
+from oasis.social_agent.agent_action import SocialAction
+from oasis.social_agent.agent_environment import SocialEnvironment
+from oasis.social_platform import Channel
+from oasis.social_platform.config import UserInfo
 
 if TYPE_CHECKING:
-    from social_simulation.social_agent import AgentGraph
+    from oasis.social_agent import AgentGraph
 
 if "sphinx" not in sys.modules:
     agent_log = logging.getLogger(name="social.agent")

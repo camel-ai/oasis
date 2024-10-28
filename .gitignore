@@ -91,6 +91,9 @@ docker-compose.override.yml
 log/
 *.log
 
+# Models
+models/
+
 # Database files
 *.db
 *.sqlite3

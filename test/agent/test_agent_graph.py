@@ -3,10 +3,10 @@ import os.path as osp
 
 import pytest
 
-from social_simulation.social_agent.agent import SocialAgent
-from social_simulation.social_agent.agent_graph import AgentGraph
-from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.config import Neo4jConfig, UserInfo
+from oasis.social_agent.agent import SocialAgent
+from oasis.social_agent.agent_graph import AgentGraph
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.config import Neo4jConfig, UserInfo
 
 
 def neo4j_vars_set() -> bool:

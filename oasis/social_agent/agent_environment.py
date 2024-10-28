@@ -4,7 +4,7 @@ import json
 from abc import ABC, abstractmethod
 from string import Template
 
-from social_simulation.social_agent.agent_action import SocialAction
+from oasis.social_agent.agent_action import SocialAction
 
 
 class Environment(ABC):

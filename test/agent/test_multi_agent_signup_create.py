@@ -7,11 +7,11 @@ import sqlite3
 
 import pytest
 
-from social_simulation.social_agent.agent import SocialAgent
-from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.config import UserInfo
-from social_simulation.social_platform.platform import Platform
-from social_simulation.testing.show_db import print_db_contents
+from oasis.social_agent.agent import SocialAgent
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.config import UserInfo
+from oasis.social_platform.platform import Platform
+from oasis.testing.show_db import print_db_contents
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test_multi.db")

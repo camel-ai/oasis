@@ -12,9 +12,9 @@ from camel.memories import MemoryRecord
 from camel.messages import BaseMessage
 from camel.types import ModelType, OpenAIBackendRole
 
-from social_simulation.social_agent import AgentGraph, SocialAgent
-from social_simulation.social_platform import Channel, Platform
-from social_simulation.social_platform.config import Neo4jConfig, UserInfo
+from oasis.social_agent import AgentGraph, SocialAgent
+from oasis.social_platform import Channel, Platform
+from oasis.social_platform.config import Neo4jConfig, UserInfo
 
 
 async def generate_agents(
