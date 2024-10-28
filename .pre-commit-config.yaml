@@ -3,11 +3,12 @@ repos:
     rev: v4.5.0
     hooks:
       - id: no-commit-to-branch
-        name: No commits to master
+        name: No commits to main
+        args: [--branch, main]
       - id: end-of-file-fixer
         name: End-of-file fixer
-      - name: mixed-line-ending
-        id: mixed-line-ending
+      - id: mixed-line-ending
+        name: Mixed line ending fixer
         args: [--fix, lf]
       - id: trailing-whitespace
         name: Remove trailing whitespaces
