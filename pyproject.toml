@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "social-simulation"
-version = "0.0.0"
-description = "Social Simulation"
+name = "oasis"
+version = "0.0.1"
+description = "Open Agents Social Interaction Simulations on a Large Scale"
 authors = ["TODO <TODO@gmail.com>"]
 readme = "README.md"
 keywords = [
@@ -11,7 +11,7 @@ keywords = [
     "graph",
     "recommendation-system",
 ]
-repository = "https://github.com/camel-ai/social-simulation.git"
+repository = "https://github.com/camel-ai/oasis.git"
 
 [tool.poetry.dependencies]
 python = ">=3.10.0,<3.12"
