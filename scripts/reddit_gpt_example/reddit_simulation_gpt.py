@@ -2,35 +2,36 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-from genericpath import isfile
 import json
 import logging
 import os
-from datetime import datetime, timedelta
 import random
+from datetime import datetime, timedelta
 from typing import Any
 
 from colorama import Back
 from yaml import safe_load
 
-from social_simulation.clock.clock import Clock
-from social_simulation.social_agent.agents_generator import (
-    gen_control_agents_with_data, generate_reddit_agents)
-from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.platform import Platform
-from social_simulation.social_platform.typing import ActionType
+from oasis.clock.clock import Clock
+from oasis.social_agent.agents_generator import (gen_control_agents_with_data,
+                                                 generate_reddit_agents)
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import ActionType
 
-
-social_log = logging.getLogger(name='social')
-social_log.setLevel('DEBUG')
-now = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-file_handler = logging.FileHandler(f'./log/social-{str(now)}.log', encoding='utf-8')
-file_handler.setLevel('DEBUG')
-file_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+social_log = logging.getLogger(name="social")
+social_log.setLevel("DEBUG")
+now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+file_handler = logging.FileHandler(f"./log/social-{str(now)}.log",
+                                   encoding="utf-8")
+file_handler.setLevel("DEBUG")
+file_handler.setFormatter(
+    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
 social_log.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel('DEBUG')
-stream_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+stream_handler.setLevel("DEBUG")
+stream_handler.setFormatter(
+    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
 social_log.addHandler(stream_handler)
 
 parser = argparse.ArgumentParser(description="Arguments for script.")
@@ -70,7 +71,7 @@ async def running(
     inference_configs: dict[str, Any] | None = None,
     init_post_score: int = 0,
     refresh_rec_post_count: int = 10,
-    action_space_file_path: str = None
+    action_space_file_path: str = None,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     user_path = DEFAULT_USER_PATH if user_path is None else user_path
@@ -81,7 +82,7 @@ async def running(
     start_time = datetime(2024, 8, 6, 8, 0)
     clock = Clock(k=clock_factor)
     twitter_channel = Channel()
-    with open(action_space_file_path, 'r', encoding='utf-8') as file:
+    with open(action_space_file_path, "r", encoding="utf-8") as file:
         action_space_prompt = file.read()
 
     infra = Platform(
@@ -93,40 +94,38 @@ async def running(
         show_score=show_score,
         recsys_type=recsys_type,
         max_rec_post_len=max_rec_post_len,
-        refresh_rec_post_count=refresh_rec_post_count
+        refresh_rec_post_count=refresh_rec_post_count,
     )
     inference_channel = Channel()
 
     twitter_task = asyncio.create_task(infra.running())
 
-
-    if inference_configs['model_type'][:3] == 'gpt':
+    if inference_configs["model_type"][:3] == "gpt":
         is_openai_model = True
     if not controllable_user:
         raise ValueError("Uncontrollable user is not supported")
     else:
-        agent_graph, agent_user_id_mapping = \
-            await gen_control_agents_with_data(
-                twitter_channel,
-                2,
-            )
+        agent_graph, id_mapping = await gen_control_agents_with_data(
+            twitter_channel,
+            2,
+        )
         agent_graph = await generate_reddit_agents(
             user_path,
             twitter_channel,
             inference_channel,
             agent_graph,
-            agent_user_id_mapping,
+            id_mapping,
             follow_post_agent,
             mute_post_agent,
             action_space_prompt,
-            inference_configs['model_type'],
-            is_openai_model
+            inference_configs["model_type"],
+            is_openai_model,
         )
     with open(pair_path, "r") as f:
         pairs = json.load(f)
 
     for timestep in range(num_timesteps):
-        os.environ['TIME_STAMP'] = str(timestep+1)
+        os.environ["TIME_STAMP"] = str(timestep + 1)
         if timestep == 0:
             start_time_0 = datetime.now()
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
@@ -142,19 +141,20 @@ async def running(
             else:
                 content = pairs[rs_rc_index]["RC_1"]["body"]
                 response = await post_agent.perform_action_by_data(
-                    'create_post', content=content)
-                post_id = response['post_id']
+                    "create_post", content=content)
+                post_id = response["post_id"]
 
                 if init_post_score == 1:
                     await rate_agent.perform_action_by_data(
-                        'like_post', post_id)
+                        "like_post", post_id)
                 elif init_post_score == -1:
                     await rate_agent.perform_action_by_data(
-                        'dislike_post', post_id)
+                        "dislike_post", post_id)
                 elif init_post_score == 0:
                     pass
                 else:
-                    raise ValueError(f"Unsupported value of init_post_score: {init_post_score}")
+                    raise ValueError(f"Unsupported value of init_post_score: "
+                                     f"{init_post_score}")
 
         tasks = [export_data(i) for i in range(round_post_num)]
         await asyncio.gather(*tasks)
@@ -175,9 +175,10 @@ async def running(
             two_hours_in_seconds = timedelta(hours=2).total_seconds()
 
             # 计算两个小时除以时间差（以秒为单位）
-            clock_factor = two_hours_in_seconds / time_difference.total_seconds()
+            clock_factor = two_hours_in_seconds / \
+                time_difference.total_seconds()
             clock.k = clock_factor
-            social_log.info(f'clock_factor: {clock_factor}')
+            social_log.info(f"clock_factor: {clock_factor}")
 
     await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
 
@@ -202,7 +203,9 @@ if __name__ == "__main__":
                 **data_params,
                 **simulation_params,
                 model_configs=model_configs,
-                inference_configs=inference_params
-            ), debug=True)
+                inference_configs=inference_params,
+            ),
+            debug=True,
+        )
     else:
         asyncio.run(running())

@@ -3,15 +3,14 @@ import os
 import os.path as osp
 import random
 import sqlite3
-from datetime import datetime
 
 import pytest
 
-from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.platform import Platform
-from social_simulation.social_platform.typing import ActionType
-from social_simulation.testing.show_db import print_db_contents
-from social_simulation.social_platform.recsys import reset_globals
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.recsys import reset_globals
+from oasis.social_platform.typing import ActionType
+from oasis.testing.show_db import print_db_contents
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -28,8 +27,13 @@ async def test_update_rec_table(setup_db):
     try:
         channel = Channel()
         recsys_type = "twhin-bert"
-        infra = Platform(test_db_filepath, channel, recsys_type=recsys_type,
-                         refresh_rec_post_count=50, max_rec_post_len=50)
+        infra = Platform(
+            test_db_filepath,
+            channel,
+            recsys_type=recsys_type,
+            refresh_rec_post_count=50,
+            max_rec_post_len=50,
+        )
         if recsys_type == "twhin-bert":
             reset_globals()
         # 在测试开始之前，将3个用户插入到user表中
@@ -37,19 +41,22 @@ async def test_update_rec_table(setup_db):
         cursor = conn.cursor()
         cursor.execute(
             ("INSERT INTO user "
-             "(user_id, agent_id, user_name, bio, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?, ?)"),
-            (0, 0, "user1", "This is test bio for user1", 0, 0))
+             "(user_id, agent_id, user_name, bio, num_followings, "
+             "num_followers) VALUES (?, ?, ?, ?, ?, ?)"),
+            (0, 0, "user1", "This is test bio for user1", 0, 0),
+        )
         cursor.execute(
             ("INSERT INTO user "
-             "(user_id, agent_id, user_name, bio, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?, ?)"),
-            (1, 1, "user2", "This is test bio for user2", 2, 4))
+             "(user_id, agent_id, user_name, bio, num_followings, "
+             "num_followers) VALUES (?, ?, ?, ?, ?, ?)"),
+            (1, 1, "user2", "This is test bio for user2", 2, 4),
+        )
         cursor.execute(
             ("INSERT INTO user "
-             "(user_id, agent_id, user_name, bio, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?, ?)"),
-            (2, 2, "user3", "This is test bio for user3", 3, 5))
+             "(user_id, agent_id, user_name, bio, num_followings, "
+             "num_followers) VALUES (?, ?, ?, ?, ?, ?)"),
+            (2, 2, "user3", "This is test bio for user3", 3, 5),
+        )
         conn.commit()
 
         # 在测试开始之前，将60条推文用户插入到post表中
@@ -59,13 +66,15 @@ async def test_update_rec_table(setup_db):
             created_at = "0"
             num_likes = random.randint(0, 100)  # 随机生成点赞数
 
-            cursor.execute(("INSERT INTO post "
-                            "(user_id, content, created_at, num_likes) "
-                            "VALUES (?, ?, ?, ?)"),
-                           (user_id, content, created_at, num_likes))
+            cursor.execute(
+                ("INSERT INTO post "
+                 "(user_id, content, created_at, num_likes) "
+                 "VALUES (?, ?, ?, ?)"),
+                (user_id, content, created_at, num_likes),
+            )
         conn.commit()
 
-        os.environ["SANDBOX_TIME"] = '0'
+        os.environ["SANDBOX_TIME"] = "0"
 
         task = asyncio.create_task(infra.running())
         await channel.write_to_receive_queue(

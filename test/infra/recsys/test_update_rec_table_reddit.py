@@ -6,10 +6,9 @@ from datetime import datetime
 
 import pytest
 
-from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.platform import Platform
-from social_simulation.social_platform.typing import ActionType
-from social_simulation.testing.show_db import print_db_contents
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import ActionType
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -26,8 +25,10 @@ def setup_db():
 async def test_update_rec_table(setup_db):
     try:
         channel = Channel()
-        infra = Platform(
-            test_db_filepath, channel, recsys_type='reddit', max_rec_post_len = 50)
+        infra = Platform(test_db_filepath,
+                         channel,
+                         recsys_type="reddit",
+                         max_rec_post_len=50)
         # 在测试开始之前，将3个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
@@ -35,17 +36,20 @@ async def test_update_rec_table(setup_db):
             ("INSERT INTO user "
              "(agent_id, user_name, bio, num_followings, num_followers) "
              "VALUES (?, ?, ?, ?, ?)"),
-            (0, "user1", "This is test bio for user1", 0, 0))
+            (0, "user1", "This is test bio for user1", 0, 0),
+        )
         cursor.execute(
             ("INSERT INTO user "
              "(agent_id, user_name, bio, num_followings, num_followers) "
              "VALUES (?, ?, ?, ?, ?)"),
-            (1, "user2", "This is test bio for user2", 2, 4))
+            (1, "user2", "This is test bio for user2", 2, 4),
+        )
         cursor.execute(
             ("INSERT INTO user "
              "(agent_id, user_name, bio, num_followings, num_followers) "
              "VALUES (?, ?, ?, ?, ?)"),
-            (2, "user3", "This is test bio for user3", 3, 5))
+            (2, "user3", "This is test bio for user3", 3, 5),
+        )
         conn.commit()
 
         # 在测试开始之前，将60条推文用户插入到post表中
@@ -55,10 +59,12 @@ async def test_update_rec_table(setup_db):
             created_at = datetime(2024, 6, 27, i % 24, 0, 0, 123456)
             num_likes = i  # 随机生成点赞数
 
-            cursor.execute(("INSERT INTO post "
-                            "(user_id, content, created_at, num_likes) "
-                            "VALUES (?, ?, ?, ?)"),
-                           (user_id, content, created_at, num_likes))
+            cursor.execute(
+                ("INSERT INTO post "
+                 "(user_id, content, created_at, num_likes) "
+                 "VALUES (?, ?, ?, ?)"),
+                (user_id, content, created_at, num_likes),
+            )
         conn.commit()
 
         task = asyncio.create_task(infra.running())

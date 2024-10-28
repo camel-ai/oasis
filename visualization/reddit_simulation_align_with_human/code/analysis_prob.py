@@ -1,8 +1,9 @@
 import json
 import sqlite3
 from datetime import datetime
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.stats import norm
 
 # 1. 追踪所有被实验的comment_id的tweet_id
@@ -12,20 +13,21 @@ from scipy.stats import norm
 
 
 class Database:
+
     def __init__(self, db_path):
         self.conn = sqlite3.connect(db_path)
 
     def find_user_by_comment_id(self, comment_id, start_at):
         cursor = self.conn.cursor()
         # 查询action为'refresh'的记录，按created_at排序
-        query = '''
+        query = """
         SELECT user_id, created_at, info
         FROM trace
         WHERE action = 'refresh'
         AND created_at > ?
         ORDER BY created_at
-        '''
-        cursor.execute(query, (start_at,))
+        """
+        cursor.execute(query, (start_at, ))
         results = cursor.fetchall()
 
         # 遍历查询结果
@@ -45,18 +47,18 @@ class Database:
         # 没有人看过这条评论，返回None
         return None
 
-    def track_ope_before_next_refresh(
-            self, track_user_id, start_time, track_comment_id):
+    def track_ope_before_next_refresh(self, track_user_id, start_time,
+                                      track_comment_id):
         cursor = self.conn.cursor()
 
         # 获取下一条action='refresh'的记录的created_at时间
-        query_next_refresh_time = '''
+        query_next_refresh_time = """
         SELECT created_at
         FROM trace
         WHERE action = 'refresh' AND created_at > ? AND user_id = ?
         ORDER BY created_at
         LIMIT 1
-        '''
+        """
         cursor.execute(query_next_refresh_time, (start_time, track_user_id))
         next_refresh_time = cursor.fetchone()
 
@@ -64,31 +66,30 @@ class Database:
 
         # 如果没有找到下一条refresh记录，则不限制结束时间
         if not next_refresh_time:
-            end_time = '9999-12-31 23:59:59'
+            end_time = "9999-12-31 23:59:59"
         else:
             end_time = next_refresh_time[0]
 
         # 检查在时间区间内是否有like的记录
-        query_like = '''
-        SELECT 1
-        FROM comment_like
-        WHERE user_id = ? AND comment_id = ? AND created_at > ? AND created_at < ?
-        LIMIT 1
-        '''
-        cursor.execute(query_like, (
-                track_user_id, track_comment_id, start_time, end_time))
+        query_like = ("SELECT 1 "
+                      "FROM comment_like "
+                      "WHERE user_id = ? AND comment_id = ? "
+                      "AND created_at > ? AND created_at < ? "
+                      "LIMIT 1")
+
+        cursor.execute(query_like,
+                       (track_user_id, track_comment_id, start_time, end_time))
         if cursor.fetchone():
             return "like_comment"
 
         # 检查在时间区间内是否有dislike的记录
-        query_dislike = '''
-        SELECT 1
-        FROM comment_dislike
-        WHERE user_id = ? AND comment_id = ? AND created_at > ? AND created_at < ?
-        LIMIT 1
-        '''
-        cursor.execute(query_dislike, (
-            track_user_id, track_comment_id, start_time, end_time))
+        query_dislike = ("SELECT 1 "
+                         "FROM comment_dislike "
+                         "WHERE user_id = ? AND comment_id = ? "
+                         "AND created_at > ? AND created_at < ? "
+                         "LIMIT 1")
+        cursor.execute(query_dislike,
+                       (track_user_id, track_comment_id, start_time, end_time))
         if cursor.fetchone():
             return "dislike_comment"
 
@@ -106,8 +107,8 @@ def get_result(comment_id_lst, db_path, exp_start_time):
         start_time = exp_start_time
         # print(start_time)
         while True:
-            read_result = db.find_user_by_comment_id(
-                track_comment_id, start_time)
+            read_result = db.find_user_by_comment_id(track_comment_id,
+                                                     start_time)
             # print(read_result)
             # 这条评论没有被阅读过，不计入分析
             if not read_result:
@@ -134,8 +135,10 @@ def get_result(comment_id_lst, db_path, exp_start_time):
     return like_lst, dislike_lst, no_action_lst
 
 
-def analyze_probability(
-        data, save_file_path, action_type='like', figsize=(8, 6)):
+def analyze_probability(data,
+                        save_file_path,
+                        action_type="like",
+                        figsize=(8, 6)):
     # 计算概率
     probabilities = {}
     for key, value in data.items():
@@ -157,25 +160,35 @@ def analyze_probability(
     conf_ints = [conf_intervals[key] for key in labels]
 
     # 计算yerr
-    yerr = [[prob - low for prob, (low, high) in zip(probs, conf_ints)], 
-            [high - prob for prob, (low, high) in zip(probs, conf_ints)]]
+    yerr = [
+        [prob - low for prob, (low, high) in zip(probs, conf_ints)],
+        [high - prob for prob, (low, high) in zip(probs, conf_ints)],
+    ]
 
     # 绘制概率和置信区间
     plt.figure(figsize=figsize)
-    plt.bar(labels, probs, color='skyblue', label=f'{action_type.capitalize()} Probability')
-    plt.errorbar(labels, probs, yerr=yerr, fmt='o', color='red', capsize=5)
+    plt.bar(labels,
+            probs,
+            color="skyblue",
+            label=f"{action_type.capitalize()} Probability")
+    plt.errorbar(labels, probs, yerr=yerr, fmt="o", color="red", capsize=5)
 
     # 在control组的概率处加一条虚线
-    control_probability = probabilities['control']
-    plt.axhline(y=control_probability, color='gray', linestyle='--', label='Control Probability')
+    control_probability = probabilities["control"]
+    plt.axhline(y=control_probability,
+                color="gray",
+                linestyle="--",
+                label="Control Probability")
 
-    plt.xlabel('Comment Type')
-    plt.ylabel(f'Probability of {action_type.capitalize()}s')
-    plt.title(f'Probability of {action_type.capitalize()}s with 95% Confidence Intervals')
+    plt.xlabel("Comment Type")
+    plt.ylabel(f"Probability of {action_type.capitalize()}s")
+    plt.title(f"Probability of {action_type.capitalize()}s with 95% "
+              f"Confidence Intervals")
     plt.legend()
 
     # 调整y轴范围以便更清晰地展示完整的置信区间
-    y_min = min(prob - low for prob, (low, high) in zip(probs, conf_ints)) - 0.05
+    y_min = min(prob - low
+                for prob, (low, high) in zip(probs, conf_ints)) - 0.05
     y_max = max(high for _, (low, high) in zip(probs, conf_ints)) + 0.05
     plt.ylim(max(0, y_min), min(1, y_max))
 
@@ -184,39 +197,56 @@ def analyze_probability(
 
 
 def main(exp_info_file_path, db_path, exp_name, folder_path):
-    with open(exp_info_file_path, 'r') as file:
+    with open(exp_info_file_path, "r") as file:
         exp_info = json.load(file)
 
     exp_start_time = datetime(2024, 8, 6, 8, 0)
 
-    like_up, dislike_up, no_action_up = get_result(
-        exp_info["up_comment_id"], db_path, exp_start_time)
+    like_up, dislike_up, no_action_up = get_result(exp_info["up_comment_id"],
+                                                   db_path, exp_start_time)
     like_down, dislike_down, no_action_down = get_result(
         exp_info["down_comment_id"], db_path, exp_start_time)
     like_control, dislike_control, no_action_control = get_result(
         exp_info["control_comment_id"], db_path, exp_start_time)
 
     data = {
-        'downvote': {'like': len(like_down), 'dislike': len(dislike_down), 'no_action': len(no_action_down)},
-        'control': {'like': len(like_control), 'dislike': len(dislike_control), 'no_action': len(no_action_control)},
-        'upvote': {'like': len(like_up), 'dislike': len(dislike_up), 'no_action': len(no_action_up)}
+        "downvote": {
+            "like": len(like_down),
+            "dislike": len(dislike_down),
+            "no_action": len(no_action_down),
+        },
+        "control": {
+            "like": len(like_control),
+            "dislike": len(dislike_control),
+            "no_action": len(no_action_control),
+        },
+        "upvote": {
+            "like": len(like_up),
+            "dislike": len(dislike_up),
+            "no_action": len(no_action_up),
+        },
     }
 
     print(data)
 
     # 分析并绘制like的概率
-    analyze_probability(data, action_type='like', save_file_path=f'{folder_path}/like_{exp_name}.png')
+    analyze_probability(data,
+                        action_type="like",
+                        save_file_path=f"{folder_path}/like_{exp_name}.png")
 
     # 分析并绘制dislike的概率
-    analyze_probability(data, action_type='dislike', save_file_path=f'{folder_path}/dislike_{exp_name}.png')
+    analyze_probability(
+        data,
+        action_type="dislike",
+        save_file_path=f"{folder_path}/dislike_{exp_name}.png",
+    )
 
 
 if __name__ == "__main__":
-    main(exp_info_file_path=(
-            './experiments/reddit_herding_effect/results_analysis/'
-            'result_data/exp_info.json'
-        ),
-        db_path=(
-            './experiments/reddit_herding_effect/results_analysis/'
-            'result_data/mock_reddit_06-30_06-33-29.db'
-        ))
+    main(
+        exp_info_file_path=(
+            "./experiments/reddit_herding_effect/results_analysis/"
+            "result_data/exp_info.json"),
+        db_path=("./experiments/reddit_herding_effect/results_analysis/"
+                 "result_data/mock_reddit_06-30_06-33-29.db"),
+    )

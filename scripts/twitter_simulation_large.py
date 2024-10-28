@@ -2,33 +2,35 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import logging
 import os
 import random
 from datetime import datetime
 from typing import Any
-import logging
-import threading
-from colorama import Back
+
 import pandas as pd
+from colorama import Back
 from yaml import safe_load
-from social_simulation.clock.clock import Clock
-from social_simulation.inference.inference_manager import InferencerManager
-from social_simulation.social_agent.agents_generator import generate_agents
-from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.platform import Platform
-from social_simulation.social_platform.typing import ActionType
 
+from oasis.clock.clock import Clock
+from oasis.inference.inference_manager import InferencerManager
+from oasis.social_agent.agents_generator import generate_agents
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import ActionType
 
-social_log = logging.getLogger(name='social')
-social_log.setLevel('DEBUG')
+social_log = logging.getLogger(name="social")
+social_log.setLevel("DEBUG")
 
-file_handler = logging.FileHandler('social.log')
-file_handler.setLevel('DEBUG')
-file_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+file_handler = logging.FileHandler("social.log")
+file_handler.setLevel("DEBUG")
+file_handler.setFormatter(
+    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
 social_log.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel('DEBUG')
-stream_handler.setFormatter(logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+stream_handler.setLevel("DEBUG")
+stream_handler.setFormatter(
+    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
 social_log.addHandler(stream_handler)
 
 parser = argparse.ArgumentParser(description="Arguments for script.")
@@ -72,9 +74,9 @@ async def running(
         clock,
         start_time,
         recsys_type=recsys_type,
-        refresh_rec_post_count = 2,
-        max_rec_post_len = 2,
-        following_post_count = 3
+        refresh_rec_post_count=2,
+        max_rec_post_len=2,
+        following_post_count=3,
     )
     inference_channel = Channel()
     infere = InferencerManager(
@@ -83,18 +85,21 @@ async def running(
     )
     twitter_task = asyncio.create_task(infra.running())
     inference_task = asyncio.create_task(infere.run())
-    
-    
+
     try:
         all_topic_df = pd.read_csv("data/label_clean_v7.csv")
         if "False" in csv_path or "True" in csv_path:
             if "-" not in csv_path:
                 topic_name = csv_path.split("/")[-1].split(".")[0]
             else:
-                topic_name = csv_path.split("/")[-1].split(".")[0].split("-")[0]
-            source_post_time = all_topic_df[all_topic_df["topic_name"]==topic_name]["start_time"].item().split(" ")[1]
-            start_hour = int(source_post_time.split(":")[0]) + float(int(source_post_time.split(":")[1])/60)
-    except:
+                topic_name = csv_path.split("/")[-1].split(".")[0].split(
+                    "-")[0]
+            source_post_time = (
+                all_topic_df[all_topic_df["topic_name"] ==
+                             topic_name]["start_time"].item().split(" ")[1])
+            start_hour = int(source_post_time.split(":")[0]) + float(
+                int(source_post_time.split(":")[1]) / 60)
+    except Exception:
         print("No real-world data, let start_hour be 13")
         start_hour = 13
 
@@ -103,16 +108,15 @@ async def running(
         agent_info_path=csv_path,
         twitter_channel=twitter_channel,
         inference_channel=inference_channel,
-        start_time = start_time,
-        recsys_type = recsys_type,
-        twitter = infra,
+        start_time=start_time,
+        recsys_type=recsys_type,
+        twitter=infra,
         **model_configs,
     )
     # agent_graph.visualize("initial_social_graph.png")
 
-
-    for timestep in range(1, num_timesteps+1):
-        os.environ["SANDBOX_TIME"] = str(timestep*3)
+    for timestep in range(1, num_timesteps + 1):
+        os.environ["SANDBOX_TIME"] = str(timestep * 3)
         social_log.info(f"timestep:{timestep}")
         db_file = db_path.split("/")[-1]
         print(Back.GREEN + f"DB:{db_file} timestep:{timestep}" + Back.RESET)
@@ -123,13 +127,13 @@ async def running(
         for node_id, agent in agent_graph.get_agents():
             if agent.user_info.is_controllable is False:
                 agent_ac_prob = random.random()
-                threshold = agent.user_info.profile['other_info'][
-                    'active_threshold'][int(simulation_time_hour % 24)]
+                threshold = agent.user_info.profile["other_info"][
+                    "active_threshold"][int(simulation_time_hour % 24)]
                 if agent_ac_prob < threshold:
                     tasks.append(agent.perform_action_by_llm())
             else:
                 await agent.perform_action_by_hci()
-        
+
         await asyncio.gather(*tasks)
         # agent_graph.visualize(f"timestep_{timestep}_social_graph.png")
 
@@ -154,7 +158,7 @@ if __name__ == "__main__":
                 **data_params,
                 **simulation_params,
                 model_configs=model_configs,
-                inference_configs=inference_configs
+                inference_configs=inference_configs,
             ))
     else:
         asyncio.run(running())

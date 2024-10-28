@@ -8,28 +8,28 @@ import random
 from datetime import datetime
 from typing import Any
 
-from colorama import Back
 import pandas as pd
+from colorama import Back
 from yaml import safe_load
 
-from social_simulation.clock.clock import Clock
-from social_simulation.social_agent.agents_generator import generate_agents
-from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.config import Neo4jConfig
-from social_simulation.social_platform.platform import Platform
-from social_simulation.social_platform.typing import ActionType
+from oasis.clock.clock import Clock
+from oasis.social_agent.agents_generator import generate_agents
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.config import Neo4jConfig
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import ActionType
 
 logger = logging.getLogger("twitter_simulation")
-logger.setLevel('DEBUG')
+logger.setLevel("DEBUG")
 file_handler = logging.FileHandler("twitter_simulation.log")
-file_handler.setLevel('DEBUG')
+file_handler.setLevel("DEBUG")
 file_handler.setFormatter(
-    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
 logger.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel('DEBUG')
+stream_handler.setLevel("DEBUG")
 stream_handler.setFormatter(
-    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
 logger.addHandler(stream_handler)
 
 parser = argparse.ArgumentParser(description="Arguments for script.")
@@ -99,15 +99,19 @@ async def running(
             if "-" not in csv_path:
                 topic_name = csv_path.split("/")[-1].split(".")[0]
             else:
-                topic_name = csv_path.split("/")[-1].split(".")[0].split("-")[0]
-            start_time = all_topic_df[all_topic_df["topic_name"]==topic_name]["start_time"].item().split(" ")[1]
-            start_hour = int(start_time.split(":")[0]) + float(int(start_time.split(":")[1])/60)
-    except:
+                topic_name = csv_path.split("/")[-1].split(".")[0].split(
+                    "-")[0]
+            start_time = (
+                all_topic_df[all_topic_df["topic_name"] ==
+                             topic_name]["start_time"].item().split(" ")[1])
+            start_hour = int(start_time.split(":")[0]) + float(
+                int(start_time.split(":")[1]) / 60)
+    except Exception:
         print("No real-world data, let start_hour be 13")
         start_hour = 13
 
-    for timestep in range(1, num_timesteps+1):
-        os.environ["SANDBOX_TIME"] = str(timestep*3)
+    for timestep in range(1, num_timesteps + 1):
+        os.environ["SANDBOX_TIME"] = str(timestep * 3)
         logger.info(f"timestep:{timestep}")
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         await infra.update_rec_table()
@@ -116,8 +120,8 @@ async def running(
         for _, agent in agent_graph.get_agents():
             if agent.user_info.is_controllable is False:
                 agent_ac_prob = random.random()
-                threshold = agent.user_info.profile['other_info'][
-                    'active_threshold'][int(simulation_time_hour % 24)]
+                threshold = agent.user_info.profile["other_info"][
+                    "active_threshold"][int(simulation_time_hour % 24)]
                 if agent_ac_prob < threshold:
                     await agent.perform_action_by_llm()
             else:

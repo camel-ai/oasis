@@ -4,8 +4,8 @@ import sqlite3
 
 import pytest
 
-from social_simulation.social_platform.platform import Platform
-from social_simulation.testing.show_db import print_db_contents
+from oasis.social_platform.platform import Platform
+from oasis.testing.show_db import print_db_contents
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -26,9 +26,9 @@ class MockChannel:
         if self.action_index < len(self.user_actions):
             action = self.user_actions[self.action_index]
             self.action_index += 1
-            return ('id_', action)
+            return ("id_", action)
         else:
-            return ('id_', (None, None, "exit"))
+            return ("id_", (None, None, "exit"))
 
     async def send_to(self, message):
         self.messages.append(message)  # 存储消息以便后续断言
@@ -45,16 +45,21 @@ def generate_user_actions(n_users, posts_per_user):
 
     for user_id in range(1, n_users + 1):
         # Add sign up action for each user
-        user_message = ("username" + str(user_id), "name" + str(user_id),
-                        "No descrption.")
+        user_message = (
+            "username" + str(user_id),
+            "name" + str(user_id),
+            "No descrption.",
+        )
         actions.append((user_id, user_message, "sign_up"))
 
         if user_id <= users_per_group:
             # This group of users sends m posts each
             for post_num in range(1, posts_per_user + 1):
-                actions.append(
-                    (user_id, f"This is post {post_num} from User{user_id}",
-                     "create_post"))
+                actions.append((
+                    user_id,
+                    f"This is post {post_num} from User{user_id}",
+                    "create_post",
+                ))
         elif user_id <= 2 * users_per_group:
             # This group of users sends 1 post each
             actions.append(
@@ -102,8 +107,8 @@ async def test_signup_and_create_post(setup_platform,
         cursor.execute("SELECT * FROM post")
         posts = cursor.fetchall()
         expected_posts = (n_users // 3) * posts_per_user + (n_users // 3)
-        assert len(posts) == expected_posts, (
-            "The number of posts should match the expected value.")
+        assert (len(posts) == expected_posts
+                ), "The number of posts should match the expected value."
 
         conn.close()
         print_db_contents(test_db_filepath)

@@ -3,7 +3,7 @@ import os.path as osp
 import sqlite3
 from datetime import datetime
 
-from social_simulation.social_platform.database import create_db
+from oasis.social_platform.database import create_db
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")

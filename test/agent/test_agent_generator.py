@@ -6,10 +6,10 @@ import os.path as osp
 import pytest
 from camel.types import ModelType
 
-from social_simulation.social_agent.agents_generator import (
-    generate_agents, generate_controllable_agents)
-from social_simulation.social_platform.channel import Channel
-from social_simulation.social_platform.platform import Platform
+from oasis.social_agent.agents_generator import (generate_agents,
+                                                 generate_controllable_agents)
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.platform import Platform
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -28,16 +28,19 @@ async def running():
         agent_info_path,
         twitter_channel,
         inferencer_channel,
-        twitter = infra,
+        twitter=infra,
         start_time=0,
         num_agents=111,
-        cfgs=[{
-            "model_type": ModelType.LLAMA_3,
-            "num": 100
-        }, {
-            "model_type": ModelType.GPT_3_5_TURBO,
-            "num": 11
-        }],
+        cfgs=[
+            {
+                "model_type": ModelType.LLAMA_3,
+                "num": 100
+            },
+            {
+                "model_type": ModelType.GPT_3_5_TURBO,
+                "num": 11
+            },
+        ],
     )
     await twitter_channel.write_to_receive_queue((None, None, "exit"))
     await task
@@ -49,7 +52,7 @@ def test_agent_generator():
 
 
 @pytest.mark.skip(reason="Now controllable agent is not supported")
-#@pytest.mark.asyncio
+# @pytest.mark.asyncio
 async def test_generate_controllable(monkeypatch):
     agent_info_path = "./test/test_data/user_all_id_time.csv"
     twitter_channel = Channel()
@@ -59,11 +62,16 @@ async def test_generate_controllable(monkeypatch):
     infra = Platform(test_db_filepath, twitter_channel)
     task = asyncio.create_task(infra.running())
     inputs = iter(["Alice", "Ali", "a student"])
-    monkeypatch.setattr('builtins.input', lambda _: next(inputs))
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
     agent_graph, agent_user_id_mapping = await generate_controllable_agents(
         twitter_channel, 1)
-    agent_graph = await generate_agents(agent_info_path, twitter_channel, inferencer_channel, agent_graph,
-                                        agent_user_id_mapping)
+    agent_graph = await generate_agents(
+        agent_info_path,
+        twitter_channel,
+        inferencer_channel,
+        agent_graph,
+        agent_user_id_mapping,
+    )
     await twitter_channel.write_to_receive_queue((None, None, "exit"))
     await task
     assert agent_graph.get_num_nodes() == 27

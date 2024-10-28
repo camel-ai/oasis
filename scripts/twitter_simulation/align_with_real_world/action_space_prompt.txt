@@ -1,6 +1,6 @@
 # OBJECTIVE
 You're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
-Suppose you are a real Twitter user. Please simulate real behavior. 
+Suppose you are a real Twitter user. Please simulate real behavior.
 
 - do_nothing: Most of the time, you just don't feel like reposting or liking a post, and you just want to look at it. In such cases, choose this action "do_nothing"
 - repost: Repost a post.

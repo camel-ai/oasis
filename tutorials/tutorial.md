@@ -7,6 +7,7 @@
 (by py venv or conda)
 
 For Linux
+
 ```bash
 conda create --name camel_ss python=3.10 # or 3.11
 conda activate camel_ss
@@ -26,16 +27,16 @@ python3.11 -m venv camel_ss       # Create virtual environment
 source camel_ss/bin/activate  # Activate virtual environment
 ```
 
-
 ### Step 2. Install requirements.txt
 
 ```bash
-python3.11 -m pip install -r requirements.txt 
+python3.11 -m pip install -r requirements.txt
 ```
 
 ## Setting up vllm-config or config.yaml files
 
 ### vllm-config(currently, will be obsolete soon)
+
 - read the vllm doc https://docs.vllm.ai/en/stable/ (Optional)
 - download llama3-8b-instruct weights to local folder.
 - prepare a linux-gpu enviornment. (Recommended VRAM >= 24G)
@@ -51,6 +52,7 @@ export LLAMA3_MODEL_PATH="/your/path/to/llama3-8b-instruct"
 ### config.yaml(will be integrated well soon)
 
 #### To set up experiment data and test data
+
 ```python
 class Config(Singleton):
     ...
@@ -62,6 +64,7 @@ class Config(Singleton):
 ```
 
 #### To set up multi-LLMs & multi-GPUs to run simulation
+
 ```python
     single_model_single_instance = {
         'flag': False,
@@ -104,32 +107,30 @@ class Config(Singleton):
     }
 ```
 
-#### To set up the three-stage recommender system 
-with all components being pluggable to accommodate experimental needs 
+#### To set up the three-stage recommender system
+
+with all components being pluggable to accommodate experimental needs
 (will be integrated well soon)
 [recsys-design](./static/recsys.jpg)
 
 #### To set up sandbox environment tailored to your experimental setup
+
 sandbox-env: various agent actions & corresponding APIs supported by infra
 [multiple-actions](./static/mutliple-actions.png)
 
-
 ## Run the Main Program
-
 
 ```bash
 bash run.sh
 ```
+
 coming soon:
 A GUI(graphical user interface) to display simulations
 
-
 ## to-dos
+
 - [x] to support functioncall & upgrade camel-ai to 0.1.5.1
 - [ ] to support Multi-GPUs & Multi-LLMs @zhiyu @yuxian
 - [ ] integrate argparser & config files @zhiyu @ziyi
 - [ ] develop a simple GUI as a program entry point and for visualizing the running process and results (preliminary analysis)
 - [ ] Develop a GUI(graphical user interface) to display simulations
-
-
-

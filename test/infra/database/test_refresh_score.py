@@ -5,8 +5,8 @@ from datetime import datetime
 
 import pytest
 
-from social_simulation.social_platform.platform import Platform
-from social_simulation.social_platform.typing import ActionType
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import ActionType
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -22,12 +22,12 @@ class MockChannel:
         # 第一次调用返回搜索用户的指令
         if self.call_count == 0:
             self.call_count += 1
-            return ('id_', (None, None, ActionType.UPDATE_REC_TABLE))
+            return ("id_", (None, None, ActionType.UPDATE_REC_TABLE))
         if self.call_count == 1:
             self.call_count += 1
-            return ('id_', (0, None, ActionType.REFRESH))
+            return ("id_", (0, None, ActionType.REFRESH))
         else:
-            return ('id_', (None, None, ActionType.EXIT))
+            return ("id_", (None, None, ActionType.EXIT))
 
     async def send_to(self, message):
         self.messages.append(message)  # 存储消息以便后续断言
@@ -39,13 +39,13 @@ class MockChannel:
             print(message[2]["posts"])
             assert len(message[2]["posts"]) == 1
             # 然后检查 'posts' 列表中的每个条目
-            for post in message[2].get('posts', []):
-                assert post.get('post_id') is not None
-                assert post.get('user_id') is not None
-                assert post.get('content') is not None
-                assert post.get('created_at') is not None
-                assert post.get('score') == -1
-                assert post.get('comments')[0].get('score') == -2
+            for post in message[2].get("posts", []):
+                assert post.get("post_id") is not None
+                assert post.get("user_id") is not None
+                assert post.get("content") is not None
+                assert post.get("created_at") is not None
+                assert post.get("score") == -1
+                assert post.get("comments")[0].get("score") == -2
 
 
 @pytest.fixture
@@ -73,7 +73,8 @@ async def test_refresh(setup_platform):
         cursor.execute(
             ("INSERT INTO user (user_id, agent_id, user_name, bio, "
              "num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?)"),
-            (0, 0, "user0", "This is test bio for user 0", 0, 0))
+            (0, 0, "user0", "This is test bio for user 0", 0, 0),
+        )
         conn.commit()
 
         # 在测试开始之前，将post插入到post表中
@@ -87,13 +88,17 @@ async def test_refresh(setup_platform):
             comment_content = f"Comment content for post {i}"
             created_at = datetime.now()
 
-            cursor.execute(("INSERT INTO post (user_id, content, created_at, "
-                            "num_likes, num_dislikes) VALUES (?, ?, ?, ?, ?)"),
-                           (user_id, content, created_at, 0, 1))
-            cursor.execute(("INSERT INTO comment (post_id, user_id, content, "
-                            "created_at, num_likes, num_dislikes) VALUES "
-                            "(?, ?, ?, ?, ?, ?)"),
-                           (i, user_id, comment_content, created_at, 0, 2))
+            cursor.execute(
+                ("INSERT INTO post (user_id, content, created_at, "
+                 "num_likes, num_dislikes) VALUES (?, ?, ?, ?, ?)"),
+                (user_id, content, created_at, 0, 1),
+            )
+            cursor.execute(
+                ("INSERT INTO comment (post_id, user_id, content, "
+                 "created_at, num_likes, num_dislikes) VALUES "
+                 "(?, ?, ?, ?, ?, ?)"),
+                (i, user_id, comment_content, created_at, 0, 2),
+            )
         conn.commit()
         # print_db_contents(test_db_filepath)
         await platform.running()

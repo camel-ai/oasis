@@ -1,31 +1,30 @@
+---
 data:
   db_path: data/twitter/test.db
   csv_path: data/topics/False_Business_0.csv
 simulation:
   num_timesteps: 5
   clock_factor: 60
-  recsys_type: "twitter"
+  recsys_type: twitter
 model:
   num_agents: 79
   model_random_seed: 42
   cfgs:
-    - model_type: "llama-3"
+    - model_type: llama-3
       num: 79
-      server_url: "http://10.140.0.184:8004/v1" # eg, http://10.160.2.154:8000/v1
-      model_path: "/mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct"
+      server_url: http://10.140.0.184:8004/v1  # eg, http://10.160.2.154:8000/v1
+      model_path: /mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct
       stop_tokens: []
       temperature: 0.0
-    - model_type: "internlm-chat-20b"
+    - model_type: internlm-chat-20b
       num: 0
-      server_url: "http://{ip address}:{port number}/v1"
-      model_path: "/your/path/to/internlm-chat-20b"
-      stop_tokens:
-        - "<eoa>"
+      server_url: http://{ip address}:{port number}/v1
+      model_path: /your/path/to/internlm-chat-20b
+      stop_tokens: [<eoa>]
       temperature: 0.0
-    - model_type: "Qwen-7B-Chat"
+    - model_type: Qwen-7B-Chat
       num: 0
-      server_url: "http://{ip address}:{port number}/v1"
-      model_path: "/your/path/to/Qwen-7B-Chat"
-      stop_tokens:
-        - "<|im_end|>"
+      server_url: http://{ip address}:{port number}/v1
+      model_path: /your/path/to/Qwen-7B-Chat
+      stop_tokens: [<|im_end|>]
       temperature: 0.0

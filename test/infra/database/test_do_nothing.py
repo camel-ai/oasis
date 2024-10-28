@@ -4,8 +4,8 @@ import sqlite3
 
 import pytest
 
-from social_simulation.social_platform.platform import Platform
-from social_simulation.social_platform.typing import ActionType
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import ActionType
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
@@ -21,9 +21,9 @@ class MockChannel:
         # 第一次调用返回搜索用户的指令
         if self.call_count == 0:
             self.call_count += 1
-            return ('id_', (1, None, ActionType.DO_NOTHING))
+            return ("id_", (1, None, ActionType.DO_NOTHING))
         else:
-            return ('id_', (None, None, ActionType.EXIT))
+            return ("id_", (None, None, ActionType.EXIT))
 
     async def send_to(self, message):
         self.messages.append(message)
@@ -56,7 +56,8 @@ async def test_refresh(setup_platform):
         cursor.execute(
             ("INSERT INTO user (user_id, agent_id, user_name, bio, "
              "num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?)"),
-            (1, 1, "user1", "This is test bio for user 1", 0, 0))
+            (1, 1, "user1", "This is test bio for user 1", 0, 0),
+        )
         conn.commit()
 
         await platform.running()
