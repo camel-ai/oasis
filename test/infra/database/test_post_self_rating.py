@@ -20,23 +20,23 @@ class MockChannel:
         # 第一次调用返回创建推文的指令
         if self.call_count == 0:
             self.call_count += 1
-            return ('id_', (1, "This is a test post", "create_post"))
+            return ("id_", (1, "This is a test post", "create_post"))
         # 第二次调用返回点赞操作的指令
         elif self.call_count == 1:
             self.call_count += 1
-            return ('id_', (1, 1, "like_post"))
+            return ("id_", (1, 1, "like_post"))
         elif self.call_count == 2:
             self.call_count += 1
-            return ('id_', (2, 1, "like_post"))
+            return ("id_", (2, 1, "like_post"))
         elif self.call_count == 3:
             self.call_count += 1
-            return ('id_', (1, 1, "dislike_post"))
+            return ("id_", (1, 1, "dislike_post"))
         elif self.call_count == 4:
             self.call_count += 1
-            return ('id_', (2, 1, "dislike_post"))
+            return ("id_", (2, 1, "dislike_post"))
         # 返回退出指令
         else:
-            return ('id_', (None, None, "exit"))
+            return ("id_", (None, None, "exit"))
 
     async def send_to(self, message):
         self.messages.append(message)  # 存储消息以便后续断言
@@ -48,14 +48,14 @@ class MockChannel:
             # 对点赞操作的成功消息进行断言
             assert message[2]["success"] is False
             assert message[2]["error"] == (
-                'Users are not allowed to like/dislike their own posts.')
+                "Users are not allowed to like/dislike their own posts.")
         elif self.call_count == 3:
             assert message[2]["success"] is True
             assert "like_id" in message[2]
         elif self.call_count == 4:
             assert message[2]["success"] is False
             assert message[2]["error"] == (
-                'Users are not allowed to like/dislike their own posts.')
+                "Users are not allowed to like/dislike their own posts.")
         elif self.call_count == 5:
             # 对点赞操作的成功消息进行断言
             assert message[2]["success"] is True
@@ -87,11 +87,15 @@ async def test_create_repost_like_unlike_post(setup_platform):
         cursor.execute(
             ("INSERT INTO user "
              "(user_id, agent_id, user_name, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"), (1, 1, "user1", 0, 0))
+             "VALUES (?, ?, ?, ?, ?)"),
+            (1, 1, "user1", 0, 0),
+        )
         cursor.execute(
             ("INSERT INTO user "
              "(user_id, agent_id, user_name, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"), (2, 2, "user2", 2, 4))
+             "VALUES (?, ?, ?, ?, ?)"),
+            (2, 2, "user2", 2, 4),
+        )
         conn.commit()
 
         await platform.running()

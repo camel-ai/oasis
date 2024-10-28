@@ -4,8 +4,8 @@ from time import sleep
 from camel.models import BaseModelBackend, ModelFactory
 from camel.types import ModelPlatformType
 
-thread_log = logging.getLogger(name='inference.thread')
-thread_log.setLevel('DEBUG')
+thread_log = logging.getLogger(name="inference.thread")
+thread_log.setLevel("DEBUG")
 
 
 class SharedMemory:
@@ -20,15 +20,16 @@ class SharedMemory:
 class InferenceThread:
 
     def __init__(
-            self,
-            model_path:
+        self,
+        model_path:
         str = "/mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct",  # noqa
-            server_url: str = "http://10.140.0.144:8000/v1",
-            stop_tokens: list[str] = None,
-            model_platform_type: ModelPlatformType = ModelPlatformType.VLLM,
-            model_type: str = "llama-3",
-            temperature: float = 0.5,
-            shared_memory: SharedMemory = None):
+        server_url: str = "http://10.140.0.144:8000/v1",
+        stop_tokens: list[str] = None,
+        model_platform_type: ModelPlatformType = ModelPlatformType.VLLM,
+        model_type: str = "llama-3",
+        temperature: float = 0.5,
+        shared_memory: SharedMemory = None,
+    ):
         self.alive = True
         self.count = 0
         self.server_url = server_url
@@ -36,7 +37,7 @@ class InferenceThread:
         self.model_type = model_type
 
         # print('server_url:', server_url)
-        print('self.model_type:', self.model_type)
+        print("self.model_type:", self.model_type)
         self.model_backend: BaseModelBackend = ModelFactory.create(
             model_platform=model_platform_type,
             model_type=self.model_type,
@@ -44,9 +45,9 @@ class InferenceThread:
                 "temperature": temperature,
                 "stop": stop_tokens
             },
-            url='vllm',
-            api_key=
-            server_url  # because of CAMEL bugs here, will fix when CAMEL upgrade.
+            url="vllm",
+            api_key=server_url,
+            # because of CAMEL bugs here, will fix when CAMEL upgrade.
         )
         # print('self.model_backend._url:', self.model_backend._url)
         if shared_memory is None:
@@ -64,7 +65,7 @@ class InferenceThread:
                     self.shared_memory.Response = response.choices[
                         0].message.content
                 except Exception as e:
-                    print('Receive Response Exception:', str(e))
+                    print("Receive Response Exception:", str(e))
                     self.shared_memory.Response = "No response."
                 self.shared_memory.Done = True
                 self.count += 1

@@ -1,23 +1,24 @@
+---
 data:
-  db_path: null
-  csv_path: null
+  db_path:
+  csv_path:
 simulation:
   num_timesteps: 3
   clock_factor: 60
-  recsys_type: "twitter"
+  recsys_type: twitter
 model:
   num_agents: 26
   model_random_seed: 42
   cfgs:
-    - model_type: "gpt-3.5-turbo"
+    - model_type: gpt-3.5-turbo
       num: 1
-      server_url: ""
-      model_path: ""
+      server_url: ''
+      model_path: ''
       stop_tokens: []
       temperature: 0.0
-    - model_type: "gpt-4o"
+    - model_type: gpt-4o
       num: 25
-      server_url: ""
-      model_path: ""
+      server_url: ''
+      model_path: ''
       stop_tokens: []
       temperature: 0.1

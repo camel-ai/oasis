@@ -30,18 +30,12 @@ twhin_tokenizer, twhin_model = None, None
 tfidf_vectorizer = TfidfVectorizer()
 # prepare the twhin model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base",model_max_length=512 ) # TODO change the pretrained_model_path
-# twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base").to(device)
-# STmodel = SentenceTransformer('/mnt/petrelfs/zhengzirui/social-simulation/models/models--sentence-transformers--paraphrase-MiniLM-L6-v2/snapshots/3bf4ae7445aa77c8daaef06518dd78baffff53c9').to(device)
-# twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="/ibex/user/yangz0h/open_source_llm/twhin-bert-base",model_max_length=512 ) # TODO change the pretrained_model_path
-# twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="/ibex/user/yangz0h/open_source_llm/twhin-bert-base").to(device)
+
 twhin_tokenizer = AutoTokenizer.from_pretrained(
     pretrained_model_name_or_path="Twitter/twhin-bert-base",
     model_max_length=512)  # TODO change the pretrained_model_path
 twhin_model = AutoModel.from_pretrained(
     pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
-# twhin_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base",model_max_length=512 ) # TODO change the pretrained_model_path
-# twhin_model = AutoModel.from_pretrained(pretrained_model_name_or_path="/mnt/hwfile/trustai/zhangzaibin/twhin-bert-base").to(device)
 
 # 每个用户的所有历史推特和最近一条推特
 user_previous_post_all = {}
@@ -85,7 +79,8 @@ def get_recsys_model(recsys_type: str = None):
         twhin_tokenizer, twhin_model = load_model("Twitter/twhin-bert-base")
         models = (twhin_tokenizer, twhin_model)
         return models
-    elif recsys_type == RecsysType.REDDIT.value or recsys_type == RecsysType.RANDOM.value:
+    elif (recsys_type == RecsysType.REDDIT.value
+          or recsys_type == RecsysType.RANDOM.value):
         return None
     else:
         raise ValueError(f"Unknown recsys type: {recsys_type}")
@@ -102,7 +97,9 @@ else:
 
 # 重置全局变量
 def reset_globals():
-    global user_previous_post_all, user_previous_post, user_profiles, t_items, u_items, date_score, fans_score
+    global user_previous_post_all, user_previous_post
+    global user_profiles, t_items, u_items
+    global date_score, fans_score
     user_previous_post_all = {}
     user_previous_post = {}
     user_profiles = []
@@ -254,21 +251,22 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
         List[List]: Updated recommendation matrix.
     """
     global model
-    if model == None or type(model) == tuple:
+    if model is None or isinstance(model, tuple):
         model = get_recsys_model(recsys_type="twitter")
 
     # 获取所有推文的ID
     post_ids = [post['post_id'] for post in post_table]
     print(
-        f'Running personalized recommendation for {len(user_table)} users......'
-    )
+        f'Running personalized recommendation for {len(user_table)} users...')
     start_time = time.time()
     new_rec_matrix = []
     if len(post_ids) <= max_rec_post_len:
-        # If the number of posts is less than or equal to the maximum recommended length, each user gets all post IDs
+        # If the number of posts is less than or equal to the maximum
+        # recommended length, each user gets all post IDs
         new_rec_matrix = [post_ids] * len(rec_matrix)
     else:
-        # If the number of posts is greater than the maximum recommended length, each user gets personalized post IDs
+        # If the number of posts is greater than the maximum recommended
+        # length, each user gets personalized post IDs
         user_bios = [
             user['bio'] if 'bio' in user and user['bio'] is not None else ''
             for user in user_table
@@ -313,7 +311,8 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
                 post_table[i]['post_id'] for i in filtered_post_indices
             ]
 
-            # Determine the top posts based on the similarities, limited by max_rec_post_len.
+            # Determine the top posts based on the similarities, limited by
+            # max_rec_post_len.
             _, top_indices = torch.topk(user_similarities,
                                         k=min(max_rec_post_len,
                                               len(filtered_post_ids)))
@@ -385,7 +384,8 @@ def rec_sys_personalized_twh(
         recall_only: bool = False,
         enable_like_score: bool = False) -> List[List]:
     # 设置一些全局变量，减少时间消耗
-    global date_score, fans_score, t_items, u_items, user_previous_post, user_previous_post_all, user_profiles
+    global date_score, fans_score, t_items, u_items, user_previous_post
+    global user_previous_post_all, user_profiles
     # 获取 uid: follower_count dict
     # 只更新一次，除非要加入中途介入新用户的功能。
     if (not u_items) or len(u_items) != len(user_table):
@@ -403,7 +403,7 @@ def rec_sys_personalized_twh(
         user_previous_post = {index: "" for index in range(len(user_table))}
     if not user_profiles or len(user_profiles) != len(user_table):
         for user in user_table:
-            if user['bio'] == None:
+            if user['bio'] is None:
                 user_profiles.append('This user does not have profile')
             else:
                 user_profiles.append(user['bio'])
@@ -444,7 +444,7 @@ def rec_sys_personalized_twh(
                                              ActionType.LIKE_POST.value,
                                              trace_table)
             like_post_ids_all.append(like_post_ids)
-    #ßscores = date_score_np * fans_score_np
+    # ßscores = date_score_np * fans_score_np
     scores = date_score_np
     new_rec_matrix = []
     if len(post_table) <= max_rec_post_len:
@@ -459,9 +459,11 @@ def rec_sys_personalized_twh(
         for post_user_index in user_previous_post:
             try:
                 # 直接使用最新推特替换profile的方法会导致推荐系统向已经转发了该推特的用户重复推送其他转发了该推特的repost
-                # user_profiles[post_user_index] = user_previous_post[post_user_index]
+                # user_profiles[post_user_index] =
+                # user_previous_post[post_user_index]
                 # 这里改为向user char的最后加上对于Recent post的内容介绍
-                update_profile = f" # Recent post:{user_previous_post[post_user_index]}"
+                update_profile = (
+                    f" # Recent post:{user_previous_post[post_user_index]}")
                 if user_previous_post[post_user_index] != "":
                     # 如果没有更新 recent post，加上这一段
                     if "# Recent post:" not in user_profiles[post_user_index]:
@@ -471,7 +473,7 @@ def rec_sys_personalized_twh(
                         user_profiles[post_user_index] = user_profiles[
                             post_user_index].split(
                                 "# Recent post:")[0] + update_profile
-            except:
+            except Exception:
                 print("update previous post failed")
 
         corpus = user_profiles + list(t_items.values())
@@ -496,7 +498,7 @@ def rec_sys_personalized_twh(
                         try:
                             like_posts_vectors.append(
                                 posts_vector[like_post_id - 1])
-                        except:
+                        except Exception:
                             like_posts_vectors.append(user_vector[user_idx])
                 else:
                     like_posts_vectors += [
@@ -505,15 +507,14 @@ def rec_sys_personalized_twh(
             try:
                 like_posts_vectors = torch.stack(like_posts_vectors).view(
                     len(user_table), 5, posts_vector.shape[1])
-            except:
-                import pdb
+            except Exception:
+                import pdb  # noqa: F811
                 pdb.set_trace()
         get_similar_start_t = time.time()
         cosine_similarities = cosine_similarity(user_vector, posts_vector)
         get_similar_end_t = time.time()
-        rec_log.info(
-            f"get cosine_similarity time: {get_similar_end_t-get_similar_start_t}"
-        )
+        rec_log.info(f"get cosine_similarity time: "
+                     f"{get_similar_end_t-get_similar_start_t}")
         if enable_like_score:
             for user_index, profile in enumerate(user_profiles):
                 user_like_posts_vector = like_posts_vectors[user_index]
@@ -521,7 +522,7 @@ def rec_sys_personalized_twh(
                     user_like_posts_vector, posts_vector)
                 try:
                     scores = scores + like_scores
-                except:
+                except Exception:
                     import pdb
                     pdb.set_trace()
 

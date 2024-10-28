@@ -20,16 +20,16 @@ from social_simulation.social_platform.platform import Platform
 from social_simulation.social_platform.typing import ActionType
 
 logger = logging.getLogger("twitter_simulation")
-logger.setLevel('DEBUG')
+logger.setLevel("DEBUG")
 file_handler = logging.FileHandler("twitter_simulation.log")
-file_handler.setLevel('DEBUG')
+file_handler.setLevel("DEBUG")
 file_handler.setFormatter(
-    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
 logger.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel('DEBUG')
+stream_handler.setLevel("DEBUG")
 stream_handler.setFormatter(
-    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
 logger.addHandler(stream_handler)
 
 parser = argparse.ArgumentParser(description="Arguments for script.")
@@ -101,12 +101,12 @@ async def running(
             else:
                 topic_name = csv_path.split("/")[-1].split(".")[0].split(
                     "-")[0]
-            start_time = all_topic_df[all_topic_df["topic_name"] ==
-                                      topic_name]["start_time"].item().split(
-                                          " ")[1]
+            start_time = (
+                all_topic_df[all_topic_df["topic_name"] ==
+                             topic_name]["start_time"].item().split(" ")[1])
             start_hour = int(start_time.split(":")[0]) + float(
                 int(start_time.split(":")[1]) / 60)
-    except:
+    except Exception:
         print("No real-world data, let start_hour be 13")
         start_hour = 13
 
@@ -120,8 +120,8 @@ async def running(
         for _, agent in agent_graph.get_agents():
             if agent.user_info.is_controllable is False:
                 agent_ac_prob = random.random()
-                threshold = agent.user_info.profile['other_info'][
-                    'active_threshold'][int(simulation_time_hour % 24)]
+                threshold = agent.user_info.profile["other_info"][
+                    "active_threshold"][int(simulation_time_hour % 24)]
                 if agent_ac_prob < threshold:
                     await agent.perform_action_by_llm()
             else:

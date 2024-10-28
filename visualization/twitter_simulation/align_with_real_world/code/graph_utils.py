@@ -16,14 +16,13 @@ def get_dpeth(G: nx.Graph, source=0):
 
 # 根据时间获取子图
 def get_subgraph_by_time(G: nx.Graph, time_threshold=10):
-
     # 假设我们要提取前 time_threshod 秒发的推
     filtered_nodes = []
     for node, attr in G.nodes(data=True):
         try:
-            if attr['timestamp'] <= time_threshold:
+            if attr["timestamp"] <= time_threshold:
                 filtered_nodes.append(node)
-        except:
+        except Exception:
             # print(f"node {node} dose not exist")
             pass
     # 使用 `subgraph()` 方法提取子图
@@ -35,7 +34,7 @@ def get_subgraph_by_time(G: nx.Graph, time_threshold=10):
 # 图的可视化
 def hierarchy_pos(G,
                   root=None,
-                  width=1.,
+                  width=1.0,
                   vert_gap=0.2,
                   vert_loc=0,
                   xcenter=0.5):
@@ -46,15 +45,17 @@ def hierarchy_pos(G,
     return pos
 
 
-def _hierarchy_pos(G,
-                   root,
-                   width=1.,
-                   vert_gap=0.2,
-                   vert_loc=0,
-                   xcenter=0.5,
-                   pos=None,
-                   parent=None,
-                   parsed=None):
+def _hierarchy_pos(
+    G,
+    root,
+    width=1.0,
+    vert_gap=0.2,
+    vert_loc=0,
+    xcenter=0.5,
+    pos=None,
+    parent=None,
+    parsed=None,
+):
     if pos is None:
         pos = {root: (xcenter, vert_loc)}
     else:
@@ -74,15 +75,17 @@ def _hierarchy_pos(G,
         nextx = xcenter - width / 2 - dx / 2
         for neighbor in neighbors:
             nextx += dx
-            pos = _hierarchy_pos(G,
-                                 neighbor,
-                                 width=dx,
-                                 vert_gap=vert_gap,
-                                 vert_loc=vert_loc - vert_gap,
-                                 xcenter=nextx,
-                                 pos=pos,
-                                 parent=root,
-                                 parsed=parsed)
+            pos = _hierarchy_pos(
+                G,
+                neighbor,
+                width=dx,
+                vert_gap=vert_gap,
+                vert_loc=vert_loc - vert_gap,
+                xcenter=nextx,
+                pos=pos,
+                parent=root,
+                parsed=parsed,
+            )
     return pos
 
 
@@ -92,13 +95,15 @@ def plot_graph_like_tree(G, root):
 
     # 绘制图
     plt.figure(figsize=(12, 8))
-    nx.draw(G,
-            pos,
-            with_labels=True,
-            node_size=3000,
-            node_color="lightblue",
-            font_size=10,
-            font_weight="bold",
-            arrows=True)
+    nx.draw(
+        G,
+        pos,
+        with_labels=True,
+        node_size=3000,
+        node_color="lightblue",
+        font_size=10,
+        font_weight="bold",
+        arrows=True,
+    )
     plt.title("Retweet Tree")
     plt.show()

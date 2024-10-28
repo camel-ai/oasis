@@ -31,7 +31,7 @@ class prop_graph:
         for i in range(len(df)):
             content = df.loc[i]["content"]
             # 数据有点encoding上的问题，加上[0:10]避开
-            if self.post_exist == False and self.source_post_content[
+            if self.post_exist is False and self.source_post_content[
                     0:10] in content:
                 self.post_exist = True
                 self.root_id = df.loc[i]["user_id"]
@@ -45,7 +45,8 @@ class prop_graph:
         # 给定的数据
         data = all_reposts_and_time
         # 获取起始时间
-        # start_time =  df.loc[df["content"]==self.source_post_content]["created_at"].item()
+        # start_time =  df.loc[df["content"]==
+        # self.source_post_content]["created_at"].item()
         start_time = 0
         # now start time is int, represent minutes
         # start_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S.%f')
@@ -56,10 +57,11 @@ class prop_graph:
         first_flag = 1
         # 从数据中提取边并添加到图中
         for reposts, timestamp in data:
-            # timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S.%f')
+            # timestamp = datetime.strptime(
+            #     timestamp_str, '%Y-%m-%d %H:%M:%S.%f')
             time_diff = timestamp - start_time
             for repost in reposts:
-                repost_info = repost.split(' repost from ')
+                repost_info = repost.split(" repost from ")
                 user = repost_info[0]
                 original_user = repost_info[1]
 
@@ -79,7 +81,7 @@ class prop_graph:
 
         # 获取传播开始与终止时间戳
         self.start_timestamp = 0
-        timestamps = nx.get_node_attributes(self.G, 'timestamp')
+        timestamps = nx.get_node_attributes(self.G, "timestamp")
         try:
             self.end_timestamp = max(timestamps.values()) + 3
         except Exception as e:
@@ -131,8 +133,9 @@ class prop_graph:
                 try:
                     sub_g = get_subgraph_by_time(self.G, time_threshold=t)
                     depth = get_dpeth(sub_g, source=self.root_id)
-                except:
+                except Exception:
                     import pdb
+
                     pdb.set_trace()
             depth_list.append(depth)
         self.depth_list = depth_list
@@ -143,16 +146,16 @@ class prop_graph:
             ax.plot(self.d_t_list, self.depth_list)
 
             # 添加标题和标签
-            plt.title('propagation depth-time')
-            plt.xlabel('time/minute')
-            plt.ylabel('depth')
+            plt.title("propagation depth-time")
+            plt.xlabel("time/minute")
+            plt.ylabel("depth")
 
             # 显示图形
             plt.show()
         else:
             return self.d_t_list, self.depth_list
 
-    def plot_scale_time(self, separate_ratio: float = 1.):
+    def plot_scale_time(self, separate_ratio: float = 1.0):
         """
         整个传播过程的前separate_ratio*T的过程之间的数据详细刻画
         之后的数据粗略刻画
@@ -168,13 +171,14 @@ class prop_graph:
         self.s_t_list = list(
             range(
                 int(self.start_timestamp), separate_point,
-                1))  #  + list(range(separate_point, int(self.end_time), 1000))
+                1))  # + list(range(separate_point, int(self.end_time), 1000))
         for t in self.s_t_list:
             try:
                 sub_g = get_subgraph_by_time(self.G, time_threshold=t)
                 node_num = sub_g.number_of_nodes()
-            except:
+            except Exception:
                 import pdb
+
                 pdb.set_trace()
 
             self.node_nums.append(node_num)
@@ -193,9 +197,9 @@ class prop_graph:
             # ax.set_xticklabels(['1', '10', '100', '1k', '10k'])
 
             # 添加标题和标签
-            plt.title('propagation scale-time')
-            plt.xlabel('time/minute')
-            plt.ylabel('scale')
+            plt.title("propagation scale-time")
+            plt.xlabel("time/minute")
+            plt.ylabel("scale")
 
             # 显示图形
             plt.show()
@@ -203,7 +207,6 @@ class prop_graph:
             return self.s_t_list, self.node_nums
 
     def plot_max_breadth_time(self, interval=1):
-
         self.max_breadth_list = []
 
         self.b_t_list = list(
@@ -212,8 +215,9 @@ class prop_graph:
         for t in self.b_t_list:
             try:
                 sub_g = get_subgraph_by_time(self.G, time_threshold=t)
-            except:
+            except Exception:
                 import pdb
+
                 pdb.set_trace()
             max_depth = self.depth_list[t - self.b_t_list[0]]
             max_breadth = 0
@@ -235,9 +239,9 @@ class prop_graph:
             ax.plot(self.b_t_list, self.max_breadth_list)
 
             # 添加标题和标签
-            plt.title('propagation max breadth-time')
-            plt.xlabel('time/minute')
-            plt.ylabel('max breadth')
+            plt.title("propagation max breadth-time")
+            plt.xlabel("time/minute")
+            plt.ylabel("max breadth")
 
             # 显示图形
             plt.show()
@@ -245,7 +249,6 @@ class prop_graph:
             return self.b_t_list, self.max_breadth_list
 
     def plot_structural_virality_time(self, interval=1):
-
         self.sv_list = []
         self.sv_t_list = list(
             range(int(self.start_timestamp), int(self.end_timestamp),
@@ -254,8 +257,9 @@ class prop_graph:
         for t in self.sv_t_list:
             try:
                 sub_g = get_subgraph_by_time(self.G, time_threshold=t)
-            except:
+            except Exception:
                 import pdb
+
                 pdb.set_trace()
             sub_g = sub_g.to_undirected()
             sv = nx.average_shortest_path_length(sub_g)
@@ -267,9 +271,9 @@ class prop_graph:
             ax.plot(self.sv_t_list, self.sv_list)
 
             # 添加标题和标签
-            plt.title('propagation structural virality -time')
-            plt.xlabel('time/minute')
-            plt.ylabel('structural virality')
+            plt.title("propagation structural virality -time")
+            plt.xlabel("time/minute")
+            plt.ylabel("structural virality")
 
             # 显示图形
             plt.show()

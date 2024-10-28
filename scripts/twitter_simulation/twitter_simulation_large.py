@@ -20,18 +20,18 @@ from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.platform import Platform
 from social_simulation.social_platform.typing import ActionType
 
-social_log = logging.getLogger(name='social')
-social_log.setLevel('DEBUG')
+social_log = logging.getLogger(name="social")
+social_log.setLevel("DEBUG")
 
-file_handler = logging.FileHandler('social.log')
-file_handler.setLevel('DEBUG')
+file_handler = logging.FileHandler("social.log")
+file_handler.setLevel("DEBUG")
 file_handler.setFormatter(
-    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
 social_log.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel('DEBUG')
+stream_handler.setLevel("DEBUG")
 stream_handler.setFormatter(
-    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
 social_log.addHandler(stream_handler)
 
 parser = argparse.ArgumentParser(description="Arguments for script.")
@@ -43,20 +43,24 @@ parser.add_argument(
     default="",
 )
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                        "data/twitter_dataset/anonymous_topic_200_1h")
+DATA_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)),
+    "data/twitter_dataset/anonymous_topic_200_1h",
+)
 DEFAULT_DB_PATH = ":memory:"
 DEFAULT_CSV_PATH = os.path.join(DATA_DIR, "False_Business_0.csv")
 
 
-async def running(db_path: str | None = DEFAULT_DB_PATH,
-                  csv_path: str | None = DEFAULT_CSV_PATH,
-                  num_timesteps: int = 3,
-                  clock_factor: int = 60,
-                  recsys_type: str = "twhin-bert",
-                  model_configs: dict[str, Any] | None = None,
-                  inference_configs: dict[str, Any] | None = None,
-                  action_space_file_path: str = None) -> None:
+async def running(
+    db_path: str | None = DEFAULT_DB_PATH,
+    csv_path: str | None = DEFAULT_CSV_PATH,
+    num_timesteps: int = 3,
+    clock_factor: int = 60,
+    recsys_type: str = "twhin-bert",
+    model_configs: dict[str, Any] | None = None,
+    inference_configs: dict[str, Any] | None = None,
+    action_space_file_path: str = None,
+) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     csv_path = DEFAULT_CSV_PATH if csv_path is None else csv_path
     if os.path.exists(db_path):
@@ -70,14 +74,16 @@ async def running(db_path: str | None = DEFAULT_DB_PATH,
     social_log.info(f"Start time: {start_time}")
     clock = Clock(k=clock_factor)
     twitter_channel = Channel()
-    infra = Platform(db_path,
-                     twitter_channel,
-                     clock,
-                     start_time,
-                     recsys_type=recsys_type,
-                     refresh_rec_post_count=2,
-                     max_rec_post_len=2,
-                     following_post_count=3)
+    infra = Platform(
+        db_path,
+        twitter_channel,
+        clock,
+        start_time,
+        recsys_type=recsys_type,
+        refresh_rec_post_count=2,
+        max_rec_post_len=2,
+        following_post_count=3,
+    )
     inference_channel = Channel()
     infere = InferencerManager(
         inference_channel,
@@ -94,17 +100,17 @@ async def running(db_path: str | None = DEFAULT_DB_PATH,
             else:
                 topic_name = csv_path.split("/")[-1].split(".")[0].split(
                     "-")[0]
-            source_post_time = all_topic_df[
-                all_topic_df["topic_name"] ==
-                topic_name]["start_time"].item().split(" ")[1]
+            source_post_time = (
+                all_topic_df[all_topic_df["topic_name"] ==
+                             topic_name]["start_time"].item().split(" ")[1])
             start_hour = int(source_post_time.split(":")[0]) + float(
                 int(source_post_time.split(":")[1]) / 60)
-    except:
+    except Exception:
         print("No real-world data, let start_hour be 1PM")
         start_hour = 13
 
     model_configs = model_configs or {}
-    with open(action_space_file_path, 'r', encoding='utf-8') as file:
+    with open(action_space_file_path, "r", encoding="utf-8") as file:
         action_space = file.read()
     agent_graph = await generate_agents(
         agent_info_path=csv_path,
@@ -132,8 +138,8 @@ async def running(db_path: str | None = DEFAULT_DB_PATH,
         for node_id, agent in agent_graph.get_agents():
             if agent.user_info.is_controllable is False:
                 agent_ac_prob = random.random()
-                threshold = agent.user_info.profile['other_info'][
-                    'active_threshold'][int(simulation_time_hour % 24)]
+                threshold = agent.user_info.profile["other_info"][
+                    "active_threshold"][int(simulation_time_hour % 24)]
                 if agent_ac_prob < threshold:
                     tasks.append(agent.perform_action_by_llm())
             else:
@@ -159,14 +165,13 @@ if __name__ == "__main__":
         inference_configs = cfg.get("inference")
 
         asyncio.run(
-            running(
-                **data_params,
-                **simulation_params,
-                model_configs=model_configs,
-                inference_configs=inference_configs,
-                action_space_file_path=
-                "scripts/twitter_simulation/align_with_real_world/action_space_prompt.txt"
-            ))
+            running(**data_params,
+                    **simulation_params,
+                    model_configs=model_configs,
+                    inference_configs=inference_configs,
+                    action_space_file_path=(
+                        "scripts/twitter_simulation/align_with_real_world/"
+                        "action_space_prompt.txt")))
     else:
         asyncio.run(running())
     social_log.info("Simulation finished.")

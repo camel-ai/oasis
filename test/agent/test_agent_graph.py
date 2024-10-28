@@ -11,27 +11,33 @@ from social_simulation.social_platform.config import Neo4jConfig, UserInfo
 
 def neo4j_vars_set() -> bool:
     # Check if all required neo4j env variables are set
-    return (os.getenv('NEO4J_URI') is not None
-            and os.getenv('NEO4J_USERNAME') is not None
-            and os.getenv('NEO4J_PASSWORD') is not None)
+    return (os.getenv("NEO4J_URI") is not None
+            and os.getenv("NEO4J_USERNAME") is not None
+            and os.getenv("NEO4J_PASSWORD") is not None)
 
 
 def test_agent_graph(tmp_path):
     twitter_channel = Channel()
     inference_channel = Channel()
     graph = AgentGraph()
-    agent_0 = SocialAgent(agent_id=0,
-                          user_info=UserInfo(name="0"),
-                          twitter_channel=twitter_channel,
-                          inference_channel=inference_channel)
-    agent_1 = SocialAgent(agent_id=1,
-                          user_info=UserInfo(name="1"),
-                          twitter_channel=twitter_channel,
-                          inference_channel=inference_channel)
-    agent_2 = SocialAgent(agent_id=2,
-                          user_info=UserInfo(name="2"),
-                          twitter_channel=twitter_channel,
-                          inference_channel=inference_channel)
+    agent_0 = SocialAgent(
+        agent_id=0,
+        user_info=UserInfo(name="0"),
+        twitter_channel=twitter_channel,
+        inference_channel=inference_channel,
+    )
+    agent_1 = SocialAgent(
+        agent_id=1,
+        user_info=UserInfo(name="1"),
+        twitter_channel=twitter_channel,
+        inference_channel=inference_channel,
+    )
+    agent_2 = SocialAgent(
+        agent_id=2,
+        user_info=UserInfo(name="2"),
+        twitter_channel=twitter_channel,
+        inference_channel=inference_channel,
+    )
 
     graph.add_agent(agent_0)
     graph.add_agent(agent_1)
@@ -75,16 +81,16 @@ def test_agent_graph(tmp_path):
 
 @pytest.mark.skipif(
     not neo4j_vars_set(),
-    reason='One or more neo4j env variables are not set',
+    reason="One or more neo4j env variables are not set",
 )
 def test_agent_neo4j_graph():
     channel = Channel()
     graph = AgentGraph(
         backend="neo4j",
         neo4j_config=Neo4jConfig(
-            uri=os.getenv('NEO4J_URI'),
-            username=os.getenv('NEO4J_USERNAME'),
-            password=os.getenv('NEO4J_PASSWORD'),
+            uri=os.getenv("NEO4J_URI"),
+            username=os.getenv("NEO4J_USERNAME"),
+            password=os.getenv("NEO4J_PASSWORD"),
         ),
     )
     agent_0 = SocialAgent(

@@ -1,24 +1,23 @@
 import os
+import pickle
 import sys
+from pathlib import Path
+from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-sys.path.append("visualization")
-import pickle
-from pathlib import Path
-from typing import List
-
 from graph import prop_graph
 from tqdm import tqdm
+
+sys.path.append("visualization")
 
 all_topic_df = pd.read_csv("data/twitter_dataset/all_topics.csv")
 
 
 def load_list(path):
     # load real world propagation data from file
-    with open(path, 'rb') as file:
+    with open(path, "rb") as file:
         loaded_list = pickle.load(file)
     return loaded_list
 
@@ -35,7 +34,6 @@ def get_stat_list(prop_g: prop_graph):
 
 
 def get_xdb_data(db_paths, topic_name):
-
     source_tweet_content = all_topic_df[all_topic_df["topic_name"] ==
                                         topic_name]["source_tweet"].item()
     stats = []
@@ -44,7 +42,7 @@ def get_xdb_data(db_paths, topic_name):
         try:
             pg.build_graph()
             stats.append(get_stat_list(pg))
-        except:
+        except Exception:
             zero_stats = [[0] * 300] * 3
             stats.append(zero_stats)
 
@@ -67,7 +65,8 @@ def get_all_xdb_data(db_folders: List):
     topics = os.listdir(f"data/simu_db/{db_folders[0]}")
     topics = [topic.split(".")[0] for topic in topics]
     # len(db_folders) == simulation results + real world propagation data  OR
-    # len(db_folders) == different simulation settings +  real world propagation data
+    # len(db_folders) == different simulation settings +  real world
+    # propagation data
     all_scale_lists = [[] for _ in range(len(db_folders) + 1)]
     all_depth_lists = [[] for _ in range(len(db_folders) + 1)]
     all_mb_lists = [[] for _ in range(len(db_folders) + 1)]
@@ -99,7 +98,7 @@ def plot_rmse(db_folders: List, db_types: List):
     stats_names = ["scale", "depth", "max breadth"]
 
     fig, axes = plt.subplots(1, 3, figsize=(28, 7))
-    markers = ['o', '^', 's', 'D', 'v', '*']
+    markers = ["o", "^", "s", "D", "v", "*"]
     for stat_index, stat_name in enumerate(stats_names):
         ax = axes[stat_index]
         colors = [
@@ -117,8 +116,8 @@ def plot_rmse(db_folders: List, db_types: List):
                 # and calculate the percentage deviation.
                 rmse_loss_per_min = np.abs(simu_arr -
                                            real_arr) / real_arr.max()
-                rmse_loss = np.sqrt(np.mean(
-                    (simu_arr - real_arr)**2)) / real_arr.max()
+                rmse_loss = (np.sqrt(np.mean(
+                    (simu_arr - real_arr)**2)) / real_arr.max())
                 topic_rmse_losses.append(rmse_loss)
                 topic_rmse_losses_per_min.append(rmse_loss_per_min)
 
@@ -126,29 +125,33 @@ def plot_rmse(db_folders: List, db_types: List):
             rmse_losses = np.mean(np.array(topic_rmse_losses))
             print(f"{db_type}_{stat_name} rmse loss: {rmse_losses}")
             rmse_losses_per_min = np.mean(topic_rmse_losses_per_min, axis=0)
-            ax.plot(rmse_losses_per_min,
-                    label=f"{db_type}",
-                    color=colors[type_index],
-                    marker=markers[type_index],
-                    markevery=3)
+            ax.plot(
+                rmse_losses_per_min,
+                label=f"{db_type}",
+                color=colors[type_index],
+                marker=markers[type_index],
+                markevery=3,
+            )
 
-        ax.set_xlabel('Time/minute', fontsize=22)
+        ax.set_xlabel("Time/minute", fontsize=22)
         if stat_index == 0:
             ax.set_ylabel("Loss", fontsize=22)
 
         ax.grid(True)
-        ax.set_title(f'Trend of {stat_name} Normalized RMSE Over Time',
+        ax.set_title(f"Trend of {stat_name} Normalized RMSE Over Time",
                      fontsize=22)
-        ax.tick_params(axis='x', labelsize=20)
-        ax.tick_params(axis='y', labelsize=20)
+        ax.tick_params(axis="x", labelsize=20)
+        ax.tick_params(axis="y", labelsize=20)
 
     handles, labels = ax.get_legend_handles_labels()
-    fig.legend(handles,
-               labels,
-               loc='lower center',
-               bbox_to_anchor=(0.5, 0),
-               fontsize=22,
-               ncol=3)
+    fig.legend(
+        handles,
+        labels,
+        loc="lower center",
+        bbox_to_anchor=(0.5, 0),
+        fontsize=22,
+        ncol=3,
+    )
     plt.tight_layout(rect=[0, 0.13, 1, 1])
     file_name = ""
     for type in db_types:
@@ -156,9 +159,8 @@ def plot_rmse(db_folders: List, db_types: List):
             type = type.replace("w/o", "without")
         file_name += f"{type}--"
     file_name += "all_stats.png"
-    save_dir = Path(
-        f"visualization/twitter_simulation/align_with_real_world/results/rmse/{file_name}"
-    )
+    save_dir = Path(f"visualization/twitter_simulation/align_with_real_world/"
+                    f"results/rmse/{file_name}")
     save_dir.parent.mkdir(parents=True, exist_ok=True)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)

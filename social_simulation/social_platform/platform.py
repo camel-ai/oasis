@@ -18,33 +18,34 @@ from social_simulation.social_platform.recsys import (
     rec_sys_reddit)
 from social_simulation.social_platform.typing import ActionType, RecsysType
 
-if 'sphinx' not in sys.modules:
-    twitter_log = logging.getLogger(name='social.twitter')
-    twitter_log.setLevel('DEBUG')
+if "sphinx" not in sys.modules:
+    twitter_log = logging.getLogger(name="social.twitter")
+    twitter_log.setLevel("DEBUG")
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    file_handler = logging.FileHandler(f'./log/social.twitter-{now}.log')
-    file_handler.setLevel('DEBUG')
+    file_handler = logging.FileHandler(f"./log/social.twitter-{now}.log")
+    file_handler.setLevel("DEBUG")
     file_handler.setFormatter(
         logging.Formatter(
-            '%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+            "%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
     twitter_log.addHandler(file_handler)
 
 
 class Platform:
     r"""Platform."""
 
-    def __init__(self,
-                 db_path: str,
-                 channel: Any,
-                 sandbox_clock: Clock | None = None,
-                 start_time: datetime | None = None,
-                 show_score: bool = False,
-                 allow_self_rating: bool = True,
-                 recsys_type: str | RecsysType = "reddit",
-                 refresh_rec_post_count: int = 1,
-                 max_rec_post_len: int = 2,
-                 following_post_count=3):
-
+    def __init__(
+        self,
+        db_path: str,
+        channel: Any,
+        sandbox_clock: Clock | None = None,
+        start_time: datetime | None = None,
+        show_score: bool = False,
+        allow_self_rating: bool = True,
+        recsys_type: str | RecsysType = "reddit",
+        refresh_rec_post_count: int = 1,
+        max_rec_post_len: int = 2,
+        following_post_count=3,
+    ):
         self.db_path = db_path
         self.recsys_type = recsys_type
         # import pdb; pdb.set_trace()
@@ -87,8 +88,13 @@ class Platform:
         self.trend_num_days = 7
         self.trend_top_k = 1
 
-        self.pl_utils = PlatformUtils(self.db, self.db_cursor, self.start_time,
-                                      self.sandbox_clock, self.show_score)
+        self.pl_utils = PlatformUtils(
+            self.db,
+            self.db_cursor,
+            self.start_time,
+            self.sandbox_clock,
+            self.show_score,
+        )
 
     async def running(self):
         while True:
@@ -122,7 +128,7 @@ class Platform:
                 # 构建参数字典
                 params = {}
                 if len_param_names >= 2:
-                    params['agent_id'] = agent_id
+                    params["agent_id"] = agent_id
                 if len_param_names == 3:
                     # 假设param_names中第二个元素是你想要添加的第二个参数名称
                     second_param_name = param_names[2]
@@ -146,16 +152,16 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
-
             # 插入用户记录
             user_insert_query = (
-                "INSERT INTO user (user_id, agent_id, user_name, name, bio, created_at,"
-                " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-            )
+                "INSERT INTO user (user_id, agent_id, user_name, name, bio, "
+                "created_at, num_followings, num_followers) VALUES "
+                "(?, ?, ?, ?, ?, ?, ?, ?)")
             self.pl_utils._execute_db_command(
                 user_insert_query,
                 (agent_id, agent_id, user_name, name, bio, current_time, 0, 0),
-                commit=True)
+                commit=True,
+            )
             user_id = agent_id
             # 准备trace记录的信息
             action_info = {"name": name, "user_name": user_name, "bio": bio}
@@ -194,16 +200,19 @@ class Platform:
                 # 从following中去获取post (in network)
                 # 更改SQL查询，令refresh得到的 post 是这个用户关注的人的 post，排序按照推特的点赞数
                 query_following_post = (
-                    "SELECT post.post_id, post.user_id, post.content, post.created_at, post.num_likes "
-                    "FROM post "
+                    "SELECT post.post_id, post.user_id, post.content, "
+                    "post.created_at, post.num_likes FROM post "
                     "JOIN follow ON post.user_id = follow.followee_id "
                     "WHERE follow.follower_id = ? "
-                    "ORDER BY post.num_likes DESC  "  # ORDER BY post.num_likes DESC
+                    "ORDER BY post.num_likes DESC  "
                     "LIMIT ?")
-                self.pl_utils._execute_db_command(query_following_post, (
-                    user_id,
-                    self.following_post_count,
-                ))
+                self.pl_utils._execute_db_command(
+                    query_following_post,
+                    (
+                        user_id,
+                        self.following_post_count,
+                    ),
+                )
 
                 following_posts = self.db_cursor.fetchall()
                 following_posts_ids = [row[0] for row in following_posts]
@@ -212,7 +221,7 @@ class Platform:
                 selected_post_ids = list(set(selected_post_ids))
 
             # 根据选定的post_id从post表中获取post详情
-            placeholders = ', '.join('?' for _ in selected_post_ids)
+            placeholders = ", ".join("?" for _ in selected_post_ids)
             # 构造SQL查询字符串
             post_query = (
                 f"SELECT post_id, user_id, content, created_at, num_likes, "
@@ -235,9 +244,9 @@ class Platform:
 
     async def update_rec_table(self):
         # Recsys(trace/user/post table), 结果是刷新了rec table
-        user_table = fetch_table_from_db(self.db_cursor, 'user')
-        post_table = fetch_table_from_db(self.db_cursor, 'post')
-        trace_table = fetch_table_from_db(self.db_cursor, 'trace')
+        user_table = fetch_table_from_db(self.db_cursor, "user")
+        post_table = fetch_table_from_db(self.db_cursor, "post")
+        trace_table = fetch_table_from_db(self.db_cursor, "trace")
         rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
 
         if self.recsys_type == RecsysType.RANDOM:
@@ -250,9 +259,7 @@ class Platform:
                 self.max_rec_post_len)
         elif self.recsys_type == RecsysType.TWHIN:
             latest_post_time = post_table[-1]["created_at"]
-            post_query = ("SELECT COUNT(*) "
-                          "FROM post "
-                          "WHERE created_at = ?")
+            post_query = "SELECT COUNT(*) " "FROM post " "WHERE created_at = ?"
 
             # 得到新发出的post条数，从而进行逐步更新
             self.pl_utils._execute_db_command(post_query, (latest_post_time, ))
@@ -263,10 +270,14 @@ class Platform:
                     "success": False,
                     "message": "Fail to get latest posts count"
                 }
-            new_rec_matrix = rec_sys_personalized_twh(user_table, post_table,
-                                                      latest_post_count,
-                                                      trace_table, rec_matrix,
-                                                      self.max_rec_post_len)
+            new_rec_matrix = rec_sys_personalized_twh(
+                user_table,
+                post_table,
+                latest_post_count,
+                trace_table,
+                rec_matrix,
+                self.max_rec_post_len,
+            )
         elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
                                             self.max_rec_post_len)
@@ -288,10 +299,10 @@ class Platform:
         self.pl_utils._execute_many_db_command(
             "INSERT INTO rec (user_id, post_id) VALUES (?, ?)",
             insert_values,
-            commit=True)
+            commit=True,
+        )
 
     async def create_post(self, agent_id: int, content: str):
-
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -375,7 +386,8 @@ class Platform:
             self.pl_utils._execute_db_command(
                 post_insert_query,
                 (user_id, repost_content, current_time, prev_like),
-                commit=True)
+                commit=True,
+            )
 
             post_id = self.db_cursor.lastrowid
             # 准备trace记录的信息
@@ -396,8 +408,8 @@ class Platform:
         try:
             user_id = agent_id
             # 检查是否已经存在点赞记录
-            like_check_query = (
-                "SELECT * FROM 'like' WHERE post_id = ? AND user_id = ?")
+            like_check_query = ("SELECT * FROM 'like' WHERE post_id = ? AND "
+                                "user_id = ?")
             self.pl_utils._execute_db_command(like_check_query,
                                               (post_id, user_id))
             if self.db_cursor.fetchone():
@@ -442,8 +454,8 @@ class Platform:
             user_id = agent_id
 
             # 检查是否已经存在点赞记录
-            like_check_query = (
-                "SELECT * FROM 'like' WHERE post_id = ? AND user_id = ?")
+            like_check_query = ("SELECT * FROM 'like' WHERE post_id = ? AND "
+                                "user_id = ?")
             self.pl_utils._execute_db_command(like_check_query,
                                               (post_id, user_id))
             result = self.db_cursor.fetchone()
@@ -468,7 +480,7 @@ class Platform:
             )
 
             # 在like表中删除记录
-            like_delete_query = ("DELETE FROM 'like' WHERE like_id = ?")
+            like_delete_query = "DELETE FROM 'like' WHERE like_id = ?"
             self.pl_utils._execute_db_command(
                 like_delete_query,
                 (like_id, ),
@@ -566,7 +578,7 @@ class Platform:
             )
 
             # 在dislike表中删除记录
-            like_delete_query = ("DELETE FROM 'dislike' WHERE dislike_id = ?")
+            like_delete_query = "DELETE FROM 'dislike' WHERE dislike_id = ?"
             self.pl_utils._execute_db_command(
                 like_delete_query,
                 (dislike_id, ),
@@ -595,8 +607,9 @@ class Platform:
             # 执行数据库查询
             self.pl_utils._execute_db_command(
                 sql_query,
-                ('%' + query + '%', '%' + query + '%', '%' + query + '%'),
-                commit=True)
+                ("%" + query + "%", "%" + query + "%", "%" + query + "%"),
+                commit=True,
+            )
             results = self.db_cursor.fetchall()
 
             # 记录操作到trace表
@@ -608,7 +621,7 @@ class Platform:
             if not results:
                 return {
                     "success": False,
-                    "message": "No posts found matching the query."
+                    "message": "No posts found matching the query.",
                 }
             results_with_comments = self.pl_utils._add_comments_to_posts(
                 results)
@@ -628,9 +641,15 @@ class Platform:
                 "CAST(user_id AS TEXT) LIKE ?")
             # 改写为使用 execute_db_command 方法
             self.pl_utils._execute_db_command(
-                sql_query, ('%' + query + '%', '%' + query + '%',
-                            '%' + query + '%', '%' + query + '%'),
-                commit=True)
+                sql_query,
+                (
+                    "%" + query + "%",
+                    "%" + query + "%",
+                    "%" + query + "%",
+                    "%" + query + "%",
+                ),
+                commit=True,
+            )
             results = self.db_cursor.fetchall()
 
             # 记录操作到trace表
@@ -642,7 +661,7 @@ class Platform:
             if not results:
                 return {
                     "success": False,
-                    "message": "No users found matching the query."
+                    "message": "No users found matching the query.",
                 }
 
             # Convert each tuple in results to a dictionary:
@@ -653,7 +672,7 @@ class Platform:
                 "bio": bio,
                 "created_at": created_at,
                 "num_followings": num_followings,
-                "num_followers": num_followers
+                "num_followers": num_followers,
             } for user_id, user_name, name, bio, created_at, num_followings,
                      num_followers in results]
             return {"success": True, "users": users}
@@ -760,7 +779,7 @@ class Platform:
                                         action_info)
             return {
                 "success": True,
-                "follow_id": follow_id  # 返回被删除的关注记录ID
+                "follow_id": follow_id,  # 返回被删除的关注记录ID
             }
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -816,7 +835,7 @@ class Platform:
             mute_id = mute_record[0]
 
             # 从mute表中删除指定的禁言记录
-            mute_delete_query = ("DELETE FROM mute WHERE mute_id = ?")
+            mute_delete_query = "DELETE FROM mute WHERE mute_id = ?"
             self.pl_utils._execute_db_command(mute_delete_query, (mute_id, ),
                                               commit=True)
 
@@ -863,7 +882,7 @@ class Platform:
             if not results:
                 return {
                     "success": False,
-                    "message": "No trending posts in the specified period."
+                    "message": "No trending posts in the specified period.",
                 }
             results_with_comments = self.pl_utils._add_comments_to_posts(
                 results)
@@ -893,7 +912,8 @@ class Platform:
             self.pl_utils._execute_db_command(
                 comment_insert_query,
                 (post_id, user_id, content, current_time),
-                commit=True)
+                commit=True,
+            )
             comment_id = self.db_cursor.lastrowid
 
             # 准备trace记录的信息
@@ -925,7 +945,7 @@ class Platform:
                 # 已存在点赞记录
                 return {
                     "success": False,
-                    "error": "Comment like record already exists."
+                    "error": "Comment like record already exists.",
                 }
 
             # 检查要点赞的评论是否是自己发布的
@@ -979,7 +999,7 @@ class Platform:
                 # 没有存在点赞记录
                 return {
                     "success": False,
-                    "error": "Comment like record does not exist."
+                    "error": "Comment like record does not exist.",
                 }
             # 获取`comment_like_id`
             comment_like_id = result[0]
@@ -994,8 +1014,8 @@ class Platform:
                 commit=True,
             )
             # 在comment_like表中删除记录
-            like_delete_query = (
-                "DELETE FROM comment_like WHERE comment_like_id = ?")
+            like_delete_query = ("DELETE FROM comment_like WHERE "
+                                 "comment_like_id = ?")
             self.pl_utils._execute_db_command(
                 like_delete_query,
                 (comment_like_id, ),
@@ -1032,7 +1052,7 @@ class Platform:
                 # 已存在不喜欢记录
                 return {
                     "success": False,
-                    "error": "Comment dislike record already exists."
+                    "error": "Comment dislike record already exists.",
                 }
 
             # 检查要点踩的评论是否是自己发布的
@@ -1057,12 +1077,12 @@ class Platform:
             self.pl_utils._execute_db_command(
                 dislike_insert_query, (comment_id, user_id, current_time),
                 commit=True)
-            comment_dislike_id = self.db_cursor.lastrowid  # 获取刚刚插入的不喜欢记录的ID
+            comment_dislike_id = (self.db_cursor.lastrowid)  # 获取刚刚插入的不喜欢记录的ID
 
             # 记录操作到trace表
             action_info = {
                 "comment_id": comment_id,
-                "comment_dislike_id": comment_dislike_id
+                "comment_dislike_id": comment_dislike_id,
             }
             self.pl_utils._record_trace(user_id,
                                         ActionType.DISLIKE_COMMENT.value,
@@ -1086,7 +1106,7 @@ class Platform:
                 # 不存在不喜欢记录
                 return {
                     "success": False,
-                    "error": "Comment dislike record does not exist."
+                    "error": "Comment dislike record does not exist.",
                 }
             comment_dislike_id = dislike_record[0]
 
@@ -1109,7 +1129,7 @@ class Platform:
             # 记录操作到trace表
             action_info = {
                 "comment_id": comment_id,
-                "comment_dislike_id": comment_dislike_id
+                "comment_dislike_id": comment_dislike_id,
             }
             self.pl_utils._record_trace(user_id,
                                         ActionType.UNDO_DISLIKE_COMMENT.value,

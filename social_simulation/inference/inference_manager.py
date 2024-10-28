@@ -5,13 +5,13 @@ import threading
 from social_simulation.inference.inference_thread import (InferenceThread,
                                                           SharedMemory)
 
-inference_log = logging.getLogger(name='inference')
-inference_log.setLevel('DEBUG')
+inference_log = logging.getLogger(name="inference")
+inference_log.setLevel("DEBUG")
 
-file_handler = logging.FileHandler('inference.log')
-file_handler.setLevel('DEBUG')
+file_handler = logging.FileHandler("inference.log")
+file_handler.setLevel("DEBUG")
 file_handler.setFormatter(
-    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
 inference_log.addHandler(file_handler)
 
 
@@ -34,12 +34,14 @@ class InferencerManager:
             for port in url["ports"]:
                 _url = f"http://{host}:{port}/v1"
                 shared_memory = SharedMemory()
-                thread = InferenceThread(model_path=model_path,
-                                         server_url=_url,
-                                         stop_tokens=stop_tokens,
-                                         model_type=model_type,
-                                         temperature=0.0,
-                                         shared_memory=shared_memory)
+                thread = InferenceThread(
+                    model_path=model_path,
+                    server_url=_url,
+                    stop_tokens=stop_tokens,
+                    model_type=model_type,
+                    temperature=0.0,
+                    shared_memory=shared_memory,
+                )
                 self.threads.append(thread)
 
     async def run(self):

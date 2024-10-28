@@ -53,7 +53,7 @@ def mean_confidence_interval(data, confidence=0.95):
     a = 1.0 * np.array(data)
     n = len(a)
     m, se = np.mean(a), stats.sem(a)
-    h = se * stats.t.ppf((1 + confidence) / 2., n - 1)
+    h = se * stats.t.ppf((1 + confidence) / 2.0, n - 1)
     return m, m - h, m + h
 
 
@@ -67,11 +67,13 @@ def visualization(up_result, down_result, control_result, exp_name,
         control_result)
 
     # 绘图
-    labels = ['Down', 'Control', 'Up']
+    labels = ["Down", "Control", "Up"]
     means = [down_mean, control_mean, up_mean]
-    conf_intervals = [(down_ci_low, down_ci_high),
-                      (control_ci_low, control_ci_high),
-                      (up_ci_low, up_ci_high)]
+    conf_intervals = [
+        (down_ci_low, down_ci_high),
+        (control_ci_low, control_ci_high),
+        (up_ci_low, up_ci_high),
+    ]
 
     x_pos = range(len(labels))  # x位置
 
@@ -79,20 +81,22 @@ def visualization(up_result, down_result, control_result, exp_name,
 
     # 绘制条形图
     # 注意：yerr的计算方式也需要调整，以确保误差条与相应的均值对应
-    ax.bar(labels,
-           means,
-           color='skyblue',
-           yerr=np.transpose(
-               [[mean - ci_low, ci_high - mean]
-                for mean, (ci_low, ci_high) in zip(means, conf_intervals)]),
-           capsize=10)
+    ax.bar(
+        labels,
+        means,
+        color="skyblue",
+        yerr=np.transpose([[mean - ci_low, ci_high - mean]
+                           for mean, (ci_low,
+                                      ci_high) in zip(means, conf_intervals)]),
+        capsize=10,
+    )
 
     # 在条形上方添加点表示均值
     for i, mean in enumerate(means):
-        ax.plot(x_pos[i], mean, 'ro')  # 'ro'表示红色的圆点
+        ax.plot(x_pos[i], mean, "ro")  # 'ro'表示红色的圆点
 
-    ax.set_ylabel('Scores')
-    ax.set_title('Mean Scores with 95% Confidence Intervals')
+    ax.set_ylabel("Scores")
+    ax.set_title("Mean Scores with 95% Confidence Intervals")
 
     # 保存图像，确保目录存在或者调整为正确的路径
     plt.savefig(f"{folder_path}/"
@@ -102,21 +106,29 @@ def visualization(up_result, down_result, control_result, exp_name,
 
 
 def main(exp_info_file_path, db_path, exp_name, folder_path):
-    with open(exp_info_file_path, 'r') as file:
+    with open(exp_info_file_path, "r") as file:
         exp_info = json.load(file)
 
     up_result = get_result(exp_info["up_comment_id"], db_path)
     down_result = get_result(exp_info["down_comment_id"], db_path)
     control_result = get_result(exp_info["control_comment_id"], db_path)
-    print('up_result:', up_result, 'down_result:', down_result,
-          'control_result', control_result)
+    print(
+        "up_result:",
+        up_result,
+        "down_result:",
+        down_result,
+        "control_result",
+        control_result,
+    )
     visualization(up_result, down_result, control_result, exp_name,
                   folder_path)
 
 
 if __name__ == "__main__":
-    main(exp_info_file_path=(
-        './experiments/reddit_herding_effect/results_analysis/'
-        'result_data/exp_info.json'),
-         db_path=('./experiments/reddit_herding_effect/results_analysis/'
-                  'result_data/mock_reddit_06-30_06-33-29.db'))
+    main(
+        exp_info_file_path=(
+            "./experiments/reddit_herding_effect/results_analysis/"
+            "result_data/exp_info.json"),
+        db_path=("./experiments/reddit_herding_effect/results_analysis/"
+                 "result_data/mock_reddit_06-30_06-33-29.db"),
+    )

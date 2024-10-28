@@ -18,7 +18,7 @@ class PlatformUtils:
             "success":
             False,
             "error": (f"Agent {agent_id} have not signed up and have no "
-                      f"user id.")
+                      f"user id."),
         }
 
     def _execute_db_command(self, command, args=(), commit=False):
@@ -35,7 +35,7 @@ class PlatformUtils:
 
     def _check_agent_userid(self, agent_id):
         try:
-            user_query = ("SELECT user_id FROM user WHERE agent_id = ?")
+            user_query = "SELECT user_id FROM user WHERE agent_id = ?"
             results = self._execute_db_command(user_query, (agent_id, ))
             # Fetch the first row of the query result
             first_row = results.fetchone()
@@ -59,7 +59,8 @@ class PlatformUtils:
             self.db_cursor.execute(
                 "SELECT comment_id, post_id, user_id, content, created_at, "
                 "num_likes, num_dislikes FROM comment WHERE post_id = ?",
-                (post_id, ))
+                (post_id, ),
+            )
             comments_results = self.db_cursor.fetchall()
 
             # 将每个comment的结果转换为字典格式
@@ -79,9 +80,16 @@ class PlatformUtils:
                 } if self.show_score else {
                        "num_likes": num_likes,
                        "num_dislikes": num_dislikes
-                   })
-            } for (comment_id, post_id, user_id, content, created_at,
-                   num_likes, num_dislikes) in comments_results]
+                   }),
+            } for (
+                comment_id,
+                post_id,
+                user_id,
+                content,
+                created_at,
+                num_likes,
+                num_dislikes,
+            ) in comments_results]
 
             # 将post信息和对应的comments添加到posts列表
             posts.append({
@@ -98,8 +106,9 @@ class PlatformUtils:
                 } if self.show_score else {
                        "num_likes": num_likes,
                        "num_dislikes": num_dislikes
-                   }), "comments":
-                comments
+                   }),
+                "comments":
+                comments,
             })
         return posts
 
@@ -125,27 +134,28 @@ class PlatformUtils:
         self._execute_db_command(
             trace_insert_query,
             (user_id, current_time, action_type, action_info_str),
-            commit=True)
+            commit=True,
+        )
 
     def _check_self_post_rating(self, post_id, user_id):
-        self_like_check_query = ("SELECT user_id FROM post WHERE post_id = ?")
+        self_like_check_query = "SELECT user_id FROM post WHERE post_id = ?"
         self._execute_db_command(self_like_check_query, (post_id, ))
         result = self.db_cursor.fetchone()
         if result and result[0] == user_id:
-            error_message = (
-                "Users are not allowed to like/dislike their own posts.")
+            error_message = ("Users are not allowed to like/dislike their own "
+                             "posts.")
             return {"success": False, "error": error_message}
         else:
             return None
 
     def _check_self_comment_rating(self, comment_id, user_id):
-        self_like_check_query = (
-            "SELECT user_id FROM comment WHERE comment_id = ?")
+        self_like_check_query = ("SELECT user_id FROM comment WHERE "
+                                 "comment_id = ?")
         self._execute_db_command(self_like_check_query, (comment_id, ))
         result = self.db_cursor.fetchone()
         if result and result[0] == user_id:
-            error_message = (
-                "Users are not allowed to like/dislike their own comments.")
+            error_message = ("Users are not allowed to like/dislike their "
+                             "own comments.")
             return {"success": False, "error": error_message}
         else:
             return None

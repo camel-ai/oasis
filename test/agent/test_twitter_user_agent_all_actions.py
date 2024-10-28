@@ -36,14 +36,14 @@ async def test_agents_actions(setup_twitter):
         description = "No description."
         # profile = {"some_key": "some_value"}  # 根据实际需要配置profile
         profile = {
-            'nodes': [],  # Relationships with other agents
-            'edges': [],  # Relationship details
-            'other_info': {
+            "nodes": [],  # Relationships with other agents
+            "edges": [],  # Relationship details
+            "other_info": {
                 "user_profile": "Nothing",
                 "mbti": "INTJ",
                 "activity_level": ["off_line"] * 24,
                 "activity_level_frequency": [3] * 24,
-                "active_threshold": [0.1] * 24
+                "active_threshold": [0.1] * 24,
             },
         }
         user_info = UserInfo(name=real_name,
@@ -58,10 +58,8 @@ async def test_agents_actions(setup_twitter):
     # 发送推文
     for agent in agents:
         for _ in range(4):
-            return_message = \
-                await agent.env.action.create_post(
-                    f"hello from {agent.agent_id}",
-                )
+            return_message = await agent.env.action.create_post(
+                f"hello from {agent.agent_id}", )
             await asyncio.sleep(random.uniform(0, 0.1))
             assert return_message["success"] is True
 
@@ -91,12 +89,11 @@ async def test_agents_actions(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = \
-        await action_agent.env.action.search_posts('hello')
+    return_message = await action_agent.env.action.search_posts("hello")
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.action.search_user('2')
+    return_message = await action_agent.env.action.search_user("2")
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
@@ -127,7 +124,7 @@ async def test_agents_actions(setup_twitter):
     await asyncio.sleep(random.uniform(0, 0.1))
 
     return_message = await action_agent.env.action.create_comment(
-        1, 'Test comment')
+        1, "Test comment")
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
@@ -143,11 +140,11 @@ async def test_agents_actions(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await (action_agent.env.action.undo_dislike_comment(1))
+    return_message = await action_agent.env.action.undo_dislike_comment(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await (action_agent.env.action.do_nothing())
+    return_message = await action_agent.env.action.do_nothing()
     print(return_message)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))

@@ -11,8 +11,7 @@ class Environment(ABC):
 
     @abstractmethod
     def to_text_prompt(self) -> str:
-        r"""Convert the environment to text prompt.
-        """
+        r"""Convert the environment to text prompt."""
         raise NotImplementedError
 
 
@@ -54,10 +53,10 @@ class SocialEnvironment(Environment):
         include_followers: bool = False,
         include_follows: bool = False,
     ) -> str:
-        followers_env = await self.get_followers_env(
-        ) if include_follows else "No followers."
-        follows_env = await self.get_follows_env(
-        ) if include_followers else "No follows."
+        followers_env = (await self.get_followers_env()
+                         if include_follows else "No followers.")
+        follows_env = (await self.get_follows_env()
+                       if include_followers else "No follows.")
         posts_env = await self.get_posts_env() if include_posts else ""
 
         return self.env_template.substitute(

@@ -40,14 +40,14 @@ async def test_agents_posting(setup_platform):
         description = "No description."
         # profile = {"some_key": "some_value"}  # 根据实际需要配置profile
         profile = {
-            'nodes': [],  # Relationships with other agents
-            'edges': [],  # Relationship details
-            'other_info': {
+            "nodes": [],  # Relationships with other agents
+            "edges": [],  # Relationship details
+            "other_info": {
                 "user_profile": "Nothing",
                 "mbti": "INTJ",
                 "activity_level": ["off_line"] * 24,
                 "activity_level_frequency": [3] * 24,
-                "active_threshold": [0.1] * 24
+                "active_threshold": [0.1] * 24,
             },
         }
         user_info = UserInfo(name=real_name,
@@ -73,13 +73,13 @@ async def test_agents_posting(setup_platform):
     # 验证用户(user)表是否正确插入了数据
     cursor.execute("SELECT * FROM user")
     users = cursor.fetchall()
-    assert len(users) == N, ("The number of users in the database"
-                             "should match n")
+    assert len(
+        users) == N, "The number of users in the database" "should match n"
 
     # 验证推文(post)表是否正确插入了数据
     cursor.execute("SELECT * FROM post")
     posts = cursor.fetchall()
-    assert len(posts) == M * N, (
-        "The number of posts should match the expected value.")
+    assert len(
+        posts) == M * N, "The number of posts should match the expected value."
     cursor.close()
     conn.close()

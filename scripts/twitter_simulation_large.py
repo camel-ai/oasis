@@ -19,18 +19,18 @@ from social_simulation.social_platform.channel import Channel
 from social_simulation.social_platform.platform import Platform
 from social_simulation.social_platform.typing import ActionType
 
-social_log = logging.getLogger(name='social')
-social_log.setLevel('DEBUG')
+social_log = logging.getLogger(name="social")
+social_log.setLevel("DEBUG")
 
-file_handler = logging.FileHandler('social.log')
-file_handler.setLevel('DEBUG')
+file_handler = logging.FileHandler("social.log")
+file_handler.setLevel("DEBUG")
 file_handler.setFormatter(
-    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
 social_log.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel('DEBUG')
+stream_handler.setLevel("DEBUG")
 stream_handler.setFormatter(
-    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
 social_log.addHandler(stream_handler)
 
 parser = argparse.ArgumentParser(description="Arguments for script.")
@@ -68,14 +68,16 @@ async def running(
     social_log.info(f"Start time: {start_time}")
     clock = Clock(k=clock_factor)
     twitter_channel = Channel()
-    infra = Platform(db_path,
-                     twitter_channel,
-                     clock,
-                     start_time,
-                     recsys_type=recsys_type,
-                     refresh_rec_post_count=2,
-                     max_rec_post_len=2,
-                     following_post_count=3)
+    infra = Platform(
+        db_path,
+        twitter_channel,
+        clock,
+        start_time,
+        recsys_type=recsys_type,
+        refresh_rec_post_count=2,
+        max_rec_post_len=2,
+        following_post_count=3,
+    )
     inference_channel = Channel()
     infere = InferencerManager(
         inference_channel,
@@ -92,12 +94,12 @@ async def running(
             else:
                 topic_name = csv_path.split("/")[-1].split(".")[0].split(
                     "-")[0]
-            source_post_time = all_topic_df[
-                all_topic_df["topic_name"] ==
-                topic_name]["start_time"].item().split(" ")[1]
+            source_post_time = (
+                all_topic_df[all_topic_df["topic_name"] ==
+                             topic_name]["start_time"].item().split(" ")[1])
             start_hour = int(source_post_time.split(":")[0]) + float(
                 int(source_post_time.split(":")[1]) / 60)
-    except:
+    except Exception:
         print("No real-world data, let start_hour be 13")
         start_hour = 13
 
@@ -125,8 +127,8 @@ async def running(
         for node_id, agent in agent_graph.get_agents():
             if agent.user_info.is_controllable is False:
                 agent_ac_prob = random.random()
-                threshold = agent.user_info.profile['other_info'][
-                    'active_threshold'][int(simulation_time_hour % 24)]
+                threshold = agent.user_info.profile["other_info"][
+                    "active_threshold"][int(simulation_time_hour % 24)]
                 if agent_ac_prob < threshold:
                     tasks.append(agent.perform_action_by_llm())
             else:
@@ -152,10 +154,12 @@ if __name__ == "__main__":
         inference_configs = cfg.get("inference")
 
         asyncio.run(
-            running(**data_params,
-                    **simulation_params,
-                    model_configs=model_configs,
-                    inference_configs=inference_configs))
+            running(
+                **data_params,
+                **simulation_params,
+                model_configs=model_configs,
+                inference_configs=inference_configs,
+            ))
     else:
         asyncio.run(running())
     social_log.info("Simulation finished.")

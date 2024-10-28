@@ -1,3 +1,4 @@
+---
 data:
   db_path: data/simu_db/yaml_200/True_Business_8.db
   csv_path: data/twitter_dataset/anonymous_topic_200_1h/True_Business_8.csv
@@ -9,21 +10,16 @@ model:
   num_agents: 228
   model_random_seed: 42
   cfgs:
-  - model_type: llama-3
-    num: 228
-    server_url: http://10.140.1.67:8096/v1
-    model_path: llama-3
-    stop_tokens:
-    - <|eot_id|>
-    - <|end_of_text|>
-    temperature: 0.0
+    - model_type: llama-3
+      num: 228
+      server_url: http://10.140.1.67:8096/v1
+      model_path: llama-3
+      stop_tokens: [<|eot_id|>, <|end_of_text|>]
+      temperature: 0.0
 inference:
   model_type: llama-3
   model_path: llama-3
-  stop_tokens:
-  - <|eot_id|>
-  - <|end_of_text|>
+  stop_tokens: [<|eot_id|>, <|end_of_text|>]
   server_url:
-  - host: 10.140.1.67
-    ports:
-    - 8096
+    - host: 10.140.1.67
+      ports: [8096]

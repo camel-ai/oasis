@@ -21,9 +21,9 @@ class MockChannel:
         # 第一次调用返回搜索用户的指令
         if self.call_count == 0:
             self.call_count += 1
-            return ('id_', (1, None, "trend"))
+            return ("id_", (1, None, "trend"))
         else:
-            return ('id_', (None, None, "exit"))
+            return ("id_", (None, None, "exit"))
 
     async def send_to(self, message):
         self.messages.append(message)  # 存储消息以便后续断言
@@ -61,7 +61,9 @@ async def test_search_user(setup_platform):
         cursor.execute(
             ("INSERT INTO user "
              "(user_id, agent_id, user_name, num_followings, num_followers) "
-             "VALUES (?, ?, ?, ?, ?)"), (1, 1, "user1", 0, 0))
+             "VALUES (?, ?, ?, ?, ?)"),
+            (1, 1, "user1", 0, 0),
+        )
         conn.commit()
 
         # 在测试开始之前，将post插入到post表中
@@ -70,23 +72,29 @@ async def test_search_user(setup_platform):
 
         today = platform.start_time
         # 生成从今天开始往前数10天的时间戳列表
-        posts_info = [
-            (1, f'Post {9-i}',
-             (today - timedelta(days=9 - i)).strftime('%Y-%m-%d %H:%M:%S.%f'),
-             (9 - i), 0) for i in range(10)
-        ]
+        posts_info = [(
+            1,
+            f"Post {9-i}",
+            (today - timedelta(days=9 - i)).strftime("%Y-%m-%d %H:%M:%S.%f"),
+            (9 - i),
+            0,
+        ) for i in range(10)]
 
         cursor.executemany(
             "INSERT INTO post (user_id, content, created_at, num_likes, "
-            "num_dislikes) VALUES (?, ?, ?, ?, ?)", posts_info)
+            "num_dislikes) VALUES (?, ?, ?, ?, ?)",
+            posts_info,
+        )
         conn.commit()
 
-        comments_info = [(i + 1, 1, 'Comment', datetime.now())
+        comments_info = [(i + 1, 1, "Comment", datetime.now())
                          for i in range(10)]
 
         cursor.executemany(
             "INSERT INTO comment (post_id, user_id, content, created_at) "
-            "VALUES (?, ?, ?, ?)", comments_info)
+            "VALUES (?, ?, ?, ?)",
+            comments_info,
+        )
         conn.commit()
 
         await platform.running()

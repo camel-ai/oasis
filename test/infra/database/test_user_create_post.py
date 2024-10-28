@@ -20,19 +20,19 @@ class MockChannel:
         # 第一次调用返回创建推文的指令
         if self.call_count == 0:
             self.call_count += 1
-            return ('id_', (1, ("alice0101", "Alice", "A girl."), "sign_up"))
+            return ("id_", (1, ("alice0101", "Alice", "A girl."), "sign_up"))
         # 第二次调用返回点赞操作的指令
         elif self.call_count == 1:
             self.call_count += 1
-            return ('id_', (2, ("bubble", "Bob", "A boy."), "sign_up"))
+            return ("id_", (2, ("bubble", "Bob", "A boy."), "sign_up"))
         elif self.call_count == 2:
             self.call_count += 1
-            return ('id_', (1, "This is a test post", "create_post"))
+            return ("id_", (1, "This is a test post", "create_post"))
         # elif self.call_count == 3:
         #     self.call_count += 1
         #     return ('id_', (3, "This is a test post", "create_post"))
         else:
-            return ('id_', (None, None, "exit"))
+            return ("id_", (None, None, "exit"))
 
     async def send_to(self, message):
         self.messages.append(message)  # 存储消息以便后续断言

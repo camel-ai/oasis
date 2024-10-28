@@ -63,10 +63,10 @@ async def generate_agents(
     assert len(model_types) == num_agents
     agent_info = pd.read_csv(agent_info_path)
     # agent_info = agent_info[:10000]
-    assert len(model_types) == len(agent_info), \
-        (f"Mismatch between the number of agents "
-         f"and the number of models, with {len(agent_info)} "
-         f"agents and {len(model_types)} models.")
+    assert len(model_types) == len(agent_info), (
+        f"Mismatch between the number of agents "
+        f"and the number of models, with {len(agent_info)} "
+        f"agents and {len(model_types)} models.")
 
     mbti_types = ["INTJ", "ENTP", "INFJ", "ENFP"]
 
@@ -78,10 +78,10 @@ async def generate_agents(
     normalized_prob = np.round(normalized_prob, 2)
     prob_list: list[float] = normalized_prob.tolist()
 
-    agent_graph = AgentGraph() if neo4j_config is None else AgentGraph(
+    agent_graph = (AgentGraph() if neo4j_config is None else AgentGraph(
         backend="neo4j",
         neo4j_config=neo4j_config,
-    )
+    ))
 
     # agent_graph = []
     sign_up_list = []
@@ -92,33 +92,35 @@ async def generate_agents(
 
     for agent_id in range(len(agent_info)):
         profile = {
-            'nodes': [],
-            'edges': [],
-            'other_info': {},
+            "nodes": [],
+            "edges": [],
+            "other_info": {},
         }
-        profile['other_info']['user_profile'] = agent_info['user_char'][
+        profile["other_info"]["user_profile"] = agent_info["user_char"][
             agent_id]
-        profile['other_info']['mbti'] = random.choice(mbti_types)
-        profile['other_info']['activity_level_frequency'] = ast.literal_eval(
+        profile["other_info"]["mbti"] = random.choice(mbti_types)
+        profile["other_info"]["activity_level_frequency"] = ast.literal_eval(
             agent_info["activity_level_frequency"][agent_id])
-        profile['other_info']['active_threshold'] = prob_list[agent_id]
+        profile["other_info"]["active_threshold"] = prob_list[agent_id]
 
         user_info = UserInfo(
-            name=agent_info['username'][agent_id],
-            description=agent_info['description'][agent_id],
+            name=agent_info["username"][agent_id],
+            description=agent_info["description"][agent_id],
             profile=profile,
             recsys_type=recsys_type,
         )
 
         model_type: ModelType = model_types[agent_id]
 
-        agent = SocialAgent(agent_id=agent_id,
-                            user_info=user_info,
-                            twitter_channel=twitter_channel,
-                            inference_channel=inference_channel,
-                            model_type=model_type,
-                            agent_graph=agent_graph,
-                            action_space_prompt=action_space_prompt)
+        agent = SocialAgent(
+            agent_id=agent_id,
+            user_info=user_info,
+            twitter_channel=twitter_channel,
+            inference_channel=inference_channel,
+            model_type=model_type,
+            agent_graph=agent_graph,
+            action_space_prompt=action_space_prompt,
+        )
 
         agent_graph.add_agent(agent)
         num_followings = 0
@@ -129,14 +131,20 @@ async def generate_agents(
         if not agent_info["followers_count"].empty:
             num_followers = agent_info["followers_count"][agent_id]
 
-        sign_up_list.append(
-            (agent_id, agent_id, agent_info["username"][agent_id],
-             agent_info["name"][agent_id], agent_info["description"][agent_id],
-             start_time, num_followings, num_followers))
+        sign_up_list.append((
+            agent_id,
+            agent_id,
+            agent_info["username"][agent_id],
+            agent_info["name"][agent_id],
+            agent_info["description"][agent_id],
+            start_time,
+            num_followings,
+            num_followers,
+        ))
 
         following_id_list = ast.literal_eval(
             agent_info["following_agentid_list"][agent_id])
-        if type(following_id_list) != int:
+        if not isinstance(following_id_list, int):
             if len(following_id_list) != 0:
                 for follow_id in following_id_list:
                     follow_list.append((agent_id, follow_id, start_time))
@@ -145,7 +153,7 @@ async def generate_agents(
                     agent_graph.add_edge(agent_id, follow_id)
 
         previous_posts = ast.literal_eval(
-            agent_info['previous_tweets'][agent_id])
+            agent_info["previous_tweets"][agent_id])
         if len(previous_posts) != 0:
             for post in previous_posts:
                 post_list.append((agent_id, post, start_time, 0, 0))
@@ -153,8 +161,9 @@ async def generate_agents(
     # generate_log.info('agent gegenerate finished.')
 
     user_insert_query = (
-        "INSERT INTO user (user_id, agent_id, user_name, name, bio, created_at,"
-        " num_followings, num_followers) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+        "INSERT INTO user (user_id, agent_id, user_name, name, bio, "
+        "created_at, num_followings, num_followers) VALUES "
+        "(?, ?, ?, ?, ?, ?, ?, ?)")
     twitter.pl_utils._execute_many_db_command(user_insert_query,
                                               sign_up_list,
                                               commit=True)
@@ -205,8 +214,8 @@ async def generate_controllable_agents(
     for i in range(control_user_num):
         user_info = UserInfo(
             is_controllable=True,
-            profile={'other_info': {
-                'user_profile': 'None'
+            profile={"other_info": {
+                "user_profile": "None"
             }},
             recsys_type="reddit",
         )
@@ -220,7 +229,7 @@ async def generate_controllable_agents(
         bio = input(f"Please input bio for agent {i}: ")
 
         response = await agent.env.action.sign_up(username, name, bio)
-        user_id = response['user_id']
+        user_id = response["user_id"]
         agent_user_id_mapping[i] = user_id
 
     for i in range(control_user_num):
@@ -244,12 +253,12 @@ async def gen_control_agents_with_data(
         user_info = UserInfo(
             is_controllable=True,
             profile={
-                'other_info': {
-                    'user_profile': 'None',
-                    'gender': 'None',
-                    'mbti': 'None',
-                    'country': 'None',
-                    'age': 'None'
+                "other_info": {
+                    "user_profile": "None",
+                    "gender": "None",
+                    "mbti": "None",
+                    "country": "None",
+                    "age": "None",
                 }
             },
             recsys_type="reddit",
@@ -258,27 +267,28 @@ async def gen_control_agents_with_data(
         agent = SocialAgent(i, user_info, channel, agent_graph=agent_graph)
         # Add agent to the agent graph
         agent_graph.add_agent(agent)
-        user_name = 'momo'
-        name = 'momo'
-        bio = 'None.'
+        user_name = "momo"
+        name = "momo"
+        bio = "None."
         response = await agent.env.action.sign_up(user_name, name, bio)
-        user_id = response['user_id']
+        user_id = response["user_id"]
         agent_user_id_mapping[i] = user_id
 
     return agent_graph, agent_user_id_mapping
 
 
-async def generate_reddit_agents(agent_info_path: str,
-                                 twitter_channel: Channel,
-                                 inference_channel: Channel,
-                                 agent_graph: AgentGraph | None = AgentGraph,
-                                 agent_user_id_mapping: dict[int, int]
-                                 | None = None,
-                                 follow_post_agent: bool = False,
-                                 mute_post_agent: bool = False,
-                                 action_space_prompt: str = None,
-                                 model_type: str = 'llama-3',
-                                 is_openai_model: bool = True) -> AgentGraph:
+async def generate_reddit_agents(
+    agent_info_path: str,
+    twitter_channel: Channel,
+    inference_channel: Channel,
+    agent_graph: AgentGraph | None = AgentGraph,
+    agent_user_id_mapping: dict[int, int] | None = None,
+    follow_post_agent: bool = False,
+    mute_post_agent: bool = False,
+    action_space_prompt: str = None,
+    model_type: str = "llama-3",
+    is_openai_model: bool = True,
+) -> AgentGraph:
     if agent_user_id_mapping is None:
         agent_user_id_mapping = {}
     if agent_graph is None:
@@ -286,67 +296,76 @@ async def generate_reddit_agents(agent_info_path: str,
 
     control_user_num = agent_graph.get_num_nodes()
 
-    with open(agent_info_path, 'r') as file:
+    with open(agent_info_path, "r") as file:
         agent_info = json.load(file)
 
     async def process_agent(i):
         # Instantiate an agent
         profile = {
-            'nodes': [],  # Relationships with other agents
-            'edges': [],  # Relationship details
-            'other_info': {},
+            "nodes": [],  # Relationships with other agents
+            "edges": [],  # Relationship details
+            "other_info": {},
         }
         # Update agent profile with additional information
-        profile['other_info']['user_profile'] = agent_info[i]['persona']
-        profile['other_info']['mbti'] = agent_info[i]['mbti']
-        profile['other_info']['gender'] = agent_info[i]['gender']
-        profile['other_info']['age'] = agent_info[i]['age']
-        profile['other_info']['country'] = agent_info[i]['country']
+        profile["other_info"]["user_profile"] = agent_info[i]["persona"]
+        profile["other_info"]["mbti"] = agent_info[i]["mbti"]
+        profile["other_info"]["gender"] = agent_info[i]["gender"]
+        profile["other_info"]["age"] = agent_info[i]["age"]
+        profile["other_info"]["country"] = agent_info[i]["country"]
 
-        user_info = UserInfo(name=agent_info[i]['username'],
-                             description=agent_info[i]['bio'],
-                             profile=profile,
-                             recsys_type="reddit")
+        user_info = UserInfo(
+            name=agent_info[i]["username"],
+            description=agent_info[i]["bio"],
+            profile=profile,
+            recsys_type="reddit",
+        )
 
-        agent = SocialAgent(agent_id=i + control_user_num,
-                            user_info=user_info,
-                            twitter_channel=twitter_channel,
-                            inference_channel=inference_channel,
-                            model_type=model_type,
-                            agent_graph=agent_graph,
-                            action_space_prompt=action_space_prompt,
-                            is_openai_model=is_openai_model)
+        agent = SocialAgent(
+            agent_id=i + control_user_num,
+            user_info=user_info,
+            twitter_channel=twitter_channel,
+            inference_channel=inference_channel,
+            model_type=model_type,
+            agent_graph=agent_graph,
+            action_space_prompt=action_space_prompt,
+            is_openai_model=is_openai_model,
+        )
 
         # Add agent to the agent graph
         agent_graph.add_agent(agent)
 
         # Sign up agent and add their information to the database
         # print(f"Signing up agent {agent_info['username'][i]}...")
-        response = await agent.env.action.sign_up(agent_info[i]['username'],
-                                                  agent_info[i]['realname'],
-                                                  agent_info[i]['bio'])
-        user_id = response['user_id']
+        response = await agent.env.action.sign_up(agent_info[i]["username"],
+                                                  agent_info[i]["realname"],
+                                                  agent_info[i]["bio"])
+        user_id = response["user_id"]
         agent_user_id_mapping[i + control_user_num] = user_id
 
         if follow_post_agent:
             await agent.env.action.follow(1)
-            content = '''
+            content = """
 {
-    "reason": "He is my friend, and I would like to follow him on social media.",
-    "functions": [{
-        "name": "follow",
-        "arguments": {
-            "user_id": 1
+    "reason": "He is my friend, and I would like to follow him "
+              "on social media.",
+    "functions": [
+        {
+            "name": "follow",
+            "arguments": {
+                "user_id": 1
+            }
         }
+    ]
 }
-'''
+"""
+
             agent_msg = BaseMessage.make_assistant_message(
                 role_name="Assistant", content=content)
             agent.memory.write_record(
                 MemoryRecord(agent_msg, OpenAIBackendRole.ASSISTANT))
         elif mute_post_agent:
             await agent.env.action.mute(1)
-            content = '''
+            content = """
 {
     "reason": "He is my enemy, and I would like to mute him on social media.",
     "functions": [{
@@ -355,7 +374,7 @@ async def generate_reddit_agents(agent_info_path: str,
             "user_id": 1
         }
 }
-'''
+"""
             agent_msg = BaseMessage.make_assistant_message(
                 role_name="Assistant", content=content)
             agent.memory.write_record(

@@ -15,7 +15,7 @@ all_topic_df = pd.read_csv("data/twitter_dataset/all_topics.csv")
 
 def load_list(path):
     # load real world propagation data from file
-    with open(path, 'rb') as file:
+    with open(path, "rb") as file:
         loaded_list = pickle.load(file)
     return loaded_list
 
@@ -32,7 +32,6 @@ def get_stat_list(prop_g: prop_graph):
 
 
 def get_xdb_data(db_paths, topic_name):
-
     source_tweet_content = all_topic_df[all_topic_df["topic_name"] ==
                                         topic_name]["source_tweet"].item()
     stats = []
@@ -65,7 +64,8 @@ def get_all_xdb_data(db_folders: List):
     topics = os.listdir(f"data/simu_db/{db_folders[0]}")
     topics = [topic.split(".")[0] for topic in topics]
     # len(db_folders) == simulation results + real world propagation data  OR
-    # len(db_folders) == different simulation settings +  real world propagation data
+    # len(db_folders) == different simulation settings +  real world
+    # propagation data
     all_scale_lists = [[] for _ in range(len(db_folders) + 1)]
     all_depth_lists = [[] for _ in range(len(db_folders) + 1)]
     all_mb_lists = [[] for _ in range(len(db_folders) + 1)]
@@ -93,7 +93,6 @@ def get_all_xdb_data(db_folders: List):
 
 
 def plot_trend(db_folders: List, db_types: List):
-
     stats = get_all_xdb_data(db_folders)
     stats_name = ["scale", "depth", "max breadth"]
 
@@ -112,32 +111,33 @@ def plot_trend(db_folders: List, db_types: List):
                 std_dev / np.sqrt(stats[db_index][stat_index].shape[0]))
 
             ax.plot(mean_values, label=db_type, color=colors[db_index])
-            ax.fill_between(range(stats[db_index][stat_index].shape[1]),
-                            mean_values - confidence_interval,
-                            mean_values + confidence_interval,
-                            color=colors[db_index],
-                            alpha=0.2,
-                            label=f'{db_type} 95% Confidence Interval')
+            ax.fill_between(
+                range(stats[db_index][stat_index].shape[1]),
+                mean_values - confidence_interval,
+                mean_values + confidence_interval,
+                color=colors[db_index],
+                alpha=0.2,
+                label=f"{db_type} 95% Confidence Interval",
+            )
 
-        ax.set_xlabel('Time/minute', fontsize=22)
+        ax.set_xlabel("Time/minute", fontsize=22)
         ax.set_ylabel(stat_name, fontsize=22)
-        ax.set_title(f'Trend of {stat_name} Over Time', fontsize=22)
+        ax.set_title(f"Trend of {stat_name} Over Time", fontsize=22)
 
-        ax.tick_params(axis='x', labelsize=20)
-        ax.tick_params(axis='y', labelsize=20)
+        ax.tick_params(axis="x", labelsize=20)
+        ax.tick_params(axis="y", labelsize=20)
         ax.grid(True)
 
     handles, labels = ax.get_legend_handles_labels()
 
-    fig.legend(handles, labels, loc='lower center', fontsize=20, ncol=2)
+    fig.legend(handles, labels, loc="lower center", fontsize=20, ncol=2)
     plt.tight_layout(rect=[0, 0.15, 1, 1])
     file_name = ""
     for type in db_types:
         file_name += f"{type}--"
     file_name += "all_stats.png"
-    save_dir = Path(
-        f"visualization/twitter_simulation/align_with_real_world/results/{file_name}"
-    )
+    save_dir = Path(f"visualization/twitter_simulation/align_with_real_world"
+                    f"/results/{file_name}")
     save_dir.parent.mkdir(parents=True, exist_ok=True)
 
     plt.savefig(save_dir)
@@ -145,5 +145,4 @@ def plot_trend(db_folders: List, db_types: List):
 
 
 if __name__ == "__main__":
-
     plot_trend(db_folders=["yaml_200"], db_types=["OASIS", "Real"])
