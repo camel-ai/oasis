@@ -17,7 +17,6 @@ ______________________________________________________________________
 <p align="center">
   <a href="https://github.com/camel-ai/camel#community">Community</a> |
   <a href="https://github.com/camel-ai/social-simulation/tree/main/scripts">Examples</a> |
-  <a href="https://openreview.net/forum?id=JBzTculaVV">Paper</a> |
   <a href="https://huggingface.co/datasets/oasis-agent/oasis-dataset">Dataset</a> |
   <a href="https://github.com/camel-ai/camel#citation">Citation</a> |
   <a href="https://github.com/camel-ai/camel#contributing-to-camel-">Contributing</a> |
