@@ -11,7 +11,7 @@ ______________________________________________________________________
 # OASIS: Open Agents Social Interaction Simulations on a Large Scale
 
 <p align="center">
-  <img src='assets/introduction.png' width=900>
+  <img src='assets/logo.jpg' width=400>
 </p>
 
 <p align="center">
@@ -25,6 +25,9 @@ ______________________________________________________________________
 
 ## 📝 Overview
 
+<p align="center">
+  <img src='assets/introduction.png' width=900>
+</p>
 🌏 OASIS is a scalable, open-source social media simulator that integrates large language models with rule-based agents to realistically mimic the behavior of up to one million users on platforms like Twitter and Reddit. It's designed to facilitate the study of complex social phenomena such as information spread, group polarization, and herd behavior, offering a versatile tool for exploring diverse social dynamics and user interactions in digital environments.
 
 ### Key Features
@@ -125,6 +128,8 @@ python scripts/reddit_gpt_example/reddit_simulation_gpt.py --config_path scripts
 # or
 '''A twitter script needed'''
 ```
+
+Note: without modifying the Configuration File, running this script requires approximately 14 API requests to call gpt-4, and the cost incurred is minimal. (October 29, 2024)
 
 ## 📘 Comprehensive Guide (For Open Source Models)
 

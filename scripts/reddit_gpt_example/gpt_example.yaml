@@ -2,7 +2,7 @@
 data:
   user_path: ./data/reddit/user_data_36.json  # Path to the user profile file
   pair_path: ./data/reddit/counterfactual_36.json  # Path to the initial post file
-  db_path: ./experiments/reddit_simulation_counterfactual/counterfactual_36_gpt.db  # Path for saving the social media database after the experiment
+  db_path: ./counterfactual_36_gpt.db  # Path for saving the social media database after the experiment
 simulation:
   recsys_type: reddit
   controllable_user: true  # Whether to use a controllable user, who posts prepared posts on the simulated social platform according to our instructions
