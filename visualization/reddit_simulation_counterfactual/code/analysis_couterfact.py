@@ -27,9 +27,8 @@ openai.api_key = os.environ['OPENAI_API_KEY']
 
 # 数据库文件列表
 db_files = [
-    'F:/experiment_dataset/scale_up/result_data/couterfact_up_100.db',
-    'F:/experiment_dataset/scale_up/result_data/couterfact_cnotrol_100.db',
-    'F:/experiment_dataset/scale_up/result_data/couterfact_down_100.db'
+    'couterfact_up_100.db', 'couterfact_cnotrol_100.db',
+    'couterfact_down_100.db'
 ]
 
 # 存储每个数据库的结果

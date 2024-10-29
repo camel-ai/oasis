@@ -1,136 +1,116 @@
-# Tutorial
+# 🚢 More Tutorials
 
-## Setting Up the Environment
+## 👨‍👨‍👧‍👦 User Generation
 
-### Step 1: Setup virtual env
+### 🔵 Twitter User Profile Generation
 
-(by py venv or conda)
+...
 
-For Linux
+### 🟠 Reddit User Profile Generation
 
-```bash
-conda create --name camel_ss python=3.10 # or 3.11
-conda activate camel_ss
-```
+We utilized the findings from a survey on the distribution of real Reddit users (https://explodingtopics.com/blog/reddit-users) as a reference to randomly generate demographic information for our users. Leveraging this data, we then employed GPT to create more detailed descriptions.
 
-For win:
+- Step 1:
 
-```bash
-python3.11 -m venv camel_ss       # Create virtual environment (by python3.10 or 3.11)
-camel_ss\Scripts\activate  # Activate virtual environment
-```
-
-For macOS:
+Modify your OpenAI API key at the top of the `generator\reddit\user_generate.py` file.
 
 ```bash
-python3.11 -m venv camel_ss       # Create virtual environment
-source camel_ss/bin/activate  # Activate virtual environment
+client = OpenAI(api_key='sk-xxx')
 ```
 
-### Step 2. Install requirements.txt
+- Step 2:
+
+Change the number of users you want to generate and the path where the user data will be saved at the bottom of the `generator\reddit\user_generate.py` file.
 
 ```bash
-python3.11 -m pip install -r requirements.txt
+if __name__ == "__main__":
+    N = 10000  # Target user number
+    user_data = generate_user_data(N)
+    output_path = 'user_data_10000.json'
+    save_user_data(user_data, output_path)
+    print(f"Generated {N} user profiles and saved to {output_path}")
 ```
 
-## Setting up vllm-config or config.yaml files
+- Step 3:
 
-### vllm-config(currently, will be obsolete soon)
-
-- read the vllm doc https://docs.vllm.ai/en/stable/ (Optional)
-- download llama3-8b-instruct weights to local folder.
-- prepare a linux-gpu enviornment. (Recommended VRAM >= 24G)
-- Please ensure that the IP address of the GPU server can be accessed by your network, such as within the school's internet.
+Run the Script:
 
 ```bash
-ifconfig -a # get your ip address
-python -m vllm.entrypoints.openai.api_server --model /your/path/to/llama3-8b-instruct # get your port number
-export LLAMA3_SERVER_URL="http://{your ip address}:{your port number}/v1" # eg, http://10.160.2.154:8000/v1
-export LLAMA3_MODEL_PATH="/your/path/to/llama3-8b-instruct"
+python generator/reddit/user_generate.py
 ```
 
-### config.yaml(will be integrated well soon)
+## 📊 Data Visualization
 
-#### To set up experiment data and test data
+### 🟠 Reddit Sore Analysis
 
-```python
-class Config(Singleton):
-    ...
+- Step 1:
 
-    test_db_filepath = "your/test/data"
-    user_data_filepath = "your/experiment/data"
-    host = 'localhost'
-    download_dir = '/mnt/workspace/.cache/modelscope/hub/'
-```
-
-#### To set up multi-LLMs & multi-GPUs to run simulation
-
-```python
-    single_model_single_instance = {
-        'flag': False,
-        'model_num': 1,
-        'model_type': ModelType.LLAMA_2,
-        'model_path': 'llama2',
-        'port': 8000,
-    }
-
-    single_model_multi_instance = {
-        'flag': True,
-        'model_type': ModelType.LLAMA_3,
-        'model_name': 'LLM-Research/Meta-Llama-3-8B-Instruct',
-        'model_path': '/mnt/workspace/.cache/modelscope/hub/LLM-Research/Meta-Llama-3-8B-Instruct',
-        'ports': [8000],
-    }
-
-    multi_model_single_instance = {
-        'flag': False,
-        'models': {
-            'llama3': {
-                'model_type': ModelType.LLAMA_3,
-                'model_name': 'LLM-Research/Meta-Llama-3-8B-Instruct',
-                'model_path': '/mnt/workspace/.cache/modelscope/hub/LLM-Research/Meta-Llama-3-8B-Instruct',
-                'port': 8000,
-            },
-            'qwen2': {
-                'model_type': ModelType.QWEN_2,
-                'model_name': 'qwen/Qwen2-7B-Instruct',
-                'model_path': '/mnt/workspace/.cache/modelscope/hub/qwen/Qwen2-7B-Instruct',
-                'port': 8001,
-            },
-            'glm4': {
-                'model_type': ModelType.GLM_4,
-                'model_name': 'ZhipuAI/glm-4-9b-chat',
-                'model_path': '/mnt/workspace/.cache/modelscope/hub/ZhipuAI/glm-4-9b-chat',
-                'port': 8002,
-            },
-        }
-    }
-```
-
-#### To set up the three-stage recommender system
-
-with all components being pluggable to accommodate experimental needs
-(will be integrated well soon)
-[recsys-design](./static/recsys.jpg)
-
-#### To set up sandbox environment tailored to your experimental setup
-
-sandbox-env: various agent actions & corresponding APIs supported by infra
-[multiple-actions](./static/mutliple-actions.png)
-
-## Run the Main Program
+After running python `scripts/reddit_simulation_align_with_human/reddit_simulation_align_with_human.py`, a database file and a JSON file with the same name will be generated. Modify `visualization/reddit_simulation_align_with_human/code/analysis_all.py` here to their respective paths and the common filename (excluding the extension).
 
 ```bash
-bash run.sh
+if __name__ == "__main__":
+    folder_path = ("visualization/reddit_simulation_align_with_human"
+                   "/experiment_results")
+    exp_name = "business_3600"
+    db_path = folder_path + f"/{exp_name}.db"
+    exp_info_file_path = folder_path + f"/{exp_name}.json"
+    analysis_score.main(exp_info_file_path, db_path, exp_name, folder_path)
 ```
 
-coming soon:
-A GUI(graphical user interface) to display simulations
+- Step 2:
 
-## to-dos
+```bash
+pip install matplotlib
+```
 
-- [x] to support functioncall & upgrade camel-ai to 0.1.5.1
-- [ ] to support Multi-GPUs & Multi-LLMs @zhiyu @yuxian
-- [ ] integrate argparser & config files @zhiyu @ziyi
-- [ ] develop a simple GUI as a program entry point and for visualizing the running process and results (preliminary analysis)
-- [ ] Develop a GUI(graphical user interface) to display simulations
+- Step 3:
+
+Run the Script:
+
+```bash
+python visualization/reddit_simulation_align_with_human/code/analysis_all.py
+```
+
+Then, you will see the scores of the three groups—down-treated, control, up-treated at the end of the experiment, like this
+
+<p align="center">
+  <img src='../visualization/reddit_simulation_align_with_human/experiment_results/score_business_3600.png' width=400>
+</p>
+
+### 🟠 Reddit Counterfactual Content Analysis
+
+- Step 1:
+
+First, you need to add your OpenAI API key to the system's environment variables.
+
+- Step 2:
+
+After running python `scripts/reddit_simulation_counterfactual/reddit_simulation_counterfactual.py`, 3 database files will be generated. Modify `visualization/reddit_simulation_counterfactual/code/analysis_couterfact.py` here to their respective paths.
+
+```bash
+db_files = [
+    'couterfact_up_100.db',
+    'couterfact_cnotrol_100.db',
+    'couterfact_down_100.db'
+]
+```
+
+- Step 3:
+
+```bash
+pip install aiohttp
+```
+
+- Step 4:
+
+Run the Script:
+
+```bash
+python visualization/reddit_simulation_counterfactual/code/analysis_couterfact.py
+```
+
+Then, you will see the disagree scores of the three groups—down-treated, control, up-treated in each timestep of the experiment, like this
+
+<p align="center">
+  <img src='../visualization/reddit_simulation_counterfactual/result/example.png' width=400>
+</p>

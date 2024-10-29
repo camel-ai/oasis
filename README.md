@@ -250,10 +250,14 @@ When simulating on generated users, you can customizing temporal feature in `soc
 
 The Reddit recommendation system is highly time-sensitive. Currently, one time step in the `reddit_simulation_xxx.py`simulates approximately two hours in the agent world, so essentially, new posts are recommended at every time step. To ensure that all posts made by controllable users can be seen by other agents, it is recommended that `the number of agents` × `activate_prob` > `max_rec_post_len` > `round_post_num`.
 
+## 🚢 More Tutorials
+
+To discover how to create profiles for large-scale users, as well as how to visualize and analyze social simulation data once your experiment concludes, please refer to [More Tutorials](tutorials/tutorial.md) for detailed guidance.
+
 ## 📢 News
 
-- Public release of our dataset on Hugging Face (November 01, 2024)
-- Initial release of OASIS github repository (October 25, 2024)
+- Public release of our dataset on Hugging Face (November 05, 2024)
+- Initial release of OASIS github repository (November 01, 2024)
 
 ## 🔗 Citation
 
@@ -261,7 +265,7 @@ To be supplemented after the release on arXiv.
 
 ## 🙌 Acknowledgment
 
-We would like to thank XXX for designing the logo of our project.
+We would like to thank Douglas for designing the logo of our project.
 
 ## 🖺 License
 
