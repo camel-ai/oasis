@@ -19,15 +19,14 @@ test_db_filepath = osp.join(parent_folder, "test_multi.db")
 
 @pytest.fixture
 def setup_platform():
-    # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
 
 @pytest.mark.asyncio
 async def test_agents_posting(setup_platform):
-    N = 5  # 代理（用户）数量
-    M = 3  # 每个用户要发送的推文数量
+    N = 5  # number of agents(users)
+    M = 3  # Number of posts each user wants to send
 
     agents = []
     channel = Channel()
@@ -38,7 +37,7 @@ async def test_agents_posting(setup_platform):
     for i in range(N):
         real_name = "name" + str(i)
         description = "No description."
-        # profile = {"some_key": "some_value"}  # 根据实际需要配置profile
+        # profile = {"some_key": "some_value"}
         profile = {
             "nodes": [],  # Relationships with other agents
             "edges": [],  # Relationship details
@@ -57,7 +56,7 @@ async def test_agents_posting(setup_platform):
         await agent.env.action.sign_up(f"user{i}0101", f"User{i}", "A bio.")
         agents.append(agent)
 
-    # 发送推文
+    # create post
     for agent in agents:
         for _ in range(M):
             await agent.env.action.create_post(f"hello from {agent.agent_id}")
@@ -66,17 +65,17 @@ async def test_agents_posting(setup_platform):
     await channel.write_to_receive_queue((None, None, "exit"))
     await task
 
-    # 验证数据库中是否正确插入了数据
+    # Verify if data was correctly inserted into the database
     conn = sqlite3.connect(test_db_filepath)
     cursor = conn.cursor()
     print_db_contents(test_db_filepath)
-    # 验证用户(user)表是否正确插入了数据
+    # Verify if data was correctly inserted into the user table
     cursor.execute("SELECT * FROM user")
     users = cursor.fetchall()
     assert len(
         users) == N, "The number of users in the database" "should match n"
 
-    # 验证推文(post)表是否正确插入了数据
+    # Verify if data was correctly inserted into the post table
     cursor.execute("SELECT * FROM post")
     posts = cursor.fetchall()
     assert len(

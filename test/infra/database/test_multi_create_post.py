@@ -19,7 +19,7 @@ class MockChannel:
         Each tuple is in the format (user_id, message, action_type)
         """
         self.user_actions = user_actions
-        self.messages = []  # 用于存储发送的消息
+        self.messages = []
         self.action_index = 0  # Track the current action
 
     async def receive_from(self):
@@ -31,7 +31,7 @@ class MockChannel:
             return ("id_", (None, None, "exit"))
 
     async def send_to(self, message):
-        self.messages.append(message)  # 存储消息以便后续断言
+        self.messages.append(message)
 
 
 def generate_user_actions(n_users, posts_per_user):
@@ -69,10 +69,8 @@ def generate_user_actions(n_users, posts_per_user):
     return actions
 
 
-# 定义一个fixture来初始化数据库和Platform实例
 @pytest.fixture
 def setup_platform():
-    # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
@@ -82,7 +80,7 @@ async def test_signup_and_create_post(setup_platform,
                                       n_users=30,
                                       posts_per_user=4):
     try:
-        # 为了简化模拟，假设n_users是3的倍数
+        # To simplify the simulation, assume that n_users is a multiple of 3.
         assert n_users % 3 == 0, "n_users should be a multiple of 3."
 
         # Generate user actions based on n_users and posts_per_user
@@ -93,17 +91,14 @@ async def test_signup_and_create_post(setup_platform,
 
         await platform_instance.running()
 
-        # 验证数据库中是否正确插入了数据
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
 
-        # 验证用户(user)表是否正确插入了数据
         cursor.execute("SELECT * FROM user")
         users = cursor.fetchall()
         assert len(users) == n_users, ("The number of users in the database"
                                        "should match n_users.")
 
-        # 验证推文(post)表是否正确插入了数据
         cursor.execute("SELECT * FROM post")
         posts = cursor.fetchall()
         expected_posts = (n_users // 3) * posts_per_user + (n_users // 3)

@@ -14,7 +14,7 @@ class MockChannel:
 
     def __init__(self):
         self.call_count = 0
-        self.messages = []  # 用于存储发送的消息
+        self.messages = []  # Used to store sent messages
 
     async def receive_from(self):
         if self.call_count == 0:
@@ -23,15 +23,12 @@ class MockChannel:
         elif self.call_count == 1:
             self.call_count += 1
             return ("id_", (2, ("bubble", "Bob", "A boy."), "sign_up"))
-        # elif self.call_count == 2:
-        #     self.call_count += 1
-        #     return ('id_', (1, ("alan", "Alan", "A kid."), "sign_up"))
-        # 返回退出指令
+        # Returns the exit command
         else:
             return ("id_", (None, None, "exit"))
 
     async def send_to(self, message):
-        self.messages.append(message)  # 存储消息以便后续断言
+        self.messages.append(message)  # Store messages for later assertions
         if self.call_count == 1:
             print(message[2])
             assert message[2]["success"] is True
@@ -39,20 +36,15 @@ class MockChannel:
         elif self.call_count == 2:
             assert message[2]["success"] is True
             assert "user_id" in message[2]
-        # elif self.call_count == 3:
-        #     assert message[2]["success"] is False
-        #     assert "error" in message[2]
-        #     assert message[2]["error"] == (
-        #         "Agent 1 have already signed up with user id: 1")
 
 
 @pytest.fixture
 def setup_platform():
-    # 测试前确保test.db不存在
+    # Ensure test.db does not exist before the test
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
-    # 创建数据库和表
+    # Create the database and table
     db_path = test_db_filepath
 
     mock_channel = MockChannel()
@@ -67,11 +59,11 @@ async def test_create_like_unlike_post(setup_platform):
 
         await platform.running()
 
-        # 验证数据库中是否正确插入了数据
+        # Verify if the data is correctly inserted into the database
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
 
-        # 验证推文表(post)是否正确插入了数据
+        # Verify if posts are correctly inserted into the post table
         cursor.execute("SELECT * FROM user")
         users = cursor.fetchall()
         assert len(users) == 2
@@ -84,7 +76,7 @@ async def test_create_like_unlike_post(setup_platform):
         assert users[1][3] == "Bob"
         assert users[1][4] == "A boy."
 
-        # 验证跟踪表(trace)是否正确记录了创建推文和点赞操作
+        # Verify if the trace table correctly recorded the sign-up operations
         cursor.execute("SELECT * FROM trace WHERE action ='sign_up'")
         results = cursor.fetchall()
         assert len(results) == 2

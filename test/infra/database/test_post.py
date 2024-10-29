@@ -14,14 +14,14 @@ class MockChannel:
 
     def __init__(self):
         self.call_count = 0
-        self.messages = []  # 用于存储发送的消息
+        self.messages = []
 
     async def receive_from(self):
-        # 第一次调用返回创建推文的指令
+        # The first call returns the command to create a post
         if self.call_count == 0:
             self.call_count += 1
             return ("id_", (1, "This is a test post", "create_post"))
-        # 第二次调用返回点赞操作的指令
+        # The second call returns the command for a like operation
         elif self.call_count == 1:
             self.call_count += 1
             return ("id_", (1, 1, "like_post"))
@@ -40,22 +40,23 @@ class MockChannel:
         elif self.call_count == 6:
             self.call_count += 1
             return ("id_", (2, 1, "undo_dislike_post"))
-        # 调用返回转推操作的指令
+        # The call returns the command for a repost operation
         elif self.call_count == 7:
             self.call_count += 1
             return ("id_", (2, 1, "repost"))
-        # 返回退出指令
+        # Returns the exit command
         else:
             return ("id_", (None, None, "exit"))
 
     async def send_to(self, message):
-        self.messages.append(message)  # 存储消息以便后续断言
+        # Store the message for subsequent assertions
+        self.messages.append(message)
         if self.call_count == 1:
-            # 对创建推文的成功消息进行断言
+            # Assert the success message for creating a post
             assert message[2]["success"] is True
             assert "post_id" in message[2]
         elif self.call_count == 2:
-            # 对点赞操作的成功消息进行断言
+            # Assert the success message for the like operation
             assert message[2]["success"] is True
             assert "like_id" in message[2]
         elif self.call_count == 3:
@@ -65,7 +66,7 @@ class MockChannel:
             assert message[2]["success"] is True
             assert "like_id" in message[2]
         elif self.call_count == 5:
-            # 对点赞操作的成功消息进行断言
+            # Assert the success message for the like operation
             assert message[2]["success"] is True
             assert "dislike_id" in message[2]
         elif self.call_count == 6:
@@ -75,18 +76,18 @@ class MockChannel:
             assert message[2]["success"] is True
             assert "dislike_id" in message[2]
         elif self.call_count == 8:
-            # 对转推的成功消息进行断言
+            # Assert the success message for a repost
             assert message[2]["success"] is True
             assert "post_id" in message[2]
 
 
 @pytest.fixture
 def setup_platform():
-    # 测试前确保test.db不存在
+    # Ensure test.db does not exist before testing
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
-    # 创建数据库和表
+    # Create the database and tables
     db_path = test_db_filepath
 
     mock_channel = MockChannel()
@@ -99,7 +100,7 @@ async def test_create_repost_like_unlike_post(setup_platform):
     try:
         platform = setup_platform
 
-        # 在测试开始之前，将2个用户插入到user表中
+        # Insert two users into the user table before testing begins
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
         cursor.execute(
@@ -118,16 +119,16 @@ async def test_create_repost_like_unlike_post(setup_platform):
 
         await platform.running()
 
-        # 验证数据库中是否正确插入了数据
+        # Verify the correct insertion of data into the database
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
 
-        # 验证推文表(post)是否正确插入了数据
+        # Verify the post table (post) has the correct data inserted
         cursor.execute("SELECT * FROM post")
         posts = cursor.fetchall()
-        assert len(posts) == 2  # 一条test post，一条repost
+        assert len(posts) == 2  # One test post, one repost
         post = posts[0]
-        assert post[1] == 1  # 假设用户ID是1
+        assert post[1] == 1  # Assuming user ID is 1
         assert post[2] == "This is a test post"
         assert post[4] == 1  # num_likes
         assert post[5] == 1  # num_dislikes
@@ -135,20 +136,20 @@ async def test_create_repost_like_unlike_post(setup_platform):
         repost = posts[1]
         rt_content = ("user2 repost from user1. "
                       "original_post: This is a test post")
-        assert repost[1] == 2  # 转发用户ID为2
+        assert repost[1] == 2  # Repost user ID is 2
         assert repost[2] == rt_content
 
-        # 验证like表是否正确插入了数据
+        # Verify the like table has the correct data inserted
         cursor.execute("SELECT * FROM like")
         likes = cursor.fetchall()
         assert len(likes) == 1
 
-        # 验证dislike表是否正确插入了数据
+        # Verify the dislike table has the correct data inserted
         cursor.execute("SELECT * FROM dislike")
         dislikes = cursor.fetchall()
         assert len(dislikes) == 1
 
-        # 验证跟踪表(trace)是否正确记录了创建推文和点赞操作
+        # Verify the trace table correctly recorded the create post and like
         cursor.execute("SELECT * FROM trace WHERE action='create_post'")
         assert cursor.fetchone() is not None, "Create post action not traced"
 
@@ -177,16 +178,16 @@ async def test_create_repost_like_unlike_post(setup_platform):
         assert results[0][0] == 2  # `user_id`
         assert results[0][-1] == '{"post_id": 1, "dislike_id": 2}'
 
-        # 验证点赞表(like)是否正确插入了数据
+        # Verify the like table has the correct data for a like
         cursor.execute("SELECT * FROM like WHERE post_id=1 AND user_id=1")
         assert cursor.fetchone() is not None, "Like record not found"
 
-        # 验证点踩表(dislike)是否正确插入了数据
+        # Verify the dislike table has the correct data for a dislike
         cursor.execute("SELECT * FROM dislike WHERE post_id=1 AND user_id=1")
         assert cursor.fetchone() is not None, "Like record not found"
 
     finally:
-        # 清理
+        # Cleanup
         conn.close()
         if os.path.exists(test_db_filepath):
             os.remove(test_db_filepath)

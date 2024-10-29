@@ -171,10 +171,11 @@ async def running(
         if timestep == 0:
             time_difference = datetime.now() - start_time_0
 
-            # 将两个小时转换为秒，因为time_difference是一个timedelta对象
+            # Convert two hours into seconds since time_difference is a
+            # timedelta object
             two_hours_in_seconds = timedelta(hours=2).total_seconds()
 
-            # 计算两个小时除以时间差（以秒为单位）
+            # Calculate two hours divided by the time difference (in seconds)
             clock_factor = two_hours_in_seconds / \
                 time_difference.total_seconds()
             clock.k = clock_factor

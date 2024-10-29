@@ -14,19 +14,20 @@ class Database:
     def get_score_comment_id(self, comment_id):
         cursor = self.conn.cursor()
         """
-        根据评论ID查询特定评论的分数（点赞数减去踩数）。
+        Query the score of a specific comment by comment ID (likes minus
+        dislikes).
         """
-        # 准备SQL查询，计算得分（点赞数 - 踩数）
+        # Prepare SQL query to calculate the score (likes - dislikes)
         query = """
         SELECT (num_likes - num_dislikes) AS score
         FROM comment
         WHERE comment_id = ?
         """
-        # 执行查询
+        # Execute the query
         cursor.execute(query, (comment_id, ))
-        # 获取查询结果
+        # Fetch the result
         result = cursor.fetchone()
-        # 如果查询有结果，返回得分；否则返回None
+        # If there's a result, return the score; otherwise, return None
         if result:
             return result[0]
         else:
@@ -48,7 +49,7 @@ def get_result(comment_id_lst, db_path):
     return result_lst
 
 
-# 计算均值和95%置信区间的函数
+# Function to calculate mean and 95% confidence interval
 def mean_confidence_interval(data, confidence=0.95):
     a = 1.0 * np.array(data)
     n = len(a)
@@ -59,14 +60,14 @@ def mean_confidence_interval(data, confidence=0.95):
 
 def visualization(up_result, down_result, control_result, exp_name,
                   folder_path):
-    # 计算每组数据的均值和置信区间
+    # Calculate the mean and confidence interval for each group
     up_mean, up_ci_low, up_ci_high = mean_confidence_interval(up_result)
     down_mean, down_ci_low, down_ci_high = mean_confidence_interval(
         down_result)
     control_mean, control_ci_low, control_ci_high = mean_confidence_interval(
         control_result)
 
-    # 绘图
+    # Plotting
     labels = ["Down", "Control", "Up"]
     means = [down_mean, control_mean, up_mean]
     conf_intervals = [
@@ -75,12 +76,13 @@ def visualization(up_result, down_result, control_result, exp_name,
         (up_ci_low, up_ci_high),
     ]
 
-    x_pos = range(len(labels))  # x位置
+    x_pos = range(len(labels))  # x positions
 
     fig, ax = plt.subplots()
 
-    # 绘制条形图
-    # 注意：yerr的计算方式也需要调整，以确保误差条与相应的均值对应
+    # Plot the bar chart
+    # Note: The calculation of yerr needs adjustment to ensure the error
+    # bars correspond to the respective means
     ax.bar(
         labels,
         means,
@@ -91,14 +93,14 @@ def visualization(up_result, down_result, control_result, exp_name,
         capsize=10,
     )
 
-    # 在条形上方添加点表示均值
+    # Add dots on top of the bars to represent the mean
     for i, mean in enumerate(means):
-        ax.plot(x_pos[i], mean, "ro")  # 'ro'表示红色的圆点
+        ax.plot(x_pos[i], mean, "ro")  # 'ro' means red circle
 
     ax.set_ylabel("Scores")
     ax.set_title("Mean Scores with 95% Confidence Intervals")
 
-    # 保存图像，确保目录存在或者调整为正确的路径
+    # Save the image, ensure the directory exists or adjust to the correct path
     plt.savefig(f"{folder_path}/"
                 f"score_{exp_name}.png")
 

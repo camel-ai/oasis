@@ -89,7 +89,6 @@ def test_user_operations():
 
     actual_result = fetch_table_from_db(cursor, "user")
 
-    # 使用assert语句进行比较
     assert actual_result == expected_result, "The fetched data does not match."
 
     cursor.execute(
@@ -146,7 +145,6 @@ def test_post_operations():
     }]
     actual_result = fetch_table_from_db(cursor, "post")
 
-    # 使用assert语句进行比较
     assert actual_result == expected_result, "The fetched data does not match."
 
     # Assert the post was updated correctly

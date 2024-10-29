@@ -15,10 +15,8 @@ parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test_actions.db")
 
 
-# 定义一个fixture来初始化数据库和Twitter实例
 @pytest.fixture
 def setup_twitter():
-    # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
@@ -30,11 +28,11 @@ async def test_agents_actions(setup_twitter):
     infra = Platform(test_db_filepath, channel)
     task = asyncio.create_task(infra.running())
 
-    # 创建并注册用户
+    # create and sign up users
     for i in range(3):
         real_name = "name" + str(i)
         description = "No description."
-        # profile = {"some_key": "some_value"}  # 根据实际需要配置profile
+        # profile = {"some_key": "some_value"}
         profile = {
             "nodes": [],  # Relationships with other agents
             "edges": [],  # Relationship details
@@ -55,7 +53,7 @@ async def test_agents_actions(setup_twitter):
         assert return_message["success"] is True
         agents.append(agent)
 
-    # 发送推文
+    # create post
     for agent in agents:
         for _ in range(4):
             return_message = await agent.env.action.create_post(
@@ -66,7 +64,7 @@ async def test_agents_actions(setup_twitter):
     await channel.write_to_receive_queue(
         (None, None, ActionType.UPDATE_REC_TABLE))
 
-    # 看推荐系统返回post
+    # Look at the posts returned by the recommendation system
     action_agent = agents[2]
     return_message = await action_agent.env.action.refresh()
     assert return_message["success"] is True
@@ -113,12 +111,12 @@ async def test_agents_actions(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    # 看最热post
+    # Check the most popular post
     return_message = await action_agent.env.action.trend()
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    # repos
+    # repost
     return_message = await action_agent.env.action.repost(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))

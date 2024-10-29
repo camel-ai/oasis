@@ -16,10 +16,10 @@ class MockChannel:
 
     def __init__(self):
         self.call_count = 0
-        self.messages = []  # 用于存储发送的消息
+        self.messages = []  # Used to store sent messages
 
     async def receive_from(self):
-        # 第一次调用返回搜索用户的指令
+        # Returns the command to search for a user on the first call
         if self.call_count == 0:
             self.call_count += 1
             return ("id_", (None, None, ActionType.UPDATE_REC_TABLE))
@@ -30,15 +30,15 @@ class MockChannel:
             return ("id_", (None, None, ActionType.EXIT))
 
     async def send_to(self, message):
-        self.messages.append(message)  # 存储消息以便后续断言
-        # 对用户refresh的结果进行断言
+        self.messages.append(message)  # Store message for later assertion
+        # Asserts the result of user refresh
         if self.call_count == 2:
-            # 验证refresh成功
+            # Verify refresh success
             # print_db_contents(test_db_filepath)
             assert message[2]["success"] is True
             print(message[2]["posts"])
             assert len(message[2]["posts"]) == 1
-            # 然后检查 'posts' 列表中的每个条目
+            # Then check each entry in the 'posts' list
             for post in message[2].get("posts", []):
                 assert post.get("post_id") is not None
                 assert post.get("user_id") is not None
@@ -50,14 +50,14 @@ class MockChannel:
 
 @pytest.fixture
 def setup_platform():
-    # 测试前确保test.db不存在
+    # Ensure test.db does not exist before testing
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
-    # 创建数据库和表
+    # Create database and tables
     db_path = test_db_filepath
     mock_channel = MockChannel()
-    # 初始化Platform实例
+    # Initialize Platform instance
     platform_instance = Platform(db_path, mock_channel, show_score=True)
     return platform_instance
 
@@ -67,7 +67,7 @@ async def test_refresh(setup_platform):
     try:
         platform = setup_platform
 
-        # 在测试开始之前，将1个用户插入到user表中
+        # Insert 1 user into the user table before the test starts
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
         cursor.execute(
@@ -77,14 +77,15 @@ async def test_refresh(setup_platform):
         )
         conn.commit()
 
-        # 在测试开始之前，将post插入到post表中
+        # Insert post into the post table before the test starts
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
 
-        # 在测试开始之前，将60条推文用户插入到post表中
-        for i in range(60):  # 生成60条post
-            user_id = i % 3  # 循环使用用户ID 1, 2, 3
-            content = f"Posts content for post {i}"  # 简单生成不同的内容
+        # Insert 60 tweet users into the post table before the test starts
+        for i in range(60):  # Generate 60 posts
+            user_id = i % 3  # Cycle through user IDs 1, 2, 3
+            # Simply generate different content
+            content = f"Posts content for post {i}"
             comment_content = f"Comment content for post {i}"
             created_at = datetime.now()
 
@@ -102,12 +103,12 @@ async def test_refresh(setup_platform):
         conn.commit()
         # print_db_contents(test_db_filepath)
         await platform.running()
-        # 验证跟踪表(trace)是否正确记录了操作
+        # Verify that the trace table correctly recorded the operation
         cursor.execute("SELECT * FROM trace WHERE action='refresh'")
         assert cursor.fetchone() is not None, "refresh action not traced"
 
     finally:
         conn.close()
-        # 清理
+        # Cleanup
         if os.path.exists(test_db_filepath):
             os.remove(test_db_filepath)

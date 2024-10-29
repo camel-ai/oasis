@@ -14,14 +14,12 @@ class MockChannel:
 
     def __init__(self):
         self.call_count = 0
-        self.messages = []  # 用于存储发送的消息
+        self.messages = []
 
     async def receive_from(self):
-        # 第一次调用返回创建推文的指令
         if self.call_count == 0:
             self.call_count += 1
             return ("id_", (1, "This is a test post", "create_post"))
-        # 第二次调用返回点赞操作的指令
         elif self.call_count == 1:
             self.call_count += 1
             return ("id_", (1, 1, "like_post"))
@@ -34,18 +32,15 @@ class MockChannel:
         elif self.call_count == 4:
             self.call_count += 1
             return ("id_", (2, 1, "dislike_post"))
-        # 返回退出指令
         else:
             return ("id_", (None, None, "exit"))
 
     async def send_to(self, message):
-        self.messages.append(message)  # 存储消息以便后续断言
+        self.messages.append(message)
         if self.call_count == 1:
-            # 对创建推文的成功消息进行断言
             assert message[2]["success"] is True
             assert "post_id" in message[2]
         elif self.call_count == 2:
-            # 对点赞操作的成功消息进行断言
             assert message[2]["success"] is False
             assert message[2]["error"] == (
                 "Users are not allowed to like/dislike their own posts.")
@@ -57,18 +52,15 @@ class MockChannel:
             assert message[2]["error"] == (
                 "Users are not allowed to like/dislike their own posts.")
         elif self.call_count == 5:
-            # 对点赞操作的成功消息进行断言
             assert message[2]["success"] is True
             assert "dislike_id" in message[2]
 
 
 @pytest.fixture
 def setup_platform():
-    # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
-    # 创建数据库和表
     db_path = test_db_filepath
 
     mock_channel = MockChannel()
@@ -81,7 +73,6 @@ async def test_create_repost_like_unlike_post(setup_platform):
     try:
         platform = setup_platform
 
-        # 在测试开始之前，将2个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
         cursor.execute(
@@ -101,7 +92,6 @@ async def test_create_repost_like_unlike_post(setup_platform):
         await platform.running()
 
     finally:
-        # 清理
         conn.close()
         if os.path.exists(test_db_filepath):
             os.remove(test_db_filepath)

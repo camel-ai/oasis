@@ -2,36 +2,38 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 
-# 使用 NetworkX 的 dfs_tree() 方法获取深度优先搜索树，得到图的深度
+# Using NetworkX's dfs_tree() method to get the depth-first search tree, to
+# find the depth of the graph
 def get_dpeth(G: nx.Graph, source=0):
     # source = 0
     dfs_tree = nx.dfs_tree(G, source=source)
-    # 获取树的深度
+    # Get the depth of the tree
     max_depth = max(
         nx.single_source_shortest_path_length(dfs_tree,
                                               source=source).values())
-    # print(f"图的最大深度为 {max_depth}")
+    # print(f"The maximum depth of the graph is {max_depth}")
     return max_depth
 
 
-# 根据时间获取子图
+# Get subgraph by time
 def get_subgraph_by_time(G: nx.Graph, time_threshold=10):
-    # 假设我们要提取前 time_threshod 秒发的推
+    # Assuming we want to extract the tweets sent in the first time_threshold
+    # seconds
     filtered_nodes = []
     for node, attr in G.nodes(data=True):
         try:
             if attr["timestamp"] <= time_threshold:
                 filtered_nodes.append(node)
         except Exception:
-            # print(f"node {node} dose not exist")
+            # print(f"node {node} does not exist")
             pass
-    # 使用 `subgraph()` 方法提取子图
+    # Extract the subgraph using `subgraph()` method
     subG = G.subgraph(filtered_nodes)
 
     return subG
 
 
-# 图的可视化
+# Visualization of the graph
 def hierarchy_pos(G,
                   root=None,
                   width=1.0,
@@ -39,7 +41,8 @@ def hierarchy_pos(G,
                   vert_loc=0,
                   xcenter=0.5):
     """
-    从一个给定的根节点位置计算树的所有节点位置
+    Compute the positions of all nodes in the tree starting from a given root
+    node position
     """
     pos = _hierarchy_pos(G, root, width, vert_gap, vert_loc, xcenter)
     return pos
@@ -68,10 +71,11 @@ def _hierarchy_pos(
 
     neighbors = list(G.neighbors(root))
     if not isinstance(G, nx.DiGraph) and parent is not None:
-        neighbors.remove(parent)
+        neighbors.remove(
+            parent)  # This ensures a directed graph is treated as such
 
     if len(neighbors) != 0:
-        dx = width / len(neighbors)
+        dx = width / len(neighbors)  # Horizontal space allocated for each node
         nextx = xcenter - width / 2 - dx / 2
         for neighbor in neighbors:
             nextx += dx
@@ -90,10 +94,10 @@ def _hierarchy_pos(
 
 
 def plot_graph_like_tree(G, root):
-    # 获取树的节点位置
+    # Get the positions of the nodes in the tree
     pos = hierarchy_pos(G, root)
 
-    # 绘制图
+    # Plot the graph
     plt.figure(figsize=(12, 8))
     nx.draw(
         G,
