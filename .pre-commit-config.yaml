@@ -62,3 +62,10 @@ repos:
           - mdformat-gfm
           - mdformat_frontmatter
           - mdformat_footnote
+  - repo: local
+    hooks:
+      - id: check-license
+        name: Check License
+        entry: python licenses/update_license.py . licenses/license_template.txt
+        language: system
+        types: [python]
