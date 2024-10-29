@@ -1,3 +1,16 @@
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 from __future__ import annotations
 
 import inspect
@@ -26,7 +39,7 @@ if TYPE_CHECKING:
 if "sphinx" not in sys.modules:
     agent_log = logging.getLogger(name="social.agent")
     agent_log.setLevel("DEBUG")
-    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # 修改这里
+    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     file_handler = logging.FileHandler(f"./log/social.agent-{str(now)}.log")
     file_handler.setLevel("DEBUG")
     file_handler.setFormatter(
@@ -171,9 +184,9 @@ class SocialAgent:
                         if name != "do_nothing":
                             arguments = function["arguments"]
                         else:
-                            # do_nothing的成功率很低
-                            # 经常会丢掉argument导致retry拉满
-                            # 比较浪费时间，在这里手动补上
+                            # The success rate of do_nothing is very low
+                            # It often drops the argument, causing retries
+                            # It's a waste of time, manually compensating here
                             arguments = {}
                         exec_functions.append({
                             "name": name,

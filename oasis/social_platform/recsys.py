@@ -1,4 +1,18 @@
-'''注意需要在写入rec_matrix的时候判断是否超过max_rec_post_len'''
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+'''Note that you need to check if it exceeds max_rec_post_len when writing
+into rec_matrix'''
 import heapq
 import logging
 import os
@@ -22,13 +36,13 @@ from .typing import ActionType, RecsysType
 rec_log = logging.getLogger(name='social.rec')
 rec_log.setLevel('DEBUG')
 
-# 先设置为None，后续再在recsys函数里赋一次值
+# Initially set to None, to be assigned once again in the recsys function
 model = None
 twhin_tokenizer, twhin_model = None, None
 
 # Create the TF-IDF model
 tfidf_vectorizer = TfidfVectorizer()
-# prepare the twhin model
+# Prepare the twhin model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 twhin_tokenizer = AutoTokenizer.from_pretrained(
@@ -37,18 +51,21 @@ twhin_tokenizer = AutoTokenizer.from_pretrained(
 twhin_model = AutoModel.from_pretrained(
     pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
 
-# 每个用户的所有历史推特和最近一条推特
+# All historical tweets and the most recent tweet of each user
 user_previous_post_all = {}
 user_previous_post = {}
 user_profiles = []
-# 获取 {post_id: content} dict
+# Get the {post_id: content} dict
 t_items = {}
-# 获取 {uid: follower_count} dict
-# 这里还是需要保证agent注册时按顺序来的，存在user_id=agent_id+1的关系 乱序注册这里就会有问题
+# Get the {uid: follower_count} dict
+# It's necessary to ensure that agent registration is sequential, with the
+# relationship of user_id=agent_id+1; disorder in registration will cause
+# issues here
 u_items = {}
-# 获取所有推文的创建时间，根据时间远近来赋分
+# Get the creation times of all tweets, assigning scores based on how recent
+# they are
 date_score = []
-# 获取所有推文的作者的粉丝数
+# Get the fan counts of all tweet authors
 fans_score = []
 
 
@@ -95,7 +112,7 @@ else:
     pass
 
 
-# 重置全局变量
+# Reset global variables
 def reset_globals():
     global user_previous_post_all, user_previous_post
     global user_profiles, t_items, u_items
@@ -127,14 +144,17 @@ def rec_sys_random(user_table: List[Dict[str,
     Returns:
         List[List]: Updated recommendation matrix.
     """
-    # 获取所有推文的ID
+    # Get all post IDs
     post_ids = [post['post_id'] for post in post_table]
     new_rec_matrix = []
     if len(post_ids) <= max_rec_post_len:
-        # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
+        # If the number of posts is less than or equal to the maximum number
+        # of recommendations, each user gets all post IDs
         new_rec_matrix = [post_ids] * len(rec_matrix)
     else:
-        # 如果推文数量大于最大推荐数，每个用户随机获得指定数量的推文ID
+        # If the number of posts is greater than the maximum number of
+        # recommendations, each user randomly gets a specified number of post
+        # IDs
         for _ in range(len(rec_matrix)):
             new_rec_matrix.append(random.sample(post_ids, max_rec_post_len))
 
@@ -199,14 +219,16 @@ def rec_sys_reddit(post_table: List[Dict[str, Any]], rec_matrix: List[List],
     Returns:
         List[List]: Updated recommendation matrix.
     """
-    # 获取所有推文的ID
+    # Get all post IDs
     post_ids = [post['post_id'] for post in post_table]
 
     if len(post_ids) <= max_rec_post_len:
-        # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
+        # If the number of posts is less than or equal to the maximum number
+        # of recommendations, each user gets all post IDs
         new_rec_matrix = [post_ids] * len(rec_matrix)
     else:
-        # 该推荐系统的时间复杂度是O(post_num * log max_rec_post_len)
+        # The time complexity of this recommendation system is
+        # O(post_num * log max_rec_post_len)
         all_hot_score = []
         for post in post_table:
             try:
@@ -219,14 +241,15 @@ def rec_sys_reddit(post_table: List[Dict[str, Any]], rec_matrix: List[List],
                                             post['num_dislikes'],
                                             created_at_dt)
             all_hot_score.append((hot_score, post['post_id']))
-        # 排序
-        # print(all_hot_score)
+        # Sort
         top_posts = heapq.nlargest(max_rec_post_len,
                                    all_hot_score,
                                    key=lambda x: x[0])
         top_post_ids = [post_id for _, post_id in top_posts]
 
-        # 如果推文数量大于最大推荐数，每个用户随机获得指定数量的推文ID
+        # If the number of posts is greater than the maximum number of
+        # recommendations, each user gets a specified number of post IDs
+        # randomly
         new_rec_matrix = [top_post_ids] * len(rec_matrix)
 
     return new_rec_matrix
@@ -254,7 +277,6 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
     if model is None or isinstance(model, tuple):
         model = get_recsys_model(recsys_type="twitter")
 
-    # 获取所有推文的ID
     post_ids = [post['post_id'] for post in post_table]
     print(
         f'Running personalized recommendation for {len(user_table)} users...')
@@ -329,7 +351,7 @@ def rec_sys_personalized(user_table: List[Dict[str, Any]],
 
 def get_like_post_id(user_id, action, trace_table):
     """
-    Get the contents of posts that a user has interacted with.
+    Get the post IDs that a user has liked or unliked.
 
     Args:
         user_id (str): ID of the user.
@@ -338,16 +360,17 @@ def get_like_post_id(user_id, action, trace_table):
         trace_table (list): List of user interactions.
 
     Returns:
-        list: List of post contents.
+        list: List of post IDs.
     """
     # Get post IDs from trace table for the given user and action
     trace_post_ids = [
         literal_eval(trace['info'])["post_id"] for trace in trace_table
         if (trace['user_id'] == user_id and trace['action'] == action)
     ]
-
-    # 只取最近点赞的5条post,如果不够则用最新点赞的post padding
-    # 只取id，不取content是因为后面会算一遍所有post的embedding，把这个拿出来单独再算一遍非常耗时，尤其是agent的数量级比较大的时候
+    """Only take the last 5 liked posts, if not enough, pad with the most
+    recently liked post. Only take IDs, not content, because calculating
+    embeddings for all posts again is very time-consuming, especially when the
+    number of agents is large"""
     if len(trace_post_ids) < 5 and len(trace_post_ids) > 0:
         trace_post_ids += [trace_post_ids[-1]] * (5 - len(trace_post_ids))
     elif len(trace_post_ids) > 5:
@@ -358,16 +381,16 @@ def get_like_post_id(user_id, action, trace_table):
     return trace_post_ids
 
 
-# 计算过去like的post与target post的余弦相似度并取平均值
+# Calculate the average cosine similarity between liked posts and target posts
 def calculate_like_similarity(liked_vectors, target_vectors):
-    # 计算向量的范数
+    # Calculate the norms of the vectors
     liked_norms = np.linalg.norm(liked_vectors, axis=1)
     target_norms = np.linalg.norm(target_vectors, axis=1)
-    # 计算点积
+    # Calculate dot products
     dot_products = np.dot(target_vectors, liked_vectors.T)
-    # 计算余弦相似度
+    # Calculate cosine similarities
     cosine_similarities = dot_products / np.outer(target_norms, liked_norms)
-    # 取平均值
+    # Take the average
     average_similarities = np.mean(cosine_similarities, axis=1)
 
     return average_similarities
@@ -383,11 +406,11 @@ def rec_sys_personalized_twh(
         # source_post_indexs: List[int],
         recall_only: bool = False,
         enable_like_score: bool = False) -> List[List]:
-    # 设置一些全局变量，减少时间消耗
+    # Set some global variables to reduce time consumption
     global date_score, fans_score, t_items, u_items, user_previous_post
     global user_previous_post_all, user_profiles
-    # 获取 uid: follower_count dict
-    # 只更新一次，除非要加入中途介入新用户的功能。
+    # Get the uid: follower_count dict
+    # Update only once, unless adding the feature to include new users midway.
     if (not u_items) or len(u_items) != len(user_table):
         u_items = {
             user['user_id']: user["num_followers"]
@@ -395,7 +418,7 @@ def rec_sys_personalized_twh(
         }
     if not user_previous_post_all or len(user_previous_post_all) != len(
             user_table):
-        # 每个user都要有一个历史推特列表
+        # Each user must have a list of historical tweets
         user_previous_post_all = {
             index: []
             for index in range(len(user_table))
@@ -411,16 +434,19 @@ def rec_sys_personalized_twh(
     current_time = int(os.environ["SANDBOX_TIME"])
     if len(t_items) < len(post_table):
         for post in post_table[-latest_post_count:]:
-            # 获取 {post_id: content} dict，只更新最新发出的推特
+            # Get the {post_id: content} dict, update only the latest tweets
             t_items[post['post_id']] = post['content']
-            # 更新用户发出的历史推特
+            # Update the user's historical tweets
             user_previous_post_all[post['user_id']].append(post['content'])
             user_previous_post[post['user_id']] = post['content']
-            # 获取所有推文的创建时间，根据时间远近来赋分, 需要注意的是这种算法最多只能跑90个时间步
+            # Get the creation times of all tweets, assigning scores based on
+            # how recent they are, note that this algorithm can run for a
+            # maximum of 90 time steps
             date_score.append(
                 np.log(
                     (271.8 - (current_time - int(post['created_at']))) / 100))
-            # 获取post的受众群体数量, 根据粉丝数量来赋分
+            # Get the audience size of the post, score based on the number of
+            # followers
             try:
                 fans_score.append(
                     np.log(u_items[post['user_id']] + 1) / np.log(1000))
@@ -436,7 +462,8 @@ def rec_sys_personalized_twh(
     fans_score_np = np.where(fans_score_np < 1, 1, fans_score_np)
 
     if enable_like_score:
-        # 与之前like的内容计算相似度，先收集trace中的like post id
+        # Calculate similarity with previously liked content, first gather
+        # liked post ids from the trace
         like_post_ids_all = []
         for user in user_table:
             user_id = user['agent_id']
@@ -448,27 +475,34 @@ def rec_sys_personalized_twh(
     scores = date_score_np
     new_rec_matrix = []
     if len(post_table) <= max_rec_post_len:
-        # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
+        # If the number of tweets is less than or equal to the max
+        # recommendation count, each user gets all post IDs
         tids = [t['post_id'] for t in post_table]
         new_rec_matrix = [tids] * (len(rec_matrix))
 
     else:
-        # 如果推文数量大于最大推荐数，每个用户随机获得personalized推文ID
+        # If the number of tweets is greater than the max recommendation
+        # count, each user randomly gets personalized post IDs
 
-        # 这里需要过一遍所有user，去更新他的profile，是一个比较耗时的操作
+        # This requires going through all users to update their profiles,
+        # which is a time-consuming operation
         for post_user_index in user_previous_post:
             try:
-                # 直接使用最新推特替换profile的方法会导致推荐系统向已经转发了该推特的用户重复推送其他转发了该推特的repost
+                # Directly replacing the profile with the latest tweet will
+                # cause the recommendation system to repeatedly push other
+                # reposts to users who have already shared that tweet
                 # user_profiles[post_user_index] =
                 # user_previous_post[post_user_index]
-                # 这里改为向user char的最后加上对于Recent post的内容介绍
+                # Instead, append the description of the Recent post's content
+                # to the end of the user char
                 update_profile = (
                     f" # Recent post:{user_previous_post[post_user_index]}")
                 if user_previous_post[post_user_index] != "":
-                    # 如果没有更新 recent post，加上这一段
+                    # If there's no update for the recent post, add this part
                     if "# Recent post:" not in user_profiles[post_user_index]:
                         user_profiles[post_user_index] += update_profile
-                    # 如果profile中有recent post，但不是该用户最新发的推，将其置换掉
+                    # If the profile has a recent post but it's not the user's
+                    # latest, replace it
                     elif update_profile not in user_profiles[post_user_index]:
                         user_profiles[post_user_index] = user_profiles[
                             post_user_index].split(
@@ -490,7 +524,8 @@ def rec_sys_personalized_twh(
         posts_vector = all_post_vector_list[len(user_profiles):]
 
         if enable_like_score:
-            # 遍历所有like post id，从posts_vector把like post vectors收集起来用矩阵加速运算
+            # Traverse all liked post ids, collecting liked post vectors from
+            # posts_vector for matrix acceleration calculation
             like_posts_vectors = []
             for user_idx, like_post_ids in enumerate(like_post_ids_all):
                 if len(like_post_ids) != 1:
@@ -653,14 +688,11 @@ def rec_sys_personalized_with_trace(
 
     start_time = time.time()
 
-    # 获取所有推文的ID
     new_rec_matrix = []
     post_ids = [post['post_id'] for post in post_table]
     if len(post_ids) <= max_rec_post_len:
-        # 如果推文数量小于等于最大推荐数，每个用户获得所有推文ID
         new_rec_matrix = [post_ids] * (len(rec_matrix) - 1)
     else:
-        # 如果推文数量大于最大推荐数，每个用户随机获得personalized推文ID
         for idx in range(1, len(rec_matrix)):
             user_id = user_table[idx - 1]['user_id']
             user_bio = user_table[idx - 1]['bio']

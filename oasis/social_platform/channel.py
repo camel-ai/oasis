@@ -1,3 +1,16 @@
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import asyncio
 import uuid
 
@@ -28,15 +41,16 @@ class AsyncSafeDict:
 class Channel:
 
     def __init__(self):
-        self.receive_queue = asyncio.Queue()  # 用于存储接收的消息
-        self.send_dict = AsyncSafeDict()  # 使用异步安全字典存储要发送的消息
+        self.receive_queue = asyncio.Queue()  # Used to store received messages
+        # Using an asynchronous safe dictionary to store messages to be sent
+        self.send_dict = AsyncSafeDict()
 
     async def receive_from(self):
         message = await self.receive_queue.get()
         return message
 
     async def send_to(self, message):
-        # message_id 是消息的第一个元素
+        # message_id is the first element of the message
         message_id = message[0]
         await self.send_dict.put(message_id, message)
 
@@ -48,9 +62,9 @@ class Channel:
     async def read_from_send_queue(self, message_id):
         while True:
             if message_id in await self.send_dict.keys():
-                # 尝试获取消息
+                # Attempting to retrieve the message
                 message = await self.send_dict.pop(message_id, None)
                 if message:
-                    return message  # 返回找到的消息
-
-            await asyncio.sleep(0.001)  # 暂时挂起，避免紧密循环
+                    return message  # Return the found message
+            # Temporarily suspend to avoid tight looping
+            await asyncio.sleep(0.001)

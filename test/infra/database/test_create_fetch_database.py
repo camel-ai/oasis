@@ -1,3 +1,16 @@
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import datetime
 import os
 import os.path as osp
@@ -89,7 +102,6 @@ def test_user_operations():
 
     actual_result = fetch_table_from_db(cursor, "user")
 
-    # 使用assert语句进行比较
     assert actual_result == expected_result, "The fetched data does not match."
 
     cursor.execute(
@@ -146,7 +158,6 @@ def test_post_operations():
     }]
     actual_result = fetch_table_from_db(cursor, "post")
 
-    # 使用assert语句进行比较
     assert actual_result == expected_result, "The fetched data does not match."
 
     # Assert the post was updated correctly

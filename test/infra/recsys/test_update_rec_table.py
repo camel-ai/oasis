@@ -1,3 +1,16 @@
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import asyncio
 import os
 import os.path as osp
@@ -36,7 +49,7 @@ async def test_update_rec_table(setup_db):
         )
         if recsys_type == "twhin-bert":
             reset_globals()
-        # 在测试开始之前，将3个用户插入到user表中
+        # Insert 3 users into the user table before the test starts
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
         cursor.execute(
@@ -59,12 +72,14 @@ async def test_update_rec_table(setup_db):
         )
         conn.commit()
 
-        # 在测试开始之前，将60条推文用户插入到post表中
-        for i in range(60):  # 生成60条post
-            user_id = i % 3  # 循环使用用户ID 0, 1, 2
-            content = f"Post content for post {i}"  # 简单生成不同的内容
+        # Insert 60 tweet users into the post table before the test starts
+        for i in range(60):  # Generate 60 posts
+            user_id = i % 3  # Cycle through user IDs 0, 1, 2
+            # Simply generate different content
+            content = f"Post content for post {i}"
             created_at = "0"
-            num_likes = random.randint(0, 100)  # 随机生成点赞数
+            num_likes = random.randint(
+                0, 100)  # Randomly generate the number of likes
 
             cursor.execute(
                 ("INSERT INTO post "
@@ -84,10 +99,10 @@ async def test_update_rec_table(setup_db):
 
         for i in range(3):
             cursor.execute("SELECT post_id FROM rec WHERE user_id = ?", (i, ))
-            posts = cursor.fetchall()  # 获取所有记录
+            posts = cursor.fetchall()  # Get all records
             # ! Number of available posts for recommendation =
             # total posts - posts from current user !
-            # 实际上推特里是可以看到自己发的推文的
+            # In reality, Twitter does allow seeing one's own tweets
             assert len(posts) == 50, f"User {user_id} doesn't have 50 posts."
             post_ids = [post[0] for post in posts]
             is_unique = len(post_ids) == len(set(post_ids))
@@ -98,6 +113,6 @@ async def test_update_rec_table(setup_db):
 
     finally:
         conn.close()
-        # 清理
+        # Clean up
         if os.path.exists(test_db_filepath):
             os.remove(test_db_filepath)

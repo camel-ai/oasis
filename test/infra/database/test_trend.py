@@ -1,3 +1,16 @@
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import os
 import os.path as osp
 import sqlite3
@@ -15,10 +28,10 @@ class MockChannel:
 
     def __init__(self):
         self.call_count = 0
-        self.messages = []  # 用于存储发送的消息
+        self.messages = []  # Used to store sent messages
 
     async def receive_from(self):
-        # 第一次调用返回搜索用户的指令
+        # Returns the command to search for a user on the first call
         if self.call_count == 0:
             self.call_count += 1
             return ("id_", (1, None, "trend"))
@@ -26,11 +39,12 @@ class MockChannel:
             return ("id_", (None, None, "exit"))
 
     async def send_to(self, message):
-        self.messages.append(message)  # 存储消息以便后续断言
-        # 对搜索用户的结果进行断言
+        self.messages.append(message)  # Store message for later assertion
+        # Asserts the result of the user search
         if self.call_count == 1:
             print(message[2])
-            # 验证搜索成功且找到至少一个匹配用户
+            # Verify the search was successful and at least one matching user
+            # was found
             assert message[2]["success"] is True, "Trend should be successful"
             assert message[2]["posts"][0]["content"] == "Post 6"
             print(message[2]["posts"])
@@ -38,11 +52,11 @@ class MockChannel:
 
 @pytest.fixture
 def setup_platform():
-    # 测试前确保test.db不存在
+    # Ensure test.db does not exist before testing
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
-    # 创建数据库和表
+    # Create database and tables
     db_path = test_db_filepath
 
     mock_channel = MockChannel()
@@ -55,7 +69,7 @@ async def test_search_user(setup_platform):
     try:
         platform = setup_platform
 
-        # 在测试开始之前，将1个用户插入到user表中
+        # Insert 1 user into the user table before the test starts
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
         cursor.execute(
@@ -66,12 +80,13 @@ async def test_search_user(setup_platform):
         )
         conn.commit()
 
-        # 在测试开始之前，将post插入到post表中
+        # Insert post into the post table before the test starts
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
 
         today = platform.start_time
-        # 生成从今天开始往前数10天的时间戳列表
+        # Generate a list of timestamps starting from today and going back 10
+        # days
         posts_info = [(
             1,
             f"Post {9-i}",
@@ -99,12 +114,12 @@ async def test_search_user(setup_platform):
 
         await platform.running()
 
-        # 验证跟踪表(trace)是否正确记录了操作
+        # Verify that the trace table correctly recorded the operation
         cursor.execute("SELECT * FROM trace WHERE action='trend'")
         assert cursor.fetchone() is not None, "trend action not traced"
 
     finally:
         conn.close()
-        # 清理
+        # Cleanup
         if os.path.exists(test_db_filepath):
             os.remove(test_db_filepath)

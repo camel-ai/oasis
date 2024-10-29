@@ -1,3 +1,16 @@
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import os
 import os.path as osp
 import sqlite3
@@ -14,29 +27,33 @@ class MockChannel:
 
     def __init__(self):
         self.call_count = 0
-        self.messages = []  # 用于存储发送的消息
+        self.messages = []  # Used to store sent messages
 
     async def receive_from(self):
-        # 第一次调用返回搜索用户的指令
+        # Returns the command to search users on the first call
         if self.call_count == 0:
             self.call_count += 1
-            return ("id_", (1, "bob", "search_user"))  # 假设搜索关键词为"bob"
+            return ("id_", (1, "bob", "search_user")
+                    )  # Assuming the search keyword is "bob"
         if self.call_count == 1:
             self.call_count += 1
-            return ("id_", (2, "Bob", "search_posts"))  # 假设搜索关键词为"bob"
-        # 后续调用返回退出指令
+            return ("id_", (2, "Bob", "search_posts")
+                    )  # Assuming the search keyword is "bob"
+        # Returns the exit command on subsequent calls
         else:
             return ("id_", (None, None, "exit"))
 
     async def send_to(self, message):
-        self.messages.append(message)  # 存储消息以便后续断言
-        # 对搜索用户的结果进行断言
+        self.messages.append(message)  # Store messages for later assertions
+        # Assert on the results of searching users
         if self.call_count == 1:
-            # 验证搜索成功且找到至少一个匹配用户
+            # Verify the search was successful and found at least one
+            # matching user
             assert message[2]["success"] is True, "Search should be successful"
             assert len(
                 message[2]["users"]) > 0, "Should find at least one user"
-            # 你可以添加更多的断言来验证返回的用户信息是否正确
+            # You can add more assertions here to verify the correctness of
+            # the returned user information
             assert (message[2]["users"][0]["user_name"] == "user2"
                     ), "The first matching user should be 'user2'"
         if self.call_count == 2:
@@ -54,11 +71,11 @@ class MockChannel:
 
 @pytest.fixture
 def setup_platform():
-    # 测试前确保test.db不存在
+    # Ensure test.db does not exist before the test
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
-    # 创建数据库和表
+    # Create the database and table
     db_path = test_db_filepath
 
     mock_channel = MockChannel()
@@ -71,7 +88,7 @@ async def test_search_user(setup_platform):
     try:
         platform = setup_platform
 
-        # 在测试开始之前，将几个用户插入到user表中
+        # Insert several users into the user table before the test starts
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
         users_info = [
@@ -89,7 +106,8 @@ async def test_search_user(setup_platform):
             (2, "Bob's first post!", "2023-01-02 14:00:00", 150, 2),
             (3, "Charlie says hi!", "2023-01-03 15:00:00", 200, 3),
         ]
-        # 假设 cursor 是你已经创建并与数据库建立连接的游标对象
+        # Assuming cursor is your cursor object already created and connected
+        # to the database
         cursor.executemany(
             ("INSERT INTO post (user_id, content, created_at, num_likes, "
              "num_dislikes) VALUES (?, ?, ?, ?, ?)"),
@@ -103,7 +121,8 @@ async def test_search_user(setup_platform):
             (2, 2, "Bob's comment", "2023-01-02 14:10:00", 3, 0),
             (2, 3, "Charlie's comment", "2023-01-03 15:20:00", 8, 2),
         ]
-        # 假设 cursor 是你已经创建并与数据库建立连接的游标对象
+        # Assuming cursor is your cursor object already created and connected
+        # to the database
         cursor.executemany(
             "INSERT INTO comment (post_id, user_id, content, created_at, "
             "num_likes, num_dislikes) VALUES (?, ?, ?, ?, ?, ?)",
@@ -113,16 +132,16 @@ async def test_search_user(setup_platform):
 
         await platform.running()
 
-        # 验证跟踪表(trace)是否正确记录了操作
+        # Verify that the trace table correctly recorded the action
         cursor.execute("SELECT * FROM trace WHERE action='search_user'")
         assert cursor.fetchone() is not None, "search_user action not traced"
 
-        # 验证跟踪表(trace)是否正确记录了操作
+        # Verify that the trace table correctly recorded the action
         cursor.execute("SELECT * FROM trace WHERE action='search_posts'")
         assert cursor.fetchone() is not None, "search_post action not traced"
 
     finally:
         conn.close()
-        # 清理
+        # Cleanup
         if os.path.exists(test_db_filepath):
             os.remove(test_db_filepath)

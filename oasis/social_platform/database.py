@@ -1,3 +1,16 @@
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 from __future__ import annotations
 
 import os
@@ -196,31 +209,33 @@ def fetch_table_from_db(cursor: sqlite3.Cursor,
 
 
 def fetch_rec_table_as_matrix(cursor: sqlite3.Cursor) -> List[List[int]]:
-    # 首先，查询user表中的所有user_id, 假设从1开始，连续
+    # First, query all user_ids from the user table, assuming they start from
+    # 1 and are consecutive
     cursor.execute("SELECT user_id FROM user ORDER BY user_id")
     user_ids = [row[0] for row in cursor.fetchall()]
 
-    # 接着，查询rec表中的所有记录
+    # Then, query all records from the rec table
     cursor.execute(
         "SELECT user_id, post_id FROM rec ORDER BY user_id, post_id")
     rec_rows = cursor.fetchall()
-    # 初始化一个字典，为每个user_id分配一个空列表
+    # Initialize a dictionary, assigning an empty list to each user_id
     user_posts = {user_id: [] for user_id in user_ids}
-    # 使用查询到的rec表记录填充字典
+    # Fill the dictionary with the records queried from the rec table
     for user_id, post_id in rec_rows:
         if user_id in user_posts:
             user_posts[user_id].append(post_id)
-    # 将字典转换为矩阵形式
+    # Convert the dictionary into matrix form
     matrix = [user_posts[user_id] for user_id in user_ids]
     return matrix
 
 
 def insert_matrix_into_rec_table(cursor: sqlite3.Cursor,
                                  matrix: List[List[int]]) -> None:
-    # 遍历matrix，跳过索引0的占位符
-    for user_id, post_ids in enumerate(matrix):
+    # Iterate through the matrix, skipping the placeholder at index 0
+    for user_id, post_ids in enumerate(matrix, start=1):
+        # Adjusted to start counting from 1
         for post_id in post_ids:
-            # 对每个user_id和post_id的组合，插入到rec表中
+            # Insert each combination of user_id and post_id into the rec table
             cursor.execute("INSERT INTO rec (user_id, post_id) VALUES (?, ?)",
                            (user_id, post_id))
 

@@ -1,3 +1,16 @@
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import os
 import os.path as osp
 import sqlite3
@@ -15,10 +28,9 @@ class MockChannel:
 
     def __init__(self):
         self.call_count = 0
-        self.messages = []  # 用于存储发送的消息
+        self.messages = []
 
     async def receive_from(self):
-        # 第一次调用返回搜索用户的指令
         if self.call_count == 0:
             self.call_count += 1
             return ("id_", (1, None, ActionType.DO_NOTHING))
@@ -33,11 +45,9 @@ class MockChannel:
 
 @pytest.fixture
 def setup_platform():
-    # 测试前确保test.db不存在
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
-    # 创建数据库和表
     db_path = test_db_filepath
     mock_channel = MockChannel()
 
@@ -50,7 +60,6 @@ async def test_refresh(setup_platform):
     try:
         platform = setup_platform
 
-        # 在测试开始之前，将1个用户插入到user表中
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
         cursor.execute(
@@ -61,7 +70,6 @@ async def test_refresh(setup_platform):
         conn.commit()
 
         await platform.running()
-        # 验证跟踪表(trace)是否正确记录了操作
         cursor.execute("SELECT * FROM trace WHERE action='do_nothing'")
         assert cursor.fetchone() is not None, "trend action not traced"
 

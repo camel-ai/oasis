@@ -1,3 +1,16 @@
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import os
 import os.path as osp
 import sqlite3
@@ -14,67 +27,68 @@ class MockChannel:
 
     def __init__(self):
         self.call_count = 0
-        self.messages = []  # 用于存储发送的消息
+        self.messages = []  # Used to store sent messages
 
     async def receive_from(self):
-        # 第一次调用返回关注操作的指令
+        # On the first call, return the command for the follow operation
         if self.call_count == 0:
             self.call_count += 1
-            return ("id_", (1, 2, "follow"))  # 假设用户1关注用户2
+            return ("id_", (1, 2, "follow"))  # Assuming user 1 follows user 2
         if self.call_count == 1:
             self.call_count += 1
-            return ("id_", (1, 3, "follow"))  # 假设用户1关注用户3
+            return ("id_", (1, 3, "follow"))  # Assuming user 1 follows user 3
         if self.call_count == 2:
             self.call_count += 1
-            return ("id_", (1, 3, "unfollow"))  # 假设用户1取消关注用户3
+            return ("id_", (1, 3, "unfollow")
+                    )  # Assuming user 1 unfollows user 3
         if self.call_count == 3:
             self.call_count += 1
-            return ("id_", (2, 1, "mute"))  # 假设用户2禁言用户1
+            return ("id_", (2, 1, "mute"))  # Assuming user 2 mutes user 1
         if self.call_count == 4:
             self.call_count += 1
-            return ("id_", (2, 3, "mute"))  # 假设用户2禁言用户3
+            return ("id_", (2, 3, "mute"))  # Assuming user 2 mutes user 3
         if self.call_count == 5:
             self.call_count += 1
-            return ("id_", (2, 3, "unmute"))  # 假设用户2取消禁言用户3
-        # 返回退出指令
+            return ("id_", (2, 3, "unmute"))  # Assuming user 2 unmutes user 3
+        # Returns the exit command afterwards
         else:
             return ("id_", (None, None, "exit"))
 
     async def send_to(self, message):
-        self.messages.append(message)  # 存储消息以便后续断言
+        self.messages.append(message)  # Store messages for later assertions
         if self.call_count == 1:
-            # 对关注操作的成功消息进行断言
+            # Assert on the success message of the follow operation
             assert message[2]["success"] is True
             assert "follow_id" in message[2]
         if self.call_count == 2:
-            # 对关注操作的成功消息进行断言
+            # Assert on the success message of the follow operation
             assert message[2]["success"] is True
             assert "follow_id" in message[2]
         if self.call_count == 3:
-            # 对取消关注操作的成功消息进行断言
+            # Assert on the success message of the unfollow operation
             assert message[2]["success"] is True
             assert "follow_id" in message[2]
         if self.call_count == 4:
-            # 对禁言操作的成功消息进行断言
+            # Assert on the success message of the mute operation
             assert message[2]["success"] is True
             assert "mute_id" in message[2]
         if self.call_count == 5:
-            # 对禁言操作的成功消息进行断言
+            # Assert on the success message of the mute operation
             assert message[2]["success"] is True
             assert "mute_id" in message[2]
         if self.call_count == 6:
-            # 对取消禁言操作的成功消息进行断言
+            # Assert on the success message of the unmute operation
             assert message[2]["success"] is True
             assert "mute_id" in message[2]
 
 
 @pytest.fixture
 def setup_platform():
-    # 测试前确保test.db不存在
+    # Ensure test.db does not exist before the test
     if os.path.exists(test_db_filepath):
         os.remove(test_db_filepath)
 
-    # 创建数据库和表
+    # Create the database and table
     db_path = test_db_filepath
 
     mock_channel = MockChannel()
@@ -87,7 +101,7 @@ async def test_follow_user(setup_platform):
     try:
         platform = setup_platform
 
-        # 在测试开始之前，将3个用户插入到user表中
+        # Insert 3 users into the user table before the test starts
         conn = sqlite3.connect(test_db_filepath)
         cursor = conn.cursor()
         cursor.execute(
@@ -112,44 +126,44 @@ async def test_follow_user(setup_platform):
 
         await platform.running()
 
-        # 验证数据库中是否正确插入了数据
+        # Verify if the data was correctly inserted into the database
 
-        # 验证关注表(follow)是否正确插入了数据
+        # Verify if the follow table has the correct data inserted
         cursor.execute(
             "SELECT * FROM follow WHERE follower_id=1 AND followee_id=2")
         assert cursor.fetchone() is not None, "Follow record not found"
 
-        # 验证跟踪表(trace)是否正确记录了关注操作
+        # Verify if the trace table correctly recorded the follow operation
         cursor.execute("SELECT * FROM trace WHERE action='follow'")
         assert cursor.fetchone() is not None, "Follow action not traced"
 
-        # 验证关注表(follow)是否正确删除了数据
+        # Verify if the follow table correctly deleted the data
         cursor.execute(
             "SELECT * FROM follow WHERE follower_id=1 AND followee_id=3")
-        assert cursor.fetchone() is None, "unfollow record not deleted"
+        assert cursor.fetchone() is None, "Unfollow record not deleted"
 
-        # 验证跟踪表(trace)是否正确记录了取消关注操作
+        # Verify if the trace table correctly recorded the unfollow operation
         cursor.execute("SELECT * FROM trace WHERE action='unfollow'")
-        assert cursor.fetchone() is not None, "Follow action not traced"
+        assert cursor.fetchone() is not None, "Unfollow action not traced"
 
-        # 验证禁言表(mute)是否正确插入了数据
+        # Verify if the mute table has the correct data inserted
         cursor.execute("SELECT * FROM mute WHERE muter_id=2 AND mutee_id=1")
         assert cursor.fetchone() is not None, "Mute record not found"
 
-        # 验证禁言表(mute)是否正确删除了数据
+        # Verify if the mute table correctly deleted the data
         cursor.execute("SELECT * FROM mute WHERE muter_id=2 AND mutee_id=3")
-        assert cursor.fetchone() is None, "Unmute record not found"
+        assert cursor.fetchone() is None, "Unmute record not deleted"
 
-        # 验证跟踪表(trace)是否正确记录了禁言操作
+        # Verify if the trace table correctly recorded the mute operation
         cursor.execute("SELECT * FROM trace WHERE action='mute'")
         assert cursor.fetchone() is not None, "Mute action not traced"
 
-        # 验证跟踪表(trace)是否正确记录了取消禁言操作
+        # Verify if the trace table correctly recorded the unmute operation
         cursor.execute("SELECT * FROM trace WHERE action='unmute'")
         assert cursor.fetchone() is not None, "Unmute action not traced"
 
     finally:
-        # 清理
+        # Cleanup
         conn.close()
         if os.path.exists(test_db_filepath):
             os.remove(test_db_filepath)

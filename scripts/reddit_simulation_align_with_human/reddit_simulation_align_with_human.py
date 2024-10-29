@@ -1,3 +1,16 @@
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 from __future__ import annotations
 
 import argparse
@@ -192,10 +205,11 @@ async def running(
         if timestep == 0:
             time_difference = datetime.now() - start_time_0
 
-            # 将两个小时转换为秒，因为time_difference是一个timedelta对象
+            # Convert two hours into seconds since time_difference is a
+            # timedelta object
             two_hours_in_seconds = timedelta(hours=2).total_seconds()
 
-            # 计算两个小时除以时间差（以秒为单位）
+            # Calculate two hours divided by the time difference (in seconds)
             clock_factor = two_hours_in_seconds / \
                 time_difference.total_seconds()
             clock.k = clock_factor

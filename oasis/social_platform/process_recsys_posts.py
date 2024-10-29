@@ -1,10 +1,23 @@
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 from typing import List
 
 import torch
 from transformers import AutoModel, AutoTokenizer
 
 
-# 函数：处理每个批次
+# Function: Process each batch
 @torch.no_grad()
 def process_batch(model: AutoModel, tokenizer: AutoTokenizer,
                   batch_texts: List[str]):
@@ -20,8 +33,8 @@ def process_batch(model: AutoModel, tokenizer: AutoTokenizer,
 
 def generate_post_vector(model: AutoModel, tokenizer: AutoTokenizer, texts,
                          batch_size):
-    # 循环处理所有消息
-    # 如果消息列表过大，采用batch的方式去处理。
+    # Loop through all messages
+    # If the list of messages is too large, process them in batches.
     all_outputs = []
     for i in range(0, len(texts), batch_size):
         batch_texts = texts[i:i + batch_size]
@@ -32,10 +45,10 @@ def generate_post_vector(model: AutoModel, tokenizer: AutoTokenizer, texts,
 
 
 if __name__ == "__main__":
-    # 输入的字符串列表（假设有上万条消息）
-    texts = ["I'm using TwHIN-BERT! #TwHIN-BERT #NLP"
-             ] * 10000  # 这里用相同的消息重复10000次作为示例
-    # 定义批量大小
+    # Input list of strings (assuming there are tens of thousands of messages)
+    # Here, the same message is repeated 10000 times as an example
+    texts = ["I'm using TwHIN-BERT! #TwHIN-BERT #NLP"] * 10000
+    # Define batch size
     batch_size = 100
     all_outputs_tensor = generate_post_vector(texts, batch_size)
     print(all_outputs_tensor.shape)
