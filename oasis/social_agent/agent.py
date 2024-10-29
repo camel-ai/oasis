@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 if "sphinx" not in sys.modules:
     agent_log = logging.getLogger(name="social.agent")
     agent_log.setLevel("DEBUG")
-    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # 修改这里
+    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     file_handler = logging.FileHandler(f"./log/social.agent-{str(now)}.log")
     file_handler.setLevel("DEBUG")
     file_handler.setFormatter(
@@ -171,9 +171,9 @@ class SocialAgent:
                         if name != "do_nothing":
                             arguments = function["arguments"]
                         else:
-                            # do_nothing的成功率很低
-                            # 经常会丢掉argument导致retry拉满
-                            # 比较浪费时间，在这里手动补上
+                            # The success rate of do_nothing is very low
+                            # It often drops the argument, causing retries
+                            # It's a waste of time, manually compensating here
                             arguments = {}
                         exec_functions.append({
                             "name": name,

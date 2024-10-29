@@ -17,8 +17,8 @@ class PlatformUtils:
         return {
             "success":
             False,
-            "error": (f"Agent {agent_id} have not signed up and have no "
-                      f"user id."),
+            "error": (f"Agent {agent_id} has not signed up and does not have "
+                      f"a user id."),
         }
 
     def _execute_db_command(self, command, args=(), commit=False):
@@ -50,12 +50,12 @@ class PlatformUtils:
             return None
 
     def _add_comments_to_posts(self, posts_results):
-        # 初始化返回的posts列表
+        # Initialize the returned posts list
         posts = []
         for row in posts_results:
             (post_id, user_id, content, created_at, num_likes,
              num_dislikes) = row
-            # 对于每个post，查询其对应的comments
+            # For each post, query its corresponding comments
             self.db_cursor.execute(
                 "SELECT comment_id, post_id, user_id, content, created_at, "
                 "num_likes, num_dislikes FROM comment WHERE post_id = ?",
@@ -63,7 +63,7 @@ class PlatformUtils:
             )
             comments_results = self.db_cursor.fetchall()
 
-            # 将每个comment的结果转换为字典格式
+            # Convert each comment's result into dictionary format
             comments = [{
                 "comment_id":
                 comment_id,
@@ -91,7 +91,7 @@ class PlatformUtils:
                 num_dislikes,
             ) in comments_results]
 
-            # 将post信息和对应的comments添加到posts列表
+            # Add post information and corresponding comments to the posts list
             posts.append({
                 "post_id":
                 post_id,
@@ -117,10 +117,16 @@ class PlatformUtils:
                       action_type,
                       action_info,
                       current_time=None):
-        # 如果除了trace，该操作函数还在数据库的其他表中记录了时间，以进入操作函数的时间为准
-        # 传入current_time，使得比如post table的created_at和trace表中时间一模一样
+        r"""If, in addition to the trace, the operation function also records
+        time in other tables of the database, use the time of entering
+        the operation function for consistency.
 
-        # 如果只有trace表需要记录时间，将进入_record_trace作为trace记录的时间
+        Pass in current_time to make, for example, the created_at in the post
+        table exactly the same as the time in the trace table.
+
+        If only the trace table needs to record time, use the entry time into
+        _record_trace as the time for the trace record.
+        """
         if self.sandbox_clock:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
