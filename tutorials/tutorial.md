@@ -143,8 +143,4 @@ if __name__ == "__main__":
 
 Use the explore page of the [https://console.neo4j.io/](https://console.neo4j.io/) dashboard. In the search bar, select `user-follow-user`. For the slicer, choose `follow-timestamp` to visualize changes in follow relationships. Like this,
 
-<div style="text-align:center;">
-  <video width="600" height="300" controls>
-    <source src="../assets/dynamic_network.mp4" type="video/mp4">
-  </video>
-</div>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/YEG6D5Xgifw" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
