@@ -114,3 +114,37 @@ Then, you will see the disagree scores of the three groups—down-treated, contr
 <p align="center">
   <img src='../visualization/reddit_simulation_counterfactual/result/example.png' width=400>
 </p>
+
+### 🟠 Dynamic Follow Network Visualization
+
+- Step 1:
+
+Visit [https://neo4j.com/](https://neo4j.com/) and register for an account, then create a free instance.
+Obtain `NEO4J_URI`, `NEO4J_USERNAME`, and `NEO4J_PASSWORD` and save them in your environment variables.
+Open the instance and connect.
+
+- Step 2:
+
+```bash
+pip install neo4j
+```
+
+- Step 3:
+
+After running python the simulation script, a database file will be generated. Modify `visualization/dynamic_follow_network/code/vis_neo4j.py` here to their respective paths.
+
+```bash
+if __name__ == "__main__":
+    sqlite_db_path = "all_360_follow.db"  # Replace with your SQLite database path
+    main(sqlite_db_path)
+```
+
+- Step 4:
+
+Use the explore page of the [https://console.neo4j.io/](https://console.neo4j.io/) dashboard. In the search bar, select `user-follow-user`. For the slicer, choose `follow-timestamp` to visualize changes in follow relationships. Like this,
+
+<div style="text-align:center;">
+  <video width="600" height="300" controls>
+    <source src="../assets/dynamic_network.mp4" type="video/mp4">
+  </video>
+</div>
