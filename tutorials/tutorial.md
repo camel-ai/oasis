@@ -115,7 +115,7 @@ Then, you will see the disagree scores of the three groups—down-treated, contr
   <img src='../visualization/reddit_simulation_counterfactual/result/example.png' width=400>
 </p>
 
-### 🟠 Dynamic Follow Network Visualization
+### 🟣 Dynamic Follow Network Visualization
 
 - Step 1:
 
@@ -143,8 +143,4 @@ if __name__ == "__main__":
 
 Use the explore page of the [https://console.neo4j.io/](https://console.neo4j.io/) dashboard. In the search bar, select `user-follow-user`. For the slicer, choose `follow-timestamp` to visualize changes in follow relationships. Like this,
 
-
-
 https://github.com/user-attachments/assets/b0628bcc-f29c-4da6-a061-6c3c0487aea3
-
-
