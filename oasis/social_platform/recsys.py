@@ -396,6 +396,22 @@ def calculate_like_similarity(liked_vectors, target_vectors):
     return average_similarities
 
 
+def coarse_filtering(input_list, scale):
+    """
+    Coarse filtering posts and return selected elements with their indices.
+    """
+    if len(input_list) <= scale:
+        # Return elements and their indices as list of tuples (element, index)
+        sampled_indices = range(len(input_list))
+        return (input_list, sampled_indices)
+    else:
+        # Get random sample of scale elements
+        sampled_indices = random.sample(range(len(input_list)), scale)
+        sampled_elements = [input_list[idx] for idx in sampled_indices]
+        # return [(input_list[idx], idx) for idx in sampled_indices]
+        return (sampled_elements, sampled_indices)
+
+
 def rec_sys_personalized_twh(
         user_table: List[Dict[str, Any]],
         post_table: List[Dict[str, Any]],
@@ -510,7 +526,10 @@ def rec_sys_personalized_twh(
             except Exception:
                 print("update previous post failed")
 
-        corpus = user_profiles + list(t_items.values())
+        # coarse filtering 4000 posts due to the memory constraint.
+        filtered_posts_tuple = coarse_filtering(list(t_items.values()), 4000)
+        corpus = user_profiles + filtered_posts_tuple[0]
+        # corpus = user_profiles + list(t_items.values())
         tweet_vector_start_t = time.time()
         all_post_vector_list = generate_post_vector(twhin_model,
                                                     twhin_tokenizer,
@@ -561,13 +580,19 @@ def rec_sys_personalized_twh(
                     import pdb
                     pdb.set_trace()
 
-        cosine_similarities = cosine_similarities * scores
+        filter_posts_index = filtered_posts_tuple[1]
+        cosine_similarities = cosine_similarities * scores[filter_posts_index]
         cosine_similarities = torch.tensor(cosine_similarities)
-        value, indices = torch.topk(cosine_similarities,
-                                    max_rec_post_len,
-                                    dim=1,
-                                    largest=True,
-                                    sorted=True)
+        value, indices = torch.topk(cosine_similarities, max_rec_post_len, dim=1, largest=True, sorted=True)
+        filter_posts_index = torch.tensor(filter_posts_index)
+        indices = filter_posts_index[indices]
+        # cosine_similarities = cosine_similarities * scores
+        # cosine_similarities = torch.tensor(cosine_similarities)
+        # value, indices = torch.topk(cosine_similarities,
+        #                             max_rec_post_len,
+        #                             dim=1,
+        #                             largest=True,
+        #                             sorted=True)
 
         matrix_list = indices.cpu().numpy()
         post_list = list(t_items.keys())

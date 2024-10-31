@@ -67,4 +67,4 @@ class Channel:
                 if message:
                     return message  # Return the found message
             # Temporarily suspend to avoid tight looping
-            await asyncio.sleep(0.001)
+            await asyncio.sleep(0.1) # set a large one to reduce the workload of cpu
