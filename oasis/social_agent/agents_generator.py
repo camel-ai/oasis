@@ -28,6 +28,7 @@ from camel.types import ModelType, OpenAIBackendRole
 from oasis.social_agent import AgentGraph, SocialAgent
 from oasis.social_platform import Channel, Platform
 from oasis.social_platform.config import Neo4jConfig, UserInfo
+import tqdm
 
 
 async def generate_agents(
@@ -42,7 +43,7 @@ async def generate_agents(
     model_random_seed: int = 42,
     cfgs: list[Any] | None = None,
     neo4j_config: Neo4jConfig | None = None,
-) -> AgentGraph:
+) -> List:
     """Generate and return a dictionary of agents from the agent
     information CSV file. Each agent is added to the database and
     their respective profiles are updated.
@@ -91,10 +92,12 @@ async def generate_agents(
     normalized_prob = np.round(normalized_prob, 2)
     prob_list: list[float] = normalized_prob.tolist()
 
-    agent_graph = (AgentGraph() if neo4j_config is None else AgentGraph(
-        backend="neo4j",
-        neo4j_config=neo4j_config,
-    ))
+    # TODO when setting 100w agents, the agentgraph class is too slow. I use the list.
+    agent_graph = []
+    # agent_graph = (AgentGraph() if neo4j_config is None else AgentGraph(
+    #     backend="neo4j",
+    #     neo4j_config=neo4j_config,
+    # ))
 
     # agent_graph = []
     sign_up_list = []
@@ -103,7 +106,14 @@ async def generate_agents(
     user_update2 = []
     post_list = []
 
-    for agent_id in range(len(agent_info)):
+    # precompute to speed up agent generation in one million scale
+    following_agent_lists = agent_info["following_agentid_list"].apply(ast.literal_eval)
+    previous_tweets_lists = agent_info["previous_tweets"].apply(ast.literal_eval)
+    activity_level_frequencies = agent_info["activity_level_frequency"].apply(ast.literal_eval)
+    previous_tweets_lists = agent_info['previous_tweets'].apply(ast.literal_eval)
+    following_id_lists = agent_info["following_agentid_list"].apply(ast.literal_eval)
+
+    for agent_id in tqdm.tqdm(range(len(agent_info))):
         profile = {
             "nodes": [],
             "edges": [],
@@ -112,9 +122,10 @@ async def generate_agents(
         profile["other_info"]["user_profile"] = agent_info["user_char"][
             agent_id]
         profile["other_info"]["mbti"] = random.choice(mbti_types)
-        profile["other_info"]["activity_level_frequency"] = ast.literal_eval(
-            agent_info["activity_level_frequency"][agent_id])
+        profile['other_info']['activity_level_frequency'] = activity_level_frequencies[agent_id]
         profile["other_info"]["active_threshold"] = prob_list[agent_id]
+        # TODO if you simulate one million agents, use active threshold below.
+        # profile['other_info']['active_threshold'] = [0.01] * 24
 
         user_info = UserInfo(
             name=agent_info["username"][agent_id],
@@ -139,6 +150,14 @@ async def generate_agents(
         num_followings = 0
         num_followers = 0
         # print('agent_info["following_count"]', agent_info["following_count"])
+
+        # TODO some data does not cotain this key.
+        if 'following_count' not in agent_info.columns:
+            agent_info['following_count'] = 0
+        if 'followers_count' not in agent_info.columns:
+            agent_info['followers_count'] = 0
+
+
         if not agent_info["following_count"].empty:
             num_followings = agent_info["following_count"][agent_id]
         if not agent_info["followers_count"].empty:
@@ -155,18 +174,20 @@ async def generate_agents(
             num_followers,
         ))
 
-        following_id_list = ast.literal_eval(
-            agent_info["following_agentid_list"][agent_id])
+
+        following_id_list = following_id_lists[agent_id]
+        
+        # TODO If we simulate 1 million agents, we can not use agent_graph class. It is not scalble.
         if not isinstance(following_id_list, int):
             if len(following_id_list) != 0:
                 for follow_id in following_id_list:
                     follow_list.append((agent_id, follow_id, start_time))
                     user_update1.append((agent_id, ))
                     user_update2.append((follow_id, ))
-                    agent_graph.add_edge(agent_id, follow_id)
+                    #agent_graph.add_edge(agent_id, follow_id)
 
-        previous_posts = ast.literal_eval(
-            agent_info["previous_tweets"][agent_id])
+
+        previous_posts = previous_tweets_lists[agent_id]
         if len(previous_posts) != 0:
             for post in previous_posts:
                 post_list.append((agent_id, post, start_time, 0, 0))
