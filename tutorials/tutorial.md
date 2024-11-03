@@ -131,12 +131,20 @@ pip install neo4j
 
 - Step 3:
 
-After running python the simulation script, a database file will be generated. Modify `visualization/dynamic_follow_network/code/vis_neo4j.py` here to their respective paths.
+After running python the simulation script, a database file will be generated. Modify `visualization/dynamic_follow_network/code/vis_neo4j_reddit.py` or `visualization/dynamic_follow_network/code/vis_neo4j_twitter.py` here to their respective paths.
 
 ```bash
 if __name__ == "__main__":
     sqlite_db_path = "all_360_follow.db"  # Replace with your SQLite database path
     main(sqlite_db_path)
+```
+
+And run the Script.
+
+```bash
+python visualization/dynamic_follow_network/code/vis_neo4j_reddit.py
+# or
+python visualization/dynamic_follow_network/code/vis_neo4j_twitter.py
 ```
 
 - Step 4:
