@@ -583,7 +583,11 @@ def rec_sys_personalized_twh(
         filter_posts_index = filtered_posts_tuple[1]
         cosine_similarities = cosine_similarities * scores[filter_posts_index]
         cosine_similarities = torch.tensor(cosine_similarities)
-        value, indices = torch.topk(cosine_similarities, max_rec_post_len, dim=1, largest=True, sorted=True)
+        value, indices = torch.topk(cosine_similarities,
+                                    max_rec_post_len,
+                                    dim=1,
+                                    largest=True,
+                                    sorted=True)
         filter_posts_index = torch.tensor(filter_posts_index)
         indices = filter_posts_index[indices]
         # cosine_similarities = cosine_similarities * scores

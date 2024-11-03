@@ -17,10 +17,11 @@ import ast
 import asyncio
 import json
 import random
-from typing import Any
+from typing import Any, List
 
 import numpy as np
 import pandas as pd
+import tqdm
 from camel.memories import MemoryRecord
 from camel.messages import BaseMessage
 from camel.types import ModelType, OpenAIBackendRole
@@ -28,7 +29,6 @@ from camel.types import ModelType, OpenAIBackendRole
 from oasis.social_agent import AgentGraph, SocialAgent
 from oasis.social_platform import Channel, Platform
 from oasis.social_platform.config import Neo4jConfig, UserInfo
-import tqdm
 
 
 async def generate_agents(
@@ -92,7 +92,8 @@ async def generate_agents(
     normalized_prob = np.round(normalized_prob, 2)
     prob_list: list[float] = normalized_prob.tolist()
 
-    # TODO when setting 100w agents, the agentgraph class is too slow. I use the list.
+    # TODO when setting 100w agents, the agentgraph class is too slow.
+    # I use the list.
     agent_graph = []
     # agent_graph = (AgentGraph() if neo4j_config is None else AgentGraph(
     #     backend="neo4j",
@@ -107,11 +108,15 @@ async def generate_agents(
     post_list = []
 
     # precompute to speed up agent generation in one million scale
-    following_agent_lists = agent_info["following_agentid_list"].apply(ast.literal_eval)
-    previous_tweets_lists = agent_info["previous_tweets"].apply(ast.literal_eval)
-    activity_level_frequencies = agent_info["activity_level_frequency"].apply(ast.literal_eval)
-    previous_tweets_lists = agent_info['previous_tweets'].apply(ast.literal_eval)
-    following_id_lists = agent_info["following_agentid_list"].apply(ast.literal_eval)
+    _ = agent_info["following_agentid_list"].apply(ast.literal_eval)
+    previous_tweets_lists = agent_info["previous_tweets"].apply(
+        ast.literal_eval)
+    activity_level_frequencies = agent_info["activity_level_frequency"].apply(
+        ast.literal_eval)
+    previous_tweets_lists = agent_info['previous_tweets'].apply(
+        ast.literal_eval)
+    following_id_lists = agent_info["following_agentid_list"].apply(
+        ast.literal_eval)
 
     for agent_id in tqdm.tqdm(range(len(agent_info))):
         profile = {
@@ -122,7 +127,8 @@ async def generate_agents(
         profile["other_info"]["user_profile"] = agent_info["user_char"][
             agent_id]
         profile["other_info"]["mbti"] = random.choice(mbti_types)
-        profile['other_info']['activity_level_frequency'] = activity_level_frequencies[agent_id]
+        profile['other_info'][
+            'activity_level_frequency'] = activity_level_frequencies[agent_id]
         profile["other_info"]["active_threshold"] = prob_list[agent_id]
         # TODO if you simulate one million agents, use active threshold below.
         # profile['other_info']['active_threshold'] = [0.01] * 24
@@ -157,7 +163,6 @@ async def generate_agents(
         if 'followers_count' not in agent_info.columns:
             agent_info['followers_count'] = 0
 
-
         if not agent_info["following_count"].empty:
             num_followings = agent_info["following_count"][agent_id]
         if not agent_info["followers_count"].empty:
@@ -174,18 +179,17 @@ async def generate_agents(
             num_followers,
         ))
 
-
         following_id_list = following_id_lists[agent_id]
-        
-        # TODO If we simulate 1 million agents, we can not use agent_graph class. It is not scalble.
+
+        # TODO If we simulate 1 million agents, we can not use agent_graph
+        # class. It is not scalble.
         if not isinstance(following_id_list, int):
             if len(following_id_list) != 0:
                 for follow_id in following_id_list:
                     follow_list.append((agent_id, follow_id, start_time))
                     user_update1.append((agent_id, ))
                     user_update2.append((follow_id, ))
-                    #agent_graph.add_edge(agent_id, follow_id)
-
+                    # agent_graph.add_edge(agent_id, follow_id)
 
         previous_posts = previous_tweets_lists[agent_id]
         if len(previous_posts) != 0:

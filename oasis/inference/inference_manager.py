@@ -41,7 +41,8 @@ class InferencerManager:
         self.count = 0
         self.channel = channel
         self.threads = []
-        self.lock = threading.Lock()  # Use thread lock to protect shared resources
+        self.lock = threading.Lock(
+        )  # Use thread lock to protect shared resources
         self.stop_event = threading.Event()  # Event for stopping threads
         for url in server_url:
             host = url["host"]
@@ -66,31 +67,32 @@ class InferencerManager:
 
         try:
             while not self.stop_event.is_set():
-                all_busy = True
                 for thread in self.threads:
-                    with self.lock:  # Use thread lock to protect shared state access
+                    # Use thread lock to protect shared state access
+                    with self.lock:
                         if thread.shared_memory.Done:
                             await self.channel.send_to(
-                                (thread.shared_memory.Message_ID, thread.shared_memory.Response)
-                            )
+                                (thread.shared_memory.Message_ID,
+                                 thread.shared_memory.Response))
                             thread.shared_memory.Done = False
                             thread.shared_memory.Busy = False
                             thread.shared_memory.Working = False
 
                     # Check if thread is busy
                     if not thread.shared_memory.Busy:
-                        all_busy = False
                         if self.channel.receive_queue.empty():
                             continue
 
                         # Get new message if thread is idle
                         message = await self.channel.receive_from()
-                        with self.lock:  # Protect shared state update with lock
+                        # Protect shared state update with lock
+                        with self.lock:
                             thread.shared_memory.Message_ID = message[0]
                             thread.shared_memory.Message = message[1]
                             thread.shared_memory.Busy = True
                             self.count += 1
-                            inference_log.info(f"Message {self.count} received")
+                            inference_log.info(
+                                f"Message {self.count} received")
 
                 # Add a reasonable sleep to avoid CPU overload
                 await asyncio.sleep(0.1)
@@ -103,31 +105,3 @@ class InferencerManager:
     async def stop(self):
         for thread in self.threads:
             thread.alive = False
-    # async def run(self):
-    #     for thread in self.threads:
-    #         thread_ = threading.Thread(target=thread.run)
-    #         thread_.start()
-    #     while True:
-    #         for thread in self.threads:
-    #             if thread.shared_memory.Done:
-    #                 await self.channel.send_to(
-    #                     (thread.shared_memory.Message_ID,
-    #                      thread.shared_memory.Response))
-    #                 thread.shared_memory.Done = False
-    #                 thread.shared_memory.Busy = False
-    #                 thread.shared_memory.Working = False
-
-    #             if not thread.shared_memory.Busy:
-    #                 if self.channel.receive_queue.empty():
-    #                     continue
-    #                 message = await self.channel.receive_from()
-    #                 thread.shared_memory.Message_ID = message[0]
-    #                 thread.shared_memory.Message = message[1]
-    #                 thread.shared_memory.Busy = True
-    #                 self.count += 1
-    #                 inference_log.info(f"Message {self.count} received")
-    #         await asyncio.sleep(0.0001)
-
-    # async def stop(self):
-    #     for thread in self.threads:
-    #         thread.alive = False
