@@ -19,7 +19,7 @@ import os.path as osp
 import pytest
 from camel.types import ModelType
 
-from oasis.social_agent.agents_generator import (generate_agents,
+from oasis.social_agent.agents_generator import (generate_agents_100w,
                                                  generate_controllable_agents)
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
@@ -37,7 +37,7 @@ async def running():
     infra = Platform(test_db_filepath, twitter_channel)
     task = asyncio.create_task(infra.running())
     os.environ["SANDBOX_TIME"] = "0"
-    agent_graph = await generate_agents(
+    agent_graph = await generate_agents_100w(
         agent_info_path,
         twitter_channel,
         inferencer_channel,
@@ -78,7 +78,7 @@ async def test_generate_controllable(monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
     agent_graph, agent_user_id_mapping = await generate_controllable_agents(
         twitter_channel, 1)
-    agent_graph = await generate_agents(
+    agent_graph = await generate_agents_100w(
         agent_info_path,
         twitter_channel,
         inferencer_channel,

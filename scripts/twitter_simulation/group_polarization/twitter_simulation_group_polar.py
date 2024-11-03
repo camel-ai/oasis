@@ -27,7 +27,7 @@ from yaml import safe_load
 
 from oasis.clock.clock import Clock
 from oasis.inference.inference_manager import InferencerManager
-from oasis.social_agent.agents_generator import generate_agents
+from oasis.social_agent.agents_generator import generate_agents_100w
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
@@ -115,7 +115,7 @@ async def running(
         start_hour = 13
 
     model_configs = model_configs or {}
-    agent_graph = await generate_agents(
+    agent_graph = await generate_agents_100w(
         agent_info_path=csv_path,
         twitter_channel=twitter_channel,
         inference_channel=inference_channel,
