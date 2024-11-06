@@ -178,63 +178,93 @@ Example output: 0
 
 Document the IP address associated with the eth0 interface, which, in this example, is `10.109.1.8`. Additionally, note the identifier of the available GPU, which in this case is `0`.
 
-### Step 2: Deploying vLLM
+### Step 3: Deploying vLLM
 
-Based on the IP address and GPU identifier from step 1, modify the hosts and gpus variables in the deploy.py file, for example:
+Based on the IP address and GPU identifier obtained from step 2, and the model path and name from step 1, modify the `hosts`, `gpus` variables, and the `'YOUR_LOCAL_MODEL_DIRECTORY'`, `'YOUR_LOCAL_MODEL_NAME strings'` in the `deploy.py` file. For example:
 
-```bash
-if __name__ == '__main__':
-    host = '10.109.1.8'  # Input your IP address
-    ports = [[8002, 8003, 8005],[8006, 8007, 8008],[8011, 8009, 8010],[8014, 8012, 8013],[8017, 8015, 8016],[8020, 8018, 8019],[8021, 8022, 8023],[8024, 8025, 8026]]
-    gpus = [0]  # Input your available GPUs
+```python
+if __name__ == "__main__":
+    host = "10.109.1.8"  # input your IP address
+    ports = [
+        [8002, 8003, 8005],
+        [8006, 8007, 8008],
+        [8011, 8009, 8010],
+        [8014, 8012, 8013],
+        [8017, 8015, 8016],
+        [8020, 8018, 8019],
+        [8021, 8022, 8023],
+        [8024, 8025, 8026],
+    ]
+    gpus = [0]  # input your $CUDA_VISIBLE_DEVICES
+
+    all_ports = [port for i in gpus for port in ports[i]]
+    print("All ports: ", all_ports, '\n\n')
 
     t = None
     for i in range(3):
-        for j in range(len(gpus)):
-          # Input 'YOUR_LOCAL_MODEL_DIRECTORY' and 'YOUR_LOCAL_MODEL_NAME'(eg. 'llama-3')
-            t = threading.Thread(target=subprocess.run, args=(f"CUDA_VISIBLE_DEVICES={gpus[j]} python -m vllm.entrypoints.openai.api_server --model {'YOUR_LOCAL_MODEL_DIRECTORY'} --served-model-name 'YOUR_LOCAL_MODEL_NAME' --host {host}  --port {ports[j][i]}  --gpu-memory-utilization 0.3  --disable-log-stats",), kwargs={'shell':True}, daemon=True)
+        for j, gpu in enumerate(gpus):
+            cmd = (
+                f"CUDA_VISIBLE_DEVICES={gpu} python -m "
+                f"vllm.entrypoints.openai.api_server --model "
+                f"'YOUR_LOCAL_MODEL_DIRECTORY' "  # input the path where you downloaded your model
+                f"--served-model-name 'YOUR_LOCAL_MODEL_NAME' "  # input the name of the model you downloaded
+                f"--host {host} --port {ports[j][i]} --gpu-memory-utilization "
+                f"0.3 --disable-log-stats")
+            t = threading.Thread(target=subprocess.run,
+                                 args=(cmd, ),
+                                 kwargs={"shell": True},
+                                 daemon=True)
             t.start()
         check_port_open(host, ports[0][i])
     t.join()
 ```
 
-Next, run the `deploy.py` script.
+Next, run the `deploy.py` script. Then you will see an output, which contains a list of all ports.
 
 ```bash
 srun --ntasks=1 --time=11:00:00 --gres=gpu:a100:1 bash -c 'python deploy.py'
+"""
+Example output:
+All ports:  [8002, 8003, 8005]
+
+More other output about vllm...
+"""
 ```
 
-### Step 3: Modify the Configuration File
+### Step 4: Modify the Configuration File
 
 Before the simulation begins, you need to enter your model name, model path, host, and ports into the corresponding yaml file in the experiment script such as `scripts\reddit_simulation_align_with_human\business_3600.yaml`. An example of what to write is:
 
-```bash
+```yaml
 inference:
-  model_type: 'YOUR_LOCAL_MODEL_NAME'  # eg. 'llama-3'
-  model_path: 'YOUR_LOCAL_MODEL_DIRECTORY'
+  model_type: 'YOUR_LOCAL_MODEL_NAME'  # input the name of the model you downloaded (eg. 'llama-3')
+  model_path: 'YOUR_LOCAL_MODEL_DIRECTORY'  # input the path where you downloaded your model
   stop_tokens: ["<|eot_id|>", "<|end_of_text|>"]
   server_url:
     - host: "10.109.1.8"
-      ports: [8002, 8003, 8005]  # posts here is align with `port for i in gpus for port in ports[i]` in `deploy.py`
+      ports: [8002, 8003, 8005]  # Input the list of all ports obtained in step 3
 ```
 
 Additionally, you can modify other settings related to data and experimental details in the yaml file. For instructions on this part, refer to `scripts\reddit_gpt_example\gpt_example.yaml`.
 
-### Step 4: Run the Main Program
+### Step 5: Run the Main Program
 
 You need to open a new terminal and then run:
 
 ```bash
 # For Reddit
+
+# Align with human
 python scripts/reddit_simulation_align_with_human/reddit_simulation_align_with_human.py --config_path scripts/reddit_simulation_align_with_human/business_3600.yaml
 
+# Agent's reaction to counterfactual content
 python scripts/reddit_simulation_counterfactual/reddit_simulation_counterfactual.py --config_path scripts/reddit_simulation_counterfactual/control_100.yaml
 
 # For Twitter(X)
 
 # Information spreading
 # one case in align_with_real_world, The ‘user_char’ field in the dataset we have open-sourced has been replaced with  ‘description’ to ensure privacy protection.
-python scripts/twitter_simulation/twitter_simulation_large.py --config_path "scripts/twitter_simulation/align_with_real_world/yaml_200/sub1/False_Business_0.yaml"
+python scripts/twitter_simulation/twitter_simulation_large.py --config_path scripts/twitter_simulation/align_with_real_world/yaml_200/sub1/False_Business_0.yaml
 
 # Group Polarization
 python scripts/twitter_simulation/group_polarization/twitter_simulation_group_polar.py --config_path scripts/twitter_simulation/group_polarization/group_polarization.yaml
@@ -251,8 +281,6 @@ python scripts/twitter_simulation_1M_agents/twitter_simulation_1m.py --config_pa
 
 When simulating on generated users, you can customizing temporal feature in `social_simulation/social_agent/agents_generator.py` by modifying `profile['other_info']['active_threshold']`. For example, you can set it to all 1 if you believe that the generated users should be active the entire time.
 
-- TIPS for Group Polarization
-
 ### For Reddit Simluation:
 
 - Reddit recommendation system
@@ -265,8 +293,9 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 ## 📢 News
 
-- Public release of our dataset on Hugging Face (November 05, 2024)
-- Initial release of OASIS github repository (November 01, 2024)
+<!-- - Public release of our dataset on Hugging Face (November 05, 2024) -->
+
+- Initial release of OASIS github repository (November 08, 2024)
 
 ## 🔗 Citation
 
