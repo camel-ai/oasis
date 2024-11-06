@@ -340,7 +340,7 @@ async def generate_agents_100w(
             action_space_prompt=action_space_prompt,
         )
 
-        agent_graph.add_agent(agent)
+        agent_graph.append(agent)
         num_followings = 0
         num_followers = 0
         # print('agent_info["following_count"]', agent_info["following_count"])
@@ -513,7 +513,7 @@ async def generate_reddit_agents(
     mute_post_agent: bool = False,
     action_space_prompt: str = None,
     model_type: str = "llama-3",
-    is_openai_model: bool = True,
+    is_openai_model: bool = False,
 ) -> AgentGraph:
     if agent_user_id_mapping is None:
         agent_user_id_mapping = {}
