@@ -45,9 +45,9 @@ if __name__ == "__main__":
     ]
     gpus = [0]
 
-    # print('check\n')
-    # check_port_open('10.140.0.184', 8002)
-    # print('\nport 8002 is open\n')
+    all_ports = [port for i in gpus for port in ports[i]]
+    print("All ports: ", all_ports, '\n\n')
+
     t = None
     for i in range(3):
         for j, gpu in enumerate(gpus):
