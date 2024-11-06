@@ -219,10 +219,11 @@ class SocialAgent:
         doing test for all agents.
         """
         # user conduct test to agent
-        user_msg = BaseMessage.make_user_message(
-            role_name="User", content=("You are a twitter user."))
-        self.memory.write_record(MemoryRecord(user_msg,
-                                              OpenAIBackendRole.USER))
+        _ = BaseMessage.make_user_message(role_name="User",
+                                          content=("You are a twitter user."))
+        # TODO error occurs
+        # self.memory.write_record(MemoryRecord(user_msg,
+        #                                       OpenAIBackendRole.USER))
 
         openai_messages, num_tokens = self.memory.get_context()
 

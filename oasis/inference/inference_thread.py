@@ -85,4 +85,4 @@ class InferenceThread:
                 thread_log.info(
                     f"Thread {self.server_url}: {self.count} finished.")
 
-            sleep(0.0001)
+            sleep(0.01)

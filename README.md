@@ -124,9 +124,9 @@ To import your own user and post data, please refer to the JSON file format loca
 ### Step 3: Run the Main Program
 
 ```bash
+# For Reddit
 python scripts/reddit_gpt_example/reddit_simulation_gpt.py --config_path scripts/reddit_gpt_example/gpt_example.yaml
-# or
-'''A twitter script needed'''
+# For Twitter
 ```
 
 Note: without modifying the Configuration File, running this script requires approximately 14 API requests to call gpt-4, and the cost incurred is minimal. (October 29, 2024)
@@ -225,13 +225,22 @@ Additionally, you can modify other settings related to data and experimental det
 You need to open a new terminal and then run:
 
 ```bash
+# For Reddit
 python scripts/reddit_simulation_align_with_human/reddit_simulation_align_with_human.py --config_path scripts/reddit_simulation_align_with_human/business_3600.yaml
-# or
+
 python scripts/reddit_simulation_counterfactual/reddit_simulation_counterfactual.py --config_path scripts/reddit_simulation_counterfactual/control_100.yaml
-# or
-'''some twitter scripts needed here'''
+
+# For Twitter(X)
+
+# Information spreading
 # one case in align_with_real_world, The ‘user_char’ field in the dataset we have open-sourced has been replaced with  ‘description’ to ensure privacy protection.
 python scripts/twitter_simulation/twitter_simulation_large.py --config_path "scripts/twitter_simulation/align_with_real_world/yaml_200/sub1/False_Business_0.yaml"
+
+# Group Polarization
+python scripts/twitter_simulation/group_polarization/twitter_simulation_group_polar.py --config_path scripts/twitter_simulation/group_polarization/group_polarization.yaml
+
+# For One Million Simulation
+python scripts/twitter_simulation_1M_agents/twitter_simulation_1m.py --config_path scripts/twitter_simulation_1M_agents/twitter_1m.yaml
 ```
 
 ## 💡Tips
