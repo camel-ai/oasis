@@ -28,7 +28,7 @@ ______________________________________________________________________
 <p align="center">
   <img src='assets/introduction.png' width=900>
 </p>
-🌏 OASIS is a scalable, open-source social media simulator that integrates large language models with rule-based agents to realistically mimic the behavior of up to one million users on platforms like Twitter and Reddit. It's designed to facilitate the study of complex social phenomena such as information spread, group polarization, and herd behavior, offering a versatile tool for exploring diverse social dynamics and user interactions in digital environments.
+🏝️ OASIS is a scalable, open-source social media simulator that integrates large language models with rule-based agents to realistically mimic the behavior of up to one million users on platforms like Twitter and Reddit. It's designed to facilitate the study of complex social phenomena such as information spread, group polarization, and herd behavior, offering a versatile tool for exploring diverse social dynamics and user interactions in digital environments.
 
 ### Key Features
 
@@ -309,7 +309,7 @@ We would like to thank Douglas for designing the logo of our project.
 
 The source code is licensed under Apache 2.0.
 
-## 🥂 Contributing to OASIS 🌏
+## 🥂 Contributing to OASIS 🏝️
 
 We greatly appreciate your interest in contributing to our open-source initiative. To ensure a smooth collaboration and the success of contributions, we adhere to a set of contributing guidelines similar to those established by CAMEL. For a comprehensive understanding of the steps involved in contributing to our project, please refer to the CAMEL contributing guidelines [here](https://github.com/camel-ai/camel/blob/master/CONTRIBUTING.md). 🤝🚀
 

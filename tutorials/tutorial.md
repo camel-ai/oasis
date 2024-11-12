@@ -2,10 +2,6 @@
 
 ## 👨‍👨‍👧‍👦 User Generation
 
-### 🔵 Twitter User Profile Generation
-
-...
-
 ### 🟠 Reddit User Profile Generation
 
 We utilized the findings from a survey on the distribution of real Reddit users (https://explodingtopics.com/blog/reddit-users) as a reference to randomly generate demographic information for our users. Leveraging this data, we then employed GPT to create more detailed descriptions.
@@ -38,6 +34,20 @@ Run the Script:
 ```bash
 python generator/reddit/user_generate.py
 ```
+
+### 🔵 Twitter User Profile Generation
+
+The Twitter users are further enhanced based on the information we have crawled. The steps to run are as follows:
+
+```bash
+pip install -r generator/twitter/requirement.txt
+
+python generator/twitter/gen.py
+
+python generator/twitter/network.py
+```
+
+Since the repository does not contain information from the actual Twitter in `complete_user_char.csv` and `new_stars.csv`, it might not run directly and is for reference only now.
 
 ## 📊 Data Visualization
 
