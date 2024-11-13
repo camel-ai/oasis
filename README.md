@@ -295,7 +295,7 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 <!-- - Public release of our dataset on Hugging Face (November 05, 2024) -->
 
-- Initial release of OASIS github repository (November 08, 2024)
+- Initial release of OASIS github repository (November 15, 2024)
 
 ## 🔗 Citation
 
