@@ -26,7 +26,7 @@ ______________________________________________________________________
 ## 📝 Overview
 
 <p align="center">
-  <img src='assets/introduction.png' width=900>
+  <img src='assets/intro-new-logo.png' width=900>
 </p>
 🏝️ OASIS is a scalable, open-source social media simulator that integrates large language models with rule-based agents to realistically mimic the behavior of up to one million users on platforms like Twitter and Reddit. It's designed to facilitate the study of complex social phenomena such as information spread, group polarization, and herd behavior, offering a versatile tool for exploring diverse social dynamics and user interactions in digital environments.
 
