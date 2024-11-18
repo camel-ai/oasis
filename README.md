@@ -8,7 +8,7 @@
 
 ______________________________________________________________________
 
-# OASIS: Open Agents Social Interaction Simulations on a Large Scale
+# OASIS: Open Agents Social Interaction Simulations on One Million Agents
 
 <p align="center">
   <img src='assets/logo.jpg' width=400>
