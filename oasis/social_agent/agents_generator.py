@@ -43,6 +43,7 @@ async def generate_agents(
     model_random_seed: int = 42,
     cfgs: list[Any] | None = None,
     neo4j_config: Neo4jConfig | None = None,
+    is_openai_model: bool = False,
 ) -> AgentGraph:
     """Generate and return a dictionary of agents from the agent
     information CSV file. Each agent is added to the database and
@@ -134,6 +135,7 @@ async def generate_agents(
             model_type=model_type,
             agent_graph=agent_graph,
             action_space_prompt=action_space_prompt,
+            is_openai_model = is_openai_model,
         )
 
         agent_graph.add_agent(agent)
@@ -141,9 +143,9 @@ async def generate_agents(
         num_followers = 0
         # print('agent_info["following_count"]', agent_info["following_count"])
         if not agent_info["following_count"].empty:
-            num_followings = agent_info["following_count"][agent_id]
+            num_followings = int(agent_info["following_count"][agent_id])
         if not agent_info["followers_count"].empty:
-            num_followers = agent_info["followers_count"][agent_id]
+            num_followers = int(agent_info["followers_count"][agent_id])
 
         sign_up_list.append((
             agent_id,
