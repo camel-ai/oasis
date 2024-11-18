@@ -467,10 +467,9 @@ def rec_sys_personalized_twh(
                 fans_score.append(
                     np.log(u_items[post['user_id']] + 1) / np.log(1000))
             except Exception as e:
-                print(e)
+                print(f"Error on fan score calculating: {e}")
                 import pdb
-
-                # pdb.set_trace()
+                pdb.set_trace()
 
     date_score_np = np.array(date_score)
     # fan_score [1, 2.x]
@@ -487,7 +486,8 @@ def rec_sys_personalized_twh(
                                              ActionType.LIKE_POST.value,
                                              trace_table)
             like_post_ids_all.append(like_post_ids)
-    # ßscores = date_score_np * fans_score_np
+    # enable fans_score when the broadcasting effect of superuser should be taken in count
+    # ßscores = date_score_np * fans_score_np  
     scores = date_score_np
     new_rec_matrix = []
     if len(post_table) <= max_rec_post_len:
