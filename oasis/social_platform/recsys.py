@@ -486,8 +486,9 @@ def rec_sys_personalized_twh(
                                              ActionType.LIKE_POST.value,
                                              trace_table)
             like_post_ids_all.append(like_post_ids)
-    # enable fans_score when the broadcasting effect of superuser should be taken in count
-    # ßscores = date_score_np * fans_score_np  
+    # enable fans_score when the broadcasting effect of superuser should be
+    # taken in count
+    # ßscores = date_score_np * fans_score_np
     scores = date_score_np
     new_rec_matrix = []
     if len(post_table) <= max_rec_post_len:

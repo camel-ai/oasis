@@ -27,7 +27,6 @@ from colorama import Back
 from yaml import safe_load
 
 from oasis.clock.clock import Clock
-from oasis.inference.inference_manager import InferencerManager
 from oasis.social_agent.agents_generator import generate_agents
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
@@ -179,9 +178,8 @@ if __name__ == "__main__":
                     **simulation_params,
                     model_configs=model_configs,
                     inference_configs=inference_configs,
-                    action_space_file_path=(
-                        "scripts/twitter_gpt_example/"
-                        "action_space_prompt.txt")))
+                    action_space_file_path=("scripts/twitter_gpt_example/"
+                                            "action_space_prompt.txt")))
     else:
         asyncio.run(running())
     social_log.info("Simulation finished.")
