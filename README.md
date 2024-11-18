@@ -45,9 +45,9 @@ ______________________________________________________________________
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/camel-ai/social-simulation.git
+git clone https://github.com/camel-ai/oasis.git
 
-cd social-simulation
+cd oasis
 ```
 
 ### Step 2: Create and Activate a Virtual Environment
@@ -94,7 +94,7 @@ First, you need to add your OpenAI API key to the system's environment variables
 ```bash
 # Export your OpenAI API key
 export OPENAI_API_KEY=<insert your OpenAI API key>
-OPENAI_API_BASE_URL=<inert your OpenAI API BASE URL>  #(Should you utilize an OpenAI proxy service, kindly specify this)
+export OPENAI_API_BASE_URL=<insert your OpenAI API BASE URL>  #(Should you utilize an OpenAI proxy service, kindly specify this)
 ```
 
 - For Windows Command Prompt:\*\*
@@ -102,7 +102,7 @@ OPENAI_API_BASE_URL=<inert your OpenAI API BASE URL>  #(Should you utilize an Op
 ```cmd
 REM export your OpenAI API key
 set OPENAI_API_KEY=<insert your OpenAI API key>
-set OPENAI_API_BASE_URL=<inert your OpenAI API BASE URL>  #(Should you utilize an OpenAI proxy service, kindly specify this)
+set OPENAI_API_BASE_URL=<insert your OpenAI API BASE URL>  #(Should you utilize an OpenAI proxy service, kindly specify this)
 ```
 
 - For Windows PowerShell:\*\*
@@ -110,7 +110,7 @@ set OPENAI_API_BASE_URL=<inert your OpenAI API BASE URL>  #(Should you utilize a
 ```powershell
 # Export your OpenAI API key
 $env:OPENAI_API_KEY="<insert your OpenAI API key>"
-$env:OPENAI_API_BASE_URL="<inert your OpenAI API BASE URL>"  #(Should you utilize an OpenAI proxy service, kindly specify this)
+$env:OPENAI_API_BASE_URL="<insert your OpenAI API BASE URL>"  #(Should you utilize an OpenAI proxy service, kindly specify this)
 ```
 
 Replace `<insert your OpenAI API key>` with your actual OpenAI API key in each case. Make sure there are no spaces around the `=` sign.
@@ -126,10 +126,12 @@ To import your own user and post data, please refer to the JSON file format loca
 ```bash
 # For Reddit
 python scripts/reddit_gpt_example/reddit_simulation_gpt.py --config_path scripts/reddit_gpt_example/gpt_example.yaml
+
 # For Twitter
+python scripts/twitter_gpt_example/twitter_simulation_large.py --config_path scripts/twitter_gpt_example/gpt_example.yaml
 ```
 
-Note: without modifying the Configuration File, running this script requires approximately 14 API requests to call gpt-4, and the cost incurred is minimal. (October 29, 2024)
+Note: without modifying the Configuration File, running the reddit script requires approximately 14 API requests to call gpt-4, and the cost incurred is minimal. (October 29, 2024)
 
 ## 📘 Comprehensive Guide (For Open Source Models)
 
