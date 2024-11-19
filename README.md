@@ -19,8 +19,8 @@ ______________________________________________________________________
   <a href="https://arxiv.org/abs/2411.11581">Paper</a> |
   <a href="https://github.com/camel-ai/social-simulation/tree/main/scripts">Examples</a> |
   <a href="https://huggingface.co/datasets/oasis-agent/oasis-dataset">Dataset</a> |
-  <a href="https://github.com/camel-ai/oasis#citation">Citation</a>
-  <a href="https://github.com/camel-ai/oasis#-contributing-to-oasis-">Contributing</a>
+  <a href="https://github.com/camel-ai/oasis#-citation">Citation</a> |
+  <a href="https://github.com/camel-ai/oasis#-contributing-to-oasis">Contributing</a> |
   <a href="https://www.camel-ai.org/">CAMEL-AI</a>
 </p>
 
@@ -323,7 +323,7 @@ We would like to thank Douglas for designing the logo of our project.
 
 The source code is licensed under Apache 2.0.
 
-## 🥂 Contributing to OASIS 🏝️
+## 🥂 Contributing to OASIS🏝️
 
 We greatly appreciate your interest in contributing to our open-source initiative. To ensure a smooth collaboration and the success of contributions, we adhere to a set of contributing guidelines similar to those established by CAMEL. For a comprehensive understanding of the steps involved in contributing to our project, please refer to the CAMEL contributing guidelines [here](https://github.com/camel-ai/camel/blob/master/CONTRIBUTING.md). 🤝🚀
 
