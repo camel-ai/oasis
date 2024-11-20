@@ -8,7 +8,7 @@
 
 ______________________________________________________________________
 
-# OASIS: Open Agents Social Interaction Simulations on One Million Agents
+# OASIS: Open Agents Social Interaction Simulations with One Million Agents
 
 <p align="center">
   <img src='assets/logo.jpg' width=400>
@@ -16,10 +16,11 @@ ______________________________________________________________________
 
 <p align="center">
   <a href="https://github.com/camel-ai/camel#community">Community</a> |
+  <a href="https://arxiv.org/abs/2411.11581">Paper</a> |
   <a href="https://github.com/camel-ai/social-simulation/tree/main/scripts">Examples</a> |
   <a href="https://huggingface.co/datasets/oasis-agent/oasis-dataset">Dataset</a> |
-  <a href="https://github.com/camel-ai/camel#citation">Citation</a> |
-  <a href="https://github.com/camel-ai/camel#contributing-to-camel-">Contributing</a> |
+  <a href="https://github.com/camel-ai/oasis#-citation">Citation</a> |
+  <a href="https://github.com/camel-ai/oasis#-contributing-to-oasis">Contributing</a> |
   <a href="https://www.camel-ai.org/">CAMEL-AI</a>
 </p>
 
@@ -297,11 +298,22 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 <!-- - Public release of our dataset on Hugging Face (November 05, 2024) -->
 
-- Initial release of OASIS github repository (November 15, 2024)
+- Initial release of OASIS on arXiv (November 19, 2024)
+- Initial release of OASIS github repository (November 19, 2024)
 
 ## 🔗 Citation
 
-To be supplemented after the release on arXiv.
+```
+@misc{yang2024oasisopenagentssocial,
+      title={OASIS: Open Agents Social Interaction Simulations on One Million Agents},
+      author={Ziyi Yang and Zaibin Zhang and Zirui Zheng and Yuxian Jiang and Ziyue Gan and Zhiyu Wang and Zijian Ling and Jinsong Chen and Martz Ma and Bowen Dong and Prateek Gupta and Shuyue Hu and Zhenfei Yin and Guohao Li and Xu Jia and Lijun Wang and Bernard Ghanem and Huchuan Lu and Wanli Ouyang and Yu Qiao and Philip Torr and Jing Shao},
+      year={2024},
+      eprint={2411.11581},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2411.11581},
+}
+```
 
 ## 🙌 Acknowledgment
 
@@ -311,7 +323,7 @@ We would like to thank Douglas for designing the logo of our project.
 
 The source code is licensed under Apache 2.0.
 
-## 🥂 Contributing to OASIS 🏝️
+## 🥂 Contributing to OASIS🏝️
 
 We greatly appreciate your interest in contributing to our open-source initiative. To ensure a smooth collaboration and the success of contributions, we adhere to a set of contributing guidelines similar to those established by CAMEL. For a comprehensive understanding of the steps involved in contributing to our project, please refer to the CAMEL contributing guidelines [here](https://github.com/camel-ai/camel/blob/master/CONTRIBUTING.md). 🤝🚀
 
@@ -329,8 +341,8 @@ If you're keen on exploring new research opportunities or discoveries with our p
 [python-url]: https://docs.python.org/3.10/
 [slack-image]: https://img.shields.io/badge/Slack-CAMEL--AI-blueviolet?logo=slack
 [slack-url]: https://join.slack.com/t/camel-kwr1314/shared_invite/zt-1vy8u9lbo-ZQmhIAyWSEfSwLCl2r2eKA
-[star-image]: https://img.shields.io/github/stars/camel-ai/social-simulation?label=stars&logo=github&color=brightgreen
-[star-url]: https://github.com/camel-ai/social-simulation/stargazers
+[star-image]: https://img.shields.io/github/stars/camel-ai/oasis?label=stars&logo=github&color=brightgreen
+[star-url]: https://github.com/camel-ai/oasis/stargazers
 [twitter-image]: https://img.shields.io/twitter/follow/CamelAIOrg?style=social&color=brightgreen&logo=twitter
 [twitter-url]: https://twitter.com/CamelAIOrg
 [wechat-image]: https://img.shields.io/badge/WeChat-CamelAIOrg-brightgreen?logo=wechat&logoColor=white
