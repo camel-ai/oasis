@@ -132,7 +132,7 @@ python scripts/reddit_gpt_example/reddit_simulation_gpt.py --config_path scripts
 python scripts/twitter_gpt_example/twitter_simulation_large.py --config_path scripts/twitter_gpt_example/gpt_example.yaml
 ```
 
-Note: without modifying the Configuration File, running the reddit script requires approximately 14 API requests to call gpt-4, and the cost incurred is minimal. (October 29, 2024)
+Note: without modifying the Configuration File, running the Reddit script requires only 36 agents operating at an activation probability of 0.1 for 2 time steps, the entire process approximately requires 7.2 agent inferences, and approximately 14 API requests to call GPT-4. The Twitter script has about 111 agents operating at an activation probability of roughly 0.1 for 3 time steps, i.e., 33.3 agent inferences, using GPT-3.5-turbo. I hope this is a cost you can bear. For running larger scale agent simulations, it is recommended to read the next section on experimenting with open-source models.
 
 ## 📘 Comprehensive Guide (For Open Source Models)
 
