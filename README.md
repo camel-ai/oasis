@@ -1,4 +1,5 @@
 [![Python Version][python-image]][python-url]
+[![PyTest Status][pytest-image]][pytest-url]
 [![Star][star-image]][star-url]
 [![Slack][slack-image]][slack-url]
 [![Discord][discord-image]][discord-url]
@@ -336,6 +337,8 @@ If you're keen on exploring new research opportunities or discoveries with our p
 [discord-url]: https://discord.gg/CNcNpquyDc
 [python-image]: https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg
 [python-url]: https://docs.python.org/3.10/
+[pytest-image]: https://github.com/camel-ai/camel/actions/workflows/pytest_package.yml/badge.svg
+[pytest-url]: https://github.com/camel-ai/social-simulation/actions/workflows/pytest_package.yml
 [slack-image]: https://img.shields.io/badge/Slack-CAMEL--AI-blueviolet?logo=slack
 [slack-url]: https://join.slack.com/t/camel-kwr1314/shared_invite/zt-1vy8u9lbo-ZQmhIAyWSEfSwLCl2r2eKA
 [star-image]: https://img.shields.io/github/stars/camel-ai/oasis?label=stars&logo=github&color=brightgreen
