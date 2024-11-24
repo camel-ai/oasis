@@ -1,6 +1,5 @@
 [![arXiv][arxiv-image]][arxiv-url]
 [![Python Version][python-image]][python-url]
-[![PyTest Status][pytest-image]][pytest-url]
 [![Star][star-image]][star-url]
 [![Slack][slack-image]][slack-url]
 [![Discord][discord-image]][discord-url]
@@ -338,8 +337,6 @@ If you're keen on exploring new research opportunities or discoveries with our p
 [arxiv-url]: https://arxiv.org/abs/2411.11581
 [discord-image]: https://img.shields.io/badge/Discord-CAMEL--AI-7289da?logo=discord&logoColor=white&color=7289da
 [discord-url]: https://discord.gg/CNcNpquyDc
-[pytest-image]: https://github.com/camel-ai/camel/actions/workflows/pytest_package.yml/badge.svg
-[pytest-url]: https://github.com/camel-ai/oasis/actions/workflows/pytest_package.yml
 [python-image]: https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg
 [python-url]: https://docs.python.org/3.10/
 [slack-image]: https://img.shields.io/badge/Slack-CAMEL--AI-blueviolet?logo=slack
