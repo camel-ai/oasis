@@ -1,3 +1,4 @@
+[![arXiv][arxiv-image]][arxiv-url]
 [![Python Version][python-image]][python-url]
 [![PyTest Status][pytest-image]][pytest-url]
 [![Star][star-image]][star-url]
@@ -333,6 +334,8 @@ An essential part of contributing involves not only submitting new features with
 
 If you're keen on exploring new research opportunities or discoveries with our platform and wish to dive deeper or suggest new features, we're here to talk. Feel free to get in touch for more details at camel.ai.team@gmail.com.
 
+[arxiv-image]: https://img.shields.io/badge/arXiv-2407.01511-b31b1b.svg
+[arxiv-url]: https://arxiv.org/abs/2411.11581
 [discord-image]: https://img.shields.io/badge/Discord-CAMEL--AI-7289da?logo=discord&logoColor=white&color=7289da
 [discord-url]: https://discord.gg/CNcNpquyDc
 [pytest-image]: https://github.com/camel-ai/camel/actions/workflows/pytest_package.yml/badge.svg
