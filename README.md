@@ -1,5 +1,5 @@
+[![arXiv][arxiv-image]][arxiv-url]
 [![Python Version][python-image]][python-url]
-[![PyTest Status][pytest-image]][pytest-url]
 [![Star][star-image]][star-url]
 [![Slack][slack-image]][slack-url]
 [![Discord][discord-image]][discord-url]
@@ -17,7 +17,7 @@ ______________________________________________________________________
 <p align="center">
   <a href="https://github.com/camel-ai/camel#community">Community</a> |
   <a href="https://arxiv.org/abs/2411.11581">Paper</a> |
-  <a href="https://github.com/camel-ai/social-simulation/tree/main/scripts">Examples</a> |
+  <a href="https://github.com/camel-ai/oasis/tree/main/scripts">Examples</a> |
   <a href="https://huggingface.co/datasets/oasis-agent/oasis-dataset">Dataset</a> |
   <a href="https://github.com/camel-ai/oasis#-citation">Citation</a> |
   <a href="https://github.com/camel-ai/oasis#-contributing-to-oasis">Contributing</a> |
@@ -333,10 +333,10 @@ An essential part of contributing involves not only submitting new features with
 
 If you're keen on exploring new research opportunities or discoveries with our platform and wish to dive deeper or suggest new features, we're here to talk. Feel free to get in touch for more details at camel.ai.team@gmail.com.
 
+[arxiv-image]: https://img.shields.io/badge/arXiv-2407.01511-b31b1b.svg
+[arxiv-url]: https://arxiv.org/abs/2411.11581
 [discord-image]: https://img.shields.io/badge/Discord-CAMEL--AI-7289da?logo=discord&logoColor=white&color=7289da
 [discord-url]: https://discord.gg/CNcNpquyDc
-[pytest-image]: https://github.com/camel-ai/camel/actions/workflows/pytest_package.yml/badge.svg
-[pytest-url]: https://github.com/camel-ai/social-simulation/actions/workflows/pytest_package.yml
 [python-image]: https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg
 [python-url]: https://docs.python.org/3.10/
 [slack-image]: https://img.shields.io/badge/Slack-CAMEL--AI-blueviolet?logo=slack
