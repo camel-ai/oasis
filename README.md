@@ -8,7 +8,7 @@
 
 ______________________________________________________________________
 
-# OASIS: Open Agents Social Interaction Simulations with One Million Agents
+# OASIS: Open Agent Social Interaction Simulations with One Million Agents
 
 <p align="center">
   <img src='assets/logo.jpg' width=400>
@@ -304,9 +304,9 @@ To discover how to create profiles for large-scale users, as well as how to visu
 ## 🔗 Citation
 
 ```
-@misc{yang2024oasisopenagentssocial,
-      title={OASIS: Open Agents Social Interaction Simulations on One Million Agents},
-      author={Ziyi Yang and Zaibin Zhang and Zirui Zheng and Yuxian Jiang and Ziyue Gan and Zhiyu Wang and Zijian Ling and Jinsong Chen and Martz Ma and Bowen Dong and Prateek Gupta and Shuyue Hu and Zhenfei Yin and Guohao Li and Xu Jia and Lijun Wang and Bernard Ghanem and Huchuan Lu and Wanli Ouyang and Yu Qiao and Philip Torr and Jing Shao},
+@misc{yang2024oasisopenagentsocial,
+      title={OASIS: Open Agent Social Interaction Simulations with One Million Agents},
+      author={Ziyi Yang and Zaibin Zhang and Zirui Zheng and Yuxian Jiang and Ziyue Gan and Zhiyu Wang and Zijian Ling and Jinsong Chen and Martz Ma and Bowen Dong and Prateek Gupta and Shuyue Hu and Zhenfei Yin and Guohao Li and Xu Jia and Lijun Wang and Bernard Ghanem and Huchuan Lu and Chaochao Lu and Wanli Ouyang and Yu Qiao and Philip Torr and Jing Shao},
       year={2024},
       eprint={2411.11581},
       archivePrefix={arXiv},
