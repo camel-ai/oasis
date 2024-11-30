@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# flake8: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -18,6 +19,7 @@ import asyncio
 import logging
 import os
 import random
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -26,8 +28,10 @@ import pandas as pd
 from colorama import Back
 from yaml import safe_load
 
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
 from oasis.clock.clock import Clock
-from oasis.inference.inference_manager import InferencerManager
 from oasis.social_agent.agents_generator import generate_agents
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
@@ -179,9 +183,8 @@ if __name__ == "__main__":
                     **simulation_params,
                     model_configs=model_configs,
                     inference_configs=inference_configs,
-                    action_space_file_path=(
-                        "scripts/twitter_gpt_example/"
-                        "action_space_prompt.txt")))
+                    action_space_file_path=("scripts/twitter_gpt_example/"
+                                            "action_space_prompt.txt")))
     else:
         asyncio.run(running())
     social_log.info("Simulation finished.")

@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# flake8: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -19,11 +20,15 @@ import json
 import logging
 import os
 import random
+import sys
 from datetime import datetime, timedelta
 from typing import Any
 
 from colorama import Back
 from yaml import safe_load
+
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from oasis.clock.clock import Clock
 from oasis.social_agent.agents_generator import (gen_control_agents_with_data,

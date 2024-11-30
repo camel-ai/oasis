@@ -135,7 +135,7 @@ async def generate_agents(
             model_type=model_type,
             agent_graph=agent_graph,
             action_space_prompt=action_space_prompt,
-            is_openai_model = is_openai_model,
+            is_openai_model=is_openai_model,
         )
 
         agent_graph.add_agent(agent)
