@@ -166,7 +166,6 @@ class SocialAgent:
 
             while retry > 0:
 
-
                 mes_id = await self.infe_channel.write_to_receive_queue(
                     openai_messages)
                 mes_id, content = await self.infe_channel.read_from_send_queue(
