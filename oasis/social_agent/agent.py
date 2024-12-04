@@ -106,7 +106,7 @@ class SocialAgent:
             "What do you think Helen should do?")
 
     async def perform_action_by_llm(self):
-        # Get 5 random tweets:
+        # Get posts:
         env_prompt = await self.env.to_text_prompt()
         user_msg = BaseMessage.make_user_message(
             role_name="User",
@@ -128,6 +128,13 @@ class SocialAgent:
 
         openai_messages, _ = self.memory.get_context()
         content = ""
+        # sometimes self.memory.get_context() would lose system prompt
+        start_message = openai_messages[0]
+        if start_message["role"] != self.system_message.role_name:
+            openai_messages = [{
+                "role": self.system_message.role_name,
+                "content": self.system_message.content,
+            }] + openai_messages
 
         if not openai_messages:
             openai_messages = [{
@@ -158,12 +165,6 @@ class SocialAgent:
             exec_functions = []
 
             while retry > 0:
-                start_message = openai_messages[0]
-                if start_message["role"] != self.system_message.role_name:
-                    openai_messages = [{
-                        "role": self.system_message.role_name,
-                        "content": self.system_message.content,
-                    }] + openai_messages
 
                 mes_id = await self.infe_channel.write_to_receive_queue(
                     openai_messages)
