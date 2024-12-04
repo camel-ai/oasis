@@ -33,6 +33,7 @@ REC_SCHEMA_SQL = "rec.sql"
 COMMENT_SCHEMA_SQL = "comment.sql"
 COMMENT_LIKE_SCHEMA_SQL = "comment_like.sql"
 COMMENT_DISLIKE_SCHEMA_SQL = "comment_dislike.sql"
+PRODUCT_SCHEMA_SQL = "product.sql"
 
 TABLE_NAMES = {
     "user",
@@ -46,6 +47,7 @@ TABLE_NAMES = {
     "comment.sql",
     "comment_like.sql",
     "comment_dislike.sql",
+    "product.sql",
 }
 
 
@@ -145,6 +147,12 @@ def create_db(db_path: str | None = None):
         with open(comment_dislike_sql_path, "r") as sql_file:
             comment_dislike_sql_script = sql_file.read()
         cursor.executescript(comment_dislike_sql_script)
+
+        # Read and execute the product table SQL script:
+        product_sql_path = osp.join(schema_dir, PRODUCT_SCHEMA_SQL)
+        with open(product_sql_path, "r") as sql_file:
+            product_sql_script = sql_file.read()
+        cursor.executescript(product_sql_script)
 
         # Commit the changes:
         conn.commit()

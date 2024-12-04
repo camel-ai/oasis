@@ -195,6 +195,52 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
+    async def sign_up_product(self, product_id: int, product_name: str):
+        # Note: do not sign up the product with the same product name
+        try:
+            product_insert_query = (
+                "INSERT INTO product (product_id, product_name) VALUES (?, ?)")
+            self.pl_utils._execute_db_command(product_insert_query,
+                                              (product_id, product_name),
+                                              commit=True)
+            return {"success": True, "product_id": product_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def purchase_product(self, agent_id: int, product_name: str):
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
+        # try:
+        user_id = agent_id
+        # Check if a like record already exists
+        product_check_query = (
+            "SELECT * FROM 'product' WHERE product_name = ?")
+        self.pl_utils._execute_db_command(product_check_query,
+                                          (product_name, ))
+        check_result = self.db_cursor.fetchone()
+        if not check_result:
+            # Product not found
+            return {"success": False, "error": "No such product."}
+        else:
+            product_id = check_result[0]
+
+        product_update_query = (
+            "UPDATE product SET sales = sales + 1 WHERE product_name = ?")
+        self.pl_utils._execute_db_command(product_update_query,
+                                          (product_name, ),
+                                          commit=True)
+
+        # Record the action in the trace table
+        action_info = {"product_name": product_name}
+        self.pl_utils._record_trace(user_id, ActionType.PURCHASE_PRODUCT.value,
+                                    action_info, current_time)
+        return {"success": True, "product_id": product_id}
+        # except Exception as e:
+        #     return {"success": False, "error": str(e)}
+
     async def refresh(self, agent_id: int):
         # Retrieve posts for a specific id from the rec table
         if self.recsys_type == RecsysType.REDDIT:
