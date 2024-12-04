@@ -33,16 +33,20 @@ class MockChannel:
     async def receive_from(self):
         if self.call_count == 0:
             self.call_count += 1
-            return ("id_", (1, 'apple', ActionType.PURCHASE_PRODUCT.value))
+            return ("id_", (1, ('apple', 1),
+                            ActionType.PURCHASE_PRODUCT.value))
         if self.call_count == 1:
             self.call_count += 1
-            return ("id_", (2, 'apple', ActionType.PURCHASE_PRODUCT.value))
+            return ("id_", (2, ('apple', 2),
+                            ActionType.PURCHASE_PRODUCT.value))
         if self.call_count == 2:
             self.call_count += 1
-            return ("id_", (2, 'banana', ActionType.PURCHASE_PRODUCT.value))
+            return ("id_", (2, ('banana', 1),
+                            ActionType.PURCHASE_PRODUCT.value))
         if self.call_count == 3:
             self.call_count += 1
-            return ("id_", (2, 'orange', ActionType.PURCHASE_PRODUCT.value))
+            return ("id_", (2, ('orange', 1),
+                            ActionType.PURCHASE_PRODUCT.value))
         else:
             return ("id_", (None, None, "exit"))
 
@@ -112,8 +116,8 @@ async def test_search_user(setup_platform):
 
         # Verify that the trace table correctly recorded the operation
         cursor.execute(
-            "SELECT * FROM product WHERE product_name='apple' and sales=2")
-        assert cursor.fetchone() is not None, "apple sales is not 2"
+            "SELECT * FROM product WHERE product_name='apple' and sales=3")
+        assert cursor.fetchone() is not None, "apple sales is not 3"
         cursor.execute(
             "SELECT * FROM product WHERE product_name='banana' and sales=1")
         assert cursor.fetchone() is not None, "banana sales is not 1"

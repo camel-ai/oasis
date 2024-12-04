@@ -207,7 +207,8 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def purchase_product(self, agent_id: int, product_name: str):
+    async def purchase_product(self, agent_id, purchase_message):
+        product_name, purchase_num = purchase_message
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -228,13 +229,16 @@ class Platform:
             product_id = check_result[0]
 
         product_update_query = (
-            "UPDATE product SET sales = sales + 1 WHERE product_name = ?")
+            "UPDATE product SET sales = sales + ? WHERE product_name = ?")
         self.pl_utils._execute_db_command(product_update_query,
-                                          (product_name, ),
+                                          (purchase_num, product_name),
                                           commit=True)
 
         # Record the action in the trace table
-        action_info = {"product_name": product_name}
+        action_info = {
+            "product_name": product_name,
+            "purchase_num": purchase_num
+        }
         self.pl_utils._record_trace(user_id, ActionType.PURCHASE_PRODUCT.value,
                                     action_info, current_time)
         return {"success": True, "product_id": product_id}
