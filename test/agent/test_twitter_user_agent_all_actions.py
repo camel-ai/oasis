@@ -160,5 +160,10 @@ async def test_agents_actions(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
+    await infra.sign_up_product(1, "apple")
+    return_message = await action_agent.env.action.purchase_product("apple", 1)
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
     await channel.write_to_receive_queue((None, None, ActionType.EXIT))
     await task
