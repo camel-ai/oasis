@@ -129,12 +129,12 @@ class SocialAgent:
         openai_messages, _ = self.memory.get_context()
         content = ""
         # sometimes self.memory.get_context() would lose system prompt
-        start_message = openai_messages[0]
-        if start_message["role"] != self.system_message.role_name:
-            openai_messages = [{
-                "role": self.system_message.role_name,
-                "content": self.system_message.content,
-            }] + openai_messages
+        # start_message = openai_messages[0]
+        # if start_message["role"] != self.system_message.role_name:
+        #     openai_messages = [{
+        #         "role": self.system_message.role_name,
+        #         "content": self.system_message.content,
+        #     }] + openai_messages
 
         if not openai_messages:
             openai_messages = [{
@@ -165,7 +165,12 @@ class SocialAgent:
             exec_functions = []
 
             while retry > 0:
-
+                start_message = openai_messages[0]
+                if start_message["role"] != self.system_message.role_name:
+                    openai_messages = [{
+                        "role": self.system_message.role_name,
+                        "content": self.system_message.content,
+                    }] + openai_messages
                 mes_id = await self.infe_channel.write_to_receive_queue(
                     openai_messages)
                 mes_id, content = await self.infe_channel.read_from_send_queue(

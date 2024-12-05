@@ -48,6 +48,7 @@ class SocialAction:
                 self.unfollow,
                 self.mute,
                 self.unmute,
+                self.purchase_product,
             ]
         ]
 
@@ -598,3 +599,18 @@ class SocialAction:
         """
         return await self.perform_action(comment_id,
                                          ActionType.UNDO_DISLIKE_COMMENT.value)
+
+    async def purchase_product(self, product_name: str, purchase_num: int):
+        r"""Purchase a product.
+
+        Args:
+            product_name (str): The name of the product to be purchased.
+            purchase_num (int): The number of products to be purchased.
+
+        Returns:
+            dict: A dictionary with 'success' indicating if the purchase was
+                successful.
+        """
+        purchase_message = (product_name, purchase_num)
+        return await self.perform_action(purchase_message,
+                                         ActionType.PURCHASE_PRODUCT.value)

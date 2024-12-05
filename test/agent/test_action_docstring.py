@@ -42,6 +42,7 @@ def test_transfer_to_openai_function():
             SocialAction.dislike_comment,
             SocialAction.undo_dislike_comment,
             SocialAction.do_nothing,
+            SocialAction.purchase_product,
         ]
     ]
     assert action_funcs is not None
