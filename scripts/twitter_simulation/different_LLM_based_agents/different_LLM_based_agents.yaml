@@ -12,16 +12,16 @@ model:
   cfgs:
     - model_type: llama-3
       num: 111
-      server_url: http://10.140.0.236:8005/v1  # eg, http://10.160.2.154:8000/v1
+      server_url: http://10.140.1.246:8005/v1  # eg, http://10.160.2.154:8000/v1
       model_path: models/Meta-Llama-3-8B-Instruct
       stop_tokens: [<|eot_id|>, <|end_of_text|>]
       temperature: 0.0
 inference:
   model_type: llama-3
-  model_path: /mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct
+  model_path: models/Meta-Llama-3-8B-Instruct
   stop_tokens: [<|eot_id|>, <|end_of_text|>]
   server_url:
-    - host: 10.140.0.236
+    - host: 10.140.1.246
       ports:
         - 8002
         - 8003
