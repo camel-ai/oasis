@@ -24,6 +24,7 @@ thread_log.setLevel("DEBUG")
 class SharedMemory:
     Message_ID = 0
     Message = None
+    Agent_ID = 0
     Response = None
     Busy = False
     Working = False
@@ -34,8 +35,7 @@ class InferenceThread:
 
     def __init__(
         self,
-        model_path:
-        str = "/mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct",  # noqa
+        model_path: str = "/mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct",  # noqa
         server_url: str = "http://10.140.0.144:8000/v1",
         stop_tokens: list[str] = None,
         model_platform_type: ModelPlatformType = ModelPlatformType.VLLM,
@@ -85,4 +85,4 @@ class InferenceThread:
                 thread_log.info(
                     f"Thread {self.server_url}: {self.count} finished.")
 
-            sleep(0.01)
+            sleep(0.1)

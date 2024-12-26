@@ -54,9 +54,9 @@ class Channel:
         message_id = message[0]
         await self.send_dict.put(message_id, message)
 
-    async def write_to_receive_queue(self, action_info):
+    async def write_to_receive_queue(self, action_info, agent_id):
         message_id = str(uuid.uuid4())
-        await self.receive_queue.put((message_id, action_info))
+        await self.receive_queue.put((message_id, action_info, agent_id))
         return message_id
 
     async def read_from_send_queue(self, message_id):

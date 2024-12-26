@@ -246,6 +246,16 @@ inference:
   server_url:
     - host: "10.109.1.8"
       ports: [8002, 8003, 8005]  # Input the list of all ports obtained in step 3
+  port_ranges:
+    - range:
+        start: 0
+        end: 50
+      ports: [8002, 8003] # Set the port 8002 and 8003 as the model1
+    
+    - range:
+        start: 51
+        end: 10000
+      ports: [8005] # Set the port 8005 as the model1
 ```
 
 Additionally, you can modify other settings related to data and experimental details in the yaml file. For instructions on this part, refer to `scripts\reddit_gpt_example\gpt_example.yaml`.
@@ -274,6 +284,9 @@ python scripts/twitter_simulation/group_polarization/twitter_simulation_group_po
 
 # For One Million Simulation
 python scripts/twitter_simulation_1M_agents/twitter_simulation_1m.py --config_path scripts/twitter_simulation_1M_agents/twitter_1m.yaml
+
+# For hybrid LLMs
+python scripts/twitter_simulation/different_LLM_based_agents/twitter_simulation.py --config_path scripts/twitter_simulation/different_LLM_based_agents/different_LLM_based_agents.yaml
 ```
 
 ## 💡Tips
@@ -293,6 +306,14 @@ The Reddit recommendation system is highly time-sensitive. Currently, one time s
 ## 🚢 More Tutorials
 
 To discover how to create profiles for large-scale users, as well as how to visualize and analyze social simulation data once your experiment concludes, please refer to [More Tutorials](tutorials/tutorial.md) for detailed guidance.
+
+
+## 💪 To Do List
+- [x] **Support different LLMs for different agent.** Explore the interactions of different LLM-based agents in OASIS.
+- [ ] **Support financial trading scenario.**
+- [ ] **Support Science Discovery Scenario.**
+- [ ] **Detailed documentation on how to add new environments to OASIS.**
+- [ ] **OASIS 1.5**
 
 ## 📢 News
 

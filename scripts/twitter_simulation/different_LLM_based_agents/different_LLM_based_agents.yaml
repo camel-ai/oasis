@@ -1,0 +1,60 @@
+---
+data:
+  db_path: data/db/test.db
+  csv_path: data/twitter_dataset/anonymous_topic_200_1h/False_Business_0.csv
+simulation:
+  num_timesteps: 60
+  clock_factor: 60
+  recsys_type: random
+model:
+  num_agents: 111
+  model_random_seed: 42
+  cfgs:
+    - model_type: llama-3
+      num: 111
+      server_url: http://10.140.0.236:8005/v1  # eg, http://10.160.2.154:8000/v1
+      model_path: models/Meta-Llama-3-8B-Instruct
+      stop_tokens: [<|eot_id|>, <|end_of_text|>]
+      temperature: 0.0
+inference:
+  model_type: llama-3
+  model_path: /mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct
+  stop_tokens: [<|eot_id|>, <|end_of_text|>]
+  server_url:
+    - host: 10.140.0.236
+      ports:
+        - 8002
+        - 8003
+        - 8005
+        - 8006
+        - 8007
+        - 8008
+        - 8011
+        - 8009
+        - 8010
+        - 8014
+        - 8012
+        - 8013
+        - 8017
+        - 8015
+        - 8016
+        - 8020
+        - 8018
+        - 8019
+        - 8021
+        - 8022
+        - 8023
+        - 8024
+        - 8025
+        - 8026
+  port_ranges:
+    - range:
+        start: 0
+        end: 50
+      ports: [8002, 8003, 8005, 8006, 8007, 8008, 8011, 8009, 8010, 8014, 8012]
+    
+    - range:
+        start: 51
+        end: 10000
+      ports: [8013, 8017, 8015, 8016, 8020, 8018, 8019, 8021, 8022, 8023, 8024, 8025, 8026]
+    
