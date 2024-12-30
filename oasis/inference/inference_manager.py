@@ -56,7 +56,11 @@ class PortManager:
 
     def _initialize_mappings(self):
         """Initialize agent_id to port mappings"""
-        for (start_id, end_id), ports in self.port_ranges.items():
+        port_ranges_dict = {
+                (entry["range"]["start"], entry["range"]["end"]): entry["ports"]
+                for entry in self.port_ranges
+            }
+        for (start_id, end_id), ports in port_ranges_dict.items():
             for agent_id in range(start_id, end_id + 1):
                 self.agent_to_ports[agent_id].extend(ports)
 

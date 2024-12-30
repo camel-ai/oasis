@@ -18,43 +18,22 @@ model:
       temperature: 0.0
 inference:
   model_type: llama-3
-  model_path: /mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct
+  model_path: models/Meta-Llama-3-8B-Instruct
   stop_tokens: [<|eot_id|>, <|end_of_text|>]
   server_url:
-    - host: 10.140.0.236
+    - host: 10.140.0.184
       ports:
-        - 8002
-        - 8003
-        - 8005
-        - 8006
-        - 8007
-        - 8008
-        - 8011
-        - 8009
-        - 8010
-        - 8014
-        - 8012
-        - 8013
-        - 8017
-        - 8015
-        - 8016
-        - 8020
-        - 8018
-        - 8019
-        - 8021
-        - 8022
-        - 8023
-        - 8024
-        - 8025
-        - 8026
+        - 8100
+    - host: 10.140.0.240
+      ports:
+        - 8200
   port_ranges:
     - range:
         start: 0
         end: 50
-      ports: [8002, 8003, 8005, 8006, 8007, 8008, 8011, 8009, 8010, 8014, 8012]
-    
+      ports: [8100]
     - range:
         start: 51
         end: 10000
-      ports: [8013, 8017, 8015, 8016, 8020, 8018, 8019, 8021, 8022, 8023, 8024, 8025, 8026]
+      ports: [8200]
     

@@ -35,7 +35,7 @@ class InferenceThread:
 
     def __init__(
         self,
-        model_path: str = "/mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct",  # noqa
+        model_path: str = "models/Meta-Llama-3-8B-Instruct",  # noqa
         server_url: str = "http://10.140.0.144:8000/v1",
         stop_tokens: list[str] = None,
         model_platform_type: ModelPlatformType = ModelPlatformType.VLLM,
