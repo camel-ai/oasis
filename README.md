@@ -138,7 +138,7 @@ Note: without modifying the Configuration File, running the Reddit script requir
 
 We assume that users are conducting large-scale experiments on a Slurm workload manager cluster. Below, we provide the commands for running experiments with open-source models on the Slurm cluster. The steps for running these experiments on a local machine are similar.
 
-### Step 1: Donwload Open Source Models
+### Step 1: Download Open Source Models
 
 Taking the download of LLaMA-3 from Hugging Face as an example:
 
