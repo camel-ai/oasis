@@ -117,7 +117,7 @@ class Platform:
 
     async def running(self):
         while True:
-            message_id, data = await self.channel.receive_from()
+            message_id, data, _ = await self.channel.receive_from()
 
             agent_id, message, action = data
             action = ActionType(action)

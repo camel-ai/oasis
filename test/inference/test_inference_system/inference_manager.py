@@ -1,17 +1,4 @@
-# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-# Licensed under the Apache License, Version 2.0 (the “License”);
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an “AS IS” BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-
+# inference_manager.py
 import asyncio
 import logging
 from collections import defaultdict
@@ -21,8 +8,8 @@ from dataclasses import dataclass, field
 from concurrent.futures import ThreadPoolExecutor
 import sys
 
-# Assuming InferenceThread and SharedMemory are defined elsewhere
-from oasis.inference.inference_thread import InferenceThread
+from mock_model_backend import MockModelBackend  # Import the mock backend
+from channel import Channel
 
 # Setup logging
 logging.basicConfig(
@@ -33,7 +20,7 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("InferenceManager")
 
 @dataclass
 class SharedMemory:
@@ -49,18 +36,14 @@ class SharedMemory:
 
 class PortManager:
     """Class to manage port allocations"""
-    def __init__(self, port_ranges: Dict[Tuple[int, int], range]):
+    def __init__(self, port_ranges: Dict[Tuple[int, int], List[int]]):
         self.port_ranges = port_ranges
         self.agent_to_ports: Dict[int, List[int]] = defaultdict(list)
         self._initialize_mappings()
 
     def _initialize_mappings(self):
         """Initialize agent_id to port mappings"""
-        port_ranges_dict = {
-                (entry["range"]["start"], entry["range"]["end"]): entry["ports"]
-                for entry in self.port_ranges
-            }
-        for (start_id, end_id), ports in port_ranges_dict.items():
+        for (start_id, end_id), ports in self.port_ranges.items():
             for agent_id in range(start_id, end_id + 1):
                 self.agent_to_ports[agent_id].extend(ports)
 
@@ -68,10 +51,47 @@ class PortManager:
         """Get available ports for a given agent_id"""
         return self.agent_to_ports.get(agent_id, [])
 
-class InferencerManager:
+class InferenceThread:
     def __init__(
         self,
-        channel,
+        model_path: str = "/path/to/mock/model",
+        server_url: str = "http://localhost:8000/v1",
+        stop_tokens: list = None,
+        model_type: str = "mock-model",
+        temperature: float = 0.5,
+        shared_memory: SharedMemory = None,
+    ):
+        self.alive = True
+        self.count = 0
+        self.server_url = server_url
+        self.model_type = model_type
+        self.model_backend = MockModelBackend()  # Use the mock backend
+        if shared_memory is None:
+            self.shared_memory = SharedMemory()
+        else:
+            self.shared_memory = shared_memory
+
+    async def run(self):
+        while self.alive:
+            if self.shared_memory.Busy and not self.shared_memory.Working:
+                self.shared_memory.Working = True
+                try:
+                    response = await self.model_backend.run(
+                        self.shared_memory.Message)
+                    self.shared_memory.Response = response.choices[0].message.content
+                except Exception as e:
+                    print("Receive Response Exception:", str(e))
+                    self.shared_memory.Response = "No response."
+                self.shared_memory.Done = True
+                self.count += 1
+                logger.info(
+                    f"Thread {self.server_url}: {self.count} finished.")
+            await asyncio.sleep(0.1)
+
+class InferenceManager:
+    def __init__(
+        self,
+        channel: Channel,
         model_type: str,
         model_path: str,
         stop_tokens: List[str],
@@ -231,10 +251,8 @@ class InferencerManager:
     async def _run_inference(self, thread: InferenceThread, message: Tuple[str, str, str]):
         """Run inference in a separate thread and update shared_memory"""
         try:
-            await asyncio.get_event_loop().run_in_executor(
-                self.executor,
-                thread.run,  # Assuming `run` is a blocking method
-            )
+            # Run the thread's run method
+            await thread.run()
             async with self.lock:
                 thread.shared_memory.Done = True
         except Exception as e:
@@ -250,8 +268,8 @@ class InferencerManager:
         """Main run loop"""
         # Start all inference threads
         for port, thread in self.threads.items():
-            # Start each thread in the ThreadPoolExecutor
-            asyncio.get_event_loop().run_in_executor(self.executor, thread.run)
+            # Start each thread's run method as a task
+            asyncio.create_task(thread.run())
 
         # Create background tasks
         process_tasks_task = asyncio.create_task(self._process_completed_tasks_loop())
