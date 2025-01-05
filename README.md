@@ -41,6 +41,10 @@ ______________________________________________________________________
 
 🔥 Integrated Recommendation Systems: Features interest-based and hot-score-based recommendation algorithms, simulating how users discover content and interact within social media platforms.
 
+## 📺 Demo Video
+
+[![demo_video](assets/demo_preview.png)](https://www.youtube.com/watch?v=wjLHrdZ1Smk&ab_channel=CamelAI)
+
 ## 🔧 Installation
 
 ### Step 1: Clone the Repository
@@ -127,6 +131,9 @@ To import your own user and post data, please refer to the JSON file format loca
 ```bash
 # For Reddit
 python scripts/reddit_gpt_example/reddit_simulation_gpt.py --config_path scripts/reddit_gpt_example/gpt_example.yaml
+
+# For Reddit with Electronic Mall
+python scripts/reddit_emall_demo/emall_simulation.py --config_path scripts/reddit_emall_demo/emall.yaml
 
 # For Twitter
 python scripts/twitter_gpt_example/twitter_simulation_large.py --config_path scripts/twitter_gpt_example/gpt_example.yaml
@@ -298,8 +305,11 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 <!-- - Public release of our dataset on Hugging Face (November 05, 2024) -->
 
-- Initial release of OASIS on arXiv (November 19, 2024)
-- Initial release of OASIS github repository (November 19, 2024)
+📣 Add the demo video and oasis's star history in the README.  (January 5, 2025)
+
+- Add an Electronic Mall in Reddit platform.  (December 5, 2024)
+- Initial release of OASIS on arXiv. (November 19, 2024)
+- Initial release of OASIS github repository. (November 19, 2024)
 
 ## 🔗 Citation
 
@@ -332,6 +342,10 @@ An essential part of contributing involves not only submitting new features with
 ## 📬 Contact
 
 If you're keen on exploring new research opportunities or discoveries with our platform and wish to dive deeper or suggest new features, we're here to talk. Feel free to get in touch for more details at camel.ai.team@gmail.com.
+
+## 🌟 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=camel-ai/oasis&type=Date)](https://star-history.com/#camel-ai/oasis&Date)
 
 [arxiv-image]: https://img.shields.io/badge/arXiv-2407.01511-b31b1b.svg
 [arxiv-url]: https://arxiv.org/abs/2411.11581
