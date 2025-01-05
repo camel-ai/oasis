@@ -132,6 +132,9 @@ To import your own user and post data, please refer to the JSON file format loca
 # For Reddit
 python scripts/reddit_gpt_example/reddit_simulation_gpt.py --config_path scripts/reddit_gpt_example/gpt_example.yaml
 
+# For Reddit with Electronic Mall
+python scripts/reddit_emall_demo/emall_simulation.py --config_path scripts/reddit_emall_demo/emall.yaml
+
 # For Twitter
 python scripts/twitter_gpt_example/twitter_simulation_large.py --config_path scripts/twitter_gpt_example/gpt_example.yaml
 ```
