@@ -410,62 +410,116 @@ class Platform:
                 datetime.now(), self.start_time)
         else:
             current_time = os.environ["SANDBOX_TIME"]
-        # try:
-        user_id = agent_id
+        try:
+            user_id = agent_id
 
-        # Ensure the content has not been reposted by this user before
-        repost_check_query = (
-            "SELECT * FROM 'post' WHERE original_post_id = ? AND "
-            "user_id = ?")
-        self.pl_utils._execute_db_command(repost_check_query,
-                                          (post_id, user_id))
-        if self.db_cursor.fetchone():
-            # for common and quote post, check if the post has been
-            # reposted
-            return {"success": False, "error": "Repost record already exists."}
-
-        post_type_result = self.pl_utils._get_post_type(post_id)
-        post_insert_query = ("INSERT INTO post (user_id, original_post_id)"
-                             "VALUES (?, ?)")
-
-        if not post_type_result:
-            return {"success": False, "error": "Post not found."}
-        elif (post_type_result['type'] == 'common'
-              or post_type_result['type'] == 'quote'):
-            self.pl_utils._execute_db_command(post_insert_query,
-                                              (user_id, post_id),
-                                              commit=True)
-        elif post_type_result['type'] == 'repost':
+            # Ensure the content has not been reposted by this user before
             repost_check_query = (
                 "SELECT * FROM 'post' WHERE original_post_id = ? AND "
                 "user_id = ?")
-            self.pl_utils._execute_db_command(
-                repost_check_query,
-                (post_type_result['root_post_id'], user_id))
-
+            self.pl_utils._execute_db_command(repost_check_query,
+                                              (post_id, user_id))
             if self.db_cursor.fetchone():
-                # for repost post, check if the post has been reposted
+                # for common and quote post, check if the post has been
+                # reposted
                 return {
                     "success": False,
                     "error": "Repost record already exists."
                 }
 
-            self.pl_utils._execute_db_command(post_insert_query, (
-                user_id,
-                post_type_result['root_post_id'],
-            ),
-                                              commit=True)
+            post_type_result = self.pl_utils._get_post_type(post_id)
+            post_insert_query = ("INSERT INTO post (user_id, original_post_id)"
+                                 "VALUES (?, ?)")
+            # Update num_shares for the found post
+            update_shares_query = (
+                "UPDATE post SET num_shares = num_shares + 1 WHERE post_id = ?"
+            )
 
-        # Update num_shares for the found post
+            if not post_type_result:
+                return {"success": False, "error": "Post not found."}
+            elif (post_type_result['type'] == 'common'
+                  or post_type_result['type'] == 'quote'):
+                self.pl_utils._execute_db_command(post_insert_query,
+                                                  (user_id, post_id),
+                                                  commit=True)
+                self.pl_utils._execute_db_command(update_shares_query,
+                                                  (post_id, ),
+                                                  commit=True)
+            elif post_type_result['type'] == 'repost':
+                repost_check_query = (
+                    "SELECT * FROM 'post' WHERE original_post_id = ? AND "
+                    "user_id = ?")
+                self.pl_utils._execute_db_command(
+                    repost_check_query,
+                    (post_type_result['root_post_id'], user_id))
+
+                if self.db_cursor.fetchone():
+                    # for repost post, check if the post has been reposted
+                    return {
+                        "success": False,
+                        "error": "Repost record already exists."
+                    }
+
+                self.pl_utils._execute_db_command(post_insert_query, (
+                    user_id,
+                    post_type_result['root_post_id'],
+                ),
+                                                  commit=True)
+                self.pl_utils._execute_db_command(
+                    update_shares_query, (post_type_result['root_post_id'], ),
+                    commit=True)
+
+            new_post_id = self.db_cursor.lastrowid
+
+            action_info = {"reposted_id": post_id, "new_post_id": new_post_id}
+            self.pl_utils._record_trace(user_id, ActionType.REPOST.value,
+                                        action_info, current_time)
+
+            return {"success": True, "post_id": new_post_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def quote_post(self, agent_id: int, quote_message: tuple):
+        post_id, quote_content = quote_message
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = os.environ["SANDBOX_TIME"]
+        # try:
+        user_id = agent_id
+
+        # Allow quote a post more than once because the quote content may be
+        # different
+
+        post_type_result = self.pl_utils._get_post_type(post_id)
+        post_insert_query = ("INSERT INTO post (user_id, original_post_id, "
+                             "quote_content) VALUES (?, ?, ?)")
         update_shares_query = (
             "UPDATE post SET num_shares = num_shares + 1 WHERE post_id = ?")
-        self.pl_utils._execute_db_command(update_shares_query, (post_id, ),
-                                          commit=True)
+
+        if not post_type_result:
+            return {"success": False, "error": "Post not found."}
+        elif post_type_result['type'] == 'common':
+            self.pl_utils._execute_db_command(
+                post_insert_query, (user_id, post_id, quote_content),
+                commit=True)
+            self.pl_utils._execute_db_command(update_shares_query, (post_id, ),
+                                              commit=True)
+        elif (post_type_result['type'] == 'repost'
+              or post_type_result['type'] == 'quote'):
+            self.pl_utils._execute_db_command(
+                post_insert_query,
+                (user_id, post_type_result['root_post_id'], quote_content),
+                commit=True)
+            self.pl_utils._execute_db_command(
+                update_shares_query, (post_type_result['root_post_id'], ),
+                commit=True)
 
         new_post_id = self.db_cursor.lastrowid
 
-        action_info = {"reposted_id": post_id, "new_post_id": new_post_id}
-        self.pl_utils._record_trace(user_id, ActionType.REPOST.value,
+        action_info = {"quoted_id": post_id, "new_post_id": new_post_id}
+        self.pl_utils._record_trace(user_id, ActionType.QUOTE_POST.value,
                                     action_info, current_time)
 
         return {"success": True, "post_id": new_post_id}

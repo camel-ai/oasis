@@ -66,6 +66,20 @@ class MockChannel:
         elif self.call_count == 10:
             self.call_count += 1
             return ("id_", (3, 2, "repost"))
+        elif self.call_count == 11:
+            self.call_count += 1
+            return ("id_", (1, (1, 'I like the post.'), "quote_post"))
+        elif self.call_count == 12:
+            self.call_count += 1
+            return ("id_", (2, (2, 'I quote to the reposted post.'),
+                            "quote_post"))
+        elif self.call_count == 13:
+            self.call_count += 1
+            return ("id_", (1, 4, "repost"))
+        elif self.call_count == 14:
+            self.call_count += 1
+            return ("id_", (2, (4, 'I quote to the quoted post.'),
+                            "quote_post"))
         # Returns the exit command
         else:
             return ("id_", (None, None, "exit"))
@@ -110,6 +124,21 @@ class MockChannel:
             assert message[2]["success"] is False
             assert message[2]["error"] == "Post not found."
         elif self.call_count == 11:
+            assert message[2]["success"] is True
+            assert "post_id" in message[2]
+        elif self.call_count == 12:
+            # Assert the success message for a repost
+            assert message[2]["success"] is True
+            assert "post_id" in message[2]
+        elif self.call_count == 13:
+            # Assert the success message for a repost
+            assert message[2]["success"] is True
+            assert "post_id" in message[2]
+        elif self.call_count == 14:
+            assert message[2]["success"] is True
+            assert "post_id" in message[2]
+        elif self.call_count == 15:
+            # Assert the success message for a repost
             assert message[2]["success"] is True
             assert "post_id" in message[2]
 
@@ -165,12 +194,13 @@ async def test_create_repost_like_unlike_post(setup_platform):
         # Verify the post table (post) has the correct data inserted
         cursor.execute("SELECT * FROM post")
         posts = cursor.fetchall()
-        assert len(posts) == 3  # One test post, one repost
+        assert len(posts) == 7  # One test post, one repost
         post = posts[0]
         assert post[1] == 1  # Assuming user ID is 1
         assert post[3] == "This is a test post"
         assert post[6] == 1  # num_likes
         assert post[7] == 1  # num_dislikes
+        assert post[8] == 5  # num_shares
 
         repost = posts[1]
         assert repost[1] == 2  # Repost user ID is 2
@@ -181,6 +211,21 @@ async def test_create_repost_like_unlike_post(setup_platform):
         assert repost_2[1] == 3  # Repost user ID is 2
         assert repost_2[2] == 1  # Original post ID is 1
         assert repost_2[3] is None  # Reposted post has no content
+
+        quote_post = posts[3]
+        assert quote_post[1] == 1  # Repost user ID is
+        assert quote_post[2] == 1  # Original post ID is 1
+        assert quote_post[4] == "I like the post."
+
+        quote_post_2 = posts[4]
+        assert quote_post_2[1] == 2  # Repost user ID is 2
+        assert quote_post_2[2] == 1  # Original post ID is 1
+
+        repost_quote_post = posts[5]
+        assert repost_quote_post[2] == 4  # Original post ID is 4
+
+        quote_post_4 = posts[6]
+        assert quote_post_4[2] == 1  # Original post ID is 4
 
         # Verify the like table has the correct data inserted
         cursor.execute("SELECT * FROM like")
@@ -220,6 +265,11 @@ async def test_create_repost_like_unlike_post(setup_platform):
         assert results is not None, "Undo dislike post action not traced"
         assert results[0][0] == 2  # `user_id`
         assert results[0][-1] == '{"post_id": 1, "dislike_id": 2}'
+
+        cursor.execute("SELECT * FROM trace WHERE action='quote_post'")
+        results = cursor.fetchall()
+        assert results is not None, "Quote post action not traced"
+        assert len(results) == 3
 
         # Verify the like table has the correct data for a like
         cursor.execute("SELECT * FROM like WHERE post_id=1 AND user_id=1")
