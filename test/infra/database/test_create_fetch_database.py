@@ -126,8 +126,8 @@ def test_post_operations():
     # Insert a post:
     cursor.execute(
         ("INSERT INTO post (user_id, content, created_at, num_likes, "
-         "num_dislikes) VALUES (?, ?, ?, ?, ?)"),
-        (1, "This is a test post", "2024-04-21 22:02:42", 0, 1),
+         "num_dislikes, num_shares) VALUES (?, ?, ?, ?, ?, ?)"),
+        (1, "This is a test post", "2024-04-21 22:02:42", 0, 1, 2),
     )
     conn.commit()
 
@@ -136,10 +136,11 @@ def test_post_operations():
     post = cursor.fetchone()
     assert post is not None
     assert post[1] == 1
-    assert post[2] == "This is a test post"
-    assert post[3] == "2024-04-21 22:02:42"
-    assert post[4] == 0
-    assert post[5] == 1
+    assert post[3] == "This is a test post"
+    assert post[5] == "2024-04-21 22:02:42"
+    assert post[6] == 0
+    assert post[7] == 1
+    assert post[8] == 2
 
     # Update the post
     cursor.execute(
@@ -149,12 +150,15 @@ def test_post_operations():
     conn.commit()
 
     expected_result = [{
-        "post_id": 1,
-        "user_id": 1,
-        "content": "Updated post",
-        "created_at": "2024-04-21 22:02:42",
-        "num_likes": 0,
-        "num_dislikes": 1,
+        'post_id': 1,
+        'user_id': 1,
+        'original_post_id': None,
+        'content': 'Updated post',
+        'quote_content': None,
+        'created_at': '2024-04-21 22:02:42',
+        'num_likes': 0,
+        'num_dislikes': 1,
+        'num_shares': 2
     }]
     actual_result = fetch_table_from_db(cursor, "post")
 
@@ -163,7 +167,7 @@ def test_post_operations():
     # Assert the post was updated correctly
     cursor.execute("SELECT * FROM post WHERE content = 'Updated post'")
     post = cursor.fetchone()
-    assert post[2] == "Updated post"
+    assert post[3] == "Updated post"
 
     # Delete the post
     cursor.execute("DELETE FROM post WHERE content = 'Updated post'")

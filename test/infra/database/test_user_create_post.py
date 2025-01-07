@@ -106,8 +106,8 @@ async def test_signup_create_post(setup_platform):
         assert len(posts) == 1
         post = posts[0]
         assert post[1] == 1  # Assuming user ID is 1
-        assert post[2] == "This is a test post"
-        assert post[4] == 0
+        assert post[3] == "This is a test post"
+        assert post[6] == 0
 
         # Verify if the trace table correctly recorded the sign-up operation
         cursor.execute("SELECT * FROM trace WHERE action ='sign_up'")

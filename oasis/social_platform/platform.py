@@ -385,15 +385,16 @@ class Platform:
 
             post_insert_query = (
                 "INSERT INTO post (user_id, content, created_at, num_likes, "
-                "num_dislikes) VALUES (?, ?, ?, ?, ?)")
+                "num_dislikes, num_shares) VALUES (?, ?, ?, ?, ?, ?)")
             self.pl_utils._execute_db_command(
-                post_insert_query, (user_id, content, current_time, 0, 0),
+                post_insert_query, (user_id, content, current_time, 0, 0, 0),
                 commit=True)
             post_id = self.db_cursor.lastrowid
 
             action_info = {"content": content, "post_id": post_id}
             self.pl_utils._record_trace(user_id, ActionType.CREATE_POST.value,
                                         action_info, current_time)
+
             twitter_log.info(f"Trace inserted: user_id={user_id}, "
                              f"current_time={current_time}, "
                              f"action={ActionType.CREATE_POST.value}, "
@@ -409,65 +410,67 @@ class Platform:
                 datetime.now(), self.start_time)
         else:
             current_time = os.environ["SANDBOX_TIME"]
-        try:
-            user_id = agent_id
+        # try:
+        user_id = agent_id
 
-            sql_query = (
-                "SELECT post_id, user_id, content, created_at, num_likes "
-                "FROM post "
-                "WHERE post_id = ? ")
+        # Ensure the content has not been reposted by this user before
+        repost_check_query = (
+            "SELECT * FROM 'post' WHERE original_post_id = ? AND "
+            "user_id = ?")
+        self.pl_utils._execute_db_command(repost_check_query,
+                                          (post_id, user_id))
+        if self.db_cursor.fetchone():
+            # for common and quote post, check if the post has been
+            # reposted
+            return {"success": False, "error": "Repost record already exists."}
 
-            self.pl_utils._execute_db_command(sql_query, (post_id, ))
-            results = self.db_cursor.fetchall()
-            if not results:
-                return {"success": False, "error": "Post not found."}
+        post_type_result = self.pl_utils._get_post_type(post_id)
+        post_insert_query = ("INSERT INTO post (user_id, original_post_id)"
+                             "VALUES (?, ?)")
 
-            prev_content = results[0][2]
-            if "original_post: " in prev_content:
-                orig_content = prev_content.split("original_post: ")[-1]
-            else:
-                orig_content = prev_content
-            orig_content = f"%{orig_content}%"
-            prev_like = results[0][-1]
-            prev_user_id = results[0][1]
-
-            # Mark retweeted tweets to indicate which user they were retweeted
-            # from, for ease of identification
-            repost_content = (
-                f"user{user_id} repost from user{str(prev_user_id)}. "
-                f"original_post: {prev_content}")
-
-            # Ensure the content has not been reposted by this user before
+        if not post_type_result:
+            return {"success": False, "error": "Post not found."}
+        elif (post_type_result['type'] == 'common'
+              or post_type_result['type'] == 'quote'):
+            self.pl_utils._execute_db_command(post_insert_query,
+                                              (user_id, post_id),
+                                              commit=True)
+        elif post_type_result['type'] == 'repost':
             repost_check_query = (
-                "SELECT * FROM 'post' WHERE content LIKE ? AND user_id = ?")
-            self.pl_utils._execute_db_command(repost_check_query,
-                                              (orig_content, user_id))
+                "SELECT * FROM 'post' WHERE original_post_id = ? AND "
+                "user_id = ?")
+            self.pl_utils._execute_db_command(
+                repost_check_query,
+                (post_type_result['root_post_id'], user_id))
+
             if self.db_cursor.fetchone():
-                # This user has a record of reposting
+                # for repost post, check if the post has been reposted
                 return {
                     "success": False,
                     "error": "Repost record already exists."
                 }
 
-            post_insert_query = (
-                "INSERT INTO post (user_id, content, created_at, num_likes) "
-                "VALUES (?, ?, ?, ?)")
+            self.pl_utils._execute_db_command(post_insert_query, (
+                user_id,
+                post_type_result['root_post_id'],
+            ),
+                                              commit=True)
 
-            self.pl_utils._execute_db_command(
-                post_insert_query,
-                (user_id, repost_content, current_time, prev_like),
-                commit=True,
-            )
+        # Update num_shares for the found post
+        update_shares_query = (
+            "UPDATE post SET num_shares = num_shares + 1 WHERE post_id = ?")
+        self.pl_utils._execute_db_command(update_shares_query, (post_id, ),
+                                          commit=True)
 
-            post_id = self.db_cursor.lastrowid
+        new_post_id = self.db_cursor.lastrowid
 
-            action_info = {"post_id": post_id}
-            self.pl_utils._record_trace(user_id, ActionType.REPOST.value,
-                                        action_info, current_time)
+        action_info = {"reposted_id": post_id, "new_post_id": new_post_id}
+        self.pl_utils._record_trace(user_id, ActionType.REPOST.value,
+                                    action_info, current_time)
 
-            return {"success": True, "post_id": post_id}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
+        return {"success": True, "post_id": new_post_id}
+        # except Exception as e:
+        #     return {"success": False, "error": str(e)}
 
     async def like_post(self, agent_id: int, post_id: int):
         if self.recsys_type == RecsysType.REDDIT:

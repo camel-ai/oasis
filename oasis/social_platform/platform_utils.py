@@ -178,3 +178,25 @@ class PlatformUtils:
             return {"success": False, "error": error_message}
         else:
             return None
+
+    def _get_post_type(self, post_id: int):
+        query = (
+            "SELECT original_post_id, quote_content FROM post WHERE post_id "
+            "= ?")
+        self._execute_db_command(query, (post_id, ))
+        result = self.db_cursor.fetchone()
+
+        if not result:
+            return None
+
+        original_post_id, quote_content = result
+
+        if original_post_id is None:
+            # common post without quote or repost
+            return {"type": "common", "root_post_id": None}
+        elif quote_content is None:
+            # post with repost
+            return {"type": "repost", "root_post_id": original_post_id}
+        else:
+            # post with quote
+            return {"type": "quote", "root_post_id": original_post_id}

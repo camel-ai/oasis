@@ -57,6 +57,15 @@ class MockChannel:
         elif self.call_count == 7:
             self.call_count += 1
             return ("id_", (2, 1, "repost"))
+        elif self.call_count == 8:
+            self.call_count += 1
+            return ("id_", (2, 1, "repost"))
+        elif self.call_count == 9:
+            self.call_count += 1
+            return ("id_", (2, 3, "repost"))
+        elif self.call_count == 10:
+            self.call_count += 1
+            return ("id_", (3, 2, "repost"))
         # Returns the exit command
         else:
             return ("id_", (None, None, "exit"))
@@ -90,6 +99,17 @@ class MockChannel:
             assert "dislike_id" in message[2]
         elif self.call_count == 8:
             # Assert the success message for a repost
+            assert message[2]["success"] is True
+            assert "post_id" in message[2]
+        elif self.call_count == 9:
+            # Assert the success message for a repost
+            assert message[2]["success"] is False
+            assert message[2]["error"] == "Repost record already exists."
+        elif self.call_count == 10:
+            # Assert the success message for a repost
+            assert message[2]["success"] is False
+            assert message[2]["error"] == "Post not found."
+        elif self.call_count == 11:
             assert message[2]["success"] is True
             assert "post_id" in message[2]
 
@@ -128,6 +148,12 @@ async def test_create_repost_like_unlike_post(setup_platform):
              "VALUES (?, ?, ?, ?, ?)"),
             (2, 2, "user2", 2, 4),
         )
+        cursor.execute(
+            ("INSERT INTO user "
+             "(user_id, agent_id, user_name, num_followings, num_followers) "
+             "VALUES (?, ?, ?, ?, ?)"),
+            (3, 3, "user3", 2, 4),
+        )
         conn.commit()
 
         await platform.running()
@@ -139,18 +165,22 @@ async def test_create_repost_like_unlike_post(setup_platform):
         # Verify the post table (post) has the correct data inserted
         cursor.execute("SELECT * FROM post")
         posts = cursor.fetchall()
-        assert len(posts) == 2  # One test post, one repost
+        assert len(posts) == 3  # One test post, one repost
         post = posts[0]
         assert post[1] == 1  # Assuming user ID is 1
-        assert post[2] == "This is a test post"
-        assert post[4] == 1  # num_likes
-        assert post[5] == 1  # num_dislikes
+        assert post[3] == "This is a test post"
+        assert post[6] == 1  # num_likes
+        assert post[7] == 1  # num_dislikes
 
         repost = posts[1]
-        rt_content = ("user2 repost from user1. "
-                      "original_post: This is a test post")
         assert repost[1] == 2  # Repost user ID is 2
-        assert repost[2] == rt_content
+        assert repost[2] == 1  # Original post ID is 1
+        assert repost[3] is None  # Reposted post has no content
+
+        repost_2 = posts[2]
+        assert repost_2[1] == 3  # Repost user ID is 2
+        assert repost_2[2] == 1  # Original post ID is 1
+        assert repost_2[3] is None  # Reposted post has no content
 
         # Verify the like table has the correct data inserted
         cursor.execute("SELECT * FROM like")
@@ -198,6 +228,11 @@ async def test_create_repost_like_unlike_post(setup_platform):
         # Verify the dislike table has the correct data for a dislike
         cursor.execute("SELECT * FROM dislike WHERE post_id=1 AND user_id=1")
         assert cursor.fetchone() is not None, "Like record not found"
+
+        # Verify the dislike table has the correct data for a dislike
+        cursor.execute("SELECT * FROM trace WHERE user_id=3")
+        result = cursor.fetchone()
+        assert result[3] == '{"reposted_id": 2, "new_post_id": 3}'
 
     finally:
         # Cleanup
