@@ -305,11 +305,12 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 <!-- - Public release of our dataset on Hugging Face (November 05, 2024) -->
 
-📣 Add the demo video and oasis's star history in the README.  (January 5, 2025)
+📣 Slightly refactoring the database to add Quote Action and modify Repost Action - 📆 January 13, 2025
 
-- Add an Electronic Mall in Reddit platform.  (December 5, 2024)
-- Initial release of OASIS on arXiv. (November 19, 2024)
-- Initial release of OASIS github repository. (November 19, 2024)
+- Added the demo video and oasis's star history in the README - 📆 January 5, 2025
+- Introduced an Electronic Mall on the Reddit platform - 📆 December 5, 2024
+- OASIS initially released on arXiv - 📆 November 19, 2024
+- OASIS GitHub repository initially launched - 📆 November 19, 2024
 
 ## 🔗 Citation
 
