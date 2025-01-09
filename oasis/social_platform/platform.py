@@ -741,10 +741,10 @@ class Platform:
             # Update the SQL query to search by content, post_id, and user_id
             # simultaneously
             sql_query = (
-                "SELECT post_id, user_id, content, created_at, num_likes, "
-                "num_dislikes FROM post "
-                "WHERE content LIKE ? OR CAST(post_id AS TEXT) LIKE ? OR "
-                "CAST(user_id AS TEXT) LIKE ?")
+                "SELECT post_id, user_id, original_post_id, content, "
+                "quote_content, created_at, num_likes, num_dislikes, "
+                "num_shares FROM post WHERE content LIKE ? OR CAST(post_id AS "
+                "TEXT) LIKE ? OR CAST(user_id AS TEXT) LIKE ?")
             # Note: CAST is necessary because post_id and user_id are integers,
             # while the search query is a string type
             self.pl_utils._execute_db_command(
@@ -1011,8 +1011,9 @@ class Platform:
 
             # Build the SQL query
             sql_query = """
-                SELECT user_id, post_id, content, created_at, num_likes,
-                num_dislikes FROM post
+                SELECT post_id, user_id, original_post_id, content,
+                quote_content, created_at, num_likes, num_dislikes,
+                num_shares FROM post
                 WHERE created_at >= ?
                 ORDER BY num_likes DESC
                 LIMIT ?
