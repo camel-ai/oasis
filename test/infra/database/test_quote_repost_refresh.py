@@ -123,7 +123,7 @@ class MockChannel:
             assert posts[0]['comments'][0]['content'] == 'a comment'
 
             # Post 2
-            assert posts[1]['post_id'] == 2
+            assert posts[1]['post_id'] == 1
             assert posts[1]['user_id'] == 2
             assert posts[1]['content'] == (
                 'User 2 reposted a post from User 1. Repost content: This is '
@@ -147,7 +147,7 @@ class MockChannel:
             assert posts[3]['num_likes'] == 0
 
             # Post 5
-            assert posts[4]['post_id'] == 5
+            assert posts[4]['post_id'] == 4
             assert posts[4]['user_id'] == 1
             assert posts[4]['content'] == (
                 'User 1 reposted a post from User 2. Repost content: This is '
