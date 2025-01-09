@@ -66,8 +66,42 @@ class PlatformUtils:
         # Initialize the returned posts list
         posts = []
         for row in posts_results:
-            (post_id, user_id, content, created_at, num_likes,
-             num_dislikes) = row
+            (post_id, user_id, original_post_id, content, quote_content,
+             created_at, num_likes, num_dislikes, num_shares) = row
+            post_type_result = self._get_post_type(post_id)
+            if post_type_result is None:
+                continue
+            original_user_id_query = (
+                "SELECT user_id FROM post WHERE post_id = ?")
+            if post_type_result["type"] == "repost":
+                self.db_cursor.execute(original_user_id_query,
+                                       (original_post_id, ))
+                original_user_id = self.db_cursor.fetchone()[0]
+                current_post_id = post_id
+                post_id = post_type_result["root_post_id"]
+                self.db_cursor.execute(
+                    "SELECT content, quote_content, created_at, num_likes, "
+                    "num_dislikes, num_shares FROM post WHERE post_id = ?",
+                    (post_id, ))
+                original_post_result = self.db_cursor.fetchone()
+                (content, quote_content, created_at, num_likes, num_dislikes,
+                 num_shares) = original_post_result
+                post_content = (
+                    f"User {user_id} reposted a post from User "
+                    f"{original_user_id}. Repost content: {content}. ")
+
+            elif post_type_result["type"] == "quote":
+                self.db_cursor.execute(original_user_id_query,
+                                       (original_post_id, ))
+                original_user_id = self.db_cursor.fetchone()[0]
+                post_content = (
+                    f"User {user_id} quoted a post from User "
+                    f"{original_user_id}. Quote content: {quote_content}. "
+                    f"Original Content: {content}")
+
+            elif post_type_result["type"] == "common":
+                post_content = content
+
             # For each post, query its corresponding comments
             self.db_cursor.execute(
                 "SELECT comment_id, post_id, user_id, content, created_at, "
@@ -107,11 +141,12 @@ class PlatformUtils:
             # Add post information and corresponding comments to the posts list
             posts.append({
                 "post_id":
-                post_id,
+                current_post_id
+                if post_type_result["type"] == "repost" else post_id,
                 "user_id":
                 user_id,
                 "content":
-                content,
+                post_content,
                 "created_at":
                 created_at,
                 **({
@@ -120,6 +155,8 @@ class PlatformUtils:
                        "num_likes": num_likes,
                        "num_dislikes": num_dislikes
                    }),
+                "num_shares":
+                num_shares,
                 "comments":
                 comments,
             })
