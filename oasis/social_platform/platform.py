@@ -489,28 +489,36 @@ class Platform:
         # try:
         user_id = agent_id
 
-        # Allow quote a post more than once because the quote content may be
-        # different
+        # Allow quote a post more than once because the quote content may
+        # be different
+
+        post_query = "SELECT content FROM post WHERE post_id = ?"
 
         post_type_result = self.pl_utils._get_post_type(post_id)
         post_insert_query = ("INSERT INTO post (user_id, original_post_id, "
-                             "quote_content) VALUES (?, ?, ?)")
+                             "content, quote_content) VALUES (?, ?, ?, ?)")
         update_shares_query = (
             "UPDATE post SET num_shares = num_shares + 1 WHERE post_id = ?")
 
         if not post_type_result:
             return {"success": False, "error": "Post not found."}
         elif post_type_result['type'] == 'common':
+            self.pl_utils._execute_db_command(post_query, (post_id, ))
+            post_content = self.db_cursor.fetchone()[0]
             self.pl_utils._execute_db_command(
-                post_insert_query, (user_id, post_id, quote_content),
+                post_insert_query,
+                (user_id, post_id, post_content, quote_content),
                 commit=True)
             self.pl_utils._execute_db_command(update_shares_query, (post_id, ),
                                               commit=True)
         elif (post_type_result['type'] == 'repost'
               or post_type_result['type'] == 'quote'):
             self.pl_utils._execute_db_command(
-                post_insert_query,
-                (user_id, post_type_result['root_post_id'], quote_content),
+                post_query, (post_type_result['root_post_id'], ))
+            post_content = self.db_cursor.fetchone()[0]
+            self.pl_utils._execute_db_command(
+                post_insert_query, (user_id, post_type_result['root_post_id'],
+                                    post_content, quote_content),
                 commit=True)
             self.pl_utils._execute_db_command(
                 update_shares_query, (post_type_result['root_post_id'], ),

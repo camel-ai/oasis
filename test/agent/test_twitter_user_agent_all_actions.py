@@ -134,6 +134,10 @@ async def test_agents_actions(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
+    return_message = await action_agent.env.action.quote_post(1, "Test quote")
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
     return_message = await action_agent.env.action.create_comment(
         1, "Test comment")
     assert return_message["success"] is True

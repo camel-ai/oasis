@@ -31,6 +31,7 @@ class SocialAction:
                 self.create_post,
                 self.like_post,
                 self.repost,
+                self.quote_post,
                 self.unlike_post,
                 self.dislike_post,
                 self.undo_dislike_post,
@@ -180,6 +181,33 @@ class SocialAction:
             will result in a failure.
         """
         return await self.perform_action(post_id, ActionType.REPOST.value)
+
+    async def quote_post(self, post_id: int, quote_content: str):
+        r"""Quote a specified post with a given quote content.
+
+        This method invokes an asynchronous action to quote a specified post
+        with a given quote content. Upon successful execution, it returns a
+        dictionary indicating success and the ID of the newly created quote.
+
+        Args:
+            post_id (int): The ID of the post to be quoted.
+            quote_content (str): The content of the quote to be created.
+
+        Returns:
+            dict: A dictionary with two key-value pairs. The 'success' key
+                maps to a boolean indicating whether the quote creation was
+                successful. The 'post_id' key maps to the integer ID of the
+                newly created quote.
+
+            Example of a successful return:
+            {"success": True, "post_id": 123}
+
+        Note:
+            Attempting to quote a post that the user has already quoted will
+            result in a failure.
+        """
+        quote_message = (post_id, quote_content)
+        return await self.perform_action(quote_message, ActionType.QUOTE_POST)
 
     async def like_post(self, post_id: int):
         r"""Create a new like for a specified post.

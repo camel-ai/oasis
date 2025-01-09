@@ -215,17 +215,21 @@ async def test_create_repost_like_unlike_post(setup_platform):
         quote_post = posts[3]
         assert quote_post[1] == 1  # Repost user ID is
         assert quote_post[2] == 1  # Original post ID is 1
+        assert quote_post[3] == "This is a test post"
         assert quote_post[4] == "I like the post."
 
         quote_post_2 = posts[4]
         assert quote_post_2[1] == 2  # Repost user ID is 2
         assert quote_post_2[2] == 1  # Original post ID is 1
+        assert quote_post[3] == "This is a test post"
 
         repost_quote_post = posts[5]
         assert repost_quote_post[2] == 4  # Original post ID is 4
+        assert quote_post[3] == "This is a test post"
 
         quote_post_4 = posts[6]
         assert quote_post_4[2] == 1  # Original post ID is 4
+        assert quote_post[3] == "This is a test post"
 
         # Verify the like table has the correct data inserted
         cursor.execute("SELECT * FROM like")
