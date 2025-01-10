@@ -43,7 +43,13 @@ ______________________________________________________________________
 
 ## 📺 Demo Video
 
+### Introducing OASIS: Open Agent Social Interaction Simulations with One Million Agents
+
 [![demo_video](assets/demo_preview.png)](https://www.youtube.com/watch?v=wjLHrdZ1Smk&ab_channel=CamelAI)
+
+### Can 1,000,000 AI agents simulate social media?
+
+[![demo_video](assets/long_demo_preview.png)](https://www.youtube.com/watch?v=lprGHqkApus&t=2s)
 
 ## 🔧 Installation
 
@@ -305,11 +311,12 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 <!-- - Public release of our dataset on Hugging Face (November 05, 2024) -->
 
-📣 Add the demo video and oasis's star history in the README.  (January 5, 2025)
+📣 Slightly refactoring the database to add Quote Action and modify Repost Action - 📆 January 13, 2025
 
-- Add an Electronic Mall in Reddit platform.  (December 5, 2024)
-- Initial release of OASIS on arXiv. (November 19, 2024)
-- Initial release of OASIS github repository. (November 19, 2024)
+- Added the demo video and oasis's star history in the README - 📆 January 5, 2025
+- Introduced an Electronic Mall on the Reddit platform - 📆 December 5, 2024
+- OASIS initially released on arXiv - 📆 November 19, 2024
+- OASIS GitHub repository initially launched - 📆 November 19, 2024
 
 ## 🔗 Citation
 
@@ -354,7 +361,7 @@ If you're keen on exploring new research opportunities or discoveries with our p
 [python-image]: https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg
 [python-url]: https://docs.python.org/3.10/
 [slack-image]: https://img.shields.io/badge/Slack-CAMEL--AI-blueviolet?logo=slack
-[slack-url]: https://join.slack.com/t/camel-kwr1314/shared_invite/zt-1vy8u9lbo-ZQmhIAyWSEfSwLCl2r2eKA
+[slack-url]: https://join.slack.com/t/camel-ai/shared_invite/zt-2g7xc41gy-_7rcrNNAArIP6sLQqldkqQ
 [star-image]: https://img.shields.io/github/stars/camel-ai/oasis?label=stars&logo=github&color=brightgreen
 [star-url]: https://github.com/camel-ai/oasis/stargazers
 [twitter-image]: https://img.shields.io/twitter/follow/CamelAIOrg?style=social&color=brightgreen&logo=twitter
