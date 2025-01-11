@@ -126,10 +126,7 @@ def reset_globals():
     fans_score = []
 
 
-def rec_sys_random(user_table: List[Dict[str,
-                                         Any]], post_table: List[Dict[str,
-                                                                      Any]],
-                   trace_table: List[Dict[str, Any]], rec_matrix: List[List],
+def rec_sys_random(post_table: List[Dict[str, Any]], rec_matrix: List[List],
                    max_rec_post_len: int) -> List[List]:
     """
     Randomly recommend posts to users.

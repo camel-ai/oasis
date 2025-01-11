@@ -20,15 +20,12 @@ from oasis.social_platform.recsys import (rec_sys_personalized,
 def test_rec_sys_random_all_posts():
     # Test the scenario when the number of tweets is less than or equal to the
     # maximum recommendation length
-    user_table = [{"user_id": 0}, {"user_id": 1}]
     post_table = [{"post_id": "1"}, {"post_id": "2"}]
-    trace_table = []
     rec_matrix = [[], []]
     max_rec_post_len = 2  # Maximum recommendation length set to 2
 
     expected = [["1", "2"], ["1", "2"]]
-    result = rec_sys_random(user_table, post_table, trace_table, rec_matrix,
-                            max_rec_post_len)
+    result = rec_sys_random(post_table, rec_matrix, max_rec_post_len)
     assert result == expected
 
 
@@ -139,14 +136,11 @@ def test_rec_sys_personalized_twhin():
 def test_rec_sys_random_sample_posts():
     # Test the scenario when the number of tweets is greater than the maximum
     # recommendation length
-    user_table = [{"user_id": 0}, {"user_id": 1}]
     post_table = [{"post_id": "1"}, {"post_id": "2"}, {"post_id": "3"}]
-    trace_table = []  # Not used in this test, but included for completeness
     rec_matrix = [[], []]  # Assuming two users
     max_rec_post_len = 2  # Maximum recommendation length set to 2
 
-    result = rec_sys_random(user_table, post_table, trace_table, rec_matrix,
-                            max_rec_post_len)
+    result = rec_sys_random(post_table, rec_matrix, max_rec_post_len)
     # Validate that each user received 2 tweet IDs
     for rec in result:
         assert len(rec) == max_rec_post_len

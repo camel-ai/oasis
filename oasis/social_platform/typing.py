@@ -31,6 +31,7 @@ class ActionType(Enum):
     TREND = "trend"
     SIGNUP = "sign_up"
     REPOST = "repost"
+    QUOTE_POST = "quote_post"
     UPDATE_REC_TABLE = "update_rec_table"
     CREATE_COMMENT = "create_comment"
     LIKE_COMMENT = "like_comment"
