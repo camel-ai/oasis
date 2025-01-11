@@ -161,7 +161,7 @@ class SocialAgent:
                 content = "No response."
 
         else:
-            retry = 5
+            retry = 1
             exec_functions = []
 
             while retry > 0:
@@ -172,8 +172,8 @@ class SocialAgent:
                         "content": self.system_message.content,
                     }] + openai_messages
                 mes_id = await self.infe_channel.write_to_receive_queue(
-                    openai_messages)
-                mes_id, content = await self.infe_channel.read_from_send_queue(
+                    openai_messages, self.agent_id)
+                mes_id, content, _ = await self.infe_channel.read_from_send_queue(
                     mes_id)
 
                 agent_log.info(
@@ -245,7 +245,7 @@ class SocialAgent:
         agent_log.info(f"Agent {self.agent_id}: {openai_messages}")
 
         message_id = await self.infe_channel.write_to_receive_queue(
-            openai_messages)
+            openai_messages, self.agent_id)
         message_id, content = await self.infe_channel.read_from_send_queue(
             message_id)
         agent_log.info(f"Agent {self.agent_id} receive response: {content}")

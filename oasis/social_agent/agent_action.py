@@ -55,7 +55,7 @@ class SocialAction:
 
     async def perform_action(self, message: Any, type: str):
         message_id = await self.channel.write_to_receive_queue(
-            (self.agent_id, message, type))
+            (self.agent_id, message, type), self.agent_id)
         response = await self.channel.read_from_send_queue(message_id)
         return response[2]
 
