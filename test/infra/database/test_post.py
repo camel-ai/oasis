@@ -212,6 +212,7 @@ async def test_create_repost_like_unlike_post(setup_platform):
         assert repost[1] == 2  # Repost user ID is 2
         assert repost[2] == 1  # Original post ID is 1
         assert repost[3] == ''  # Reposted post is empty
+        print('created_at:', repost[5])
         assert repost[5] is not None  # created_at
         assert repost[6] == 0  # num_likes
 
