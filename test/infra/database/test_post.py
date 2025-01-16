@@ -59,24 +59,27 @@ class MockChannel:
             return ("id_", (2, 1, "repost"))
         elif self.call_count == 8:
             self.call_count += 1
-            return ("id_", (2, 1, "repost"))
+            return ("id_", (2, 2, "like_post"))
         elif self.call_count == 9:
             self.call_count += 1
-            return ("id_", (2, 3, "repost"))
+            return ("id_", (2, 1, "repost"))
         elif self.call_count == 10:
             self.call_count += 1
-            return ("id_", (3, 2, "repost"))
+            return ("id_", (2, 3, "repost"))
         elif self.call_count == 11:
             self.call_count += 1
-            return ("id_", (1, (1, 'I like the post.'), "quote_post"))
+            return ("id_", (3, 2, "repost"))
         elif self.call_count == 12:
+            self.call_count += 1
+            return ("id_", (1, (1, 'I like the post.'), "quote_post"))
+        elif self.call_count == 13:
             self.call_count += 1
             return ("id_", (2, (2, 'I quote to the reposted post.'),
                             "quote_post"))
-        elif self.call_count == 13:
+        elif self.call_count == 14:
             self.call_count += 1
             return ("id_", (1, 4, "repost"))
-        elif self.call_count == 14:
+        elif self.call_count == 15:
             self.call_count += 1
             return ("id_", (2, (4, 'I quote to the quoted post.'),
                             "quote_post"))
@@ -116,18 +119,17 @@ class MockChannel:
             assert message[2]["success"] is True
             assert "post_id" in message[2]
         elif self.call_count == 9:
-            # Assert the success message for a repost
-            assert message[2]["success"] is False
-            assert message[2]["error"] == "Repost record already exists."
+            assert message[2]["success"] is True
+            assert "like_id" in message[2]
         elif self.call_count == 10:
             # Assert the success message for a repost
             assert message[2]["success"] is False
-            assert message[2]["error"] == "Post not found."
+            assert message[2]["error"] == "Repost record already exists."
         elif self.call_count == 11:
-            assert message[2]["success"] is True
-            assert "post_id" in message[2]
-        elif self.call_count == 12:
             # Assert the success message for a repost
+            assert message[2]["success"] is False
+            assert message[2]["error"] == "Post not found."
+        elif self.call_count == 12:
             assert message[2]["success"] is True
             assert "post_id" in message[2]
         elif self.call_count == 13:
@@ -135,9 +137,13 @@ class MockChannel:
             assert message[2]["success"] is True
             assert "post_id" in message[2]
         elif self.call_count == 14:
+            # Assert the success message for a repost
             assert message[2]["success"] is True
             assert "post_id" in message[2]
         elif self.call_count == 15:
+            assert message[2]["success"] is True
+            assert "post_id" in message[2]
+        elif self.call_count == 16:
             # Assert the success message for a repost
             assert message[2]["success"] is True
             assert "post_id" in message[2]
@@ -198,19 +204,22 @@ async def test_create_repost_like_unlike_post(setup_platform):
         post = posts[0]
         assert post[1] == 1  # Assuming user ID is 1
         assert post[3] == "This is a test post"
-        assert post[6] == 1  # num_likes
+        assert post[6] == 2  # num_likes
         assert post[7] == 1  # num_dislikes
         assert post[8] == 5  # num_shares
 
         repost = posts[1]
         assert repost[1] == 2  # Repost user ID is 2
         assert repost[2] == 1  # Original post ID is 1
-        assert repost[3] is None  # Reposted post has no content
+        assert repost[3] == ''  # Reposted post is empty
+        assert repost[5] is not None  # created_at
+        assert repost[6] == 0  # num_likes
 
         repost_2 = posts[2]
         assert repost_2[1] == 3  # Repost user ID is 2
         assert repost_2[2] == 1  # Original post ID is 1
-        assert repost_2[3] is None  # Reposted post has no content
+        assert repost_2[3] == ''  # Reposted post is empty
+        assert repost[5] is not None  # created_at
 
         quote_post = posts[3]
         assert quote_post[1] == 1  # Repost user ID is
@@ -234,7 +243,7 @@ async def test_create_repost_like_unlike_post(setup_platform):
         # Verify the like table has the correct data inserted
         cursor.execute("SELECT * FROM like")
         likes = cursor.fetchall()
-        assert len(likes) == 1
+        assert len(likes) == 2
 
         # Verify the dislike table has the correct data inserted
         cursor.execute("SELECT * FROM dislike")
@@ -251,7 +260,7 @@ async def test_create_repost_like_unlike_post(setup_platform):
         cursor.execute("SELECT * FROM trace WHERE action='like_post'")
         results = cursor.fetchall()
         assert results is not None, "Like post action not traced"
-        assert len(results) == 2
+        assert len(results) == 3
 
         cursor.execute("SELECT * FROM trace WHERE action='unlike_post'")
         results = cursor.fetchall()
