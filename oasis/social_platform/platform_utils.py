@@ -77,6 +77,7 @@ class PlatformUtils:
                 self.db_cursor.execute(original_user_id_query,
                                        (original_post_id, ))
                 original_user_id = self.db_cursor.fetchone()[0]
+                original_post_id = post_id
                 post_id = post_type_result["root_post_id"]
                 self.db_cursor.execute(
                     "SELECT content, quote_content, created_at, num_likes, "
@@ -140,7 +141,8 @@ class PlatformUtils:
             # Add post information and corresponding comments to the posts list
             posts.append({
                 "post_id":
-                post_id,
+                post_id
+                if post_type_result["type"] != "repost" else original_post_id,
                 "user_id":
                 user_id,
                 "content":

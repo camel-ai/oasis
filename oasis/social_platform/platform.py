@@ -252,67 +252,68 @@ class Platform:
                 datetime.now(), self.start_time)
         else:
             current_time = os.environ["SANDBOX_TIME"]
-        # try:
-        user_id = agent_id
-        # Retrieve all post_ids for a given user_id from the rec table
-        rec_query = "SELECT post_id FROM rec WHERE user_id = ?"
-        self.pl_utils._execute_db_command(rec_query, (user_id, ))
-        rec_results = self.db_cursor.fetchall()
+        try:
+            user_id = agent_id
+            # Retrieve all post_ids for a given user_id from the rec table
+            rec_query = "SELECT post_id FROM rec WHERE user_id = ?"
+            self.pl_utils._execute_db_command(rec_query, (user_id, ))
+            rec_results = self.db_cursor.fetchall()
 
-        post_ids = [row[0] for row in rec_results]
-        selected_post_ids = post_ids
-        # If the number of post_ids >= self.refresh_rec_post_count,
-        # randomly select a specified number of post_ids
-        if len(selected_post_ids) >= self.refresh_rec_post_count:
-            selected_post_ids = random.sample(selected_post_ids,
-                                              self.refresh_rec_post_count)
+            post_ids = [row[0] for row in rec_results]
+            selected_post_ids = post_ids
+            # If the number of post_ids >= self.refresh_rec_post_count,
+            # randomly select a specified number of post_ids
+            if len(selected_post_ids) >= self.refresh_rec_post_count:
+                selected_post_ids = random.sample(selected_post_ids,
+                                                  self.refresh_rec_post_count)
 
-        if self.recsys_type != RecsysType.REDDIT:
-            # Retrieve posts from following (in network)
-            # Modify the SQL query so that the refresh gets posts from
-            # people the user follows, sorted by the number of likes on
-            # Twitter
-            query_following_post = (
-                "SELECT post.post_id, post.user_id, post.content, "
-                "post.created_at, post.num_likes FROM post "
-                "JOIN follow ON post.user_id = follow.followee_id "
-                "WHERE follow.follower_id = ? "
-                "ORDER BY post.num_likes DESC  "
-                "LIMIT ?")
-            self.pl_utils._execute_db_command(
-                query_following_post,
-                (
-                    user_id,
-                    self.following_post_count,
-                ),
-            )
+            if self.recsys_type != RecsysType.REDDIT:
+                # Retrieve posts from following (in network)
+                # Modify the SQL query so that the refresh gets posts from
+                # people the user follows, sorted by the number of likes on
+                # Twitter
+                query_following_post = (
+                    "SELECT post.post_id, post.user_id, post.content, "
+                    "post.created_at, post.num_likes FROM post "
+                    "JOIN follow ON post.user_id = follow.followee_id "
+                    "WHERE follow.follower_id = ? "
+                    "ORDER BY post.num_likes DESC  "
+                    "LIMIT ?")
+                self.pl_utils._execute_db_command(
+                    query_following_post,
+                    (
+                        user_id,
+                        self.following_post_count,
+                    ),
+                )
 
-            following_posts = self.db_cursor.fetchall()
-            following_posts_ids = [row[0] for row in following_posts]
+                following_posts = self.db_cursor.fetchall()
+                following_posts_ids = [row[0] for row in following_posts]
 
-            selected_post_ids = following_posts_ids + selected_post_ids
-            selected_post_ids = list(set(selected_post_ids))
+                selected_post_ids = following_posts_ids + selected_post_ids
+                selected_post_ids = list(set(selected_post_ids))
 
-        placeholders = ", ".join("?" for _ in selected_post_ids)
+            placeholders = ", ".join("?" for _ in selected_post_ids)
 
-        post_query = (
-            f"SELECT post_id, user_id, original_post_id, content, "
-            f"quote_content, created_at, num_likes, num_dislikes, "
-            f"num_shares FROM post WHERE post_id IN ({placeholders})")
-        self.pl_utils._execute_db_command(post_query, selected_post_ids)
-        results = self.db_cursor.fetchall()
-        if not results:
-            return {"success": False, "message": "No posts found."}
-        results_with_comments = self.pl_utils._add_comments_to_posts(results)
+            post_query = (
+                f"SELECT post_id, user_id, original_post_id, content, "
+                f"quote_content, created_at, num_likes, num_dislikes, "
+                f"num_shares FROM post WHERE post_id IN ({placeholders})")
+            self.pl_utils._execute_db_command(post_query, selected_post_ids)
+            results = self.db_cursor.fetchall()
+            if not results:
+                return {"success": False, "message": "No posts found."}
+            results_with_comments = self.pl_utils._add_comments_to_posts(
+                results)
 
-        action_info = {"posts": results_with_comments}
-        twitter_log.info(action_info)
-        self.pl_utils._record_trace(user_id, ActionType.REFRESH.value,
-                                    action_info, current_time)
+            action_info = {"posts": results_with_comments}
+            twitter_log.info(action_info)
+            self.pl_utils._record_trace(user_id, ActionType.REFRESH.value,
+                                        action_info, current_time)
 
-        return {"success": True, "posts": results_with_comments}
-        # except Exception as e:
-        #     return {"success": False, "error": str(e)}
+            return {"success": True, "posts": results_with_comments}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
     async def update_rec_table(self):
         # Recsys(trace/user/post table), refresh rec table
@@ -428,8 +429,8 @@ class Platform:
                 }
 
             post_type_result = self.pl_utils._get_post_type(post_id)
-            post_insert_query = ("INSERT INTO post (user_id, original_post_id)"
-                                 "VALUES (?, ?)")
+            post_insert_query = ("INSERT INTO post (user_id, original_post_id"
+                                 ", created_at) VALUES (?, ?, ?)")
             # Update num_shares for the found post
             update_shares_query = (
                 "UPDATE post SET num_shares = num_shares + 1 WHERE post_id = ?"
@@ -439,9 +440,9 @@ class Platform:
                 return {"success": False, "error": "Post not found."}
             elif (post_type_result['type'] == 'common'
                   or post_type_result['type'] == 'quote'):
-                self.pl_utils._execute_db_command(post_insert_query,
-                                                  (user_id, post_id),
-                                                  commit=True)
+                self.pl_utils._execute_db_command(
+                    post_insert_query, (user_id, post_id, current_time),
+                    commit=True)
                 self.pl_utils._execute_db_command(update_shares_query,
                                                   (post_id, ),
                                                   commit=True)
@@ -460,11 +461,10 @@ class Platform:
                         "error": "Repost record already exists."
                     }
 
-                self.pl_utils._execute_db_command(post_insert_query, (
-                    user_id,
-                    post_type_result['root_post_id'],
-                ),
-                                                  commit=True)
+                self.pl_utils._execute_db_command(
+                    post_insert_query,
+                    (user_id, post_type_result['root_post_id'], current_time),
+                    commit=True)
                 self.pl_utils._execute_db_command(
                     update_shares_query, (post_type_result['root_post_id'], ),
                     commit=True)
@@ -545,6 +545,9 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
+            post_type_result = self.pl_utils._get_post_type(post_id)
+            if post_type_result['type'] == 'repost':
+                post_id = post_type_result['root_post_id']
             user_id = agent_id
             # Check if a like record already exists
             like_check_query = ("SELECT * FROM 'like' WHERE post_id = ? AND "
@@ -582,6 +585,7 @@ class Platform:
             like_id = self.db_cursor.lastrowid
 
             # Record the action in the trace table
+            # if post has been reposted, record the root post id into trace
             action_info = {"post_id": post_id, "like_id": like_id}
             self.pl_utils._record_trace(user_id, ActionType.LIKE_POST.value,
                                         action_info, current_time)
@@ -591,6 +595,9 @@ class Platform:
 
     async def unlike_post(self, agent_id: int, post_id: int):
         try:
+            post_type_result = self.pl_utils._get_post_type(post_id)
+            if post_type_result['type'] == 'repost':
+                post_id = post_type_result['root_post_id']
             user_id = agent_id
 
             # Check if a like record already exists
@@ -642,6 +649,9 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
+            post_type_result = self.pl_utils._get_post_type(post_id)
+            if post_type_result['type'] == 'repost':
+                post_id = post_type_result['root_post_id']
             user_id = agent_id
             # Check if a dislike record already exists
             like_check_query = (
@@ -689,6 +699,9 @@ class Platform:
 
     async def undo_dislike_post(self, agent_id: int, post_id: int):
         try:
+            post_type_result = self.pl_utils._get_post_type(post_id)
+            if post_type_result['type'] == 'repost':
+                post_id = post_type_result['root_post_id']
             user_id = agent_id
 
             # Check if a dislike record already exists
@@ -1049,6 +1062,9 @@ class Platform:
         else:
             current_time = os.environ["SANDBOX_TIME"]
         try:
+            post_type_result = self.pl_utils._get_post_type(post_id)
+            if post_type_result['type'] == 'repost':
+                post_id = post_type_result['root_post_id']
             user_id = agent_id
 
             # Insert the comment record
