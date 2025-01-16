@@ -291,13 +291,13 @@ python scripts/twitter_simulation_1M_agents/twitter_simulation_1m.py --config_pa
 
 ## 💡Tips
 
-### For Twitter Simluation:
+### For Twitter Simulation:
 
 - Customizing temporal feature
 
-When simulating on generated users, you can customizing temporal feature in `social_simulation/social_agent/agents_generator.py` by modifying `profile['other_info']['active_threshold']`. For example, you can set it to all 1 if you believe that the generated users should be active the entire time.
+When simulating on generated users, you can customize the temporal feature in `social_simulation/social_agent/agents_generator.py` by modifying `profile['other_info']['active_threshold']`. For example, you can set it to all 1 if you believe that the generated users should be active the entire time.
 
-### For Reddit Simluation:
+### For Reddit Simulation:
 
 - Reddit recommendation system
 
