@@ -1,27 +1,9 @@
-[![arXiv][arxiv-image]][arxiv-url]
-[![Python Version][python-image]][python-url]
-[![Star][star-image]][star-url]
-[![Slack][slack-image]][slack-url]
-[![Discord][discord-image]][discord-url]
-[![Wechat][wechat-image]][wechat-url]
-[![Twitter][twitter-image]][twitter-url]
-
 ______________________________________________________________________
 
 # OASIS: Open Agent Social Interaction Simulations with One Million Agents
 
 <p align="center">
   <img src='assets/logo.jpg' width=400>
-</p>
-
-<p align="center">
-  <a href="https://github.com/camel-ai/camel#community">Community</a> |
-  <a href="https://arxiv.org/abs/2411.11581">Paper</a> |
-  <a href="https://github.com/camel-ai/oasis/tree/main/scripts">Examples</a> |
-  <a href="https://huggingface.co/datasets/oasis-agent/oasis-dataset">Dataset</a> |
-  <a href="https://github.com/camel-ai/oasis#-citation">Citation</a> |
-  <a href="https://github.com/camel-ai/oasis#-contributing-to-oasis">Contributing</a> |
-  <a href="https://www.camel-ai.org/">CAMEL-AI</a>
 </p>
 
 ## 📝 Overview
@@ -45,11 +27,7 @@ ______________________________________________________________________
 
 ### Introducing OASIS: Open Agent Social Interaction Simulations with One Million Agents
 
-[![demo_video](assets/demo_preview.png)](https://www.youtube.com/watch?v=wjLHrdZ1Smk&ab_channel=CamelAI)
-
 ### Can 1,000,000 AI agents simulate social media?
-
-[![demo_video](assets/long_demo_preview.png)](https://www.youtube.com/watch?v=lprGHqkApus&t=2s)
 
 ## 🔧 Installation
 
@@ -307,64 +285,6 @@ The Reddit recommendation system is highly time-sensitive. Currently, one time s
 
 To discover how to create profiles for large-scale users, as well as how to visualize and analyze social simulation data once your experiment concludes, please refer to [More Tutorials](tutorials/tutorial.md) for detailed guidance.
 
-## 📢 News
-
-<!-- - Public release of our dataset on Hugging Face (November 05, 2024) -->
-
-📣 Slightly refactoring the database to add Quote Action and modify Repost Action - 📆 January 13, 2025
-
-- Added the demo video and oasis's star history in the README - 📆 January 5, 2025
-- Introduced an Electronic Mall on the Reddit platform - 📆 December 5, 2024
-- OASIS initially released on arXiv - 📆 November 19, 2024
-- OASIS GitHub repository initially launched - 📆 November 19, 2024
-
-## 🔗 Citation
-
-```
-@misc{yang2024oasisopenagentsocial,
-      title={OASIS: Open Agent Social Interaction Simulations with One Million Agents},
-      author={Ziyi Yang and Zaibin Zhang and Zirui Zheng and Yuxian Jiang and Ziyue Gan and Zhiyu Wang and Zijian Ling and Jinsong Chen and Martz Ma and Bowen Dong and Prateek Gupta and Shuyue Hu and Zhenfei Yin and Guohao Li and Xu Jia and Lijun Wang and Bernard Ghanem and Huchuan Lu and Chaochao Lu and Wanli Ouyang and Yu Qiao and Philip Torr and Jing Shao},
-      year={2024},
-      eprint={2411.11581},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2411.11581},
-}
-```
-
-## 🙌 Acknowledgment
-
-We would like to thank Douglas for designing the logo of our project.
-
 ## 🖺 License
 
 The source code is licensed under Apache 2.0.
-
-## 🥂 Contributing to OASIS🏝️
-
-We greatly appreciate your interest in contributing to our open-source initiative. To ensure a smooth collaboration and the success of contributions, we adhere to a set of contributing guidelines similar to those established by CAMEL. For a comprehensive understanding of the steps involved in contributing to our project, please refer to the CAMEL contributing guidelines [here](https://github.com/camel-ai/camel/blob/master/CONTRIBUTING.md). 🤝🚀
-
-An essential part of contributing involves not only submitting new features with accompanying tests (and, ideally, examples) but also ensuring that these contributions pass our automated pytest suite. This approach helps us maintain the project's quality and reliability by verifying compatibility and functionality.
-
-## 📬 Contact
-
-If you're keen on exploring new research opportunities or discoveries with our platform and wish to dive deeper or suggest new features, we're here to talk. Feel free to get in touch for more details at camel.ai.team@gmail.com.
-
-## 🌟 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=camel-ai/oasis&type=Date)](https://star-history.com/#camel-ai/oasis&Date)
-
-[arxiv-image]: https://img.shields.io/badge/arXiv-2407.01511-b31b1b.svg
-[arxiv-url]: https://arxiv.org/abs/2411.11581
-[discord-image]: https://img.shields.io/badge/Discord-CAMEL--AI-7289da?logo=discord&logoColor=white&color=7289da
-[discord-url]: https://discord.gg/CNcNpquyDc
-[python-image]: https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg
-[python-url]: https://docs.python.org/3.10/
-[slack-image]: https://img.shields.io/badge/Slack-CAMEL--AI-blueviolet?logo=slack
-[slack-url]: https://join.slack.com/t/camel-ai/shared_invite/zt-2g7xc41gy-_7rcrNNAArIP6sLQqldkqQ
-[star-image]: https://img.shields.io/github/stars/camel-ai/oasis?label=stars&logo=github&color=brightgreen
-[star-url]: https://github.com/camel-ai/oasis/stargazers
-[twitter-image]: https://img.shields.io/twitter/follow/CamelAIOrg?style=social&color=brightgreen&logo=twitter
-[twitter-url]: https://twitter.com/CamelAIOrg
-[wechat-image]: https://img.shields.io/badge/WeChat-CamelAIOrg-brightgreen?logo=wechat&logoColor=white
-[wechat-url]: https://ghli.org/camel/wechat.png
