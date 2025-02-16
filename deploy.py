@@ -54,7 +54,7 @@ if __name__ == "__main__":
             cmd = (
                 f"CUDA_VISIBLE_DEVICES={gpu} python -m "
                 f"vllm.entrypoints.openai.api_server --model "
-                f"'/ibex/user/yangz0h/open_source_llm/llama-3' "
+                f"'/open_source_llm/llama-3' "
                 f"--served-model-name 'llama-3' "
                 f"--host {host} --port {ports[j][i]} --gpu-memory-utilization "
                 f"0.3 --disable-log-stats")
