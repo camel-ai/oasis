@@ -133,7 +133,7 @@ async def running(
         print(Back.GREEN + f"DB:{db_file} timestep:{timestep}" + Back.RESET)
         print(Back.YELLOW + "doing test" + Back.RESET)
 
-        if timestep - 1 % 10 == 0:
+        if (timestep - 1) % 10 == 0:
             test_results_list = []
             test_tasks = [
                 agent.perform_test() for agent in agent_graph
