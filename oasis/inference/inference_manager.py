@@ -51,14 +51,16 @@ class InferencerManager:
 
         # Check if max_workers is set to a reasonable value
         if max_workers < 1:
-            inference_log.error("Max workers must be at least 1. Setting to 1.")
+            inference_log.error(
+                "Max workers must be at least 1. Setting to 1.")
             max_workers = 1
         # For IO bound tasks, max_workers should be set to a higher value between 5 and 20 times the number of CPUs
         elif max_workers > cpu_count() * 20:
             inference_log.warning(
-                f"Max workers is higher than recommended value. Setting to {cpu_count() * 20}.")
+                f"Max workers is higher than recommended value. Setting to {cpu_count() * 20}."
+            )
             max_workers = cpu_count() * 20
-        
+
         # Check if threads_per_port is set to a reasonable value
         total_ports = 0
         for url in server_url:
@@ -66,9 +68,11 @@ class InferencerManager:
         if total_ports * threads_per_port > max_workers:
             threads_per_port = max(max_workers // total_ports, 1)
             inference_log.warning(
-                f"Total threads exceeds max workers. Setting threads per port to {threads_per_port}.")
+                f"Total threads exceeds max workers. Setting threads per port to {threads_per_port}."
+            )
         if threads_per_port < 1:
-            inference_log.error("Threads per port must be at least 1. Setting to 1.")
+            inference_log.error(
+                "Threads per port must be at least 1. Setting to 1.")
             threads_per_port = 1
 
         for url in server_url:
