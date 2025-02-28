@@ -14,6 +14,8 @@
 import asyncio
 import logging
 import threading
+from os import cpu_count
+from typing import Any
 
 from oasis.inference.inference_thread import InferenceThread, SharedMemory
 
@@ -32,11 +34,13 @@ class InferencerManager:
 
     def __init__(
         self,
-        channel,
-        model_type,
-        model_path,
-        stop_tokens,
-        server_url,
+        channel: Any,
+        model_type: str,
+        model_path: str,
+        stop_tokens: list[str],
+        server_url: list[dict[str, list[int]]],
+        threads_per_port: int = 20,
+        max_workers: int = 80,
     ):
         self.count = 0
         self.channel = channel
@@ -44,20 +48,48 @@ class InferencerManager:
         self.lock = threading.Lock(
         )  # Use thread lock to protect shared resources
         self.stop_event = threading.Event()  # Event for stopping threads
+
+        # Check if max_workers is set to a reasonable value
+        if max_workers < 1:
+            inference_log.error(
+                "Max workers must be at least 1. Setting to 1.")
+            max_workers = 1
+        # For IO bound tasks, max_workers should be set to a higher value
+        # between 5 and 20 times the number of CPUs
+        elif max_workers > cpu_count() * 20:
+            inference_log.warning(
+                f"Max workers is higher than recommended value. Setting to "
+                f"{cpu_count() * 20}.")
+            max_workers = cpu_count() * 20
+
+        # Check if threads_per_port is set to a reasonable value
+        total_ports = 0
+        for url in server_url:
+            total_ports += len(url["ports"])
+        if total_ports * threads_per_port > max_workers:
+            threads_per_port = max(max_workers // total_ports, 1)
+            inference_log.warning(
+                f"Total threads exceeds max workers. Setting threads per port "
+                f"to {threads_per_port}.")
+        if threads_per_port < 1:
+            inference_log.error(
+                "Threads per port must be at least 1. Setting to 1.")
+            threads_per_port = 1
+
         for url in server_url:
             host = url["host"]
             for port in url["ports"]:
                 _url = f"http://{host}:{port}/v1"
-                shared_memory = SharedMemory()
-                thread = InferenceThread(
-                    model_path=model_path,
-                    server_url=_url,
-                    stop_tokens=stop_tokens,
-                    model_type=model_type,
-                    temperature=0.0,
-                    shared_memory=shared_memory,
-                )
-                self.threads.append(thread)
+                self.threads.extend([
+                    InferenceThread(
+                        model_path=model_path,
+                        server_url=_url,
+                        stop_tokens=stop_tokens,
+                        model_type=model_type,
+                        temperature=0.0,
+                        shared_memory=SharedMemory(),
+                    ) for _ in range(threads_per_port)
+                ])
 
     async def run(self):
         # Start threads
@@ -103,5 +135,7 @@ class InferencerManager:
             await self.stop()
 
     async def stop(self):
+        self.stop_event.set()
+
         for thread in self.threads:
             thread.alive = False
