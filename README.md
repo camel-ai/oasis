@@ -310,6 +310,7 @@ To discover how to create profiles for large-scale users, as well as how to visu
 ## 📢 News
 
 <!-- - Public release of our dataset on Hugging Face (November 05, 2024) -->
+
 📣 Add multi-threading support to speed up LLM inference by 13x - 📆 March 4, 2025
 
 - Slightly refactoring the database to add Quote Action and modify Repost Action - 📆 January 13, 2025
