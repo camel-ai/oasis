@@ -13,7 +13,7 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 from typing import Any
 
-from camel.toolkits import OpenAIFunction
+from camel.toolkits import FunctionTool
 
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.typing import ActionType
@@ -25,31 +25,17 @@ class SocialAction:
         self.agent_id = agent_id
         self.channel = channel
 
-    def get_openai_function_list(self) -> list[OpenAIFunction]:
+    def get_openai_function_list(self) -> list[FunctionTool]:
         return [
-            OpenAIFunction(func) for func in [
+            FunctionTool(func) for func in [
                 self.create_post,
                 self.like_post,
                 self.repost,
                 self.quote_post,
-                self.unlike_post,
-                self.dislike_post,
-                self.undo_dislike_post,
-                self.search_posts,
-                self.search_user,
-                self.trend,
                 self.refresh,
                 self.do_nothing,
                 self.create_comment,
                 self.like_comment,
-                self.dislike_comment,
-                self.unlike_comment,
-                self.undo_dislike_comment,
-                self.follow,
-                self.unfollow,
-                self.mute,
-                self.unmute,
-                self.purchase_product,
             ]
         ]
 
