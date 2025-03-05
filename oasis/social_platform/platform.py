@@ -59,6 +59,7 @@ class Platform:
         refresh_rec_post_count: int = 1,
         max_rec_post_len: int = 2,
         following_post_count=3,
+        content_id: int = 0,
     ):
         self.db_path = db_path
         self.recsys_type = recsys_type
@@ -106,6 +107,8 @@ class Platform:
         # Parameters for the platform's internal trending rules
         self.trend_num_days = 7
         self.trend_top_k = 1
+
+        self.content_id = content_id
 
         self.pl_utils = PlatformUtils(
             self.db,
@@ -400,6 +403,7 @@ class Platform:
                              f"current_time={current_time}, "
                              f"action={ActionType.CREATE_POST.value}, "
                              f"info={action_info}")
+
             return {"success": True, "post_id": post_id}
 
         except Exception as e:
