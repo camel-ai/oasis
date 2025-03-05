@@ -97,3 +97,9 @@ models/
 *.db
 *.sqlite3
 *.sqlite
+
+data/1w
+
+set_vllm
+
+scripts/misinformation_spreading
