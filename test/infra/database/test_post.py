@@ -33,59 +33,59 @@ class MockChannel:
         # The first call returns the command to create a post
         if self.call_count == 0:
             self.call_count += 1
-            return ("id_", (1, "This is a test post", "create_post"))
+            return ("id_", (1, "This is a test post", "create_post"), 0)
         # The second call returns the command for a like operation
         elif self.call_count == 1:
             self.call_count += 1
-            return ("id_", (1, 1, "like_post"))
+            return ("id_", (1, 1, "like_post"), 0)
         elif self.call_count == 2:
             self.call_count += 1
-            return ("id_", (2, 1, "like_post"))
+            return ("id_", (2, 1, "like_post"), 0)
         elif self.call_count == 3:
             self.call_count += 1
-            return ("id_", (2, 1, "unlike_post"))
+            return ("id_", (2, 1, "unlike_post"), 0)
         elif self.call_count == 4:
             self.call_count += 1
-            return ("id_", (1, 1, "dislike_post"))
+            return ("id_", (1, 1, "dislike_post"), 0)
         elif self.call_count == 5:
             self.call_count += 1
-            return ("id_", (2, 1, "dislike_post"))
+            return ("id_", (2, 1, "dislike_post"), 0)
         elif self.call_count == 6:
             self.call_count += 1
-            return ("id_", (2, 1, "undo_dislike_post"))
+            return ("id_", (2, 1, "undo_dislike_post"), 0)
         # The call returns the command for a repost operation
         elif self.call_count == 7:
             self.call_count += 1
-            return ("id_", (2, 1, "repost"))
+            return ("id_", (2, 1, "repost"), 0)
         elif self.call_count == 8:
             self.call_count += 1
-            return ("id_", (2, 2, "like_post"))
+            return ("id_", (2, 2, "like_post"), 0)
         elif self.call_count == 9:
             self.call_count += 1
-            return ("id_", (2, 1, "repost"))
+            return ("id_", (2, 1, "repost"), 0)
         elif self.call_count == 10:
             self.call_count += 1
-            return ("id_", (2, 3, "repost"))
+            return ("id_", (2, 3, "repost"), 0)
         elif self.call_count == 11:
             self.call_count += 1
-            return ("id_", (3, 2, "repost"))
+            return ("id_", (3, 2, "repost"), 0)
         elif self.call_count == 12:
             self.call_count += 1
-            return ("id_", (1, (1, 'I like the post.'), "quote_post"))
+            return ("id_", (1, (1, 'I like the post.'), "quote_post"), 0)
         elif self.call_count == 13:
             self.call_count += 1
             return ("id_", (2, (2, 'I quote to the reposted post.'),
-                            "quote_post"))
+                            "quote_post"), 0)
         elif self.call_count == 14:
             self.call_count += 1
-            return ("id_", (1, 4, "repost"))
+            return ("id_", (1, 4, "repost"), 0)
         elif self.call_count == 15:
             self.call_count += 1
             return ("id_", (2, (4, 'I quote to the quoted post.'),
-                            "quote_post"))
+                            "quote_post"), 0)
         # Returns the exit command
         else:
-            return ("id_", (None, None, "exit"))
+            return ("id_", (None, None, "exit"), 0)
 
     async def send_to(self, message):
         # Store the message for subsequent assertions

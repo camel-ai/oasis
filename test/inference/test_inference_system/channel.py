@@ -11,12 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# channel.py
 import asyncio
 import uuid
 
-
 class AsyncSafeDict:
-
     def __init__(self):
         self.dict = {}
         self.lock = asyncio.Lock()
@@ -37,12 +36,9 @@ class AsyncSafeDict:
         async with self.lock:
             return list(self.dict.keys())
 
-
 class Channel:
-
     def __init__(self):
         self.receive_queue = asyncio.Queue()  # Used to store received messages
-        # Using an asynchronous safe dictionary to store messages to be sent
         self.send_dict = AsyncSafeDict()
 
     async def receive_from(self):
@@ -67,5 +63,4 @@ class Channel:
                 if message:
                     return message  # Return the found message
             # Temporarily suspend to avoid tight looping
-            await asyncio.sleep(
-                0.1)  # set a large one to reduce the workload of cpu
+            await asyncio.sleep(0.1)  # Adjust as needed

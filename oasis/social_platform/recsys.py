@@ -460,13 +460,13 @@ def rec_sys_personalized_twh(
                     (271.8 - (current_time - int(post['created_at']))) / 100))
             # Get the audience size of the post, score based on the number of
             # followers
-            try:
-                fans_score.append(
-                    np.log(u_items[post['user_id']] + 1) / np.log(1000))
-            except Exception as e:
-                print(f"Error on fan score calculating: {e}")
-                import pdb
-                pdb.set_trace()
+            # try:
+            #     fans_score.append(
+            #         np.log(u_items[post['user_id']] + 1) / np.log(1000))
+            # except Exception as e:
+            #     print(f"Error on fan score calculating: {e}")
+            #     import pdb
+            #     pdb.set_trace()
 
     date_score_np = np.array(date_score)
     # fan_score [1, 2.x]

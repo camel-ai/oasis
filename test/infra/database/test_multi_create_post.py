@@ -39,9 +39,9 @@ class MockChannel:
         if self.action_index < len(self.user_actions):
             action = self.user_actions[self.action_index]
             self.action_index += 1
-            return ("id_", action)
+            return ("id_", action, 0)
         else:
-            return ("id_", (None, None, "exit"))
+            return ("id_", (None, None, "exit"), 0)
 
     async def send_to(self, message):
         self.messages.append(message)

@@ -55,7 +55,7 @@ async def running():
             },
         ],
     )
-    await twitter_channel.write_to_receive_queue((None, None, "exit"))
+    await twitter_channel.write_to_receive_queue((None, None, "exit"), 0)
     await task
     assert agent_graph.get_num_nodes() == 111
 
@@ -85,6 +85,6 @@ async def test_generate_controllable(monkeypatch):
         agent_graph,
         agent_user_id_mapping,
     )
-    await twitter_channel.write_to_receive_queue((None, None, "exit"))
+    await twitter_channel.write_to_receive_queue((None, None, "exit"), 0)
     await task
     assert agent_graph.get_num_nodes() == 27

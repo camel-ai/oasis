@@ -32,21 +32,21 @@ class MockChannel:
     async def receive_from(self):
         if self.call_count == 0:
             self.call_count += 1
-            return ("id_", (1, "This is a test post", "create_post"))
+            return ("id_", (1, "This is a test post", "create_post"), 0)
         elif self.call_count == 1:
             self.call_count += 1
-            return ("id_", (1, 1, "like_post"))
+            return ("id_", (1, 1, "like_post"), 0)
         elif self.call_count == 2:
             self.call_count += 1
-            return ("id_", (2, 1, "like_post"))
+            return ("id_", (2, 1, "like_post"), 0)
         elif self.call_count == 3:
             self.call_count += 1
-            return ("id_", (1, 1, "dislike_post"))
+            return ("id_", (1, 1, "dislike_post"), 0)
         elif self.call_count == 4:
             self.call_count += 1
-            return ("id_", (2, 1, "dislike_post"))
+            return ("id_", (2, 1, "dislike_post"), 0)
         else:
-            return ("id_", (None, None, "exit"))
+            return ("id_", (None, None, "exit"), 0)
 
     async def send_to(self, message):
         self.messages.append(message)

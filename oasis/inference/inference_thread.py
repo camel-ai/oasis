@@ -12,7 +12,9 @@
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import logging
+import time
 from time import sleep
+from typing import Optional
 
 from camel.models import BaseModelBackend, ModelFactory
 from camel.types import ModelPlatformType
@@ -22,20 +24,22 @@ thread_log.setLevel("DEBUG")
 
 
 class SharedMemory:
-    Message_ID = 0
-    Message = None
-    Response = None
-    Busy = False
-    Working = False
-    Done = False
+    """Using dataclass for optimized memory usage and access efficiency"""
+    Message_ID: Optional[str] = None
+    Message: Optional[str] = None
+    Agent_ID: Optional[int] = None
+    Response: Optional[str] = None
+    Done: bool = False
+    Busy: bool = False
+    Working: bool = False
+    last_active: float = time.time()  # Record last active time
 
 
 class InferenceThread:
 
     def __init__(
         self,
-        model_path:
-        str = "/mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct",  # noqa
+        model_path: str = "models/Meta-Llama-3-8B-Instruct",  # noqa
         server_url: str = "http://10.140.0.144:8000/v1",
         stop_tokens: list[str] = None,
         model_platform_type: ModelPlatformType = ModelPlatformType.VLLM,
@@ -85,4 +89,4 @@ class InferenceThread:
                 thread_log.info(
                     f"Thread {self.server_url}: {self.count} finished.")
 
-            sleep(0.01)
+            sleep(0.1)

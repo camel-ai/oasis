@@ -32,13 +32,14 @@ class MockChannel:
     async def receive_from(self):
         if self.call_count == 0:
             self.call_count += 1
-            return ("id_", (1, ("alice0101", "Alice", "A girl."), "sign_up"))
+            return ("id_", (1, ("alice0101", "Alice", "A girl."), "sign_up"),
+                    0)
         elif self.call_count == 1:
             self.call_count += 1
-            return ("id_", (2, ("bubble", "Bob", "A boy."), "sign_up"))
+            return ("id_", (2, ("bubble", "Bob", "A boy."), "sign_up"), 0)
         # Returns the exit command
         else:
-            return ("id_", (None, None, "exit"))
+            return ("id_", (None, None, "exit"), 0)
 
     async def send_to(self, message):
         self.messages.append(message)  # Store messages for later assertions

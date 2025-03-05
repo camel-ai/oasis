@@ -33,9 +33,9 @@ class MockChannel:
     async def receive_from(self):
         if self.call_count == 0:
             self.call_count += 1
-            return ("id_", (1, None, ActionType.DO_NOTHING))
+            return ("id_", (1, None, ActionType.DO_NOTHING), 0)
         else:
-            return ("id_", (None, None, ActionType.EXIT))
+            return ("id_", (None, None, ActionType.EXIT), 0)
 
     async def send_to(self, message):
         self.messages.append(message)
