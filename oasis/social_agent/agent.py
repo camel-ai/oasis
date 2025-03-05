@@ -20,7 +20,7 @@ import sys
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from camel.configs import ChatGPTConfig
+from camel.agents._utils import convert_to_schema
 from camel.memories import (ChatHistoryMemory, MemoryRecord,
                             ScoreBasedContextCreator)
 from camel.messages import BaseMessage
@@ -74,15 +74,17 @@ class SocialAgent:
         self.model_type = model_type
         self.is_openai_model = is_openai_model
         if self.is_openai_model:
-            model_config = ChatGPTConfig(
-                tools=self.env.action.get_openai_function_list(),
-                temperature=0.5,
-            )
+            tools = self.env.action.get_openai_function_list()
+            tool_schemas = {
+                tool_schema["function"]["name"]: tool_schema
+                for tool_schema in [convert_to_schema(tool) for tool in tools]
+            }
+            self.full_tool_schemas = list(tool_schemas.values())
             self.model_backend = ModelFactory.create(
                 model_platform=ModelPlatformType.OPENAI,
                 model_type=ModelType(model_type),
-                model_config_dict=model_config.as_dict(),
             )
+            self.model_backend.model_config_dict['temperature'] = 0.6
 
         context_creator = ScoreBasedContextCreator(
             OpenAITokenCounter(ModelType.GPT_3_5_TURBO),
@@ -146,7 +148,8 @@ class SocialAgent:
 
         if self.is_openai_model:
             try:
-                response = self.model_backend.run(openai_messages)
+                response = await self.model_backend._arun(
+                    openai_messages, tools=self.full_tool_schemas)
                 agent_log.info(f"Agent {self.agent_id} response: {response}")
                 content = response
                 for tool_call in response.choices[0].message.tool_calls:
