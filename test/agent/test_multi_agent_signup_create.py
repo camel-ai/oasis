@@ -75,7 +75,7 @@ async def test_agents_posting(setup_platform):
             await agent.env.action.create_post(f"hello from {agent.agent_id}")
             await asyncio.sleep(random.uniform(0, 0.1))
 
-    await channel.write_to_receive_queue((None, None, "exit"))
+    await channel.write_to_receive_queue((None, None, "exit"), 0)
     await task
 
     # Verify if data was correctly inserted into the database

@@ -35,12 +35,12 @@ class MockChannel:
         # Returns the command to search for users on the first call
         if self.call_count == 0:
             self.call_count += 1
-            return ("id_", (None, None, ActionType.UPDATE_REC_TABLE))
+            return ("id_", (None, None, ActionType.UPDATE_REC_TABLE), 0)
         if self.call_count == 1:
             self.call_count += 1
-            return ("id_", (0, None, ActionType.REFRESH))
+            return ("id_", (0, None, ActionType.REFRESH), 0)
         else:
-            return ("id_", (None, None, ActionType.EXIT))
+            return ("id_", (None, None, ActionType.EXIT), 0)
 
     async def send_to(self, message):
         self.messages.append(message)  # Store messages for later assertions

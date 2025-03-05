@@ -33,26 +33,29 @@ class MockChannel:
         # On the first call, return the command for the follow operation
         if self.call_count == 0:
             self.call_count += 1
-            return ("id_", (1, 2, "follow"))  # Assuming user 1 follows user 2
+            return ("id_", (1, 2, "follow"), 0
+                    )  # Assuming user 1 follows user 2
         if self.call_count == 1:
             self.call_count += 1
-            return ("id_", (1, 3, "follow"))  # Assuming user 1 follows user 3
+            return ("id_", (1, 3, "follow"), 0
+                    )  # Assuming user 1 follows user 3
         if self.call_count == 2:
             self.call_count += 1
-            return ("id_", (1, 3, "unfollow")
+            return ("id_", (1, 3, "unfollow"), 0
                     )  # Assuming user 1 unfollows user 3
         if self.call_count == 3:
             self.call_count += 1
-            return ("id_", (2, 1, "mute"))  # Assuming user 2 mutes user 1
+            return ("id_", (2, 1, "mute"), 0)  # Assuming user 2 mutes user 1
         if self.call_count == 4:
             self.call_count += 1
-            return ("id_", (2, 3, "mute"))  # Assuming user 2 mutes user 3
+            return ("id_", (2, 3, "mute"), 0)  # Assuming user 2 mutes user 3
         if self.call_count == 5:
             self.call_count += 1
-            return ("id_", (2, 3, "unmute"))  # Assuming user 2 unmutes user 3
+            return ("id_", (2, 3, "unmute"), 0
+                    )  # Assuming user 2 unmutes user 3
         # Returns the exit command afterwards
         else:
-            return ("id_", (None, None, "exit"))
+            return ("id_", (None, None, "exit"), 0)
 
     async def send_to(self, message):
         self.messages.append(message)  # Store messages for later assertions

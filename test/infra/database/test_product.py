@@ -34,21 +34,21 @@ class MockChannel:
         if self.call_count == 0:
             self.call_count += 1
             return ("id_", (1, ('apple', 1),
-                            ActionType.PURCHASE_PRODUCT.value))
+                            ActionType.PURCHASE_PRODUCT.value), 0)
         if self.call_count == 1:
             self.call_count += 1
             return ("id_", (2, ('apple', 2),
-                            ActionType.PURCHASE_PRODUCT.value))
+                            ActionType.PURCHASE_PRODUCT.value), 0)
         if self.call_count == 2:
             self.call_count += 1
             return ("id_", (2, ('banana', 1),
-                            ActionType.PURCHASE_PRODUCT.value))
+                            ActionType.PURCHASE_PRODUCT.value), 0)
         if self.call_count == 3:
             self.call_count += 1
             return ("id_", (2, ('orange', 1),
-                            ActionType.PURCHASE_PRODUCT.value))
+                            ActionType.PURCHASE_PRODUCT.value), 0)
         else:
-            return ("id_", (None, None, "exit"))
+            return ("id_", (None, None, "exit"), 0)
 
     async def send_to(self, message):
         self.messages.append(message)  # Store message for later assertion

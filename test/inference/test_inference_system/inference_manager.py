@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-
+# inference_manager.py
 import asyncio
 import logging
 import sys
@@ -21,8 +21,8 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
-# Assuming InferenceThread and SharedMemory are defined elsewhere
-from oasis.inference.inference_thread import InferenceThread
+from channel import Channel
+from mock_model_backend import MockModelBackend  # Import the mock backend
 
 # Setup logging
 logging.basicConfig(
@@ -30,7 +30,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[logging.FileHandler('inference.log'),
               logging.StreamHandler()])
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("InferenceManager")
 
 
 @dataclass
@@ -50,18 +50,14 @@ class SharedMemory:
 class PortManager:
     """Class to manage port allocations"""
 
-    def __init__(self, port_ranges: Dict[Tuple[int, int], range]):
+    def __init__(self, port_ranges: Dict[Tuple[int, int], List[int]]):
         self.port_ranges = port_ranges
         self.agent_to_ports: Dict[int, List[int]] = defaultdict(list)
         self._initialize_mappings()
 
     def _initialize_mappings(self):
         """Initialize agent_id to port mappings"""
-        port_ranges_dict = {
-            (entry["range"]["start"], entry["range"]["end"]): entry["ports"]
-            for entry in self.port_ranges
-        }
-        for (start_id, end_id), ports in port_ranges_dict.items():
+        for (start_id, end_id), ports in self.port_ranges.items():
             for agent_id in range(start_id, end_id + 1):
                 self.agent_to_ports[agent_id].extend(ports)
 
@@ -70,35 +66,58 @@ class PortManager:
         return self.agent_to_ports.get(agent_id, [])
 
 
-from os import cpu_count
-
-from oasis.inference.inference_thread import SharedMemory
-
-inference_log = logging.getLogger(name="inference")
-inference_log.setLevel("DEBUG")
-
-file_handler = logging.FileHandler("inference.log")
-file_handler.setLevel("DEBUG")
-file_handler.setFormatter(
-    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
-inference_log.addHandler(file_handler)
-
-
-class InferencerManager:
+class InferenceThread:
 
     def __init__(
         self,
-        channel,
-        model_type: str,
-        model_path: str,
-        stop_tokens: List[str],
-        server_url: List[Dict],
-        port_ranges: Optional[Dict[Tuple[int, int], List[int]]] = None,
-        timeout: int = 300,  # Timeout in seconds
-        threads_per_port: int = 20,
-        max_workers: int = 80,
+        model_path: str = "/path/to/mock/model",
+        server_url: str = "http://localhost:8000/v1",
+        stop_tokens: list = None,
+        model_type: str = "mock-model",
+        temperature: float = 0.5,
+        shared_memory: SharedMemory = None,
     ):
+        self.alive = True
         self.count = 0
+        self.server_url = server_url
+        self.model_type = model_type
+        self.model_backend = MockModelBackend()  # Use the mock backend
+        if shared_memory is None:
+            self.shared_memory = SharedMemory()
+        else:
+            self.shared_memory = shared_memory
+
+    async def run(self):
+        while self.alive:
+            if self.shared_memory.Busy and not self.shared_memory.Working:
+                self.shared_memory.Working = True
+                try:
+                    response = await self.model_backend.run(
+                        self.shared_memory.Message)
+                    self.shared_memory.Response = response.choices[
+                        0].message.content
+                except Exception as e:
+                    print("Receive Response Exception:", str(e))
+                    self.shared_memory.Response = "No response."
+                self.shared_memory.Done = True
+                self.count += 1
+                logger.info(
+                    f"Thread {self.server_url}: {self.count} finished.")
+            await asyncio.sleep(0.1)
+
+
+class InferenceManager:
+
+    def __init__(
+            self,
+            channel: Channel,
+            model_type: str,
+            model_path: str,
+            stop_tokens: List[str],
+            server_url: List[Dict],
+            port_ranges: Optional[Dict[Tuple[int, int], List[int]]] = None,
+            timeout: int = 300  # Timeout in seconds
+    ):
         self.channel = channel
         self.threads: Dict[int, InferenceThread] = {}
         self.lock = asyncio.Lock(
@@ -122,7 +141,7 @@ class InferencerManager:
 
         # Initialize threads
         self._initialize_threads(server_url, model_type, model_path,
-                                 stop_tokens, max_workers, threads_per_port)
+                                 stop_tokens)
 
         # Performance metrics
         self.metrics = {
@@ -136,69 +155,26 @@ class InferencerManager:
         self.executor = ThreadPoolExecutor(max_workers=len(self.threads))
 
     def _initialize_threads(self, server_url, model_type, model_path,
-                            stop_tokens, max_workers, threads_per_port):
-        # """Initialize inference threads"""
-        # for url_config in server_url:
-        #     host = url_config["host"]
-        #     for port in url_config["ports"]:
-        #         try:
-        #             _url = f"http://{host}:{port}/v1"
-        #             shared_memory = SharedMemory()
-        #             thread = InferenceThread(
-        #                 model_path=model_path,
-        #                 server_url=_url,
-        #                 stop_tokens=stop_tokens,
-        #                 model_type=model_type,
-        #                 temperature=0.0,
-        #                 shared_memory=shared_memory,
-        #             )
-        #             self.threads[port] = thread
-        #         except Exception as e:
-        #             logger.error(f"Failed to initialize thread for port {port}: {e}")
-
-        # Check if max_workers is set to a reasonable value
-        if max_workers < 1:
-            inference_log.error(
-                "Max workers must be at least 1. Setting to 1.")
-            max_workers = 1
-        # For IO bound tasks, max_workers should be set to a higher value
-        # between 5 and 20 times the number of CPUs
-        elif max_workers > cpu_count() * 20:
-            inference_log.warning(
-                f"Max workers is higher than recommended value. Setting to "
-                f"{cpu_count() * 20}.")
-            max_workers = cpu_count() * 20
-
-        # Check if threads_per_port is set to a reasonable value
-        total_ports = 0
-        for url in server_url:
-            total_ports += len(url["ports"])
-        if total_ports * threads_per_port > max_workers:
-            threads_per_port = max(max_workers // total_ports, 1)
-            inference_log.warning(
-                f"Total threads exceeds max workers. Setting threads per port "
-                f"to {threads_per_port}.")
-        if threads_per_port < 1:
-            inference_log.error(
-                "Threads per port must be at least 1. Setting to 1.")
-            threads_per_port = 1
-
-        for url in server_url:
-            host = url["host"]
-            for port in url["ports"]:
-                _url = f"http://{host}:{port}/v1"
-                thread = [
-                    InferenceThread(
+                            stop_tokens):
+        """Initialize inference threads"""
+        for url_config in server_url:
+            host = url_config["host"]
+            for port in url_config["ports"]:
+                try:
+                    _url = f"http://{host}:{port}/v1"
+                    shared_memory = SharedMemory()
+                    thread = InferenceThread(
                         model_path=model_path,
                         server_url=_url,
                         stop_tokens=stop_tokens,
                         model_type=model_type,
                         temperature=0.0,
-                        shared_memory=SharedMemory(),
-                    ) for _ in range(threads_per_port)
-                ]
-                for t in thread:
-                    self.threads[port] = t
+                        shared_memory=shared_memory,
+                    )
+                    self.threads[port] = thread
+                except Exception as e:
+                    logger.error(
+                        f"Failed to initialize thread for port {port}: {e}")
 
     async def _find_available_thread(
             self,
@@ -214,8 +190,8 @@ class InferencerManager:
 
             async with self.lock:
                 if (not thread.shared_memory.Busy
-                        or (current_time - thread.shared_memory.last_active)
-                        > self.timeout):
+                        or (current_time - thread.shared_memory.last_active
+                            > self.timeout)):
                     if thread.shared_memory.Busy:
                         thread.shared_memory = SharedMemory()
                         logger.warning(
@@ -307,10 +283,8 @@ class InferencerManager:
                              message: Tuple[str, str, str]):
         """Run inference in a separate thread and update shared_memory"""
         try:
-            await asyncio.get_event_loop().run_in_executor(
-                self.executor,
-                thread.run,  # Assuming `run` is a blocking method
-            )
+            # Run the thread's run method
+            await thread.run()
             async with self.lock:
                 thread.shared_memory.Done = True
         except Exception as e:
@@ -326,8 +300,8 @@ class InferencerManager:
         """Main run loop"""
         # Start all inference threads
         for port, thread in self.threads.items():
-            # Start each thread in the ThreadPoolExecutor
-            asyncio.get_event_loop().run_in_executor(self.executor, thread.run)
+            # Start each thread's run method as a task
+            asyncio.create_task(thread.run())
 
         # Create background tasks
         process_tasks_task = asyncio.create_task(

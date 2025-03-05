@@ -23,7 +23,19 @@ from oasis.social_platform import Channel
 @pytest.mark.asyncio
 async def test_manager_run_with_mocked_response():
     channel = Channel()
-
+    mock_port_ranges = [{
+        'range': {
+            'start': 0,
+            'end': 50
+        },
+        'ports': [8000]
+    }, {
+        'range': {
+            'start': 51,
+            'end': 100000
+        },
+        'ports': [8000]
+    }]
     # Setup the InferencerManager with the real channel
     manager = InferencerManager(
         channel=channel,
@@ -34,6 +46,7 @@ async def test_manager_run_with_mocked_response():
             "host": "localhost",
             "ports": [8000]
         }],
+        port_ranges=mock_port_ranges,
     )
 
     # Mocking the run method of model_backend to return a mocked response
@@ -43,7 +56,7 @@ async def test_manager_run_with_mocked_response():
     ]
 
     # Mocking channel.send_to as well
-    with mock.patch.object(manager.threads[0].model_backend,
+    with mock.patch.object(manager.threads[8000].model_backend,
                            'run',
                            return_value=mock_response):
 
@@ -56,8 +69,8 @@ async def test_manager_run_with_mocked_response():
         task = asyncio.create_task(manager.run())
 
         # Add a message to the receive_queue
-        mes_id = await channel.write_to_receive_queue(openai_messages)
-        mes_id, content = await channel.read_from_send_queue(mes_id)
+        mes_id = await channel.write_to_receive_queue(openai_messages, 0)
+        mes_id, content, _ = await channel.read_from_send_queue(mes_id)
         assert content == "Mock Response"
 
         await manager.stop()
@@ -76,6 +89,19 @@ async def test_multiple_threads():
     }  # 3 ports
                   ]
 
+    mock_port_ranges = [{
+        'range': {
+            'start': 0,
+            'end': 50
+        },
+        'ports': [8000]
+    }, {
+        'range': {
+            'start': 51,
+            'end': 100000
+        },
+        'ports': [8000]
+    }]
     # Initialize InferencerManager with multiple threads
     manager = InferencerManager(
         channel=channel,
@@ -83,6 +109,7 @@ async def test_multiple_threads():
         model_path="/path/to/model",
         stop_tokens=["\n"],
         server_url=server_url,
+        port_ranges=mock_port_ranges,
         threads_per_port=2,  # 2 threads per port
     )
 
@@ -93,8 +120,8 @@ async def test_multiple_threads():
     ]
 
     # Replace the model_backend.run method for all threads with the mock
-    for thread in manager.threads:
-        thread.model_backend.run = mock.Mock(return_value=mock_response)
+    for thread in manager.threads.items():
+        thread[-1].model_backend.run = mock.Mock(return_value=mock_response)
 
     # Start the manager
     task = asyncio.create_task(manager.run())
@@ -108,13 +135,13 @@ async def test_multiple_threads():
     # Write messages to the receive queue
     message_ids = []
     for message in openai_messages:
-        message_id = await channel.write_to_receive_queue([message])
+        message_id = await channel.write_to_receive_queue([message], 0)
         message_ids.append(message_id)
 
     # Read results from the send queue
     results = []
     for message_id in message_ids:
-        _, content = await channel.read_from_send_queue(message_id)
+        _, content, _ = await channel.read_from_send_queue(message_id)
         results.append(content)
 
     # Validate the results

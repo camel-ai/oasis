@@ -33,15 +33,15 @@ class MockChannel:
         # Returns the command to search users on the first call
         if self.call_count == 0:
             self.call_count += 1
-            return ("id_", (1, "bob", "search_user")
+            return ("id_", (1, "bob", "search_user"), 0
                     )  # Assuming the search keyword is "bob"
         if self.call_count == 1:
             self.call_count += 1
-            return ("id_", (2, "Bob", "search_posts")
+            return ("id_", (2, "Bob", "search_posts"), 0
                     )  # Assuming the search keyword is "bob"
         # Returns the exit command on subsequent calls
         else:
-            return ("id_", (None, None, "exit"))
+            return ("id_", (None, None, "exit"), 0)
 
     async def send_to(self, message):
         self.messages.append(message)  # Store messages for later assertions

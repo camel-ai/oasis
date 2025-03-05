@@ -93,8 +93,8 @@ async def test_update_rec_table(setup_db):
 
         task = asyncio.create_task(infra.running())
         await channel.write_to_receive_queue(
-            (None, None, ActionType.UPDATE_REC_TABLE))
-        await channel.write_to_receive_queue((None, None, ActionType.EXIT))
+            (None, None, ActionType.UPDATE_REC_TABLE), 0)
+        await channel.write_to_receive_queue((None, None, ActionType.EXIT), 0)
         await task
 
         for i in range(3):

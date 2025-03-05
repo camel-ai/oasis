@@ -33,19 +33,20 @@ class MockChannel:
         # Returns the command to create a tweet on the first call
         if self.call_count == 0:
             self.call_count += 1
-            return ("id_", (1, ("alice0101", "Alice", "A girl."), "sign_up"))
+            return ("id_", (1, ("alice0101", "Alice", "A girl."), "sign_up"),
+                    0)
         # Returns the command for the like operation on the second call
         elif self.call_count == 1:
             self.call_count += 1
-            return ("id_", (2, ("bubble", "Bob", "A boy."), "sign_up"))
+            return ("id_", (2, ("bubble", "Bob", "A boy."), "sign_up"), 0)
         elif self.call_count == 2:
             self.call_count += 1
-            return ("id_", (1, "This is a test post", "create_post"))
+            return ("id_", (1, "This is a test post", "create_post"), 0)
         # elif self.call_count == 3:
         #     self.call_count += 1
         #     return ('id_', (3, "This is a test post", "create_post"))
         else:
-            return ("id_", (None, None, "exit"))
+            return ("id_", (None, None, "exit"), 0)
 
     async def send_to(self, message):
         self.messages.append(message)  # Store message for later assertion

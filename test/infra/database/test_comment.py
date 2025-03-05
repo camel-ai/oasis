@@ -32,30 +32,30 @@ class MockChannel:
     async def receive_from(self):
         if self.call_count == 0:
             self.call_count += 1
-            return ("id_", (1, "Test post", "create_post"))
+            return ("id_", (1, "Test post", "create_post"), 0)
         if self.call_count == 1:
             self.call_count += 1
-            return ("id_", (1, (1, "Test Comment"), "create_comment"))
+            return ("id_", (1, (1, "Test Comment"), "create_comment"), 0)
         if self.call_count == 2:
             self.call_count += 1
-            return ("id_", (1, 1, "like_comment"))
+            return ("id_", (1, 1, "like_comment"), 0)
         if self.call_count == 3:
             self.call_count += 1
-            return ("id_", (2, 1, "like_comment"))
+            return ("id_", (2, 1, "like_comment"), 0)
         if self.call_count == 4:
             self.call_count += 1
-            return ("id_", (2, 1, "unlike_comment"))
+            return ("id_", (2, 1, "unlike_comment"), 0)
         if self.call_count == 5:
             self.call_count += 1
-            return ("id_", (1, 1, "dislike_comment"))
+            return ("id_", (1, 1, "dislike_comment"), 0)
         if self.call_count == 6:
             self.call_count += 1
-            return ("id_", (2, 1, "dislike_comment"))
+            return ("id_", (2, 1, "dislike_comment"), 0)
         if self.call_count == 7:
             self.call_count += 1
-            return ("id_", (2, 1, "undo_dislike_comment"))
+            return ("id_", (2, 1, "undo_dislike_comment"), 0)
         else:
-            return ("id_", (None, None, "exit"))
+            return ("id_", (None, None, "exit"), 0)
 
     async def send_to(self, message):
         # Store the message for subsequent assertions.
