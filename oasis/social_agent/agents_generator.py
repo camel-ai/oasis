@@ -540,12 +540,14 @@ async def generate_reddit_agents(
         profile["other_info"]["gender"] = agent_info[i]["gender"]
         profile["other_info"]["age"] = agent_info[i]["age"]
         profile["other_info"]["country"] = agent_info[i]["country"]
+        profile["other_info"]["profession"] = agent_info[i]["profession"]
+        profile["other_info"]["realname"] = agent_info[i]["realname"]
 
         user_info = UserInfo(
             name=agent_info[i]["username"],
             description=agent_info[i]["bio"],
             profile=profile,
-            recsys_type="reddit",
+            recsys_type="twitter",
         )
 
         agent = SocialAgent(

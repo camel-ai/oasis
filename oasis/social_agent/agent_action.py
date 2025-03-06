@@ -29,12 +29,12 @@ class SocialAction:
         return [
             FunctionTool(func) for func in [
                 self.create_post,
+                self.create_comment,
                 self.like_post,
-                self.repost,
                 self.quote_post,
+                self.repost,
                 self.refresh,
                 self.do_nothing,
-                self.create_comment,
                 self.like_comment,
             ]
         ]
@@ -129,7 +129,9 @@ class SocialAction:
         dictionary indicating success and the ID of the newly created post.
 
         Args:
-            content (str): The content of the post to be created.
+            content (str): The content of the post to be created. Please
+                includes more emojis and hashtags to make your post more
+                attractive.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -177,7 +179,9 @@ class SocialAction:
 
         Args:
             post_id (int): The ID of the post to be quoted.
-            quote_content (str): The content of the quote to be created.
+            quote_content (str): The content of the quote to be created. Please
+                includes more emojis and hashtags to make your post more
+                attractive.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -496,7 +500,9 @@ class SocialAction:
         Args:
             post_id (int): The ID of the post to which the comment is to be
                 added.
-            content (str): The content of the comment to be created.
+            content (str): The content of the comment to be created. Please
+                includes more emojis and hashtags to make your post more
+                attractive.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key

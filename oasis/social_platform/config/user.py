@@ -35,7 +35,7 @@ class UserInfo:
         name_string = ""
         description_string = ""
         if self.name is not None:
-            name_string = f"Your name is {self.name}."
+            name_string = f"Your name is {self.profile['other_info']['realname']}."
         if self.profile is None:
             description = name_string
         elif "other_info" not in self.profile:
@@ -45,37 +45,26 @@ class UserInfo:
                 user_profile = self.profile["other_info"]["user_profile"]
                 description_string = f"Your have profile: {user_profile}."
                 description = f"{name_string}\n{description_string}"
+                print(self.profile['other_info'])
+                description += (
+                    f"You are a {self.profile['other_info']['gender']}, "
+                    f"{self.profile['other_info']['age']} years old, with an MBTI "
+                    f"personality type of {self.profile['other_info']['mbti']} from "
+                    f"{self.profile['other_info']['country']}. Your profession is "
+                    f"{self.profile['other_info']['profession']}.")
 
-        if not action_space_prompt:
-            action_space_prompt = """
-# OBJECTIVE
-You're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
-
-- do_nothing: Most of the time, you just don't feel like reposting or liking a post, and you just want to look at it. In such cases, choose this action "do_nothing"
-- create_post:Create a new post with the given content.
-    - Arguments: "content"(str): The content of the post to be created.
-- repost: Repost a post.
-    - Arguments: "post_id" (integer) - The ID of the post to be reposted. You can `repost` when you want to spread it.
-- like_post: Likes a specified post.
-    - Arguments: "post_id" (integer) - The ID of the tweet to be liked. You can `like` when you feel something interesting or you agree with.
-- dislike_post: Dislikes a specified post.
-    - Arguments: "post_id" (integer) - The ID of the post to be disliked. You can use `dislike` when you disagree with a tweet or find it uninteresting.
-- follow: Follow a user specified by 'followee_id'. You can `follow' when you respect someone, love someone, or care about someone.
-    - Arguments: "followee_id" (integer) - The ID of the user to be followed.
-- create_comment: Creates a comment on a specified post to engage in conversations or share your thoughts on a post.
-    - Arguments:
-        "post_id" (integer) - The ID of the post to comment on.
-        "content" (str) - The content of the comment.
-- like_comment: Likes a specified comment.
-    - Arguments: "comment_id" (integer) - The ID of the comment to be liked. Use `like_comment` to show agreement or appreciation for a comment.
-- dislike_comment: Dislikes a specified comment.
-    - Arguments: "comment_id" (integer) - The ID of the comment to be disliked. Use `dislike_comment` when you disagree with a comment or find it unhelpful.
-"""
-        system_content = action_space_prompt + f"""
+        system_content = f"""
 # SELF-DESCRIPTION
 Your actions should be consistent with your self-description and personality.
 
+If you are a celebrity, your show mock the behavior of the celebrity.
+For example, if you are Trump, you show always create post such as
+"I am the best president in the world.". If you are a normal user,
+you should try to be more interesting and Witty banter.
+For example, you can try to create some creative and hilarious content.
+
 {description}
+
 
 # RESPONSE FORMAT
 Your answer should follow the response format:
@@ -98,7 +87,7 @@ Your answer should follow the response format:
 }}
 
 Ensure that your output can be directly converted into **JSON format**, and avoid outputting anything unnecessary! Don't forget the key `name`.
-        """
+"""
 
         return system_content
 

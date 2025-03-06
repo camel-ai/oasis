@@ -93,9 +93,6 @@ async def running(
     twitter_channel = Channel()
     inference_channel = Channel()
 
-    with open(action_space_file_path, "r", encoding="utf-8") as file:
-        action_space_prompt = file.read()
-
     infra = Platform(
         db_path,
         twitter_channel,
@@ -125,7 +122,7 @@ async def running(
             agent_user_id_mapping=id_mapping,
             follow_post_agent=False,
             mute_post_agent=False,
-            action_space_prompt=action_space_prompt,
+            action_space_prompt=None,
             model_type=inference_configs["model_type"],
             is_openai_model=is_openai_model,
         )
@@ -185,6 +182,4 @@ if __name__ == "__main__":
                 num_timesteps=3,
                 recsys_type="twhin-bert",
                 inference_configs=inference_configs,
-                action_space_file_path=(
-                    "scripts/twitter_game/action_space_prompt.txt"),
                 content_id=args.content_id))
