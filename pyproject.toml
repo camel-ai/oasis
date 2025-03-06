@@ -29,6 +29,7 @@ openapi-spec-validator = "0.7.1"
 slack_sdk = "3.31.0"
 neo4j = "5.23.0"
 camel-ai = "0.2.23a0"
+tenacity = "8.5.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

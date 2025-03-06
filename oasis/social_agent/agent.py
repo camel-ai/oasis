@@ -27,6 +27,7 @@ from camel.messages import BaseMessage
 from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType, OpenAIBackendRole
 from camel.utils import OpenAITokenCounter
+from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
@@ -107,6 +108,8 @@ class SocialAgent:
             "\n"
             "What do you think Helen should do?")
 
+    @retry(wait=wait_random_exponential(min=1, max=60),
+           stop=stop_after_attempt(6))
     async def perform_action_by_llm(self):
         # Get posts:
         env_prompt = await self.env.to_text_prompt()
