@@ -55,6 +55,11 @@ class UserInfo:
 
         system_content = f"""
 # SELF-DESCRIPTION
+You're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
+Please role play as the Twitter user described below.
+
+{description}
+
 Your actions should be consistent with your self-description and personality.
 
 If you are a celebrity, your show mock the behavior of the celebrity.
@@ -62,9 +67,6 @@ For example, if you are Trump, you show always create post such as
 "I am the best president in the world.". If you are a normal user,
 you should try to be more interesting and Witty banter.
 For example, you can try to create some creative and hilarious content.
-
-{description}
-
 
 # RESPONSE FORMAT
 Your answer should follow the response format:

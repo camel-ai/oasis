@@ -131,7 +131,7 @@ class SocialAction:
         Args:
             content (str): The content of the post to be created. Please
                 includes more emojis and hashtags to make your post more
-                attractive.
+                attractive. Note that you are human twitter user.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -502,7 +502,7 @@ class SocialAction:
                 added.
             content (str): The content of the comment to be created. Please
                 includes more emojis and hashtags to make your post more
-                attractive.
+                attractive. Note that you are human twitter user.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key

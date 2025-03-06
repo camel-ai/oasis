@@ -68,10 +68,6 @@ class SocialAgent:
         self.twitter_channel = twitter_channel
         self.infe_channel = inference_channel
         self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
-        self.system_message = BaseMessage.make_assistant_message(
-            role_name="User",
-            content=self.user_info.to_system_message(action_space_prompt),
-        )
         self.model_type = model_type
         self.is_openai_model = is_openai_model
         if self.is_openai_model:
@@ -93,7 +89,7 @@ class SocialAgent:
         )
         self.memory = ChatHistoryMemory(context_creator, window_size=5)
         self.system_message = BaseMessage.make_assistant_message(
-            role_name="system",
+            role_name="A Humorous Twitter User",
             content=self.user_info.to_system_message(
                 action_space_prompt),  # system prompt
         )
@@ -114,7 +110,7 @@ class SocialAgent:
         # Get posts:
         env_prompt = await self.env.to_text_prompt()
         user_msg = BaseMessage.make_user_message(
-            role_name="User",
+            role_name="A Humorous Twitter User",
             # content=(
             #     f"Please perform social media actions after observing the "
             #     f"platform environments. Notice that don't limit your "
@@ -146,14 +142,15 @@ class SocialAgent:
                 "role": self.system_message.role_name,
                 "content": self.system_message.content,
             }] + [user_msg.to_openai_user_message()]
-        agent_log.info(
-            f"Agent {self.agent_id} is running with prompt: {openai_messages}")
+        # agent_log.info(
+        #     f"Agent {self.agent_id} is running with prompt: "
+        #     f"{openai_messages}")
 
         if self.is_openai_model:
             try:
                 response = await self.model_backend._arun(
                     openai_messages, tools=self.full_tool_schemas)
-                agent_log.info(f"Agent {self.agent_id} response: {response}")
+                # agent_log.info(f"Agent {self.agent_id} response: {response}")
                 content = response
                 for tool_call in response.choices[0].message.tool_calls:
                     action_name = tool_call.function.name
