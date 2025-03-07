@@ -16,6 +16,7 @@ from __future__ import annotations
 import inspect
 import json
 import logging
+import random
 import sys
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
@@ -148,6 +149,37 @@ class SocialAgent:
         #     f"{openai_messages}")
 
         if self.is_openai_model:
+            full_tool_schemas = self.full_tool_schemas
+            self_description = self.user_info.to_description()
+            for func_index in [0, 1]:
+                full_tool_schemas[func_index]["function"]["parameters"][
+                    'properties']['content']['description'] += self_description
+            full_tool_schemas[2]["function"]["parameters"]['properties'][
+                'quote_content']['description'] += self_description
+
+            mean_prob = 0.5
+            mean_prompt = """
+你是一个以幽默、反讽、mean、猎奇、刻薄著称的X博主，你非常擅长使用网络热梗和网上冲浪。并且很了解目前创业投资圈的资讯。挥你幽默反讽的风格。
+"""
+            long_content_prob = 1
+            long_comment_prob = 0.5
+            long_quote_prob = 0.5
+            num_words_long = 50
+            long_prompt = f"""
+Note that content should exceed {num_words_long} words.
+"""
+            if random.random() < mean_prob:
+                full_tool_schemas[0]["function"]["parameters"]['properties'][
+                    'content']['description'] += mean_prompt
+            if random.random() < long_content_prob:
+                full_tool_schemas[0]["function"]["parameters"]['properties'][
+                    'content']['description'] += long_prompt
+            if random.random() < long_comment_prob:
+                full_tool_schemas[1]["function"]["parameters"]['properties'][
+                    'content']['description'] += long_prompt
+            if random.random() < long_quote_prob:
+                full_tool_schemas[2]["function"]["parameters"]['properties'][
+                    'quote_content']['description'] += long_prompt
             try:
                 response = await self.model_backend._arun(
                     openai_messages, tools=self.full_tool_schemas)
@@ -216,8 +248,8 @@ class SocialAgent:
                 mes_id, content = await self.infe_channel.read_from_send_queue(
                     mes_id)
 
-                agent_log.info(
-                    f"Agent {self.agent_id} receive response: {content}")
+                # agent_log.info(
+                #     f"Agent {self.agent_id} receive response: {content}")
 
                 try:
                     content_json = json.loads(content)
@@ -277,13 +309,13 @@ class SocialAgent:
             "role": "user",
             "content": self.test_prompt
         }])
-        agent_log.info(f"Agent {self.agent_id}: {openai_messages}")
+        # agent_log.info(f"Agent {self.agent_id}: {openai_messages}")
 
         message_id = await self.infe_channel.write_to_receive_queue(
             openai_messages)
         message_id, content = await self.infe_channel.read_from_send_queue(
             message_id)
-        agent_log.info(f"Agent {self.agent_id} receive response: {content}")
+        # agent_log.info(f"Agent {self.agent_id} receive response: {content}")
         return {
             "user_id": self.agent_id,
             "prompt": openai_messages,
@@ -293,9 +325,9 @@ class SocialAgent:
     async def perform_action_by_hci(self) -> Any:
         print("Please choose one function to perform:")
         function_list = self.env.action.get_openai_function_list()
-        for i in range(len(function_list)):
-            agent_log.info(f"Agent {self.agent_id} function: "
-                           f"{function_list[i].func.__name__}")
+        # for i in range(len(function_list)):
+        #     agent_log.info(f"Agent {self.agent_id} function: "
+        #                    f"{function_list[i].func.__name__}")
 
         selection = int(input("Enter your choice: "))
         if not 0 <= selection < len(function_list):
@@ -323,7 +355,7 @@ class SocialAgent:
             if function_list[i].func.__name__ == func_name:
                 func = function_list[i].func
                 result = await func(*args, **kwargs)
-                agent_log.info(f"Agent {self.agent_id}: {result}")
+                # agent_log.info(f"Agent {self.agent_id}: {result}")
                 return result
         raise ValueError(f"Function {func_name} not found in the list.")
 

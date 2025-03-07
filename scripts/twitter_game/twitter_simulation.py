@@ -72,7 +72,7 @@ ROUND_POST_NUM = 20
 async def running(
     db_path: str | None = DEFAULT_DB_PATH,
     user_path: str | None = DEFAULT_USER_PATH,
-    num_timesteps: int = 3,
+    num_timesteps: int = 5,
     recsys_type: str = "twrec-bert",
     controllable_user: bool = True,
     activate_prob: float = 0.2,
@@ -160,9 +160,6 @@ def log_info(message: str) -> None:
 def parse_args():
     parser = argparse.ArgumentParser(description="Simulation parameters")
     parser.add_argument("--db_path", type=str, default='twitter.db')
-    parser.add_argument("--user_path",
-                        type=str,
-                        default=f'{DATA_DIR}/reddit/user_data_36.json')
     parser.add_argument("--content_id", type=int)
     return parser.parse_args()
 
@@ -176,9 +173,20 @@ if __name__ == "__main__":
         "is_openai_model": True,
     }
 
+    user_profile_root_path = './data/game/'
+    all_user_profile_path = [
+        "game_agent_0_50.json",
+        "game_agent_25_75.json",
+        "game_agent_50_100.json",
+        "game_agent_75_125.json",
+        "game_agent_100_156.json",
+    ]
+    user_profile_path = user_profile_root_path + random.choice(
+        all_user_profile_path)
+
     asyncio.run(
         running(db_path=args.db_path,
-                user_path=args.user_path,
+                user_path=user_profile_path,
                 num_timesteps=3,
                 recsys_type="twhin-bert",
                 inference_configs=inference_configs,
