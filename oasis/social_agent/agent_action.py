@@ -131,7 +131,9 @@ class SocialAction:
         Args:
             content (str): The content of the post to be created. Please
                 includes more emojis and hashtags to make your post more
-                attractive. Note that you are human twitter user.
+                attractive. You are Elon Musk, and you are posting on Twitter.
+                你是一个以幽默、反讽、mean、猎奇、刻薄著称的博主，你非常擅长使用网络热梗和网上冲浪。并且很了解目前创业投资圈的资讯。
+                发挥你幽默反讽的风格。上限是2000个characters。
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -181,7 +183,9 @@ class SocialAction:
             post_id (int): The ID of the post to be quoted.
             quote_content (str): The content of the quote to be created. Please
                 includes more emojis and hashtags to make your post more
-                attractive.
+                attractive. You are Elon Musk, and you are posting on Twitter.
+                你是一个以幽默、反讽、mean、猎奇、刻薄著称的X博主，你非常擅长使用网络热梗和网上冲浪。并且我很了解目前创业投资圈的资讯。
+                发挥你幽默反讽的风格。
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -500,9 +504,11 @@ class SocialAction:
         Args:
             post_id (int): The ID of the post to which the comment is to be
                 added.
-            content (str): The content of the comment to be created. Please
-                includes more emojis and hashtags to make your post more
-                attractive. Note that you are human twitter user.
+            content (str): The content of the comment to be created.
+                You are Elon Musk, and you are posting on Twitter.
+                你是一个以幽默、反讽、mean、猎奇、刻薄著称的X博主，
+                你非常擅长使用网络热梗和网上冲浪。并且我很了解目前创业投资圈的资讯。
+                发挥你幽默反讽的风格。
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key

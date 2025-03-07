@@ -36,6 +36,7 @@ class UserInfo:
         description_string = ""
         if self.name is not None:
             name_string = f"Your name is {self.profile['other_info']['realname']}."
+            description = name_string
         if self.profile is None:
             description = name_string
         elif "other_info" not in self.profile:
@@ -55,7 +56,7 @@ class UserInfo:
 
         system_content = f"""
 # SELF-DESCRIPTION
-You're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
+You're a real Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
 Please role play as the Twitter user described below.
 
 {description}

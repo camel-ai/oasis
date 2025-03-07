@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Any
 from camel.agents._utils import convert_to_schema
 from camel.memories import (ChatHistoryMemory, MemoryRecord,
                             ScoreBasedContextCreator)
-from camel.messages import BaseMessage
+from camel.messages import BaseMessage, FunctionCallingMessage
 from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType, OpenAIBackendRole
 from camel.utils import OpenAITokenCounter
@@ -89,7 +89,7 @@ class SocialAgent:
         )
         self.memory = ChatHistoryMemory(context_creator, window_size=5)
         self.system_message = BaseMessage.make_assistant_message(
-            role_name="A Humorous Twitter User",
+            role_name="System",
             content=self.user_info.to_system_message(
                 action_space_prompt),  # system prompt
         )
@@ -110,7 +110,7 @@ class SocialAgent:
         # Get posts:
         env_prompt = await self.env.to_text_prompt()
         user_msg = BaseMessage.make_user_message(
-            role_name="A Humorous Twitter User",
+            role_name="User",
             # content=(
             #     f"Please perform social media actions after observing the "
             #     f"platform environments. Notice that don't limit your "
@@ -142,6 +142,7 @@ class SocialAgent:
                 "role": self.system_message.role_name,
                 "content": self.system_message.content,
             }] + [user_msg.to_openai_user_message()]
+
         # agent_log.info(
         #     f"Agent {self.agent_id} is running with prompt: "
         #     f"{openai_messages}")
@@ -151,17 +152,53 @@ class SocialAgent:
                 response = await self.model_backend._arun(
                     openai_messages, tools=self.full_tool_schemas)
                 # agent_log.info(f"Agent {self.agent_id} response: {response}")
-                content = response
+                # print(f"Agent {self.agent_id} response: {response}")
                 for tool_call in response.choices[0].message.tool_calls:
                     action_name = tool_call.function.name
                     args = json.loads(tool_call.function.arguments)
                     print(f"Agent {self.agent_id} is performing "
                           f"action: {action_name} with args: {args}")
-                    await getattr(self.env.action, action_name)(**args)
+                    result = await getattr(self.env.action,
+                                           action_name)(**args)
                     self.perform_agent_graph_action(action_name, args)
+                    assist_msg = FunctionCallingMessage(
+                        role_name="Twitter User",
+                        role_type=OpenAIBackendRole.ASSISTANT,
+                        meta_dict=None,
+                        content="",
+                        func_name=action_name,
+                        args=args,
+                        tool_call_id=tool_call.id,
+                    )
+                    func_msg = FunctionCallingMessage(
+                        role_name="Twitter User",
+                        role_type=OpenAIBackendRole.ASSISTANT,
+                        meta_dict=None,
+                        content="",
+                        func_name=action_name,
+                        result=result,
+                        tool_call_id=tool_call.id,
+                    )
+                    self.memory.write_record(
+                        MemoryRecord(
+                            message=assist_msg,
+                            role_at_backend=OpenAIBackendRole.ASSISTANT,
+                        ))
+                    self.memory.write_record(
+                        MemoryRecord(
+                            message=func_msg,
+                            role_at_backend=OpenAIBackendRole.FUNCTION,
+                        ))
+
             except Exception as e:
-                print(e)
+                print(f"Agent {self.agent_id} error: {e}")
+                print(openai_messages)
                 content = "No response."
+                agent_msg = BaseMessage.make_assistant_message(
+                    role_name="Assistant", content=content)
+                self.memory.write_record(
+                    MemoryRecord(message=agent_msg,
+                                 role_at_backend=OpenAIBackendRole.ASSISTANT))
 
         else:
             retry = 5
@@ -217,11 +254,6 @@ class SocialAgent:
 
             if retry == 0:
                 content = "No response."
-        agent_msg = BaseMessage.make_assistant_message(role_name="Assistant",
-                                                       content=content)
-        self.memory.write_record(
-            MemoryRecord(message=agent_msg,
-                         role_at_backend=OpenAIBackendRole.ASSISTANT))
 
     async def perform_test(self):
         """
@@ -229,7 +261,7 @@ class SocialAgent:
         """
         # user conduct test to agent
         _ = BaseMessage.make_user_message(role_name="User",
-                                          content=("You are a twitter user."))
+                                          content="You are a twitter user.")
         # TODO error occurs
         # self.memory.write_record(MemoryRecord(user_msg,
         #                                       OpenAIBackendRole.USER))

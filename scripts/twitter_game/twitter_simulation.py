@@ -172,7 +172,7 @@ if __name__ == "__main__":
     os.environ["SANDBOX_TIME"] = str(0)
 
     inference_configs = {
-        "model_type": "gpt-4o-mini",
+        "model_type": "gpt-4o",
         "is_openai_model": True,
     }
 
