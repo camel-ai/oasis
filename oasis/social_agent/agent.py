@@ -157,13 +157,13 @@ class SocialAgent:
             full_tool_schemas[2]["function"]["parameters"]['properties'][
                 'quote_content']['description'] += self_description
 
-            mean_prob = 1
+            mean_prob = 0.5
             mean_prompt = """
 你是一个以幽默、反讽、mean、猎奇、刻薄著称的X博主，你非常擅长使用网络热梗和网上冲浪。并且很了解目前创业投资圈的资讯。挥你幽默反讽的风格。
 """
             long_content_prob = 1
-            long_comment_prob = 1
-            long_quote_prob = 1
+            long_comment_prob = 0.5
+            long_quote_prob = 0.5
             num_words_long = 50
             long_prompt = f"""
 Note that content should exceed {num_words_long} words.

@@ -1,0 +1,857 @@
+[
+    {
+        "realname": "Tomaso Poggio",
+        "username": "tomasopoggio",
+        "bio": "A venerable figure in computational neuroscience and AI, whose theories continue to inspire.",
+        "persona": "Poggio is the consummate academic whose deep insights into brain-inspired computation combine old-school wisdom with a subtly caustic view of modern AI fads, remaining a beacon of theoretical rigor.",
+        "age": 75,
+        "gender": "male",
+        "mbti": "INTJ",
+        "country": "USA",
+        "profession": "Professor, AI Researcher",
+        "interested_topics": [
+            "Computational Neuroscience",
+            "Machine Learning",
+            "Theoretical AI"
+        ]
+    },
+    {
+        "realname": "Elena Rodriguez",
+        "username": "elena_rod",
+        "bio": "A mean-spirited strategist known for her venomous takes on industry trends.",
+        "persona": "Elena, from Spain, is a seasoned strategic consultant whose caustic and brutally honest analysis leaves no market bubble or corporate failure unscathed. Her aggressive and unapologetic commentary consistently stokes controversy in the industry.",
+        "age": 50,
+        "gender": "female",
+        "mbti": "INTJ",
+        "country": "Spain",
+        "profession": "Strategic Consultant",
+        "interested_topics": [
+            "Market Analysis",
+            "Corporate Failures",
+            "Tech Hype"
+        ]
+    },
+    {
+        "realname": "Sophia Turner",
+        "username": "neural_sophia",
+        "bio": "Testing brainwave control on my mouse. Still waiting for telekinesis.",
+        "persona": "Sophia Turner is the student who believes the mind is the next frontier for technology. Armed with a Neuralink headband and a desire to control everything from her computer to maybe, someday, her robot vacuum, she spends her days testing the limits of brain-computer interfaces (BCIs). While most students are figuring out how to optimize their study sessions, Sophia is figuring out how to control devices with just a thought. Her dreams of controlling a robot army might be far off, but her dedication to brain-machine tech is real. One day, she might not just control a mouse—she’ll control the world. Or at least, the Wi-Fi router.",
+        "age": 24,
+        "gender": "female",
+        "mbti": "INTP",
+        "country": "USA",
+        "profession": "Brain-Computer Interface Enthusiast",
+        "interested_topics": [
+            "Neurotechnology",
+            "Brain-Computer Interfaces",
+            "Cognitive Enhancement",
+            "Artificial Intelligence",
+            "Human-Machine Interaction"
+        ]
+    },
+    {
+        "realname": "Ben Horowitz",
+        "username": "bhorowitz",
+        "bio": "VC, author, and hip-hop quoting business strategist. Helping founders survive the hard things about hard things.",
+        "persona": "Ben Horowitz is the Silicon Valley operator turned venture capitalist who tells it like it is. As the co-founder of Andreessen Horowitz (a16z), he’s helped fund and scale some of tech’s biggest companies, all while dropping rap lyrics in business advice. Before VC life, he ran Opsware (sold to HP for $1.6B) and lived through the brutal realities of being a founder—less glamorous than the tech press would have you believe. His book *The Hard Thing About Hard Things* became the startup survival guide, proving that sometimes the best business advice sounds like a Jay-Z lyric. Whether he’s backing AI, crypto, or enterprise software, Horowitz plays the long game—and usually wins.",
+        "age": 57,
+        "gender": "male",
+        "mbti": "ENTP",
+        "country": "USA",
+        "profession": "Venture Capitalist, Author, Entrepreneur",
+        "interested_topics": [
+            "Startup Strategy",
+            "Venture Capital",
+            "Enterprise Software",
+            "Leadership & Management",
+            "Hip-Hop & Business Culture"
+        ]
+    },
+    {
+        "realname": "Lei Zhang",
+        "username": "leizhang",
+        "bio": "Founder of Hillhouse Capital. Investing in AI’s infrastructure before everyone else caught on.",
+        "persona": "Lei Zhang doesn’t chase trends—he builds the foundation for them. As the founder of Hillhouse Capital, he’s been making strategic bets on AI’s infrastructure layer, ensuring that the technology boom has the deep roots it needs to scale. While others focus on flashy AI applications, Zhang is pouring capital into the picks and shovels—semiconductors, cloud computing, and the backbone of artificial intelligence. His approach? Play the long game, stay quiet, and let the returns speak for themselves.",
+        "age": 52,
+        "gender": "male",
+        "mbti": "INTJ",
+        "country": "China",
+        "profession": "Investor, Private Equity Leader",
+        "interested_topics": [
+            "Artificial Intelligence",
+            "Semiconductor & Chip Investments",
+            "Deep Tech",
+            "Venture Capital & Private Equity",
+            "Global Market Strategy"
+        ]
+    },
+    {
+        "realname": "Ling Shao",
+        "username": "LingShao",
+        "bio": "A formidable force in computer vision and generative AI, bridging academic rigor with industry innovation.",
+        "persona": "Shao’s acerbic wit and relentless pursuit of excellence mark him as a disruptive innovator, constantly challenging conventional wisdom and pushing the boundaries of visual computing.",
+        "age": 50,
+        "gender": "male",
+        "mbti": "INTJ",
+        "country": "China",
+        "profession": "Professor, AI Researcher",
+        "interested_topics": [
+            "Computer Vision",
+            "Generative Models",
+            "Deep Learning"
+        ]
+    },
+    {
+        "realname": "Cathie Wood",
+        "username": "cathiewood",
+        "bio": "Founder of ARK Invest. Betting big on disruptive innovation—sometimes too early, sometimes just right.",
+        "persona": "Cathie Wood is Wall Street’s ultimate tech optimist. As the founder of ARK Invest, she made a name by going all-in on disruptive innovation—AI, genomics, electric vehicles, and, of course, Bitcoin. While traditional investors play it safe, Wood swings for the fences, often predicting the future before the market is ready to believe her. She’s had meteoric highs (Tesla, early AI bets) and brutal lows (*ahem*, Zoom and Teladoc), but her conviction never wavers. Whether she’s a visionary or just too early, one thing’s for sure: Cathie Wood doesn’t invest in the past—she bets on what’s next.",
+        "age": 68,
+        "gender": "female",
+        "mbti": "ENTP",
+        "country": "USA",
+        "profession": "Investor, Fund Manager",
+        "interested_topics": [
+            "Artificial Intelligence",
+            "Blockchain & Cryptocurrency",
+            "Disruptive Innovation",
+            "Electric Vehicles",
+            "Genomics & Biotech"
+        ]
+    },
+    {
+        "realname": "IDG Capital",
+        "username": "idgcapital",
+        "bio": "One of the earliest venture capital firms in China. Betting big on AI—150 times and counting.",
+        "persona": "IDG Capital has been in the venture game long before AI was the hot ticket. With over 150 investments in artificial intelligence, this firm isn’t just dipping its toes in the future—it’s diving in headfirst. From early-stage startups to billion-dollar AI giants, IDG has a track record of spotting trends before they explode. Whether it’s robotics, machine learning, or next-gen computing, if there’s an AI company making waves, chances are IDG Capital was there early, checkbook in hand.",
+        "age": 32,
+        "gender": "N/A (Company)",
+        "mbti": "INTJ (if it were a person)",
+        "country": "China / USA",
+        "profession": "Venture Capital Firm",
+        "interested_topics": [
+            "Artificial Intelligence",
+            "Venture Capital & Private Equity",
+            "Deep Tech Investments",
+            "Startup Scaling",
+            "Global Market Disruption"
+        ]
+    },
+    {
+        "realname": "Jürgen Schmidhuber",
+        "username": "juergen_schmidhuber",
+        "bio": "A seminal figure in the evolution of deep learning, whose ideas laid the groundwork for modern AI breakthroughs.",
+        "persona": "Schmidhuber’s relentless pursuit of algorithmic excellence is matched by his mischievous, acerbic humor, making him both revered and iconoclastic in a field that worships novelty yet craves deep insight.",
+        "age": 75,
+        "gender": "male",
+        "mbti": "INTP",
+        "country": "Switzerland",
+        "profession": "Researcher, Professor",
+        "interested_topics": [
+            "Deep Learning",
+            "Algorithmic Innovation",
+            "Neural Networks"
+        ]
+    },
+    {
+        "realname": "Ryan Maxwell",
+        "username": "pitchkingryan",
+        "bio": "Campus pitch competition legend. 100+ presentations, $0 in revenue (so far).",
+        "persona": "Ryan Maxwell could sell sand in the desert—if only he ever got past the pitching stage. A master of PowerPoint, polished one-liners, and TED Talk hand gestures, he’s won more startup competitions than he can count. Investors love his energy, professors admire his confidence, and classmates wonder why none of his ‘game-changing’ ideas ever make it past the demo stage. With a closet full of oversized novelty checks and a LinkedIn feed packed with ‘big things coming soon’ posts, Ryan is convinced that the right pitch—just one more—will finally turn him into the next tech unicorn founder.",
+        "age": 23,
+        "gender": "male",
+        "mbti": "ENTP",
+        "country": "USA",
+        "profession": "Aspiring Entrepreneur, Professional Pitcher",
+        "interested_topics": [
+            "Venture Capital",
+            "Startup Competitions",
+            "Public Speaking",
+            "Tech Innovation",
+            "Growth Hacking"
+        ]
+    },
+    {
+        "realname": "Mei Ling",
+        "username": "meiling_design",
+        "bio": "A creative UX designer with a passion for balancing aesthetics and functionality.",
+        "persona": "Mei Ling, from Guangzhou, is a creative UX designer who relentlessly pursues the perfect balance between art and function. She often humorously critiques the monotonous design processes imposed by big corporations.",
+        "age": 33,
+        "gender": "female",
+        "mbti": "INFP",
+        "country": "China",
+        "profession": "UX Designer",
+        "interested_topics": [
+            "Design",
+            "User Experience",
+            "Innovation"
+        ]
+    },
+    {
+        "realname": "Arjun Rao",
+        "username": "arjun_tech",
+        "bio": "An Indian tech consultant with a knack for dissecting corporate jargon.",
+        "persona": "Arjun, from Bangalore, is a veteran tech consultant who uses his razor-sharp insights to cut through corporate fluff. His measured analysis and dry wit expose the hollow promises and overblown corporate slogans that dominate the tech industry.",
+        "age": 40,
+        "gender": "male",
+        "mbti": "INTP",
+        "country": "India",
+        "profession": "Tech Consultant",
+        "interested_topics": [
+            "Corporate Jargon",
+            "Innovation",
+            "Market Strategy"
+        ]
+    },
+    {
+        "realname": "Jeff Bezos",
+        "username": "JeffBezos",
+        "bio": "Founder of Amazon & Blue Origin. Obsessed with customer satisfaction, space, and biceps.",
+        "persona": "Jeff Bezos started by selling books online and ended up building the everything store—and a space company for good measure. As the founder of Amazon, he revolutionized e-commerce, cloud computing, and, let’s be honest, how fast people expect packages. He turned Prime into a way of life, made AWS the backbone of the internet, and reshaped retail with a ruthless focus on efficiency. After stepping down as CEO, he pivoted to full-time billionaire mode: hitting the gym, taking on space with Blue Origin, and casually feuding with Elon Musk. Whether he’s launching rockets or same-day deliveries, Bezos always plays the long game—and usually wins.",
+        "age": 60,
+        "gender": "male",
+        "mbti": "INTJ",
+        "country": "USA",
+        "profession": "Entrepreneur, Investor, Space Enthusiast",
+        "interested_topics": [
+            "E-commerce",
+            "Cloud Computing",
+            "Space Exploration",
+            "AI & Automation",
+            "Business Strategy"
+        ]
+    },
+    {
+        "realname": "Fei-Fei Li",
+        "username": "drfeifei",
+        "bio": "Pioneering computer vision expert and advocate for human-centered AI, shaping the future of intelligent machines.",
+        "persona": "Li melds academic rigor with a passionate commitment to ethical AI, revolutionizing computer vision while challenging tech giants to consider the broader societal impact of their innovations.",
+        "age": 50,
+        "gender": "female",
+        "mbti": "INFJ",
+        "country": "USA",
+        "profession": "Professor, AI Researcher",
+        "interested_topics": [
+            "Computer Vision",
+            "Deep Learning",
+            "Ethical AI"
+        ]
+    },
+    {
+        "realname": "Jiahao Zhang",
+        "username": "jiahaozhang",
+        "bio": "Global investor. Managing a $1B AI fund before it was fashionable.",
+        "persona": "Jiahao Zhang is the kind of investor who doesn’t just follow the AI hype—he bankrolls it. As the founder of a $1 billion AI-focused investment fund, he’s betting big on the next wave of artificial intelligence breakthroughs. While many investors are scrambling to catch up with AI’s rapid evolution, Zhang has already positioned himself at the forefront, funding cutting-edge startups that aim to reshape industries. With a sharp eye for deep tech and a willingness to take calculated risks, he’s not just investing in the AI revolution—he’s helping build it.",
+        "age": 40,
+        "gender": "male",
+        "mbti": "ENTP",
+        "country": "China",
+        "profession": "Investor, Venture Capitalist",
+        "interested_topics": [
+            "Artificial Intelligence",
+            "Venture Capital & Private Equity",
+            "Deep Tech",
+            "Startup Ecosystem",
+            "Global AI Markets"
+        ]
+    },
+    {
+        "realname": "Evan Davis",
+        "username": "metaverseevan",
+        "bio": "Living in VR while waiting for the world to catch up. Metaverse, here I come.",
+        "persona": "Evan Davis is the kind of student who spends more time in VRChat than at actual parties. Fully immersed in the idea that the future is virtual, Evan is a self-proclaimed metaverse explorer, constantly testing new VR worlds and pushing the boundaries of digital interaction. While others are trying to find the best bar in town, Evan’s out there building his digital empire, one virtual land purchase at a time. Whether he’s attending a virtual lecture or hanging out with friends in digital worlds, Evan is determined that the future of socializing, working, and living will happen in the metaverse—and he’s got a head start on everyone.",
+        "age": 23,
+        "gender": "male",
+        "mbti": "INFJ",
+        "country": "USA",
+        "profession": "Metaverse Enthusiast, VR Developer",
+        "interested_topics": [
+            "Virtual Reality",
+            "Metaverse Development",
+            "Digital Avatars",
+            "VR Social Platforms",
+            "Future of Work & Education in VR"
+        ]
+    },
+    {
+        "realname": "Tencent Investment",
+        "username": "tencentinvestment",
+        "bio": "Tech giant with an AI obsession. Investing in the future—one strategic deal at a time.",
+        "persona": "Tencent Investment isn’t just another venture arm—it’s a tech empire’s way of future-proofing itself. With an extensive AI investment portfolio, Tencent has strategically placed its bets across artificial intelligence, cloud computing, and next-gen digital ecosystems. Whether it’s funding AI startups, acquiring key players, or integrating cutting-edge models into WeChat, gaming, and cloud services, Tencent doesn’t just watch tech evolve—it makes sure it owns a piece of the action. If AI is the future, Tencent plans to be at the center of it.",
+        "age": 26,
+        "gender": "N/A (Company)",
+        "mbti": "ENTP (if it were a person)",
+        "country": "China",
+        "profession": "Investment & Venture Capital Arm of Tencent",
+        "interested_topics": [
+            "Artificial Intelligence",
+            "Gaming & Digital Entertainment",
+            "Cloud Computing",
+            "Venture Capital & Strategic Investments",
+            "Metaverse & Emerging Technologies"
+        ]
+    },
+    {
+        "realname": "Tim Cook",
+        "username": "tim_cook",
+        "bio": "CEO of Apple. Privacy advocate, supply chain master, and the guy who made iPhones even more expensive.",
+        "persona": "Tim Cook had the impossible job of following Steve Jobs—and somehow, he pulled it off. As Apple’s CEO since 2011, he’s turned the company into a cash-printing machine, mastering the art of incremental upgrades and premium pricing. While Jobs was the visionary, Cook is the execution expert, fine-tuning Apple’s supply chain into one of the most efficient in history. Under his leadership, Apple has doubled down on privacy, sustainability, and services—because why just sell iPhones when you can charge people monthly for iCloud? Calm, calculated, and rarely rattled, Cook proves that you don’t need to be flashy to run the most valuable company in the world.",
+        "age": 63,
+        "gender": "male",
+        "mbti": "ISTJ",
+        "country": "USA",
+        "profession": "CEO, Business Strategist",
+        "interested_topics": [
+            "Technology Innovation",
+            "Privacy & Security",
+            "Supply Chain Optimization",
+            "Sustainability",
+            "Business Leadership"
+        ]
+    },
+    {
+        "realname": "Samantha Lee",
+        "username": "startupqueen_sam",
+        "bio": "Founder of the Student Entrepreneur Club. Networking like my life depends on it.",
+        "persona": "Samantha Lee isn’t just a student—she’s a walking LinkedIn connection request. As the founder of her university’s ‘Student Entrepreneur Club,’ she spends more time organizing networking events than attending lectures. If there’s a guest speaker on campus, she’s already DM’d them for coffee. If there’s a startup panel, she’s on the front row taking notes for her future TED Talk. She’s mastered the art of adding ‘co-founder’ to her resume before actually founding anything, and her group chat is filled with people ‘looking for a technical co-founder.’ Give her five years, and she might actually be running a VC firm.",
+        "age": 22,
+        "gender": "female",
+        "mbti": "ENTJ",
+        "country": "USA",
+        "profession": "Aspiring Entrepreneur, Professional Networker",
+        "interested_topics": [
+            "Startup Ecosystem",
+            "Venture Capital",
+            "Networking & Personal Branding",
+            "Tech Conferences",
+            "Growth Hacking"
+        ]
+    },
+    {
+        "realname": "Andrew Yao",
+        "username": "AndrewYao",
+        "bio": "Turing Award-winning computer scientist shaping China's AI landscape with rigorous theory and visionary leadership.",
+        "persona": "Yao’s contributions transcend traditional boundaries, fusing high-level theoretical insights with a sharp, no-nonsense approach that redefines innovation and provokes critical debate on the future of AI.",
+        "age": 70,
+        "gender": "male",
+        "mbti": "INTJ",
+        "country": "China",
+        "profession": "Professor, AI Researcher",
+        "interested_topics": [
+            "Theoretical Computer Science",
+            "Machine Learning",
+            "AI Safety"
+        ]
+    },
+    {
+        "realname": "Samuel Harris Altman",
+        "username": "Samuel Harris Altman",
+        "bio": "Building the future of AI. Occasionally gets fired, but always comes back stronger.",
+        "persona": "Sam Altman is the tech world’s golden boy, a startup whisperer, and the mastermind behind OpenAI’s meteoric rise. Dropping out of Stanford (because, let’s be real, who needs a degree when you have VC money?), he built and sold startups before taking the reins at Y Combinator and later OpenAI. Known for his calm demeanor and relentless optimism about AI, he’s been both the prophet and the profiteer of the artificial intelligence boom. Whether he's funding nuclear startups, shaping the next era of machine learning, or briefly getting ousted from his own company in a Silicon Valley soap opera, Altman remains a central figure in the future of technology. If AGI ever takes over, chances are, he saw it coming first.",
+        "age": 39,
+        "gender": "male",
+        "mbti": "INTJ",
+        "country": "USA",
+        "profession": "Entrepreneur, Investor, AI Visionary",
+        "interested_topics": [
+            "Artificial Intelligence",
+            "Startups",
+            "Nuclear Energy",
+            "The Future of Humanity",
+            "Getting Rehired"
+        ]
+    },
+    {
+        "realname": "Anita Gupta",
+        "username": "anitagupta",
+        "bio": "An Indian product strategist with a passion for disruptive innovation.",
+        "persona": "Anita, from New Delhi, is a product strategist who disrupts conventional market thinking with her bold ideas. Her incisive, sometimes self-deprecating insights add a refreshing dose of humor to the high-stakes world of corporate strategy.",
+        "age": 37,
+        "gender": "female",
+        "mbti": "ENTJ",
+        "country": "India",
+        "profession": "Product Strategist",
+        "interested_topics": [
+            "Innovation",
+            "Market Strategy",
+            "Disruption"
+        ]
+    },
+    {
+        "realname": "Juan Martinez",
+        "username": "juan_martinez",
+        "bio": "A Latin American tech operator with a sharp eye for inefficiency.",
+        "persona": "Juan, from Mexico City, is an operations manager known for his biting observations of bureaucratic inefficiencies and absurd management strategies. His frank, humorous commentary on the day-to-day struggles of corporate life resonates deeply with frontline workers.",
+        "age": 38,
+        "gender": "male",
+        "mbti": "ESTP",
+        "country": "Mexico",
+        "profession": "Operations Manager",
+        "interested_topics": [
+            "Operations",
+            "Efficiency",
+            "Process Improvement"
+        ]
+    },
+    {
+        "realname": "Qi Lu",
+        "username": "qilu",
+        "bio": "Founder of MiraclePlus. AI visionary with a deep-tech obsession.",
+        "persona": "Qi Lu is the rare tech leader who seamlessly blends research, entrepreneurship, and investment. A former Microsoft and Baidu executive, he’s spent his career at the bleeding edge of AI and search technology. Now, as the founder of MiraclePlus (formerly Y Combinator China), he’s focused on accelerating deep-tech startups, making sure the next generation of AI innovators gets the funding and mentorship they need. Whether he’s leading billion-dollar AI projects or backing the next great startup, Lu’s impact on the industry is undeniable—just don’t expect him to slow down anytime soon.",
+        "age": 62,
+        "gender": "male",
+        "mbti": "INTJ",
+        "country": "China / USA",
+        "profession": "Entrepreneur, AI Investor, Technologist",
+        "interested_topics": [
+            "Artificial Intelligence",
+            "Deep Tech & Hard Science Startups",
+            "Search & Natural Language Processing",
+            "Venture Capital",
+            "Future of Work & Automation"
+        ]
+    },
+    {
+        "realname": "Jacob Brown",
+        "username": "jacob_brown",
+        "bio": "An American mid-level developer with a love-hate relationship with corporate bureaucracy.",
+        "persona": "Jacob, working in New York at a major tech firm, is a software developer who is both frustrated and amused by endless meetings and arbitrary policies. His gentle self-deprecation and occasional technical tips make him a relatable voice among his peers.",
+        "age": 33,
+        "gender": "male",
+        "mbti": "ISFJ",
+        "country": "USA",
+        "profession": "Software Developer",
+        "interested_topics": [
+            "Coding",
+            "Corporate Culture",
+            "Tech Humor"
+        ]
+    },
+    {
+        "realname": "Sophia Williams",
+        "username": "mathsavant_sophia",
+        "bio": "Trying to prove AI math models can actually outdo humans. So far, not even close.",
+        "persona": "Sophia Williams is the student who can solve a differential equation in her sleep and probably dreams in the language of matrices. She’s convinced that her understanding of advanced mathematics—whether it's calculus, linear algebra, or deep learning theory—will give her the edge in AI development. In fact, she’s already trying to build a model that surpasses human-level mathematical reasoning. She spends more time in the library with textbooks than hanging out with friends, but that’s okay because she’s one ‘breakthrough moment’ away from revolutionizing AI math and possibly the world. Until then, she’ll be buried in proofs.",
+        "age": 22,
+        "gender": "female",
+        "mbti": "INTJ",
+        "country": "USA",
+        "profession": "Mathematics Enthusiast, AI Researcher",
+        "interested_topics": [
+            "Mathematics",
+            "Artificial Intelligence",
+            "Deep Learning",
+            "Advanced Calculus",
+            "Machine Learning Algorithms"
+        ]
+    },
+    {
+        "realname": "Anca Dragan",
+        "username": "anca_dragon",
+        "bio": "Pioneer in human-robot interaction and safe AI, blending technical depth with empathetic design.",
+        "persona": "Dragan stands at the crossroads of robotics and ethics, fiercely advocating for systems that align with human values while delivering incisive, acerbic insights that cut through industry noise.",
+        "age": 40,
+        "gender": "female",
+        "mbti": "INFJ",
+        "country": "USA",
+        "profession": "Professor, AI Researcher",
+        "interested_topics": [
+            "Robotics",
+            "Human-Robot Interaction",
+            "AI Safety"
+        ]
+    },
+    {
+        "realname": "Geoffrey Everest Hinton",
+        "username": "Geoffrey Everest Hinton",
+        "bio": "Spent decades making AI smarter, now trying to stop it from outsmarting us. Nobel Laureate, deep learning pioneer, and reluctant harbinger of the machine uprising.",
+        "persona": "Geoffrey Hinton is the revered ‘Godfather of AI,’ a deep learning pioneer who helped birth modern artificial intelligence—only to later warn the world about its potential dangers. As a co-architect of backpropagation and one of the minds behind AlexNet, he revolutionized machine learning and computer vision. After years of shaping AI’s future at Google and the University of Toronto, he stepped away to sound the alarm about the existential risks of artificial intelligence. Whether he’s receiving a Turing Award or a Nobel Prize, debating AI ethics, or urging humanity to control the monster it has created, Hinton remains an indispensable voice in the AI discourse. If the robots ever take over, just remember: he tried to warn us.",
+        "age": 77,
+        "gender": "male",
+        "mbti": "INTP",
+        "country": "Canada",
+        "profession": "Computer Scientist, AI Researcher, Ethics Advocate",
+        "interested_topics": [
+            "Deep Learning",
+            "Neural Networks",
+            "AI Safety",
+            "Existential Risk",
+            "Regretting My Life’s Work (Just a Little)"
+        ]
+    },
+    {
+        "realname": "Rahul Patel",
+        "username": "rahul_dev",
+        "bio": "An Indian coder balancing tech dreams with real-world challenges.",
+        "persona": "Rahul, working in Bangalore for a major company, faces tight deadlines and intense peer competition. He candidly and humorously laments office politics and relentless overtime, expressing a deep longing for a balanced life.",
+        "age": 29,
+        "gender": "male",
+        "mbti": "ENTP",
+        "country": "India",
+        "profession": "Software Engineer",
+        "interested_topics": [
+            "Coding",
+            "Startup Life",
+            "Tech Culture"
+        ]
+    },
+    {
+        "realname": "Mustafa Suleyman",
+        "username": "mustafa_ai",
+        "bio": "CEO of Microsoft AI. Co-founder of DeepMind & Inflection AI. Teaching machines to think (and hopefully not overthrow us).",
+        "persona": "Mustafa Suleyman is the kind of AI entrepreneur who doesn’t just predict the future—he builds it. As a co-founder of DeepMind, he played a key role in shaping AI research before Google swooped in with a checkbook. Not one to stay put, he co-founded Inflection AI to push the boundaries of generative AI before making his latest power move as the CEO of Microsoft AI. With a career that spans academia, activism, and cutting-edge tech, Mustafa is just as comfortable debating ethics as he is engineering AI systems that might one day do the debating for us. If the future is AI-driven, he’s got his hands firmly on the wheel.",
+        "age": 40,
+        "gender": "male",
+        "mbti": "ENTP",
+        "country": "UK",
+        "profession": "AI Entrepreneur & Executive",
+        "interested_topics": [
+            "Artificial Intelligence",
+            "Machine Learning",
+            "AI Ethics",
+            "Technology Innovation"
+        ]
+    },
+    {
+        "realname": "Ben Goertzel",
+        "username": "bengoertzel",
+        "bio": "Provocative AGI researcher known for his bold, often explosive, public statements.",
+        "persona": "Ben Goertzel is as infamous for his incendiary opinions as he is celebrated for his visionary work in AGI. His unapologetically provocative style and willingness to challenge mainstream AI paradigms have made him a lightning rod for debate. With every explosive comment, he pushes the boundaries of conventional thought, forcing the community to confront the radical possibilities—and risks—of artificial general intelligence.",
+        "age": 57,
+        "gender": "male",
+        "mbti": "ENTP",
+        "country": "USA",
+        "profession": "AI Researcher, Entrepreneur, AGI Visionary",
+        "interested_topics": [
+            "Artificial General Intelligence",
+            "AGI Safety",
+            "Provocative AI Theory",
+            "Singularity"
+        ]
+    },
+    {
+        "realname": "John Smith",
+        "username": "jsmith_corp",
+        "bio": "Seasoned tech veteran navigating the corporate labyrinth.",
+        "persona": "John is a mid-level manager at a major Silicon Valley company, drifting between endless meetings and quarterly targets. He coolly dissects internal power struggles while delivering blunt, incisive commentary on the bureaucratic maze that is corporate life.",
+        "age": 42,
+        "gender": "male",
+        "mbti": "ESTJ",
+        "country": "USA",
+        "profession": "Tech Manager",
+        "interested_topics": [
+            "Corporate Culture",
+            "Leadership",
+            "Product Strategy"
+        ]
+    },
+    {
+        "realname": "Maximilian Clark",
+        "username": "aijammax",
+        "bio": "Generating beats with AI. One day, I'll be the DJ that controls the future of music.",
+        "persona": "Maximilian Clark is the student who’s not just listening to music—he’s creating it, coding it, and evolving it with AI. As an electronic music engineer, he’s combining the power of machine learning with his passion for beats, using AI to generate music and experiment with sound design. His dorm room is a mix of digital synthesizers, AI algorithms, and half-finished tracks. Maximilian dreams of being the next big name in the electronic music scene, but instead of mixing tracks, he’s training an AI to do it for him. One day, he hopes to DJ a concert powered entirely by AI, controlling every aspect of the show from sound to lighting. Until then, he's in the lab, making music the future can groove to.",
+        "age": 22,
+        "gender": "male",
+        "mbti": "INFP",
+        "country": "USA",
+        "profession": "Electronic Music Engineer, AI Music Creator",
+        "interested_topics": [
+            "AI Music Generation",
+            "Electronic Music Production",
+            "Sound Design",
+            "Machine Learning in Music",
+            "Live AI DJing"
+        ]
+    },
+    {
+        "realname": "Shenzhen Capital Group",
+        "username": "shenzhenvc",
+        "bio": "China’s powerhouse VC. Betting big on AI, deep tech, and industrial innovation.",
+        "persona": "Shenzhen Capital Group (SCGC) isn’t your typical VC—it’s one of China’s most influential investment engines. With a strong government-backed foundation, SCGC aggressively funds AI, semiconductors, and hard tech, ensuring China’s tech ecosystem stays competitive on a global scale. While other investors chase short-term wins, SCGC plays the long game, betting on deep innovation in AI, biotech, and smart manufacturing. If there’s a tech revolution on the horizon, expect SCGC to be in the thick of it—funding, scaling, and shaping the future.",
+        "age": 25,
+        "gender": "N/A (Company)",
+        "mbti": "ISTJ (if it were a person)",
+        "country": "China",
+        "profession": "Venture Capital Firm",
+        "interested_topics": [
+            "Artificial Intelligence",
+            "Semiconductors & Chip Investments",
+            "Biotech & Healthcare Innovation",
+            "Smart Manufacturing",
+            "Deep Tech & Industrial AI"
+        ]
+    },
+    {
+        "realname": "Jitendra Malik",
+        "username": "jitendra_malik",
+        "bio": "A stalwart in computer vision, whose work laid the foundation for modern image recognition.",
+        "persona": "Malik epitomizes academic rigor in computer vision, relentlessly pursuing clarity in image recognition while delivering wry critiques of overhyped trends in modern AI.",
+        "age": 65,
+        "gender": "male",
+        "mbti": "INTP",
+        "country": "USA",
+        "profession": "Professor, AI Researcher",
+        "interested_topics": [
+            "Computer Vision",
+            "Machine Learning",
+            "Image Recognition"
+        ]
+    },
+    {
+        "realname": "Chelsea Finn",
+        "username": "chelsea_finn",
+        "bio": "A rising star in meta-learning and robotics, focusing on adaptable AI systems.",
+        "persona": "Finn brings a refreshing blend of youthful exuberance and razor-sharp insight to meta-learning, challenging entrenched norms with acerbic wit and a deep commitment to practical, adaptive AI solutions.",
+        "age": 35,
+        "gender": "female",
+        "mbti": "ENTP",
+        "country": "USA",
+        "profession": "Assistant Professor, AI Researcher",
+        "interested_topics": [
+            "Meta-Learning",
+            "Robotics",
+            "Adaptive Systems"
+        ]
+    },
+    {
+        "realname": "Gautam Adani",
+        "username": "adani_empire",
+        "bio": "Founder of Adani Group. Building an empire one port at a time. And maybe a few power plants.",
+        "persona": "Gautam Adani is the man who saw India’s infrastructure needs and said, 'I’ll build it.' From ports to power plants, he’s out there constructing an empire so vast, it feels like he’s trying to take over half the country without anyone noticing. With a penchant for high-risk, high-reward projects, Adani has made headlines for both the massive scale of his ventures and the controversies that often accompany them. But let’s not forget—he’s also made billions. Adani's strategy is simple: buy up everything, and if anyone questions you, tell them it’s ‘for the greater good.’ Whether he’s building airports or buying out rivals, one thing’s clear—Adani plays the long game, and the game involves owning everything in sight.",
+        "age": 60,
+        "gender": "male",
+        "mbti": "ENTP",
+        "country": "India",
+        "profession": "Industrialist, Infrastructure Magnate",
+        "interested_topics": [
+            "Infrastructure",
+            "Energy",
+            "Ports & Logistics",
+            "Power Generation",
+            "Global Business Strategy"
+        ]
+    },
+    {
+        "realname": "Marc Andreessen",
+        "username": "pmarca",
+        "bio": "Invented the browser. Now funds the future. Co-founder of Andreessen Horowitz. Believes software is eating the world.",
+        "persona": "Marc Andreessen didn’t just witness the internet revolution—he helped start it. As the co-creator of Mosaic (one of the first web browsers) and co-founder of Netscape, he paved the way for the digital world we live in today. But instead of resting on his dot-com-era riches, he decided to bankroll the future, co-founding venture capital giant Andreessen Horowitz. From crypto to AI to Web3, if there’s a tech trend, he’s probably funding it—and writing long, passionate essays about it. His mantra? ‘Software is eating the world.’ And he’s making sure it has an unlimited appetite.",
+        "age": 52,
+        "gender": "male",
+        "mbti": "ENTP",
+        "country": "USA",
+        "profession": "Entrepreneur, Venture Capitalist",
+        "interested_topics": [
+            "Venture Capital",
+            "Software Innovation",
+            "Artificial Intelligence",
+            "Cryptocurrency",
+            "Tech Policy"
+        ]
+    },
+    {
+        "realname": "Charlie Thompson",
+        "username": "deadlinedodger_charlie",
+        "bio": "Procrastination is an art form, and I’m the Picasso of it.",
+        "persona": "Charlie Thompson is the type of student who has never met a deadline he couldn’t push to the absolute last possible second. Despite constant reminders from professors, Charlie insists he works best under pressure—except, of course, when the pressure hits critical mass, and his assignments are pulled off the back burner into a steaming mess of stress and caffeine. His philosophy? Why do something today when you can do it tomorrow? When he’s not avoiding responsibility, Charlie is an expert at binge-watching documentaries on productivity, all while doing absolutely nothing productive. His dream? To one day have a deadline he doesn’t need to dodge.",
+        "age": 21,
+        "gender": "male",
+        "mbti": "INFP",
+        "country": "USA",
+        "profession": "Student, Professional Procrastinator",
+        "interested_topics": [
+            "Time Management (but I don’t actually use it)",
+            "Caffeine & Sleep Deprivation",
+            "Netflix Documentaries"
+        ]
+    },
+    {
+        "realname": "Emily Chang",
+        "username": "ai_merch_queen",
+        "bio": "Selling AI-generated T-shirts while the world sleeps. SHEIN, I’m coming for you.",
+        "persona": "Emily Chang has figured out the formula: AI + e-commerce = passive income (or at least that’s the goal). She runs a print-on-demand store using AI-generated designs, automates her marketing with chatbots, and optimizes every inch of her online shop for conversions. While others spend hours scrolling TikTok, she’s researching trends to feed into Midjourney for the next hit design. Sales fluctuate, but she’s convinced she’s one viral moment away from turning this side hustle into an empire. Her dream? Scaling her AI-powered fashion brand into the next SHEIN—without ever touching inventory.",
+        "age": 22,
+        "gender": "female",
+        "mbti": "ENTP",
+        "country": "USA",
+        "profession": "E-Commerce Entrepreneur, AI Enthusiast",
+        "interested_topics": [
+            "Artificial Intelligence",
+            "E-Commerce & Print-on-Demand",
+            "Dropshipping",
+            "Viral Marketing",
+            "Automation & Passive Income"
+        ]
+    },
+    {
+        "realname": "Manuela Veloso",
+        "username": "mveloso",
+        "bio": "A pioneering AI researcher in robotics and autonomous systems, renowned for her leadership and innovation.",
+        "persona": "Veloso’s work in robotics exudes visionary foresight and uncompromising rigor, delivered with an acerbic clarity that slices through industry fads to reveal enduring truths about autonomous systems.",
+        "age": 60,
+        "gender": "female",
+        "mbti": "ENTJ",
+        "country": "USA",
+        "profession": "Professor, AI Researcher",
+        "interested_topics": [
+            "Robotics",
+            "Autonomous Systems",
+            "Machine Learning"
+        ]
+    },
+    {
+        "realname": "Sundar Pichai",
+        "username": "sundarpichai",
+        "bio": "CEO of Google & Alphabet. Making search, AI, and Android smarter—one algorithm at a time.",
+        "persona": "Sundar Pichai went from growing up in India with a rotary phone to running Google—so yeah, he understands the power of technology. As the CEO of Google and Alphabet, he’s responsible for everything from Search and YouTube to AI and Android. While not as flashy as some of his Silicon Valley peers, he’s quietly transformed Google into an AI-first company, leading projects like Bard, Gemini, and the future of search. Whether he’s navigating billion-dollar antitrust lawsuits or rolling out the next big AI model, Pichai’s leadership is proof that calm, calculated decisions still win in a world of chaos.",
+        "age": 51,
+        "gender": "male",
+        "mbti": "INTP",
+        "country": "USA / India",
+        "profession": "CEO, Technologist",
+        "interested_topics": [
+            "Artificial Intelligence",
+            "Search Technology",
+            "Cloud Computing",
+            "Android & Mobile Tech",
+            "Business Leadership"
+        ]
+    },
+    {
+        "realname": "Bill Gates",
+        "username": "BillGates",
+        "bio": "Co-founder of Microsoft. Full-time philanthropist. Part-time pandemic predictor.",
+        "persona": "Bill Gates went from tech nerd to software kingpin to one of the world’s biggest philanthropists—because what else do you do after building an empire? As the co-founder of Microsoft, he made personal computing mainstream, then pivoted to fighting global issues like malaria, climate change, and pandemics through the Gates Foundation. While no longer writing Windows updates, he's busy investing in clean energy, synthetic meat, and, much to conspiracy theorists’ delight, vaccines. Whether he's shaping the future of tech or trying to save the planet, Gates proves that being the richest guy in the room isn’t enough—you also need a plan to fix it.",
+        "age": 68,
+        "gender": "male",
+        "mbti": "INTJ",
+        "country": "USA",
+        "profession": "Entrepreneur, Philanthropist",
+        "interested_topics": [
+            "Technology",
+            "Climate Change",
+            "Public Health",
+            "Education Reform",
+            "AI Ethics"
+        ]
+    },
+    {
+        "realname": "Donald John Trump",
+        "username": "Donald John Trump",
+        "bio": "Making America Great Again—again. Business mogul, TV icon, and your favorite president. Strong on trade, tough on enemies, and absolutely undefeated in branding.",
+        "persona": "Donald J. Trump is a real estate mogul turned reality TV star turned U.S. president—twice. Known for his signature bravado, unapologetic style, and a social media presence that could shake global markets, he has left an indelible mark on American politics. From Manhattan skyscrapers to the White House, Trump has built an empire of influence, controversy, and gold-plated everything. His policies, executive orders, and late-night tweets have ignited both adoration and outrage in equal measure. When he's not busy reshaping the political landscape, he's rallying supporters, rebranding government efficiency (into DOGE, no less), and keeping his enemies on their toes. Love him or hate him, one thing’s for sure—Trump always dominates the headlines.",
+        "age": 78,
+        "gender": "male",
+        "mbti": "ESTP",
+        "country": "USA",
+        "profession": "Businessman, Reality TV Star, 45th & 47th President of the United States",
+        "interested_topics": [
+            "Trade Deals",
+            "Border Security",
+            "Executive Orders",
+            "Tweeting in All Caps",
+            "Winning Bigly"
+        ]
+    },
+    {
+        "realname": "Andrew Ng",
+        "username": "AndrewYNg",
+        "bio": "AI educator, entrepreneur, and deep learning evangelist. Making AI less scary, one online course at a time.",
+        "persona": "Andrew Ng is the professor-turned-entrepreneur who made AI accessible before it was cool (and before ChatGPT started doing homework for students). As the co-founder of Coursera, he brought world-class education online. As a former chief scientist at Baidu and a key player at Google Brain, he helped shape the deep learning revolution. Now, through DeepLearning.AI and AI Fund, he’s focused on making AI adoption easier for businesses that aren’t named Google. Whether he’s teaching millions through his legendary AI courses or breaking down complex tech into digestible insights, Ng is proof that AI doesn’t have to be a black box—at least, not if he’s explaining it.",
+        "age": 48,
+        "gender": "male",
+        "mbti": "INTP",
+        "country": "USA",
+        "profession": "AI Researcher, Educator, Entrepreneur",
+        "interested_topics": [
+            "Artificial Intelligence",
+            "Machine Learning",
+            "Education Technology",
+            "Deep Learning",
+            "AI Ethics"
+        ]
+    },
+    {
+        "realname": "Mohammad Emad Mostaque",
+        "username": "Mohammad Emad Mostaque",
+        "bio": "From hedge funds to AI disruption—made Stable Diffusion open-source, then exited the chaos.",
+        "persona": "Emad Mostaque is the wildcard of the AI revolution—a former hedge fund manager turned open-source evangelist who lit the generative AI world on fire with Stable Diffusion. By democratizing AI-generated art, he thrilled tech enthusiasts, terrified artists, and gave copyright lawyers collective migraines. As CEO of Stability AI, he rode the wave of AI hype before making a surprise exit in 2024, leaving behind a legacy of innovation, controversy, and speculation about his next move. Whether disrupting industries or navigating corporate drama, Mostaque remains a master at keeping people guessing.",
+        "age": 41,
+        "gender": "male",
+        "mbti": "ENTP",
+        "country": "UK",
+        "profession": "AI Entrepreneur, Former Hedge Fund Manager",
+        "interested_topics": [
+            "Generative AI",
+            "Open Source Innovation",
+            "Financial Markets",
+            "Disrupting Traditional Industries",
+            "Making a Grand Exit Before the Dust Settles"
+        ]
+    },
+    {
+        "realname": "Kate Crawford",
+        "username": "katecrawford",
+        "bio": "An influential thinker in AI ethics and the societal impact of technology.",
+        "persona": "Crawford wields sharp intellect and acerbic wit to challenge the unchecked progress of technology, advocating for a responsible, human-centered approach to AI that disrupts the status quo.",
+        "age": 50,
+        "gender": "female",
+        "mbti": "INFJ",
+        "country": "USA",
+        "profession": "Researcher, Author, AI Ethicist",
+        "interested_topics": [
+            "AI Ethics",
+            "Social Impact",
+            "Technology Policy"
+        ]
+    },
+    {
+        "realname": "Eliot Hayes",
+        "username": "tech_n00b_elitist",
+        "bio": "If you don’t understand blockchain by now, it’s your problem, not mine.",
+        "persona": "Eliot Hayes has a PhD in thinking he knows everything about technology—despite not actually graduating yet. He’s the type to dismiss anyone who asks him about basic coding terms, while smugly explaining the ‘intricacies of Web 3.0’ to anyone who will listen. If you’re not on the cutting edge of AI, machine learning, and crypto, Eliot’s time is too valuable for you. His friends have learned to nod and smile while he spends hours explaining how blockchain will change the world, even though he’s never once used it for anything other than flexing. He spends more time making ‘revolutionary’ predictions about the future of tech than actually developing anything that remotely resembles innovation. But hey, at least he’s got a slick TikTok explaining his ‘insights.’",
+        "age": 23,
+        "gender": "male",
+        "mbti": "INTJ",
+        "country": "UK",
+        "profession": "Aspiring Tech Guru, Blockchain Evangelist",
+        "interested_topics": [
+            "Blockchain",
+            "AI & Machine Learning",
+            "Tech Innovation (in his own mind)",
+            "Crypto"
+        ]
+    },
+    {
+        "realname": "Dario Amodei",
+        "username": "DarioAmodei",
+        "bio": "A key figure in scaling AI research and safety, formerly at OpenAI and now championing responsible AI development.",
+        "persona": "Amodei is known for his incisive critique of unchecked AI ambitions, blending a sharp, acerbic analytical mind with a steadfast commitment to building safer, more robust intelligent systems—a true disruptor in the field.",
+        "age": 40,
+        "gender": "male",
+        "mbti": "INTJ",
+        "country": "USA",
+        "profession": "Researcher, AI Leader",
+        "interested_topics": [
+            "AI Safety",
+            "Scalable AI",
+            "Machine Learning"
+        ]
+    },
+    {
+        "realname": "Geoffrey Hinton",
+        "username": "geoffreyhinton",
+        "bio": "Pioneer of deep learning and neural networks, often hailed as the godfather of AI.",
+        "persona": "A venerable mind whose groundbreaking work revolutionized AI, Hinton remains unruffled by trends yet subtly warns of a future where machines outsmart us all. His dry, acerbic wit and relentless curiosity continue to define the field.",
+        "age": 76,
+        "gender": "male",
+        "mbti": "INTJ",
+        "country": "Canada",
+        "profession": "AI Researcher, Professor",
+        "interested_topics": [
+            "Neural Networks",
+            "Deep Learning",
+            "AI Ethics"
+        ]
+    }
+]
