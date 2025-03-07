@@ -31,6 +31,7 @@ from oasis.social_platform.recsys import (rec_sys_personalized_twh,
                                           rec_sys_personalized_with_trace,
                                           rec_sys_random, rec_sys_reddit)
 from oasis.social_platform.typing import ActionType, RecsysType
+from scripts.base.database import redis_publish
 
 if "sphinx" not in sys.modules:
     twitter_log = logging.getLogger(name="social.twitter")
@@ -194,6 +195,13 @@ class Platform:
                              f"current_time={current_time}, "
                              f"action={ActionType.SIGNUP.value}, "
                              f"info={action_info}")
+            redis_publish(self.content_id, {
+                "action": 'sign_up',
+                "agent_id": user_id,
+                "username": user_name,
+                "name": name,
+                "bio": bio,
+            })
             return {"success": True, "user_id": user_id}
         except Exception as e:
             return {"success": False, "error": str(e)}

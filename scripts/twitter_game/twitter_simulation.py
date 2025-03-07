@@ -60,7 +60,7 @@ parser.add_argument(
     default="",
 )
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 DEFAULT_DB_PATH = os.path.join(DATA_DIR, "mock_reddit.db")
 DEFAULT_USER_PATH = os.path.join(DATA_DIR, "reddit",
                                  "filter_user_results.json")
@@ -162,7 +162,7 @@ def parse_args():
     parser.add_argument("--db_path", type=str, default='twitter.db')
     parser.add_argument("--user_path",
                         type=str,
-                        default='./data/reddit/user_data_36.json')
+                        default=f'{DATA_DIR}/reddit/user_data_36.json')
     parser.add_argument("--content_id", type=int)
     return parser.parse_args()
 
