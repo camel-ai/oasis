@@ -24,6 +24,19 @@ class UserInfo:
     recsys_type: str = "twitter",
     is_controllable: bool = False
 
+    def to_description(self) -> str:
+        name_string = f"Your name is {self.profile['other_info']['realname']}."
+        user_profile = self.profile["other_info"]["user_profile"]
+        description_string = f"Your have profile: {user_profile}."
+        description = f"{name_string}\n{description_string}"
+        description += (
+            f"You are a {self.profile['other_info']['gender']}, "
+            f"{self.profile['other_info']['age']} years old, with an MBTI "
+            f"personality type of {self.profile['other_info']['mbti']} from "
+            f"{self.profile['other_info']['country']}. Your profession is "
+            f"{self.profile['other_info']['profession']}.")
+        return description
+
     def to_system_message(self, action_space_prompt: str = None) -> str:
         if self.recsys_type != "reddit":
             return self.to_twitter_system_message(action_space_prompt)
