@@ -322,14 +322,14 @@ Note that content should exceed {num_words_long} words.
             "content": content
         }
 
-    async def perform_action_by_hci(self) -> Any:
+    async def perform_action_by_hci(self, input_content: str, selection:int = 0) -> Any:
         print("Please choose one function to perform:")
         function_list = self.env.action.get_openai_function_list()
         # for i in range(len(function_list)):
         #     agent_log.info(f"Agent {self.agent_id} function: "
         #                    f"{function_list[i].func.__name__}")
 
-        selection = int(input("Enter your choice: "))
+        # selection = int(input("Enter your choice: "))
         if not 0 <= selection < len(function_list):
             agent_log.error(f"Agent {self.agent_id} invalid input.")
             return
@@ -340,7 +340,8 @@ Note that content should exceed {num_words_long} words.
         for param in params.values():
             while True:
                 try:
-                    value = input(f"Enter value for {param.name}: ")
+                    # value = input(f"Enter value for {param.name}: ")
+                    value = input_content
                     args.append(value)
                     break
                 except ValueError:

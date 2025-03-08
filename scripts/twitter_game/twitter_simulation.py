@@ -13,6 +13,12 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 # flake8: noqa: E402
 from __future__ import annotations
+from oasis.social_platform.typing import ActionType
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.channel import Channel
+from oasis.social_agent.agents_generator import (gen_control_agents_with_data,
+                                                 generate_reddit_agents)
+from oasis.clock.clock import Clock
 
 import argparse
 import asyncio
@@ -28,12 +34,6 @@ from colorama import Back
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
-from oasis.clock.clock import Clock
-from oasis.social_agent.agents_generator import (gen_control_agents_with_data,
-                                                 generate_reddit_agents)
-from oasis.social_platform.channel import Channel
-from oasis.social_platform.platform import Platform
-from oasis.social_platform.typing import ActionType
 
 logging.basicConfig(level=logging.CRITICAL)
 # social_log = logging.getLogger(name="social")
@@ -60,7 +60,8 @@ parser.add_argument(
     default="",
 )
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
+DATA_DIR = os.path.join(os.path.dirname(
+    os.path.dirname(os.path.dirname(__file__))), "data")
 DEFAULT_DB_PATH = os.path.join(DATA_DIR, "mock_reddit.db")
 DEFAULT_USER_PATH = os.path.join(DATA_DIR, "reddit",
                                  "filter_user_results.json")
@@ -80,6 +81,7 @@ async def running(
     refresh_rec_post_count: int = 5,
     user_number: int = 1,
     action_space_file_path: str = None,
+    content: str = '',
     content_id: int = 0,
 ) -> None:
     os.environ["SANDBOX_TIME"] = str(0)
@@ -126,14 +128,14 @@ async def running(
             model_type=inference_configs["model_type"],
             is_openai_model=is_openai_model,
         )
-
+    num_timesteps = 1
     for timestep in range(1, num_timesteps + 1):
         os.environ["SANDBOX_TIME"] = str(timestep * 3)
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         # social_log.info(f"timestep:{timestep + 1}.")
 
         player_agent = agent_graph.get_agent(0)
-        await player_agent.perform_action_by_hci()
+        await player_agent.perform_action_by_hci(content)
 
         await infra.update_rec_table()
         # social_log.info("update rec table.")
@@ -160,6 +162,7 @@ def log_info(message: str) -> None:
 def parse_args():
     parser = argparse.ArgumentParser(description="Simulation parameters")
     parser.add_argument("--db_path", type=str, default='twitter.db')
+    parser.add_argument("--content", type=str)
     parser.add_argument("--content_id", type=int)
     return parser.parse_args()
 
@@ -173,7 +176,7 @@ if __name__ == "__main__":
         "is_openai_model": True,
     }
 
-    user_profile_root_path = './data/game/'
+    user_profile_root_path = f'{DATA_DIR}/game/'
     all_user_profile_path = [
         "game_agent_0_50.json",
         "game_agent_25_75.json",
@@ -190,4 +193,5 @@ if __name__ == "__main__":
                 num_timesteps=3,
                 recsys_type="twhin-bert",
                 inference_configs=inference_configs,
+                content=args.content,
                 content_id=args.content_id))

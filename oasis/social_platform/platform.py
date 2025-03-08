@@ -197,10 +197,11 @@ class Platform:
                              f"info={action_info}")
             redis_publish(self.content_id, {
                 "action": 'sign_up',
-                "agent_id": user_id,
+                "user_id": user_id,
                 "username": user_name,
                 "name": name,
                 "bio": bio,
+                "created_at": current_time
             })
             return {"success": True, "user_id": user_id}
         except Exception as e:
@@ -411,7 +412,13 @@ class Platform:
             #                  f"current_time={current_time}, "
             #                  f"action={ActionType.CREATE_POST.value}, "
             #                  f"info={action_info}")
-
+            redis_publish(self.content_id, {
+                'action': 'create_post',
+                'post_id': post_id,
+                'user_id': user_id,
+                'content': content,
+                'created_at': current_time
+            })
             return {"success": True, "post_id": post_id}
 
         except Exception as e:
@@ -486,7 +493,13 @@ class Platform:
             action_info = {"reposted_id": post_id, "new_post_id": new_post_id}
             self.pl_utils._record_trace(user_id, ActionType.REPOST.value,
                                         action_info, current_time)
-
+            redis_publish(self.content_id, {
+                'action': 'repost',
+                'new_post_id': new_post_id,
+                'post_id': post_id,
+                'user_id': user_id,
+                'created_at': current_time
+            })
             return {"success": True, "post_id": new_post_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -545,7 +558,14 @@ class Platform:
             action_info = {"quoted_id": post_id, "new_post_id": new_post_id}
             self.pl_utils._record_trace(user_id, ActionType.QUOTE_POST.value,
                                         action_info, current_time)
-
+            redis_publish(self.content_id, {
+                'action': 'quote',
+                'new_post_id': new_post_id,
+                'post_id': post_id,
+                'content': quote_content,
+                'user_id': user_id,
+                'created_at': current_time
+            })
             return {"success": True, "post_id": new_post_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -601,6 +621,12 @@ class Platform:
             action_info = {"post_id": post_id, "like_id": like_id}
             self.pl_utils._record_trace(user_id, ActionType.LIKE_POST.value,
                                         action_info, current_time)
+            redis_publish(self.content_id, {
+                'action': 'like_post',
+                'post_id': post_id,
+                'user_id': user_id,
+                'created_at': current_time
+            })
             return {"success": True, "like_id": like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -841,7 +867,7 @@ class Platform:
                 "num_followings": num_followings,
                 "num_followers": num_followers,
             } for user_id, user_name, name, bio, created_at, num_followings,
-                     num_followers in results]
+                num_followers in results]
             return {"success": True, "users": users}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -1095,7 +1121,14 @@ class Platform:
             self.pl_utils._record_trace(user_id,
                                         ActionType.CREATE_COMMENT.value,
                                         action_info, current_time)
-
+            redis_publish(self.content_id, {
+                'action': 'create_comment',
+                'comment_id': comment_id,
+                'post_id': post_id,
+                'content': content,
+                'user_id': user_id,
+                'created_at': current_time
+            })
             return {"success": True, "comment_id": comment_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -1154,6 +1187,13 @@ class Platform:
             }
             self.pl_utils._record_trace(user_id, ActionType.LIKE_COMMENT.value,
                                         action_info, current_time)
+
+            redis_publish(self.content_id, {
+                'action': 'like_comment',
+                'comment_id': comment_id,
+                'user_id': user_id,
+                'created_at': current_time
+            })
             return {"success": True, "comment_like_id": comment_like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
