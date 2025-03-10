@@ -34,6 +34,7 @@ class SocialAction:
                 self.repost,
                 self.like_comment,
                 self.like_post,
+                self.do_nothing,
             ]
         ]
 

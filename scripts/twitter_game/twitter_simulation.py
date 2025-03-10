@@ -175,11 +175,11 @@ if __name__ == "__main__":
 
     user_profile_root_path = './data/game/'
     all_user_profile_path = [
-        "game_agent_0_50.json",
-        "game_agent_25_75.json",
-        "game_agent_50_100.json",
-        "game_agent_75_125.json",
-        "game_agent_100_156.json",
+        "all_game_agent_shuffle.json",
+        # "game_agent_25_75.json",
+        # "game_agent_50_100.json",
+        # "game_agent_75_125.json",
+        # "game_agent_100_156.json",
     ]
     user_profile_path = user_profile_root_path + random.choice(
         all_user_profile_path)
