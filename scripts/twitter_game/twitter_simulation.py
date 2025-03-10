@@ -129,20 +129,6 @@ async def running(
             is_openai_model=is_openai_model,
         )
 
-    step = 1
-    trigger(step, content)
-
-    channel_name = f'predict_new_{content_id}'
-    pubsub = redis.pubsub()
-    pubsub.subscribe(channel_name)
-    
-    for message in pubsub.listen():
-        if message["type"] != "message":
-            continue
-        step += 1
-        trigger(step, message["data"])
-
-
     async def trigger(timestep: int, predict_content: str):
         os.environ["SANDBOX_TIME"] = str(timestep * 3)
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
@@ -164,6 +150,20 @@ async def running(
             'action': 'predict_end',
             'step': timestep
         })
+
+    step = 1
+    trigger(step, content)
+
+    channel_name = f'predict_new_{content_id}'
+    pubsub = redis.pubsub()
+    pubsub.subscribe(channel_name)
+    
+    for message in pubsub.listen():
+        if message["type"] != "message":
+            continue
+        step += 1
+        trigger(step, message["data"])
+
 
     # num_timesteps = 1
     # for timestep in range(1, num_timesteps + 1):
