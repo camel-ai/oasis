@@ -28,7 +28,7 @@ import random
 import sys
 from datetime import datetime
 from typing import Any
-
+from scripts.base.database import redis, redis_publish
 from colorama import Back
 
 sys.path.append(
@@ -128,14 +128,28 @@ async def running(
             model_type=inference_configs["model_type"],
             is_openai_model=is_openai_model,
         )
-    num_timesteps = 1
-    for timestep in range(1, num_timesteps + 1):
+
+    step = 1
+    trigger(step, content)
+
+    channel_name = f'predict_new_{content_id}'
+    pubsub = redis.pubsub()
+    pubsub.subscribe(channel_name)
+    
+    for message in pubsub.listen():
+        if message["type"] != "message":
+            continue
+        step += 1
+        trigger(step, message["data"])
+
+
+    async def trigger(timestep: int, predict_content: str):
         os.environ["SANDBOX_TIME"] = str(timestep * 3)
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         # social_log.info(f"timestep:{timestep + 1}.")
 
         player_agent = agent_graph.get_agent(0)
-        await player_agent.perform_action_by_hci(content)
+        await player_agent.perform_action_by_hci(predict_content)
 
         await infra.update_rec_table()
         # social_log.info("update rec table.")
@@ -146,6 +160,29 @@ async def running(
                     tasks.append(agent.perform_action_by_llm())
         random.shuffle(tasks)
         await asyncio.gather(*tasks)
+        redis_publish(content_id, {
+            'action': 'predict_end',
+            'step': timestep
+        })
+
+    # num_timesteps = 1
+    # for timestep in range(1, num_timesteps + 1):
+    #     os.environ["SANDBOX_TIME"] = str(timestep * 3)
+    #     print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
+    #     # social_log.info(f"timestep:{timestep + 1}.")
+
+    #     player_agent = agent_graph.get_agent(0)
+    #     await player_agent.perform_action_by_hci(content)
+
+    #     await infra.update_rec_table()
+    #     # social_log.info("update rec table.")
+    #     tasks = []
+    #     for _, agent in agent_graph.get_agents():
+    #         if agent.user_info.is_controllable is False:
+    #             if random.random() < activate_prob:
+    #                 tasks.append(agent.perform_action_by_llm())
+    #     random.shuffle(tasks)
+    #     await asyncio.gather(*tasks)
 
     await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
 
