@@ -152,7 +152,7 @@ async def running(
         })
 
     step = 1
-    trigger(step, content)
+    await trigger(step, content)
 
     channel_name = f'predict_new_{content_id}'
     pubsub = redis.pubsub()
@@ -162,7 +162,7 @@ async def running(
         if message["type"] != "message":
             continue
         step += 1
-        trigger(step, message["data"])
+        await trigger(step, message["data"])
 
 
     # num_timesteps = 1
