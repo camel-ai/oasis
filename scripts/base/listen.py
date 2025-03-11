@@ -28,6 +28,7 @@ if __name__ == "__main__":
     pubsub.subscribe("predict")
     try:
         for message in pubsub.listen():
+            print(message)
             if message["type"] != "message":
                 continue
 
