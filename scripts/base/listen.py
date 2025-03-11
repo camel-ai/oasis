@@ -12,6 +12,8 @@ script_path = os.path.dirname(os.path.dirname(__file__))
 
 
 def redis_publish(content_id, message: dict):
+    print(f"predict_{content_id}")
+    print('+++++++++++++++++=========================')
     redis.publish(f"predict_{content_id}", json.dumps(message))
 
 
