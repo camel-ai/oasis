@@ -11,7 +11,6 @@ process_table: dict[str, subprocess.Popen] = {}
 
 
 def redis_publish(content_id, message: dict):
-    # print(f'predict_{content_id}')
     redis.publish(f"predict_{content_id}", json.dumps(message))
 
 
@@ -33,6 +32,11 @@ if __name__ == "__main__":
                 continue
 
             data = json.loads(message["data"])
+            predict_id = data["predict_id"]
+            if data["action"] == "start":
+                start_predict(predict_id, data["content"])
+            if data["action"] == "end" and predict_id in process_table:
+                process_table.pop(predict_id).kill()
 
     except Exception as e:
         print(e)
