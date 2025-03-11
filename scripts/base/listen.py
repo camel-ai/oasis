@@ -13,13 +13,11 @@ script_path = os.path.dirname(os.path.dirname(__file__))
 
 def redis_publish(content_id, message: dict):
     print(f"predict_{content_id}")
-    print('+++++++++++++++++=========================')
+    print("+++++++++++++++++=========================")
     redis.publish(f"predict_{content_id}", json.dumps(message))
 
 
 def start_predict(predict_id, content):
-    predict_id = 0
-    content = "hello world"
 
     command = f"python {script_path}/twitter_game/twitter_simulation.py --db_path log/twitter_{predict_id}.db --content '{content}'  --content_id {predict_id}"
 
