@@ -31,7 +31,7 @@ from oasis.social_platform.recsys import (rec_sys_personalized_twh,
                                           rec_sys_personalized_with_trace,
                                           rec_sys_random, rec_sys_reddit)
 from oasis.social_platform.typing import ActionType, RecsysType
-from scripts.base.database import redis_publish
+from scripts.base.listen import redis_publish
 
 if "sphinx" not in sys.modules:
     twitter_log = logging.getLogger(name="social.twitter")

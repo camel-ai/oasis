@@ -28,7 +28,7 @@ import random
 import sys
 from datetime import datetime
 from typing import Any
-from scripts.base.database import redis, redis_publish
+from scripts.base.listen import redis, redis_publish
 from colorama import Back
 
 sys.path.append(
