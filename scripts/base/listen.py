@@ -38,9 +38,9 @@ if __name__ == "__main__":
                 start_predict(predict_id, data["content"])
             if data["action"] == "end" and predict_id in process_table:
                 process_table.pop(predict_id).kill()
-
     except Exception as e:
         print(e)
+    finally:
         pubsub.unsubscribe("predict")
         pubsub.close()
         redis.close()
