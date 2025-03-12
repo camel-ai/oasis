@@ -323,7 +323,7 @@ Note that content should exceed {num_words_long} words.
         }
 
     async def perform_action_by_hci(self, input_content: str, selection:int = 0) -> Any:
-        print("Please choose one function to perform:")
+        # print("Please choose one function to perform:")
         function_list = self.env.action.get_openai_function_list()
         # for i in range(len(function_list)):
         #     agent_log.info(f"Agent {self.agent_id} function: "

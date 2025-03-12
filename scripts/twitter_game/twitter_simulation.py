@@ -16,8 +16,10 @@ from __future__ import annotations
 from oasis.social_platform.typing import ActionType
 from oasis.social_platform.platform import Platform
 from oasis.social_platform.channel import Channel
-from oasis.social_agent.agents_generator import (gen_control_agents_with_data,
-                                                 generate_reddit_agents)
+from oasis.social_agent.agents_generator import (
+    gen_control_agents_with_data,
+    generate_reddit_agents,
+)
 from oasis.clock.clock import Clock
 
 import argparse
@@ -31,8 +33,7 @@ from typing import Any
 from scripts.base.listen import redis, redis_publish
 from colorama import Back
 
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 
 logging.basicConfig(level=logging.CRITICAL)
@@ -60,11 +61,11 @@ parser.add_argument(
     default="",
 )
 
-DATA_DIR = os.path.join(os.path.dirname(
-    os.path.dirname(os.path.dirname(__file__))), "data")
+DATA_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data"
+)
 DEFAULT_DB_PATH = os.path.join(DATA_DIR, "mock_reddit.db")
-DEFAULT_USER_PATH = os.path.join(DATA_DIR, "reddit",
-                                 "filter_user_results.json")
+DEFAULT_USER_PATH = os.path.join(DATA_DIR, "reddit", "filter_user_results.json")
 DEFAULT_PAIR_PATH = os.path.join(DATA_DIR, "reddit", "RS-RC-pairs.json")
 
 ROUND_POST_NUM = 20
@@ -81,7 +82,7 @@ async def running(
     refresh_rec_post_count: int = 5,
     user_number: int = 1,
     action_space_file_path: str = None,
-    content: str = '',
+    content: str = "",
     content_id: int = 0,
 ) -> None:
     os.environ["SANDBOX_TIME"] = str(0)
@@ -135,7 +136,9 @@ async def running(
         # social_log.info(f"timestep:{timestep + 1}.")
 
         player_agent = agent_graph.get_agent(0)
-        await player_agent.perform_action_by_hci(predict_content)
+        await player_agent.perform_action_by_hci(
+            predict_content, 0 if predict_content != "" else 6
+        )
 
         await infra.update_rec_table()
         # social_log.info("update rec table.")
@@ -146,27 +149,23 @@ async def running(
                     tasks.append(agent.perform_action_by_llm())
         random.shuffle(tasks)
         await asyncio.gather(*tasks)
-        redis_publish(content_id, {
-            'action': 'predict_end',
-            'step': timestep
-        })
+        redis_publish(content_id, {"action": "predict_end", "step": timestep})
 
     step = 1
     await trigger(step, content)
 
-    channel_name = f'predict_new_{content_id}'
-    print('===============================')
+    channel_name = f"predict_new_{content_id}"
+    print("===============================")
     print(channel_name)
     pubsub = redis.pubsub()
     pubsub.subscribe(channel_name)
-    
+
     for message in pubsub.listen():
         print(message)
         if message["type"] != "message":
             continue
         step += 1
         await trigger(step, str(message["data"]))
-
 
     # num_timesteps = 1
     # for timestep in range(1, num_timesteps + 1):
@@ -201,7 +200,7 @@ def log_info(message: str) -> None:
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Simulation parameters")
-    parser.add_argument("--db_path", type=str, default='twitter.db')
+    parser.add_argument("--db_path", type=str, default="twitter.db")
     parser.add_argument("--content", type=str)
     parser.add_argument("--content_id", type=int)
     return parser.parse_args()
@@ -216,7 +215,7 @@ if __name__ == "__main__":
         "is_openai_model": True,
     }
 
-    user_profile_root_path = f'{DATA_DIR}/game/'
+    user_profile_root_path = f"{DATA_DIR}/game/"
     all_user_profile_path = [
         "all_game_agent_shuffle.json",
         # "game_agent_25_75.json",
@@ -224,14 +223,16 @@ if __name__ == "__main__":
         # "game_agent_75_125.json",
         # "game_agent_100_156.json",
     ]
-    user_profile_path = user_profile_root_path + random.choice(
-        all_user_profile_path)
+    user_profile_path = user_profile_root_path + random.choice(all_user_profile_path)
 
     asyncio.run(
-        running(db_path=args.db_path,
-                user_path=user_profile_path,
-                num_timesteps=3,
-                recsys_type="twhin-bert",
-                inference_configs=inference_configs,
-                content=args.content,
-                content_id=args.content_id))
+        running(
+            db_path=args.db_path,
+            user_path=user_profile_path,
+            num_timesteps=3,
+            recsys_type="twhin-bert",
+            inference_configs=inference_configs,
+            content=args.content,
+            content_id=args.content_id,
+        )
+    )
