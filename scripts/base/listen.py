@@ -7,8 +7,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 redis_url = os.getenv("REDIS_URL")
-print(redis_url)
-print("+++++++++++++============================")
 
 redis = redis_client.from_url(redis_url)
 process_table: dict[str, subprocess.Popen] = {}
