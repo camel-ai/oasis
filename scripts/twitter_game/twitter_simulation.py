@@ -155,8 +155,6 @@ async def running(
     await trigger(step, content)
 
     channel_name = f"predict_new_{content_id}"
-    print("===============================")
-    print(channel_name)
     pubsub = redis.pubsub()
     pubsub.subscribe(channel_name)
 
