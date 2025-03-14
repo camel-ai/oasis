@@ -129,8 +129,7 @@ class SocialAction:
 
         Args:
             content (str): The content of the post to be created. Please
-                includes more emojis and hashtags to make your post more
-                attractive.
+                includes more emojis to make your post more attractive.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -179,8 +178,7 @@ class SocialAction:
         Args:
             post_id (int): The ID of the post to be quoted.
             quote_content (str): The content of the quote to be created. Please
-                includes more emojis and hashtags to make your post more
-                attractive.
+                includes more emojis to make your post more attractive.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -499,7 +497,8 @@ class SocialAction:
         Args:
             post_id (int): The ID of the post to which the comment is to be
                 added.
-            content (str): The content of the comment to be created.
+            content (str): The content of the comment to be created. Please
+                includes more emojis to make your comment more attractive.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
