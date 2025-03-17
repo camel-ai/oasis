@@ -1,12 +1,12 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-# Licensed under the Apache License, Version 2.0 (the “License”);
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an “AS IS” BASIS,
+# distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -37,6 +37,24 @@ class SocialAction:
                 self.do_nothing,
             ]
         ]
+
+    async def filter_end_hashtags(self, content: str) -> str:
+        try:
+            # Split by newlines to preserve line breaks
+            lines = content.split('\n')
+            last_line = lines[-1].strip()
+            words = last_line.split()
+
+            # Find last non-hashtag word
+            for i in range(len(words) - 1, -1, -1):
+                if not words[i].startswith('#'):
+                    lines[-1] = ' '.join(words[:i + 1])
+                    break
+
+            # Rejoin with original line breaks
+            return '\n'.join(lines)
+        except Exception:
+            return content
 
     async def perform_action(self, message: Any, type: str):
         message_id = await self.channel.write_to_receive_queue(
@@ -128,8 +146,9 @@ class SocialAction:
         dictionary indicating success and the ID of the newly created post.
 
         Args:
-            content (str): The content of the post to be created. Please
-                includes more emojis to make your post more attractive.
+            content (str): The content of the post to be created. Ensure that
+                the content does not contain any hashtags. Please includes
+                more emojis to make your post more attractive.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -140,6 +159,7 @@ class SocialAction:
             Example of a successful return:
             {'success': True, 'post_id': 50}
         """
+        content = await self.filter_end_hashtags(content)
         return await self.perform_action(content, ActionType.CREATE_POST.value)
 
     async def repost(self, post_id: int):
@@ -157,7 +177,7 @@ class SocialAction:
             dict: A dictionary with two key-value pairs. The 'success' key
                 maps to a boolean indicating whether the Repost creation was
                 successful. The 'post_id' key maps to the integer ID of the
-                newly created repost.
+                newly created repost. 
 
             Example of a successful return:
             {"success": True, "post_id": 123}
@@ -177,8 +197,9 @@ class SocialAction:
 
         Args:
             post_id (int): The ID of the post to be quoted.
-            quote_content (str): The content of the quote to be created. Please
-                includes more emojis to make your post more attractive.
+            quote_content (str): The content of the quote to be created. Ensure
+                that the content does not contain any hashtags. Please includes
+                more emojis to make your quote more attractive.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -193,6 +214,7 @@ class SocialAction:
             Attempting to quote a post that the user has already quoted will
             result in a failure.
         """
+        quote_content = await self.filter_end_hashtags(quote_content)
         quote_message = (post_id, quote_content)
         return await self.perform_action(quote_message, ActionType.QUOTE_POST)
 
@@ -497,7 +519,8 @@ class SocialAction:
         Args:
             post_id (int): The ID of the post to which the comment is to be
                 added.
-            content (str): The content of the comment to be created. Please
+            content (str): The content of the comment to be created. Ensure
+                that the content does not contain any hashtags. Please
                 includes more emojis to make your comment more attractive.
 
         Returns:
@@ -509,6 +532,7 @@ class SocialAction:
             Example of a successful return:
                 {'success': True, 'comment_id': 123}
         """
+        content = await self.filter_end_hashtags(content)
         comment_message = (post_id, content)
         return await self.perform_action(comment_message,
                                          ActionType.CREATE_COMMENT.value)

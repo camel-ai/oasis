@@ -120,6 +120,7 @@ class SocialAgent:
             content=(
                 f"Please perform social media actions after observing the "
                 f"platform environments. "
+                f"Notice that if you want to create some content, "
                 f"Here is your social media environment: {env_prompt}"),
         )
         self.memory.write_record(
@@ -182,14 +183,14 @@ Note that content should exceed {num_words_long} words.
                     'quote_content']['description'] += long_prompt
             try:
                 response = await self.model_backend._arun(
-                    openai_messages, tools=self.full_tool_schemas)
+                    openai_messages, tools=full_tool_schemas)
                 # agent_log.info(f"Agent {self.agent_id} response: {response}")
                 # print(f"Agent {self.agent_id} response: {response}")
                 for tool_call in response.choices[0].message.tool_calls:
                     action_name = tool_call.function.name
                     args = json.loads(tool_call.function.arguments)
-                    print(f"Agent {self.agent_id} is performing "
-                          f"action: {action_name} with args: {args}")
+                    # print(f"Agent {self.agent_id} is performing "
+                    #       f"action: {action_name} with args: {args}")
                     result = await getattr(self.env.action,
                                            action_name)(**args)
                     self.perform_agent_graph_action(action_name, args)

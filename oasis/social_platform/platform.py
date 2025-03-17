@@ -160,6 +160,8 @@ class Platform:
                     params[second_param_name] = message
 
                 # Call the function with the parameters
+                print(f"agent_id: {agent_id} is performing {action.value} "
+                      f"with params: {params}")
                 result = await action_function(**params)
                 await self.channel.send_to((message_id, agent_id, result))
             else:
