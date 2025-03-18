@@ -146,9 +146,9 @@ class SocialAction:
         dictionary indicating success and the ID of the newly created post.
 
         Args:
-            content (str): The content of the post to be created. Ensure that
-                the content does not contain any hashtags. Please includes
-                more emojis to make your post more attractive.
+            content (str): The content of the post to be created in Chinese.
+                Ensure that the content does not contain any hashtags. Please
+                includes more emojis to make your post more attractive.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -197,9 +197,9 @@ class SocialAction:
 
         Args:
             post_id (int): The ID of the post to be quoted.
-            quote_content (str): The content of the quote to be created. Ensure
-                that the content does not contain any hashtags. Please includes
-                more emojis to make your quote more attractive.
+            quote_content (str): The content of the quote to be created in
+                Chinese. Ensure that the content does not contain any hashtags.
+                Please includes more emojis to make your quote more attractive.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -519,8 +519,8 @@ class SocialAction:
         Args:
             post_id (int): The ID of the post to which the comment is to be
                 added.
-            content (str): The content of the comment to be created. Ensure
-                that the content does not contain any hashtags. Please
+            content (str): The content of the comment to be created in Chinese.
+                Ensure that the content does not contain any hashtags. Please
                 includes more emojis to make your comment more attractive.
 
         Returns:

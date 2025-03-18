@@ -83,6 +83,11 @@ class SocialAgent:
                 model_type=ModelType(model_type),
             )
             self.model_backend.model_config_dict['temperature'] = 0.6
+            # self.model_backend = ModelFactory.create(
+            #     model_platform=ModelPlatformType.QWEN,
+            #     model_type=ModelType.QWEN_MAX,
+            # )
+            # self.model_backend.model_config_dict['temperature'] = 0.6
 
         context_creator = ScoreBasedContextCreator(
             OpenAITokenCounter(ModelType.GPT_3_5_TURBO),
