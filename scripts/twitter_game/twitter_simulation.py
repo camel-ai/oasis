@@ -136,7 +136,7 @@ async def running(
     for timestep in range(1, num_timesteps + 1):
         # os.environ["SANDBOX_TIME"] = str(timestep * 3)
         infra.current_timestep = str(timestep * 3)
-        print(Back.GREEN + f"timestep:{current_timestep}" + Back.RESET)
+        print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         # social_log.info(f"timestep:{timestep + 1}.")
 
         player_agent = agent_graph.get_agent(0)
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     asyncio.run(
         running(db_path=args.db_path,
                 user_path=user_profile_path,
-                num_timesteps=3,
+                num_timesteps=100,
                 recsys_type="twhin-bert",
                 inference_configs=inference_configs,
                 content_id=args.content_id))
