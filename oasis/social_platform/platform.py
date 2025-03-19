@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 import random
 import sqlite3
 import sys
@@ -60,6 +59,7 @@ class Platform:
         max_rec_post_len: int = 2,
         following_post_count=3,
         content_id: int = 0,
+        current_timestep: str = "0",
     ):
         self.db_path = db_path
         self.recsys_type = recsys_type
@@ -109,6 +109,7 @@ class Platform:
         self.trend_top_k = 1
 
         self.content_id = content_id
+        self.current_timestep = current_timestep
 
         self.pl_utils = PlatformUtils(
             self.db,
@@ -116,6 +117,7 @@ class Platform:
             self.start_time,
             self.sandbox_clock,
             self.show_score,
+            self.current_timestep,
         )
 
     async def running(self):
@@ -176,7 +178,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_insert_query = (
                 "INSERT INTO user (user_id, agent_id, user_name, name, bio, "
@@ -218,7 +220,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         # try:
         user_id = agent_id
         # Check if a like record already exists
@@ -256,7 +258,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
             # Retrieve all post_ids for a given user_id from the rec table
@@ -355,6 +357,7 @@ class Platform:
                 trace_table,
                 rec_matrix,
                 self.max_rec_post_len,
+                current_timestep=self.current_timestep,
             )
         elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
@@ -385,7 +388,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
 
@@ -416,7 +419,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
 
@@ -491,7 +494,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
 
@@ -549,7 +552,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -653,7 +656,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -845,7 +848,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
             # Check if a follow record already exists
@@ -952,7 +955,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
             # Check if a mute record already exists
@@ -1019,7 +1022,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
             # Calculate the start time for the search
@@ -1066,7 +1069,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -1099,7 +1102,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
 
@@ -1207,7 +1210,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
 

@@ -71,6 +71,7 @@ class SocialAgent:
         self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
         self.model_type = model_type
         self.is_openai_model = is_openai_model
+        self.language_type = "english"
         if self.is_openai_model:
             tools = self.env.action.get_openai_function_list()
             tool_schemas = {
@@ -115,6 +116,7 @@ class SocialAgent:
     async def perform_action_by_llm(self):
         # Get posts:
         env_prompt = await self.env.to_text_prompt()
+        env_prompt = env_prompt.replace("Chinese", self.language_type)
         user_msg = BaseMessage.make_user_message(
             role_name="User",
             # content=(
@@ -186,6 +188,24 @@ Note that content should exceed {num_words_long} words.
             if random.random() < long_quote_prob:
                 full_tool_schemas[2]["function"]["parameters"]['properties'][
                     'quote_content']['description'] += long_prompt
+
+            full_tool_schemas[0]["function"]["parameters"]['properties'][
+                'content']['description'] = (
+                    full_tool_schemas[0]["function"]["parameters"]
+                    ['properties']['content']['description'].replace(
+                        "Chinese", self.language_type))
+            full_tool_schemas[1]["function"]["parameters"]['properties'][
+                'content']['description'] = (
+                    full_tool_schemas[1]["function"]["parameters"]
+                    ['properties']['content']['description'].replace(
+                        "Chinese", self.language_type))
+            full_tool_schemas[2]["function"]["parameters"]['properties'][
+                'quote_content']['description'] = (
+                    full_tool_schemas[2]["function"]["parameters"]
+                    ['properties']['quote_content']['description'].replace(
+                        "Chinese", self.language_type))
+            # print(f"full_tool_schemas: {full_tool_schemas}")
+            # exit()
             try:
                 response = await self.model_backend._arun(
                     openai_messages, tools=full_tool_schemas)

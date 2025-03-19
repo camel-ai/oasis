@@ -23,7 +23,11 @@ import sys
 from datetime import datetime
 from typing import Any
 
+from camel.agents import ChatAgent
+from camel.models import ModelFactory
+from camel.types import ModelPlatformType, ModelType
 from colorama import Back
+from pydantic import BaseModel
 
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
@@ -82,7 +86,7 @@ async def running(
     action_space_file_path: str = None,
     content_id: int = 0,
 ) -> None:
-    os.environ["SANDBOX_TIME"] = str(0)
+    current_timestep = str(0)
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     user_path = DEFAULT_USER_PATH if user_path is None else user_path
     if os.path.exists(db_path):
@@ -101,6 +105,7 @@ async def running(
         recsys_type=recsys_type,
         refresh_rec_post_count=refresh_rec_post_count,
         content_id=content_id,
+        current_timestep=current_timestep,
     )
 
     twitter_task = asyncio.create_task(infra.running())
@@ -128,12 +133,32 @@ async def running(
         )
 
     for timestep in range(1, num_timesteps + 1):
-        os.environ["SANDBOX_TIME"] = str(timestep * 3)
-        print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
+        # os.environ["SANDBOX_TIME"] = str(timestep * 3)
+        infra.current_timestep = str(timestep * 3)
+        print(Back.GREEN + f"timestep:{current_timestep}" + Back.RESET)
         # social_log.info(f"timestep:{timestep + 1}.")
 
         player_agent = agent_graph.get_agent(0)
         await player_agent.perform_action_by_hci()
+        if timestep == 1:
+            query = "SELECT content FROM post WHERE post_id = 1"
+            result = infra.db_cursor.execute(query).fetchone()[0]
+            model = ModelFactory.create(
+                model_platform=ModelPlatformType.OPENAI,
+                model_type=ModelType.GPT_4O,
+            )
+            language_judge_agent = ChatAgent(model=model)
+            user_message = (
+                f"Please judge the following text is in which language: {result}, and only return one word, like 'chinese', 'english', 'japanese', etc."
+            )
+
+            class LanguageType(BaseModel):
+                language_type: str
+
+            response = language_judge_agent.step(user_message,
+                                                 response_format=LanguageType)
+            language_type = response.msgs[0].parsed.language_type
+            print(f"language_type: {language_type}")
 
         await infra.update_rec_table()
         # social_log.info("update rec table.")
@@ -141,6 +166,7 @@ async def running(
         for _, agent in agent_graph.get_agents():
             if agent.user_info.is_controllable is False:
                 if random.random() < activate_prob:
+                    agent.language_type = language_type
                     tasks.append(agent.perform_action_by_llm())
         random.shuffle(tasks)
         await asyncio.gather(*tasks)
@@ -166,7 +192,7 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    os.environ["SANDBOX_TIME"] = str(0)
+    current_timestep = str(0)
 
     inference_configs = {
         "model_type": "gpt-4o-mini",

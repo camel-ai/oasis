@@ -15,7 +15,6 @@
 into rec_matrix'''
 import heapq
 import logging
-import os
 import random
 import time
 from ast import literal_eval
@@ -410,15 +409,17 @@ def coarse_filtering(input_list, scale):
 
 
 def rec_sys_personalized_twh(
-        user_table: List[Dict[str, Any]],
-        post_table: List[Dict[str, Any]],
-        latest_post_count: int,
-        trace_table: List[Dict[str, Any]],
-        rec_matrix: List[List],
-        max_rec_post_len: int,
-        # source_post_indexs: List[int],
-        recall_only: bool = False,
-        enable_like_score: bool = False) -> List[List]:
+    user_table: List[Dict[str, Any]],
+    post_table: List[Dict[str, Any]],
+    latest_post_count: int,
+    trace_table: List[Dict[str, Any]],
+    rec_matrix: List[List],
+    max_rec_post_len: int,
+    # source_post_indexs: List[int],
+    recall_only: bool = False,
+    enable_like_score: bool = False,
+    current_timestep: str = "0",
+) -> List[List]:
     # Set some global variables to reduce time consumption
     global date_score, fans_score, t_items, u_items, user_previous_post
     global user_previous_post_all, user_profiles
@@ -444,7 +445,7 @@ def rec_sys_personalized_twh(
             else:
                 user_profiles.append(user['bio'])
 
-    current_time = int(os.environ["SANDBOX_TIME"])
+    current_time = int(current_timestep)
     if len(t_items) < len(post_table):
         for post in post_table[-latest_post_count:]:
             # Get the {post_id: content} dict, update only the latest tweets
