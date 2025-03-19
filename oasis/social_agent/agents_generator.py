@@ -499,6 +499,7 @@ async def gen_control_agents_with_data(
         name = "momo"
         bio = "None."
         response = await agent.env.action.sign_up(user_name, name, bio)
+        print(response)
         user_id = response["user_id"]
         agent_user_id_mapping[i] = user_id
 

@@ -29,15 +29,16 @@ from camel.types import ModelPlatformType, ModelType
 from colorama import Back
 from pydantic import BaseModel
 
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-
 from oasis.clock.clock import Clock
 from oasis.social_agent.agents_generator import (gen_control_agents_with_data,
                                                  generate_reddit_agents)
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
+from scripts.base.listen import redis, redis_publish
+
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 logging.basicConfig(level=logging.CRITICAL)
 # social_log = logging.getLogger(name="social")
@@ -64,7 +65,8 @@ parser.add_argument(
     default="",
 )
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+DATA_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 DEFAULT_DB_PATH = os.path.join(DATA_DIR, "mock_reddit.db")
 DEFAULT_USER_PATH = os.path.join(DATA_DIR, "reddit",
                                  "filter_user_results.json")
@@ -85,6 +87,7 @@ async def running(
     refresh_rec_post_count: int = 5,
     user_number: int = 1,
     action_space_file_path: str = None,
+    content: str = "",
     content_id: int = 0,
 ) -> None:
     current_timestep = str(0)
@@ -133,14 +136,15 @@ async def running(
             is_openai_model=is_openai_model,
         )
 
-    for timestep in range(1, num_timesteps + 1):
+    async def trigger(timestep: int, predict_content: str):
         # os.environ["SANDBOX_TIME"] = str(timestep * 3)
         infra.current_timestep = str(timestep * 3)
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         # social_log.info(f"timestep:{timestep + 1}.")
 
         player_agent = agent_graph.get_agent(0)
-        await player_agent.perform_action_by_hci()
+        await player_agent.perform_action_by_hci(
+            predict_content, 0 if predict_content != "" else 6)
         if timestep == 1:
             query = "SELECT content FROM post WHERE post_id = 1"
             result = infra.db_cursor.execute(query).fetchone()[0]
@@ -179,6 +183,40 @@ async def running(
                         tasks.append(agent.perform_action_by_llm())
         random.shuffle(tasks)
         await asyncio.gather(*tasks)
+        redis_publish(content_id, {"action": "predict_end", "step": timestep})
+
+    step = 1
+    await trigger(step, content)
+
+    channel_name = f"predict_new_{content_id}"
+    pubsub = redis.pubsub()
+    pubsub.subscribe(channel_name)
+
+    for message in pubsub.listen():
+        print(message)
+        if message["type"] != "message":
+            continue
+        step += 1
+        await trigger(step, str(message["data"]))
+
+    # num_timesteps = 1
+    # for timestep in range(1, num_timesteps + 1):
+    #     os.environ["SANDBOX_TIME"] = str(timestep * 3)
+    #     print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
+    #     # social_log.info(f"timestep:{timestep + 1}.")
+
+    #     player_agent = agent_graph.get_agent(0)
+    #     await player_agent.perform_action_by_hci(content)
+
+    #     await infra.update_rec_table()
+    #     # social_log.info("update rec table.")
+    #     tasks = []
+    #     for _, agent in agent_graph.get_agents():
+    #         if agent.user_info.is_controllable is False:
+    #             if random.random() < activate_prob:
+    #                 tasks.append(agent.perform_action_by_llm())
+    #     random.shuffle(tasks)
+    #     await asyncio.gather(*tasks)
 
     await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
 
@@ -194,7 +232,8 @@ def log_info(message: str) -> None:
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Simulation parameters")
-    parser.add_argument("--db_path", type=str, default='twitter.db')
+    parser.add_argument("--db_path", type=str, default="twitter.db")
+    parser.add_argument("--content", type=str)
     parser.add_argument("--content_id", type=int)
     return parser.parse_args()
 
