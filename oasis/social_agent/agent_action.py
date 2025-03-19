@@ -38,6 +38,24 @@ class SocialAction:
             ]
         ]
 
+    async def filter_end_hashtags(self, content: str) -> str:
+        try:
+            # Split by newlines to preserve line breaks
+            lines = content.split('\n')
+            last_line = lines[-1].strip()
+            words = last_line.split()
+
+            # Find last non-hashtag word
+            for i in range(len(words) - 1, -1, -1):
+                if not words[i].startswith('#'):
+                    lines[-1] = ' '.join(words[:i + 1])
+                    break
+
+            # Rejoin with original line breaks
+            return '\n'.join(lines)
+        except Exception:
+            return content
+
     async def perform_action(self, message: Any, type: str):
         message_id = await self.channel.write_to_receive_queue(
             (self.agent_id, message, type))
@@ -128,9 +146,9 @@ class SocialAction:
         dictionary indicating success and the ID of the newly created post.
 
         Args:
-            content (str): The content of the post to be created. Please
-                includes more emojis and hashtags to make your post more
-                attractive.
+            content (str): The content of the post to be created in Chinese.
+                Ensure that the content does not contain any hashtags. Please
+                includes more emojis to make your post more attractive.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -141,6 +159,7 @@ class SocialAction:
             Example of a successful return:
             {'success': True, 'post_id': 50}
         """
+        content = await self.filter_end_hashtags(content)
         return await self.perform_action(content, ActionType.CREATE_POST.value)
 
     async def repost(self, post_id: int):
@@ -178,9 +197,9 @@ class SocialAction:
 
         Args:
             post_id (int): The ID of the post to be quoted.
-            quote_content (str): The content of the quote to be created. Please
-                includes more emojis and hashtags to make your post more
-                attractive.
+            quote_content (str): The content of the quote to be created in
+                Chinese. Ensure that the content does not contain any hashtags.
+                Please includes more emojis to make your quote more attractive.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -195,6 +214,7 @@ class SocialAction:
             Attempting to quote a post that the user has already quoted will
             result in a failure.
         """
+        quote_content = await self.filter_end_hashtags(quote_content)
         quote_message = (post_id, quote_content)
         return await self.perform_action(quote_message, ActionType.QUOTE_POST)
 
@@ -499,7 +519,9 @@ class SocialAction:
         Args:
             post_id (int): The ID of the post to which the comment is to be
                 added.
-            content (str): The content of the comment to be created.
+            content (str): The content of the comment to be created in Chinese.
+                Ensure that the content does not contain any hashtags. Please
+                includes more emojis to make your comment more attractive.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -510,6 +532,7 @@ class SocialAction:
             Example of a successful return:
                 {'success': True, 'comment_id': 123}
         """
+        content = await self.filter_end_hashtags(content)
         comment_message = (post_id, content)
         return await self.perform_action(comment_message,
                                          ActionType.CREATE_COMMENT.value)

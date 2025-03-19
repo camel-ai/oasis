@@ -71,6 +71,7 @@ class SocialAgent:
         self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
         self.model_type = model_type
         self.is_openai_model = is_openai_model
+        self.language_type = "english"
         if self.is_openai_model:
             tools = self.env.action.get_openai_function_list()
             tool_schemas = {
@@ -83,6 +84,11 @@ class SocialAgent:
                 model_type=ModelType(model_type),
             )
             self.model_backend.model_config_dict['temperature'] = 0.6
+            # self.model_backend = ModelFactory.create(
+            #     model_platform=ModelPlatformType.QWEN,
+            #     model_type=ModelType.QWEN_MAX,
+            # )
+            # self.model_backend.model_config_dict['temperature'] = 0.6
 
         context_creator = ScoreBasedContextCreator(
             OpenAITokenCounter(ModelType.GPT_3_5_TURBO),
@@ -110,6 +116,7 @@ class SocialAgent:
     async def perform_action_by_llm(self):
         # Get posts:
         env_prompt = await self.env.to_text_prompt()
+        env_prompt = env_prompt.replace("Chinese", self.language_type)
         user_msg = BaseMessage.make_user_message(
             role_name="User",
             # content=(
@@ -120,6 +127,7 @@ class SocialAgent:
             content=(
                 f"Please perform social media actions after observing the "
                 f"platform environments. "
+                f"Notice that if you want to create some content, "
                 f"Here is your social media environment: {env_prompt}"),
         )
         self.memory.write_record(
@@ -180,16 +188,34 @@ Note that content should exceed {num_words_long} words.
             if random.random() < long_quote_prob:
                 full_tool_schemas[2]["function"]["parameters"]['properties'][
                     'quote_content']['description'] += long_prompt
+
+            full_tool_schemas[0]["function"]["parameters"]['properties'][
+                'content']['description'] = (
+                    full_tool_schemas[0]["function"]["parameters"]
+                    ['properties']['content']['description'].replace(
+                        "Chinese", self.language_type))
+            full_tool_schemas[1]["function"]["parameters"]['properties'][
+                'content']['description'] = (
+                    full_tool_schemas[1]["function"]["parameters"]
+                    ['properties']['content']['description'].replace(
+                        "Chinese", self.language_type))
+            full_tool_schemas[2]["function"]["parameters"]['properties'][
+                'quote_content']['description'] = (
+                    full_tool_schemas[2]["function"]["parameters"]
+                    ['properties']['quote_content']['description'].replace(
+                        "Chinese", self.language_type))
+            # print(f"full_tool_schemas: {full_tool_schemas}")
+            # exit()
             try:
                 response = await self.model_backend._arun(
-                    openai_messages, tools=self.full_tool_schemas)
+                    openai_messages, tools=full_tool_schemas)
                 # agent_log.info(f"Agent {self.agent_id} response: {response}")
                 # print(f"Agent {self.agent_id} response: {response}")
                 for tool_call in response.choices[0].message.tool_calls:
                     action_name = tool_call.function.name
                     args = json.loads(tool_call.function.arguments)
-                    print(f"Agent {self.agent_id} is performing "
-                          f"action: {action_name} with args: {args}")
+                    # print(f"Agent {self.agent_id} is performing "
+                    #       f"action: {action_name} with args: {args}")
                     result = await getattr(self.env.action,
                                            action_name)(**args)
                     self.perform_agent_graph_action(action_name, args)
@@ -322,7 +348,9 @@ Note that content should exceed {num_words_long} words.
             "content": content
         }
 
-    async def perform_action_by_hci(self, input_content: str, selection:int = 0) -> Any:
+    async def perform_action_by_hci(self,
+                                    input_content: str,
+                                    selection: int = 0) -> Any:
         # print("Please choose one function to perform:")
         function_list = self.env.action.get_openai_function_list()
         # for i in range(len(function_list)):

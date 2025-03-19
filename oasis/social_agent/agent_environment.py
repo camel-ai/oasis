@@ -37,7 +37,9 @@ class SocialEnvironment(Environment):
     env_template = Template(
         "$posts_env\npick one you want to perform action that best "
         "reflects your current inclination based on your profile and "
-        "posts content. Do not limit your action in just `like` to like posts")
+        "posts content. Do not limit your action in just `like` to like posts "
+        "and do not include any hashtags in your response."
+        "Use Chinese for creating post content, quote content, and comment content.")
 
     def __init__(self, action: SocialAction):
         self.action = action

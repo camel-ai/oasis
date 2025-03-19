@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 import random
 import sqlite3
 import sys
@@ -61,6 +60,7 @@ class Platform:
         max_rec_post_len: int = 2,
         following_post_count=3,
         content_id: int = 0,
+        current_timestep: str = "0",
     ):
         self.db_path = db_path
         self.recsys_type = recsys_type
@@ -110,6 +110,7 @@ class Platform:
         self.trend_top_k = 1
 
         self.content_id = content_id
+        self.current_timestep = current_timestep
 
         self.pl_utils = PlatformUtils(
             self.db,
@@ -117,6 +118,7 @@ class Platform:
             self.start_time,
             self.sandbox_clock,
             self.show_score,
+            self.current_timestep,
         )
 
     async def running(self):
@@ -161,6 +163,8 @@ class Platform:
                     params[second_param_name] = message
 
                 # Call the function with the parameters
+                print(f"agent_id: {agent_id} is performing {action.value} "
+                      f"with params: {params}")
                 result = await action_function(**params)
                 await self.channel.send_to((message_id, agent_id, result))
             else:
@@ -175,7 +179,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_insert_query = (
                 "INSERT INTO user (user_id, agent_id, user_name, name, bio, "
@@ -195,14 +199,15 @@ class Platform:
                              f"current_time={current_time}, "
                              f"action={ActionType.SIGNUP.value}, "
                              f"info={action_info}")
-            redis_publish(self.content_id, {
-                "action": 'sign_up',
-                "user_id": user_id,
-                "username": user_name,
-                "name": name,
-                "bio": bio,
-                "created_at": current_time
-            })
+            redis_publish(
+                self.content_id, {
+                    "action": 'sign_up',
+                    "user_id": user_id,
+                    "username": user_name,
+                    "name": name,
+                    "bio": bio,
+                    "created_at": current_time
+                })
             return {"success": True, "user_id": user_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -225,7 +230,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         # try:
         user_id = agent_id
         # Check if a like record already exists
@@ -263,7 +268,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
             # Retrieve all post_ids for a given user_id from the rec table
@@ -362,6 +367,7 @@ class Platform:
                 trace_table,
                 rec_matrix,
                 self.max_rec_post_len,
+                current_timestep=self.current_timestep,
             )
         elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
@@ -392,7 +398,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
 
@@ -412,13 +418,20 @@ class Platform:
             #                  f"current_time={current_time}, "
             #                  f"action={ActionType.CREATE_POST.value}, "
             #                  f"info={action_info}")
-            redis_publish(self.content_id, {
-                'action': 'create_post',
-                'post_id': post_id,
-                'user_id': user_id,
-                'content': content,
-                'created_at': current_time
-            })
+            if agent_id <= 33:  # celebrity
+                activate_prob = 0.1
+            else:  # normal
+                activate_prob = 0.2
+            # print(f"activate_prob: {activate_prob}")
+            redis_publish(
+                self.content_id, {
+                    'action': 'create_post',
+                    'post_id': post_id,
+                    'user_id': user_id,
+                    'content': content,
+                    'created_at': current_time,
+                    'activate_prob': activate_prob
+                })
             return {"success": True, "post_id": post_id}
 
         except Exception as e:
@@ -429,7 +442,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
 
@@ -493,13 +506,14 @@ class Platform:
             action_info = {"reposted_id": post_id, "new_post_id": new_post_id}
             self.pl_utils._record_trace(user_id, ActionType.REPOST.value,
                                         action_info, current_time)
-            redis_publish(self.content_id, {
-                'action': 'repost',
-                'new_post_id': new_post_id,
-                'post_id': post_id,
-                'user_id': user_id,
-                'created_at': current_time
-            })
+            redis_publish(
+                self.content_id, {
+                    'action': 'repost',
+                    'new_post_id': new_post_id,
+                    'post_id': post_id,
+                    'user_id': user_id,
+                    'created_at': current_time
+                })
             return {"success": True, "post_id": new_post_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -510,7 +524,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
 
@@ -558,14 +572,15 @@ class Platform:
             action_info = {"quoted_id": post_id, "new_post_id": new_post_id}
             self.pl_utils._record_trace(user_id, ActionType.QUOTE_POST.value,
                                         action_info, current_time)
-            redis_publish(self.content_id, {
-                'action': 'quote',
-                'new_post_id': new_post_id,
-                'post_id': post_id,
-                'content': quote_content,
-                'user_id': user_id,
-                'created_at': current_time
-            })
+            redis_publish(
+                self.content_id, {
+                    'action': 'quote',
+                    'new_post_id': new_post_id,
+                    'post_id': post_id,
+                    'content': quote_content,
+                    'user_id': user_id,
+                    'created_at': current_time
+                })
             return {"success": True, "post_id": new_post_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -575,7 +590,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -621,12 +636,13 @@ class Platform:
             action_info = {"post_id": post_id, "like_id": like_id}
             self.pl_utils._record_trace(user_id, ActionType.LIKE_POST.value,
                                         action_info, current_time)
-            redis_publish(self.content_id, {
-                'action': 'like_post',
-                'post_id': post_id,
-                'user_id': user_id,
-                'created_at': current_time
-            })
+            redis_publish(
+                self.content_id, {
+                    'action': 'like_post',
+                    'post_id': post_id,
+                    'user_id': user_id,
+                    'created_at': current_time
+                })
             return {"success": True, "like_id": like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -685,7 +701,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -867,7 +883,7 @@ class Platform:
                 "num_followings": num_followings,
                 "num_followers": num_followers,
             } for user_id, user_name, name, bio, created_at, num_followings,
-                num_followers in results]
+                     num_followers in results]
             return {"success": True, "users": users}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -877,7 +893,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
             # Check if a follow record already exists
@@ -984,7 +1000,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
             # Check if a mute record already exists
@@ -1051,7 +1067,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
             # Calculate the start time for the search
@@ -1098,7 +1114,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -1121,14 +1137,15 @@ class Platform:
             self.pl_utils._record_trace(user_id,
                                         ActionType.CREATE_COMMENT.value,
                                         action_info, current_time)
-            redis_publish(self.content_id, {
-                'action': 'create_comment',
-                'comment_id': comment_id,
-                'post_id': post_id,
-                'content': content,
-                'user_id': user_id,
-                'created_at': current_time
-            })
+            redis_publish(
+                self.content_id, {
+                    'action': 'create_comment',
+                    'comment_id': comment_id,
+                    'post_id': post_id,
+                    'content': content,
+                    'user_id': user_id,
+                    'created_at': current_time
+                })
             return {"success": True, "comment_id": comment_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -1138,7 +1155,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
 
@@ -1188,12 +1205,13 @@ class Platform:
             self.pl_utils._record_trace(user_id, ActionType.LIKE_COMMENT.value,
                                         action_info, current_time)
 
-            redis_publish(self.content_id, {
-                'action': 'like_comment',
-                'comment_id': comment_id,
-                'user_id': user_id,
-                'created_at': current_time
-            })
+            redis_publish(
+                self.content_id, {
+                    'action': 'like_comment',
+                    'comment_id': comment_id,
+                    'user_id': user_id,
+                    'created_at': current_time
+                })
             return {"success": True, "comment_like_id": comment_like_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -1253,7 +1271,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
         try:
             user_id = agent_id
 
