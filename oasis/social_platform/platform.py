@@ -408,6 +408,11 @@ class Platform:
             #                  f"current_time={current_time}, "
             #                  f"action={ActionType.CREATE_POST.value}, "
             #                  f"info={action_info}")
+            if agent_id <= 33:  # celebrity
+                activate_prob = 0.1
+            else:  # normal
+                activate_prob = 0.2
+            print(f"activate_prob: {activate_prob}")
 
             return {"success": True, "post_id": post_id}
 

@@ -79,7 +79,8 @@ async def running(
     num_timesteps: int = 5,
     recsys_type: str = "twrec-bert",
     controllable_user: bool = True,
-    activate_prob: float = 0.2,
+    activate_prob_normal: float = 0.2,
+    activate_prob_celebrity: float = 0.1,
     inference_configs: dict[str, Any] | None = None,
     refresh_rec_post_count: int = 5,
     user_number: int = 1,
@@ -164,10 +165,18 @@ async def running(
         # social_log.info("update rec table.")
         tasks = []
         for _, agent in agent_graph.get_agents():
+            if agent.agent_id == 33:
+                assert agent.user_info.profile['other_info'][
+                    'realname'] == "Liu Qiangdong"
             if agent.user_info.is_controllable is False:
-                if random.random() < activate_prob:
-                    agent.language_type = language_type
-                    tasks.append(agent.perform_action_by_llm())
+                if agent.agent_id <= 33:  # celebrity
+                    if random.random() < activate_prob_celebrity:
+                        agent.language_type = language_type
+                        tasks.append(agent.perform_action_by_llm())
+                else:  # normal
+                    if random.random() < activate_prob_normal:
+                        agent.language_type = language_type
+                        tasks.append(agent.perform_action_by_llm())
         random.shuffle(tasks)
         await asyncio.gather(*tasks)
 
@@ -200,13 +209,7 @@ if __name__ == "__main__":
     }
 
     user_profile_root_path = './data/game/'
-    all_user_profile_path = [
-        "all_game_agent_shuffle.json",
-        # "game_agent_25_75.json",
-        # "game_agent_50_100.json",
-        # "game_agent_75_125.json",
-        # "game_agent_100_156.json",
-    ]
+    all_user_profile_path = ["mixed_agents.json"]
     user_profile_path = user_profile_root_path + random.choice(
         all_user_profile_path)
 
