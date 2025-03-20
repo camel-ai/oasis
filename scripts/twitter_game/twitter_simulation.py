@@ -146,15 +146,15 @@ async def running(
         await player_agent.perform_action_by_hci(
             predict_content, 0 if predict_content != "" else 6)
         if timestep == 1:
-            query = "SELECT content FROM post WHERE post_id = 1"
-            result = infra.db_cursor.execute(query).fetchone()[0]
+            # query = "SELECT content FROM post WHERE post_id = 1"
+            # result = infra.db_cursor.execute(query).fetchone()[0]
             model = ModelFactory.create(
                 model_platform=ModelPlatformType.OPENAI,
                 model_type=ModelType.GPT_4O,
             )
             language_judge_agent = ChatAgent(model=model)
             user_message = (
-                f"Please judge the following text is in which language: {result}, and only return one word, like 'chinese', 'english', 'japanese', etc."
+                f"Please judge the following text is in which language: {predict_content}, and only return one word, like 'chinese', 'english', 'japanese', etc."
             )
 
             class LanguageType(BaseModel):
