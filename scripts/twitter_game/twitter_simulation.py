@@ -111,7 +111,7 @@ async def running(
         content_id=content_id,
         current_timestep=current_timestep,
     )
-
+    
     twitter_task = asyncio.create_task(infra.running())
 
     if inference_configs["model_type"][:3] == "gpt":
@@ -258,4 +258,5 @@ if __name__ == "__main__":
                 num_timesteps=100,
                 recsys_type="twhin-bert",
                 inference_configs=inference_configs,
+                content=args.content,
                 content_id=args.content_id))
