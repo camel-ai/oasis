@@ -33,10 +33,12 @@ def redis_publish(content_id, message: dict):
 
 def start_predict(predict_id, content):
 
-    command = (f"python {script_path}/twitter_game/twitter_simulation.py "
-               f"--db_path log/twitter_{predict_id}.db "
-               f"--content '{content}'  "
-               f"--content_id {predict_id}")
+    command = (
+        f"python {script_path}/twitter_game/twitter_simulation.py "
+        f"--db_path log/twitter_{predict_id}.db "
+        f"--content '{content}'  "
+        f"--content_id {predict_id}"
+    )
 
     proc = subprocess.Popen([command], env=os.environ.copy(), shell=True)
     process_table[predict_id] = proc
