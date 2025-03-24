@@ -323,8 +323,7 @@ class Platform:
         rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
 
         if self.recsys_type == RecsysType.RANDOM:
-            new_rec_matrix = rec_sys_random(user_table, post_table,
-                                            trace_table, rec_matrix,
+            new_rec_matrix = rec_sys_random(post_table, rec_matrix,
                                             self.max_rec_post_len)
         elif self.recsys_type == RecsysType.TWITTER:
             new_rec_matrix = rec_sys_personalized_with_trace(

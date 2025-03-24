@@ -21,7 +21,7 @@ class UserInfo:
     name: str | None = None
     description: str | None = None
     profile: dict[str, Any] | None = None
-    recsys_type: str = "twitter",
+    recsys_type: str = "twitter"
     is_controllable: bool = False
 
     def to_system_message(self, action_space_prompt: str = None) -> str:

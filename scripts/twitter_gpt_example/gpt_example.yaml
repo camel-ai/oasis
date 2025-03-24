@@ -5,12 +5,12 @@ data:
 simulation:
   num_timesteps: 3
   clock_factor: 60
-  recsys_type: twhin-bert
+  recsys_type: random
 model:
   num_agents: 111
   model_random_seed: 42
   cfgs:
-    - model_type: gpt-3.5-turbo
+    - model_type: gpt-4o-mini
       num: 111
       server_url: null
       model_path: null
