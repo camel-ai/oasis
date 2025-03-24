@@ -5,7 +5,7 @@ data:
 simulation:
   num_timesteps: 3
   clock_factor: 60
-  recsys_type: random
+  recsys_type: twhin-bert
 model:
   num_agents: 111
   model_random_seed: 42
