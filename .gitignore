@@ -97,3 +97,5 @@ models/
 *.db
 *.sqlite3
 *.sqlite
+
+tmp
