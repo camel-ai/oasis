@@ -38,6 +38,3 @@ actions:
       - name: "post_id"
         type: "integer"
         description: "The ID of the post to be liked."
-
-
-
