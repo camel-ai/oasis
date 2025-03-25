@@ -37,6 +37,9 @@ from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
 from scripts.base.listen import redis, redis_publish
 
+os.environ["HTTP_PROXY"] = "http://127.0.0.1:7890"
+os.environ["HTTPS_PROXY"] = "http://127.0.0.1:7890"
+
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
@@ -163,6 +166,7 @@ async def running(
 
             response = language_judge_agent.step(user_message,
                                                  response_format=LanguageType)
+            global language_type
             language_type = response.msgs[0].parsed.language_type
             print(f"language_type: {language_type}")
 

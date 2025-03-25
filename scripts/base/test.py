@@ -12,6 +12,7 @@
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import os
+import json
 
 import redis as redis_client
 from dotenv import load_dotenv
@@ -31,4 +32,4 @@ redis = redis_client.from_url(redis_url)
 #     }),
 # )
 
-# redis.publish("predict_new_1000", "Repeat this is best")
+redis.publish("predict_new_1000", "Repeat this is best")
