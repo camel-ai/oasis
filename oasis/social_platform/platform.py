@@ -61,6 +61,7 @@ class Platform:
         following_post_count=3,
         content_id: int = 0,
         current_timestep: str = "0",
+        use_openai_embedding: bool = False,
     ):
         self.db_path = db_path
         self.recsys_type = recsys_type
@@ -104,6 +105,7 @@ class Platform:
         self.max_rec_post_len = max_rec_post_len
         # rec prob between random and personalized
         self.rec_prob = 0.7
+        self.use_openai_embedding = use_openai_embedding
 
         # Parameters for the platform's internal trending rules
         self.trend_num_days = 7
@@ -340,8 +342,7 @@ class Platform:
         rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
 
         if self.recsys_type == RecsysType.RANDOM:
-            new_rec_matrix = rec_sys_random(user_table, post_table,
-                                            trace_table, rec_matrix,
+            new_rec_matrix = rec_sys_random(post_table, rec_matrix,
                                             self.max_rec_post_len)
         elif self.recsys_type == RecsysType.TWITTER:
             new_rec_matrix = rec_sys_personalized_with_trace(
@@ -367,6 +368,7 @@ class Platform:
                 trace_table,
                 rec_matrix,
                 self.max_rec_post_len,
+                use_openai_embedding=self.use_openai_embedding,
                 current_timestep=self.current_timestep,
             )
         elif self.recsys_type == RecsysType.REDDIT:

@@ -21,7 +21,7 @@ class UserInfo:
     name: str | None = None
     description: str | None = None
     profile: dict[str, Any] | None = None
-    recsys_type: str = "twitter",
+    recsys_type: str = "twitter"
     is_controllable: bool = False
 
     def to_description(self) -> str:
@@ -83,7 +83,7 @@ you should try to be more interesting and Witty banter.
 For example, you can try to create some creative and hilarious content.
 
 # RESPONSE FORMAT
-Your can choose some actions by calling tools. Ensure that the content you created does not contain any hashtags.  
+Your can choose some actions by calling tools. Ensure that the content you created does not contain any hashtags.
 """
         return system_content
 
