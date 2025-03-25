@@ -31,3 +31,5 @@ redis.publish(
         "content": "this is the best product"
     }),
 )
+
+# redis.publish("predict_new_1000", "Repeat this is best")
