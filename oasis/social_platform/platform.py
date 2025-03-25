@@ -59,6 +59,7 @@ class Platform:
         refresh_rec_post_count: int = 1,
         max_rec_post_len: int = 2,
         following_post_count=3,
+        use_openai_embedding: bool = False,
     ):
         self.db_path = db_path
         self.recsys_type = recsys_type
@@ -102,6 +103,7 @@ class Platform:
         self.max_rec_post_len = max_rec_post_len
         # rec prob between random and personalized
         self.rec_prob = 0.7
+        self.use_openai_embedding = use_openai_embedding
 
         # Parameters for the platform's internal trending rules
         self.trend_num_days = 7
@@ -349,6 +351,7 @@ class Platform:
                 trace_table,
                 rec_matrix,
                 self.max_rec_post_len,
+                use_openai_embedding=self.use_openai_embedding,
             )
         elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
