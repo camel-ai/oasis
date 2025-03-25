@@ -14,9 +14,9 @@
 from typing import List
 
 import torch
-from transformers import AutoModel, AutoTokenizer
 from camel.embeddings import OpenAIEmbedding
 from camel.types import EmbeddingModelType
+from transformers import AutoModel, AutoTokenizer
 
 
 # Function: Process each batch
@@ -49,24 +49,25 @@ def generate_post_vector(model: AutoModel, tokenizer: AutoTokenizer, texts,
 def generate_post_vector_openai(texts: List[str], batch_size: int = 100):
     """
     Generate embeddings using OpenAI API
-    
+
     Args:
         texts: List of texts to process
         batch_size: Size of each batch
     """
     openai_embedding = OpenAIEmbedding(
-        model_type=EmbeddingModelType.TEXT_EMBEDDING_3_SMALL
-    )
-    
+        model_type=EmbeddingModelType.TEXT_EMBEDDING_3_SMALL)
+
     all_embeddings = []
     for i in range(0, len(texts), batch_size):
         batch_texts = texts[i:i + batch_size]
-        batch_embeddings = openai_embedding.embed_list(
-            objs=batch_texts
-        )
+        cleaned_texts = [
+            text.strip() if text and isinstance(text, str) else "empty"
+            for text in batch_texts
+        ]
+        batch_embeddings = openai_embedding.embed_list(objs=cleaned_texts)
         batch_tensor = torch.tensor(batch_embeddings)
         all_embeddings.append(batch_tensor)
-    
+
     return torch.cat(all_embeddings, dim=0)
 
 
