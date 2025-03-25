@@ -37,9 +37,6 @@ from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
 from scripts.base.listen import redis, redis_publish
 
-os.environ["HTTP_PROXY"] = "http://127.0.0.1:7890"
-os.environ["HTTPS_PROXY"] = "http://127.0.0.1:7890"
-
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
