@@ -11,8 +11,11 @@ redis = redis_client.from_url(redis_url)
 
 
 redis.publish(
-    f"predict",
+    "predict",
     json.dumps(
         {"action": "start", "predict_id": 1000, "content": "this is the best product"}
     ),
 )
+
+
+# redis.publish("predict_new_1000", "Repeat this is best")
