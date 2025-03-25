@@ -110,8 +110,9 @@ async def running(
         refresh_rec_post_count=refresh_rec_post_count,
         content_id=content_id,
         current_timestep=current_timestep,
+        use_openai_embedding=True,
     )
-    
+
     twitter_task = asyncio.create_task(infra.running())
 
     if inference_configs["model_type"][:3] == "gpt":
