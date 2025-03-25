@@ -1,10 +1,15 @@
-[![arXiv][arxiv-image]][arxiv-url]
-[![Python Version][python-image]][python-url]
-[![Star][star-image]][star-url]
-[![Slack][slack-image]][slack-url]
+<div align="center">
+
 [![Discord][discord-image]][discord-url]
+[![X][x-image]][x-url]
+[![Reddit][reddit-image]][reddit-url]
 [![Wechat][wechat-image]][wechat-url]
-[![Twitter][twitter-image]][twitter-url]
+[![Wechat][oasis-image]][oasis-url]
+[![Hugging Face][huggingface-image]][huggingface-url]
+[![Star][star-image]][star-url]
+[![Package License][package-license-image]][package-license-url]
+
+</div>
 
 ______________________________________________________________________
 
@@ -311,8 +316,9 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 <!-- - Public release of our dataset on Hugging Face (November 05, 2024) -->
 
-📣 Add multi-threading support to speed up LLM inference by 13x - 📆 March 4, 2025
+📣 Updated social media links and QR codes in the README! Join OASIS & CAMEL on WeChat, X, Reddit, and Discord. - 📆 March 25, 2025
 
+- Add multi-threading support to speed up LLM inference by 13x - 📆 March 4, 2025
 - Slightly refactoring the database to add Quote Action and modify Repost Action - 📆 January 13, 2025
 - Added the demo video and oasis's star history in the README - 📆 January 5, 2025
 - Introduced an Electronic Mall on the Reddit platform - 📆 December 5, 2024
@@ -355,17 +361,19 @@ If you're keen on exploring new research opportunities or discoveries with our p
 
 [![Star History Chart](https://api.star-history.com/svg?repos=camel-ai/oasis&type=Date)](https://star-history.com/#camel-ai/oasis&Date)
 
-[arxiv-image]: https://img.shields.io/badge/arXiv-2407.01511-b31b1b.svg
-[arxiv-url]: https://arxiv.org/abs/2411.11581
-[discord-image]: https://img.shields.io/badge/Discord-CAMEL--AI-7289da?logo=discord&logoColor=white&color=7289da
-[discord-url]: https://discord.gg/CNcNpquyDc
-[python-image]: https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg
-[python-url]: https://docs.python.org/3.10/
-[slack-image]: https://img.shields.io/badge/Slack-CAMEL--AI-blueviolet?logo=slack
-[slack-url]: https://join.slack.com/t/camel-ai/shared_invite/zt-2g7xc41gy-_7rcrNNAArIP6sLQqldkqQ
+[discord-image]: https://img.shields.io/discord/1082486657678311454?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb
+[discord-url]: https://discord.camel-ai.org/
+[huggingface-image]: https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-CAMEL--AI-ffc107?color=ffc107&logoColor=white
+[huggingface-url]: https://huggingface.co/camel-ai
+[oasis-image]: https://img.shields.io/badge/WeChat-OASISProject-brightgreen?logo=wechat&logoColor=white
+[oasis-url]: ./assets/oasis_wechat.jpg
+[package-license-image]: https://img.shields.io/badge/License-Apache_2.0-blue.svg
+[package-license-url]: https://github.com/camel-ai/oasis/blob/main/licenses/LICENSE
+[reddit-image]: https://img.shields.io/reddit/subreddit-subscribers/CamelAI?style=plastic&logo=reddit&label=r%2FCAMEL&labelColor=white
+[reddit-url]: https://www.reddit.com/r/CamelAI/
 [star-image]: https://img.shields.io/github/stars/camel-ai/oasis?label=stars&logo=github&color=brightgreen
 [star-url]: https://github.com/camel-ai/oasis/stargazers
-[twitter-image]: https://img.shields.io/twitter/follow/CamelAIOrg?style=social&color=brightgreen&logo=twitter
-[twitter-url]: https://twitter.com/CamelAIOrg
 [wechat-image]: https://img.shields.io/badge/WeChat-CamelAIOrg-brightgreen?logo=wechat&logoColor=white
 [wechat-url]: https://ghli.org/camel/wechat.png
+[x-image]: https://img.shields.io/twitter/follow/CamelAIOrg?style=social
+[x-url]: https://x.com/CamelAIOrg
