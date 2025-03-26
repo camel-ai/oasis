@@ -430,7 +430,7 @@ class Platform:
                     'action': 'create_post',
                     'post_id': post_id,
                     'user_id': user_id,
-                    'content': content,
+                    'content': str(content),
                     'created_at': current_time,
                     'activate_prob': activate_prob
                 })
