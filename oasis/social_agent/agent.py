@@ -122,11 +122,14 @@ class SocialAgent(ChatAgent):
                 f"Here is your social media environment: {env_prompt}"),
         )
         try:
+            agent_log.info(
+                f"Agent {self.social_agent_id} observing environment: "
+                f"{env_prompt}")
             response = await self.astep(user_msg)
             for tool_call in response.info['tool_calls']:
                 action_name = tool_call.tool_name
                 args = tool_call.args
-                agent_log.info(f"Agent {self.social_agent_id} is performing "
+                agent_log.info(f"Agent {self.social_agent_id} performed "
                                f"action: {action_name} with args: {args}")
                 self.perform_agent_graph_action(action_name, args)
         except Exception as e:
