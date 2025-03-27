@@ -38,6 +38,7 @@ from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
 
 social_log = logging.getLogger(name="social")
+social_log.propagate = False
 social_log.setLevel("DEBUG")
 
 file_handler = logging.FileHandler("social.log")
@@ -88,7 +89,6 @@ async def running(
         start_time = datetime.now()
     else:
         start_time = 0
-    social_log.info(f"Start time: {start_time}")
     clock = Clock(k=clock_factor)
     twitter_channel = Channel()
     infra = Platform(
@@ -120,7 +120,7 @@ async def running(
             start_hour = int(source_post_time.split(":")[0]) + float(
                 int(source_post_time.split(":")[1]) / 60)
     except Exception:
-        print("No real-world data, let start_hour be 1PM")
+        social_log.info("No real-world data, let start_hour be 1PM")
         start_hour = 13
 
     model_configs = model_configs or {}
@@ -151,7 +151,6 @@ async def running(
 
     for timestep in range(1, num_timesteps + 1):
         os.environ["SANDBOX_TIME"] = str(timestep * 3)
-        social_log.info(f"timestep:{timestep}")
         db_file = db_path.split("/")[-1]
         print(Back.GREEN + f"DB:{db_file} timestep:{timestep}" + Back.RESET)
         # if you want to disable recsys, please comment this line

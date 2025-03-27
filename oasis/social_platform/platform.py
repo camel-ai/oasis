@@ -319,6 +319,7 @@ class Platform:
 
     async def update_rec_table(self):
         # Recsys(trace/user/post table), refresh rec table
+        twitter_log.info("Starting to refresh recommendation system cache...")
         user_table = fetch_table_from_db(self.db_cursor, "user")
         post_table = fetch_table_from_db(self.db_cursor, "post")
         trace_table = fetch_table_from_db(self.db_cursor, "trace")

@@ -19,7 +19,6 @@ class Clock:
 
     def __init__(self, k: int):
         self.real_start_time = datetime.now()
-        print("self.real_start_time", self.real_start_time)
         self.k = k
 
     def time_transfer(self, now_time: datetime,
