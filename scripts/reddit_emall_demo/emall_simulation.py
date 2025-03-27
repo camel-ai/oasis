@@ -38,19 +38,25 @@ from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
 
 social_log = logging.getLogger(name="social")
+social_log.propagate = False
 social_log.setLevel("DEBUG")
-now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-file_handler = logging.FileHandler(f"./log/social-{str(now)}.log",
-                                   encoding="utf-8")
-file_handler.setLevel("DEBUG")
-file_handler.setFormatter(
-    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
-social_log.addHandler(file_handler)
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel("DEBUG")
-stream_handler.setFormatter(
-    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
-social_log.addHandler(stream_handler)
+
+if not social_log.handlers:
+    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    file_handler = logging.FileHandler(f"./log/social-{str(now)}.log",
+                                       encoding="utf-8")
+    file_handler.setLevel("DEBUG")
+    file_handler.setFormatter(
+        logging.Formatter(
+            "%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
+    social_log.addHandler(file_handler)
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel("DEBUG")
+    stream_handler.setFormatter(
+        logging.Formatter(
+            "%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
+    social_log.addHandler(stream_handler)
 
 parser = argparse.ArgumentParser(description="Arguments for script.")
 parser.add_argument(
