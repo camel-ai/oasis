@@ -16,7 +16,6 @@ from __future__ import annotations
 import inspect
 import logging
 import sys
-import time
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -36,13 +35,16 @@ if TYPE_CHECKING:
 if "sphinx" not in sys.modules:
     agent_log = logging.getLogger(name="social.agent")
     agent_log.setLevel("DEBUG")
-    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    file_handler = logging.FileHandler(f"./log/social.agent-{str(now)}.log")
-    file_handler.setLevel("DEBUG")
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
-    agent_log.addHandler(file_handler)
+
+    if not agent_log.handlers:
+        now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        file_handler = logging.FileHandler(
+            f"./log/social.agent-{str(now)}.log")
+        file_handler.setLevel("DEBUG")
+        file_handler.setFormatter(
+            logging.Formatter(
+                "%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
+        agent_log.addHandler(file_handler)
 
 
 class SocialAgent(ChatAgent):
@@ -67,14 +69,11 @@ class SocialAgent(ChatAgent):
         self.model_type = model_type
         self.is_openai_model = is_openai_model
         if self.is_openai_model:
-            t1 = time.time()
             self.model_backend = ModelFactory.create(
                 model_platform=ModelPlatformType.OPENAI,
                 model_type=ModelType(model_type),
             )
             self.model_backend.model_config_dict['temperature'] = 0.6
-            print(
-                f"Model backend initialized in {time.time() - t1:.3f} seconds")
         else:
             self.model_backend = ModelFactory.create(
                 model_platform=ModelPlatformType.VLLM,
@@ -122,13 +121,16 @@ class SocialAgent(ChatAgent):
                 f"platform environments. "
                 f"Here is your social media environment: {env_prompt}"),
         )
-        response = await self.astep(user_msg)
-        for tool_call in response.info['tool_calls']:
-            action_name = tool_call.tool_name
-            args = tool_call.args
-            agent_log.info(f"Agent {self.social_agent_id} is performing "
-                           f"action: {action_name} with args: {args}")
-            self.perform_agent_graph_action(action_name, args)
+        try:
+            response = await self.astep(user_msg)
+            for tool_call in response.info['tool_calls']:
+                action_name = tool_call.tool_name
+                args = tool_call.args
+                agent_log.info(f"Agent {self.social_agent_id} is performing "
+                               f"action: {action_name} with args: {args}")
+                self.perform_agent_graph_action(action_name, args)
+        except Exception as e:
+            agent_log.error(f"Agent {self.social_agent_id} error: {e}")
 
     async def perform_test(self):
         """

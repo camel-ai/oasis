@@ -189,10 +189,10 @@ class Platform:
             action_info = {"name": name, "user_name": user_name, "bio": bio}
             self.pl_utils._record_trace(user_id, ActionType.SIGNUP.value,
                                         action_info, current_time)
-            twitter_log.info(f"Trace inserted: user_id={user_id}, "
-                             f"current_time={current_time}, "
-                             f"action={ActionType.SIGNUP.value}, "
-                             f"info={action_info}")
+            # twitter_log.info(f"Trace inserted: user_id={user_id}, "
+            #                  f"current_time={current_time}, "
+            #                  f"action={ActionType.SIGNUP.value}, "
+            #                  f"info={action_info}")
             return {"success": True, "user_id": user_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -309,7 +309,7 @@ class Platform:
                 results)
 
             action_info = {"posts": results_with_comments}
-            twitter_log.info(action_info)
+            # twitter_log.info(action_info)
             self.pl_utils._record_trace(user_id, ActionType.REFRESH.value,
                                         action_info, current_time)
 
@@ -398,10 +398,10 @@ class Platform:
             self.pl_utils._record_trace(user_id, ActionType.CREATE_POST.value,
                                         action_info, current_time)
 
-            twitter_log.info(f"Trace inserted: user_id={user_id}, "
-                             f"current_time={current_time}, "
-                             f"action={ActionType.CREATE_POST.value}, "
-                             f"info={action_info}")
+            # twitter_log.info(f"Trace inserted: user_id={user_id}, "
+            #                  f"current_time={current_time}, "
+            #                  f"action={ActionType.CREATE_POST.value}, "
+            #                  f"info={action_info}")
             return {"success": True, "post_id": post_id}
 
         except Exception as e:
@@ -885,10 +885,10 @@ class Platform:
             action_info = {"follow_id": follow_id}
             self.pl_utils._record_trace(user_id, ActionType.FOLLOW.value,
                                         action_info, current_time)
-            twitter_log.info(f"Trace inserted: user_id={user_id}, "
-                             f"current_time={current_time}, "
-                             f"action={ActionType.FOLLOW.value}, "
-                             f"info={action_info}")
+            # twitter_log.info(f"Trace inserted: user_id={user_id}, "
+            #                  f"current_time={current_time}, "
+            #                  f"action={ActionType.FOLLOW.value}, "
+            #                  f"info={action_info}")
             return {"success": True, "follow_id": follow_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
