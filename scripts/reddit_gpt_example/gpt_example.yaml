@@ -8,9 +8,9 @@ simulation:
   controllable_user: true  # Whether to use a controllable user, who posts prepared posts on the simulated social platform according to our instructions
   allow_self_rating: false  # Reddit feature: does not allow users to rate their own content
   show_score: true  # Reddit feature: users can only see scores, not separate upvote and downvote counts
-  activate_prob: 0.2  # Probability of each agent being activated to perform an action at each timestep
+  activate_prob: 1  # Probability of each agent being activated to perform an action at each timestep
   clock_factor: 10  # Magnification factor of the first timestep in real-world time, not recommended to change
-  num_timesteps: 2  # Number of timesteps the simulation experiment runs
+  num_timesteps: 1  # Number of timesteps the simulation experiment runs
   max_rec_post_len: 50  # Number of posts in each user's recommendation list cache
   round_post_num: 30  # Number of posts sent by controllable_user at each timestep
   follow_post_agent: false  # Whether all agents follow the controllable_user
