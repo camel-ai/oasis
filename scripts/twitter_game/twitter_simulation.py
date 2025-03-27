@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import logging
 import os
 import random
@@ -199,7 +200,7 @@ async def running(
         if message["type"] != "message":
             continue
         step += 1
-        await trigger(step, str(message["data"]))
+        await trigger(step, json.loads(message["data"]))
 
     # num_timesteps = 1
     # for timestep in range(1, num_timesteps + 1):
