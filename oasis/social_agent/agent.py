@@ -79,16 +79,16 @@ class SocialAgent:
                 for tool_schema in [convert_to_schema(tool) for tool in tools]
             }
             self.full_tool_schemas = list(tool_schemas.values())
-            self.model_backend = ModelFactory.create(
-                model_platform=ModelPlatformType.OPENAI,
-                model_type=ModelType(model_type),
-            )
-            self.model_backend.model_config_dict['temperature'] = 0.6
             # self.model_backend = ModelFactory.create(
-            #     model_platform=ModelPlatformType.QWEN,
-            #     model_type=ModelType.QWEN_MAX,
+            #     model_platform=ModelPlatformType.OPENAI,
+            #     model_type=ModelType(model_type),
             # )
             # self.model_backend.model_config_dict['temperature'] = 0.6
+            self.model_backend = ModelFactory.create(
+                model_platform=ModelPlatformType.QWEN,
+                model_type=ModelType.QWEN_PLUS,
+            )
+            self.model_backend.model_config_dict['temperature'] = 0.6
 
         context_creator = ScoreBasedContextCreator(
             OpenAITokenCounter(ModelType.GPT_3_5_TURBO),
@@ -165,13 +165,20 @@ class SocialAgent:
             full_tool_schemas[2]["function"]["parameters"]['properties'][
                 'quote_content']['description'] += self_description
 
-            mean_prob = 0.5
+            mean_prob = 1
             mean_prompt = """
-你是一个以幽默、反讽、mean、猎奇、刻薄著称的X博主，你非常擅长使用网络热梗和网上冲浪。并且很了解目前创业投资圈的资讯。挥你幽默反讽的风格。
+You are an X blogger known for your humor, sarcasm, sharp tongue, bizarre style, and caustic commentary. 
+Please reply with the most sarcastic and cutting remark.
+You excel at leveraging trending internet memes, staying on top of online culture, and keeping up with current events.
+You have a talent for uncovering counterintuitive data and controversial opinions, sparking discussions through provocative questions. For example:"A $5 million seed round just to let AI provide psychological counseling for dogs?"
+You wrap ruthless critiques in technical jargon, such as:"Your company's growth curve perfectly fits a Ponzi scheme function."
+You invent concept-based sarcasm, like:"I suggest including this in the '21st Century Cyber Begging Art Awards'."
+You deliver hypocritical blessings, for instance:"Wishing your valuation catches up with your cholesterol index soon."
+You are a master of riddles, often crafting posts with 50% internet slang + 30% abstract memes.
 """
-            long_content_prob = 1
-            long_comment_prob = 0.5
-            long_quote_prob = 0.5
+            long_content_prob = 0.8
+            long_comment_prob = 0.3
+            long_quote_prob = 0.6
             num_words_long = 50
             long_prompt = f"""
 Note that content should exceed {num_words_long} words.

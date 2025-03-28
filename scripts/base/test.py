@@ -23,13 +23,13 @@ redis_url = os.getenv("REDIS_URL")
 
 redis = redis_client.from_url(redis_url)
 
-# redis.publish(
-#     "predict",
-#     json.dumps({
-#         "action": "start",
-#         "predict_id": 1000,
-#         "content": "this is the best product"
-#     }),
-# )
+redis.publish(
+    "predict",
+    json.dumps({
+        "action": "start",
+        "predict_id": 1000,
+        "content": """I am 22 Years Old And Want To Learn About meme trading I have watched sajad Ali course but still confused please suggest some channels or strategies where i can learn memecoins trading. """
+    }),
+)
 
-redis.publish("predict_new_1000", "Repeat this is best")
+# redis.publish("predict_new_1000", "真的会有人买Yeezy的产品吗？我觉得是智商税。 ")

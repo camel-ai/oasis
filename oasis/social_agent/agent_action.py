@@ -142,13 +142,18 @@ class SocialAction:
         r"""Create a new post with the given content.
 
         This method invokes an asynchronous action to create a new post based
-        on the provided content. Upon successful execution, it returns a
-        dictionary indicating success and the ID of the newly created post.
+        on the provided content. The post is designed to embody the dynamic and
+        engaging characteristics of modern social media platforms like X. Upon successful
+        execution, it returns a dictionary indicating success and the ID of the
+        newly created post.
 
         Args:
             content (str): The content of the post to be created in Chinese.
-                Ensure that the content does not contain any hashtags. Please
-                includes more emojis to make your post more attractive.
+                Ensure that the content does not contain any hashtags. Please include
+                one or two emojis to make your post more attractive. Additionally, the content
+                should be timely, offer sharp insights, and be structured to stimulate
+                discussion and interest among users. Do not use questions to engage discussion.
+                Use conversational and informal language.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -165,13 +170,19 @@ class SocialAction:
     async def repost(self, post_id: int):
         r"""Repost a specified post.
 
-        This method invokes an asynchronous action to Repost a specified
-        post. It is identified by the given post ID. Upon successful
-        execution, it returns a dictionary indicating success and the ID of
-        the newly created repost.
+        This method invokes an asynchronous action to repost a specified post,
+        identified by the given post ID. The repost functionality is enhanced to
+        simulate the engaging and dynamic behavior typical of social media platforms
+        like X. This includes features such as timely engagement with current events
+        and trending topics, delivering sharp commentary that sparks debate. 
+        Upon successful execution,it returns a dictionary indicating success 
+        and the ID of the newly created repost.
 
         Args:
             post_id (int): The ID of the post to be reposted.
+                This parameter taps into the energetic and interactive spirit of X,
+                where content is often reposted for its relevance, wit, and ability to
+                drive conversation. Do not use questions to engage discussion.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -191,15 +202,22 @@ class SocialAction:
     async def quote_post(self, post_id: int, quote_content: str):
         r"""Quote a specified post with a given quote content.
 
-        This method invokes an asynchronous action to quote a specified post
-        with a given quote content. Upon successful execution, it returns a
-        dictionary indicating success and the ID of the newly created quote.
+        This method invokes an asynchronous action to quote a specified post 
+        with the given quote content. Designed to mimic the dynamic and engaging 
+        behavior seen on social platforms like X, it leverages characteristics 
+        such as real-time trend tracking, incisive commentary, and discussion-provoking 
+        content. Upon successful execution, it returns a dictionary indicating 
+        success and the ID of the newly created quote.
 
         Args:
             post_id (int): The ID of the post to be quoted.
             quote_content (str): The content of the quote to be created in
                 Chinese. Ensure that the content does not contain any hashtags.
-                Please includes more emojis to make your quote more attractive.
+                To enhance engagement, consider incorporating timely references, 
+                sharp opinions, and elements that stimulate conversation—reflecting 
+                the fast-paced, witty, and topic-driven nature of platforms like X.
+                Do not use questions to engage discussion.
+                Use conversational and informal language.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -520,8 +538,9 @@ class SocialAction:
             post_id (int): The ID of the post to which the comment is to be
                 added.
             content (str): The content of the comment to be created in Chinese.
-                Ensure that the content does not contain any hashtags. Please
-                includes more emojis to make your comment more attractive.
+                Ensure that the content does not contain any hashtags.
+                Do not use questions to engage discussion.
+                Use conversational and informal language.
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
