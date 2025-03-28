@@ -16,17 +16,19 @@ from __future__ import annotations
 import inspect
 import json
 import logging
+import random
 import sys
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from camel.configs import ChatGPTConfig
+from camel.agents._utils import convert_to_schema
 from camel.memories import (ChatHistoryMemory, MemoryRecord,
                             ScoreBasedContextCreator)
-from camel.messages import BaseMessage
+from camel.messages import BaseMessage, FunctionCallingMessage
 from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType, OpenAIBackendRole
 from camel.utils import OpenAITokenCounter
+from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
@@ -67,22 +69,26 @@ class SocialAgent:
         self.twitter_channel = twitter_channel
         self.infe_channel = inference_channel
         self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
-        self.system_message = BaseMessage.make_assistant_message(
-            role_name="User",
-            content=self.user_info.to_system_message(action_space_prompt),
-        )
         self.model_type = model_type
         self.is_openai_model = is_openai_model
+        self.language_type = "english"
         if self.is_openai_model:
-            model_config = ChatGPTConfig(
-                tools=self.env.action.get_openai_function_list(),
-                temperature=0.5,
-            )
+            tools = self.env.action.get_openai_function_list()
+            tool_schemas = {
+                tool_schema["function"]["name"]: tool_schema
+                for tool_schema in [convert_to_schema(tool) for tool in tools]
+            }
+            self.full_tool_schemas = list(tool_schemas.values())
+            # self.model_backend = ModelFactory.create(
+            #     model_platform=ModelPlatformType.OPENAI,
+            #     model_type=ModelType(model_type),
+            # )
+            # self.model_backend.model_config_dict['temperature'] = 0.6
             self.model_backend = ModelFactory.create(
-                model_platform=ModelPlatformType.OPENAI,
-                model_type=ModelType(model_type),
-                model_config_dict=model_config.as_dict(),
+                model_platform=ModelPlatformType.QWEN,
+                model_type=ModelType.QWEN_PLUS,
             )
+            self.model_backend.model_config_dict['temperature'] = 0.6
 
         context_creator = ScoreBasedContextCreator(
             OpenAITokenCounter(ModelType.GPT_3_5_TURBO),
@@ -90,7 +96,7 @@ class SocialAgent:
         )
         self.memory = ChatHistoryMemory(context_creator, window_size=5)
         self.system_message = BaseMessage.make_assistant_message(
-            role_name="system",
+            role_name="System",
             content=self.user_info.to_system_message(
                 action_space_prompt),  # system prompt
         )
@@ -105,9 +111,12 @@ class SocialAgent:
             "\n"
             "What do you think Helen should do?")
 
+    @retry(wait=wait_random_exponential(min=1, max=60),
+           stop=stop_after_attempt(6))
     async def perform_action_by_llm(self):
         # Get posts:
         env_prompt = await self.env.to_text_prompt()
+        env_prompt = env_prompt.replace("Chinese", self.language_type)
         user_msg = BaseMessage.make_user_message(
             role_name="User",
             # content=(
@@ -118,6 +127,7 @@ class SocialAgent:
             content=(
                 f"Please perform social media actions after observing the "
                 f"platform environments. "
+                f"Notice that if you want to create some content, "
                 f"Here is your social media environment: {env_prompt}"),
         )
         self.memory.write_record(
@@ -141,24 +151,119 @@ class SocialAgent:
                 "role": self.system_message.role_name,
                 "content": self.system_message.content,
             }] + [user_msg.to_openai_user_message()]
-        agent_log.info(
-            f"Agent {self.agent_id} is running with prompt: {openai_messages}")
+
+        # agent_log.info(
+        #     f"Agent {self.agent_id} is running with prompt: "
+        #     f"{openai_messages}")
 
         if self.is_openai_model:
+            full_tool_schemas = self.full_tool_schemas
+            self_description = self.user_info.to_description()
+            for func_index in [0, 1]:
+                full_tool_schemas[func_index]["function"]["parameters"][
+                    'properties']['content']['description'] += self_description
+            full_tool_schemas[2]["function"]["parameters"]['properties'][
+                'quote_content']['description'] += self_description
+
+            mean_prob = 1
+            mean_prompt = """
+You are an X blogger known for your humor, sarcasm, sharp tongue, bizarre style, and caustic commentary. 
+Please reply with the most sarcastic and cutting remark.
+You excel at leveraging trending internet memes, staying on top of online culture, and keeping up with current events.
+You have a talent for uncovering counterintuitive data and controversial opinions, sparking discussions through provocative questions. For example:"A $5 million seed round just to let AI provide psychological counseling for dogs?"
+You wrap ruthless critiques in technical jargon, such as:"Your company's growth curve perfectly fits a Ponzi scheme function."
+You invent concept-based sarcasm, like:"I suggest including this in the '21st Century Cyber Begging Art Awards'."
+You deliver hypocritical blessings, for instance:"Wishing your valuation catches up with your cholesterol index soon."
+You are a master of riddles, often crafting posts with 50% internet slang + 30% abstract memes.
+"""
+            long_content_prob = 0.8
+            long_comment_prob = 0.3
+            long_quote_prob = 0.6
+            num_words_long = 50
+            long_prompt = f"""
+Note that content should exceed {num_words_long} words.
+"""
+            if random.random() < mean_prob:
+                full_tool_schemas[0]["function"]["parameters"]['properties'][
+                    'content']['description'] += mean_prompt
+            if random.random() < long_content_prob:
+                full_tool_schemas[0]["function"]["parameters"]['properties'][
+                    'content']['description'] += long_prompt
+            if random.random() < long_comment_prob:
+                full_tool_schemas[1]["function"]["parameters"]['properties'][
+                    'content']['description'] += long_prompt
+            if random.random() < long_quote_prob:
+                full_tool_schemas[2]["function"]["parameters"]['properties'][
+                    'quote_content']['description'] += long_prompt
+
+            full_tool_schemas[0]["function"]["parameters"]['properties'][
+                'content']['description'] = (
+                    full_tool_schemas[0]["function"]["parameters"]
+                    ['properties']['content']['description'].replace(
+                        "Chinese", self.language_type))
+            full_tool_schemas[1]["function"]["parameters"]['properties'][
+                'content']['description'] = (
+                    full_tool_schemas[1]["function"]["parameters"]
+                    ['properties']['content']['description'].replace(
+                        "Chinese", self.language_type))
+            full_tool_schemas[2]["function"]["parameters"]['properties'][
+                'quote_content']['description'] = (
+                    full_tool_schemas[2]["function"]["parameters"]
+                    ['properties']['quote_content']['description'].replace(
+                        "Chinese", self.language_type))
+            # print(f"full_tool_schemas: {full_tool_schemas}")
+            # exit()
             try:
-                response = self.model_backend.run(openai_messages)
-                agent_log.info(f"Agent {self.agent_id} response: {response}")
-                content = response
+                response = await self.model_backend._arun(
+                    openai_messages, tools=full_tool_schemas)
+                # agent_log.info(f"Agent {self.agent_id} response: {response}")
+                # print(f"Agent {self.agent_id} response: {response}")
                 for tool_call in response.choices[0].message.tool_calls:
                     action_name = tool_call.function.name
                     args = json.loads(tool_call.function.arguments)
-                    print(f"Agent {self.agent_id} is performing "
-                          f"action: {action_name} with args: {args}")
-                    await getattr(self.env.action, action_name)(**args)
+                    # print(f"Agent {self.agent_id} is performing "
+                    #       f"action: {action_name} with args: {args}")
+                    result = await getattr(self.env.action,
+                                           action_name)(**args)
                     self.perform_agent_graph_action(action_name, args)
+                    assist_msg = FunctionCallingMessage(
+                        role_name="Twitter User",
+                        role_type=OpenAIBackendRole.ASSISTANT,
+                        meta_dict=None,
+                        content="",
+                        func_name=action_name,
+                        args=args,
+                        tool_call_id=tool_call.id,
+                    )
+                    func_msg = FunctionCallingMessage(
+                        role_name="Twitter User",
+                        role_type=OpenAIBackendRole.ASSISTANT,
+                        meta_dict=None,
+                        content="",
+                        func_name=action_name,
+                        result=result,
+                        tool_call_id=tool_call.id,
+                    )
+                    self.memory.write_record(
+                        MemoryRecord(
+                            message=assist_msg,
+                            role_at_backend=OpenAIBackendRole.ASSISTANT,
+                        ))
+                    self.memory.write_record(
+                        MemoryRecord(
+                            message=func_msg,
+                            role_at_backend=OpenAIBackendRole.FUNCTION,
+                        ))
+
             except Exception as e:
-                print(e)
+                print(f"Agent {self.agent_id} error: {e}")
+                print(openai_messages)
                 content = "No response."
+                agent_msg = BaseMessage.make_assistant_message(
+                    role_name="Assistant", content=content)
+                self.memory.write_record(
+                    MemoryRecord(message=agent_msg,
+                                 role_at_backend=OpenAIBackendRole.ASSISTANT))
 
         else:
             retry = 5
@@ -176,8 +281,8 @@ class SocialAgent:
                 mes_id, content = await self.infe_channel.read_from_send_queue(
                     mes_id)
 
-                agent_log.info(
-                    f"Agent {self.agent_id} receive response: {content}")
+                # agent_log.info(
+                #     f"Agent {self.agent_id} receive response: {content}")
 
                 try:
                     content_json = json.loads(content)
@@ -214,11 +319,6 @@ class SocialAgent:
 
             if retry == 0:
                 content = "No response."
-        agent_msg = BaseMessage.make_assistant_message(role_name="Assistant",
-                                                       content=content)
-        self.memory.write_record(
-            MemoryRecord(message=agent_msg,
-                         role_at_backend=OpenAIBackendRole.ASSISTANT))
 
     async def perform_test(self):
         """
@@ -226,7 +326,7 @@ class SocialAgent:
         """
         # user conduct test to agent
         _ = BaseMessage.make_user_message(role_name="User",
-                                          content=("You are a twitter user."))
+                                          content="You are a twitter user.")
         # TODO error occurs
         # self.memory.write_record(MemoryRecord(user_msg,
         #                                       OpenAIBackendRole.USER))
@@ -242,27 +342,29 @@ class SocialAgent:
             "role": "user",
             "content": self.test_prompt
         }])
-        agent_log.info(f"Agent {self.agent_id}: {openai_messages}")
+        # agent_log.info(f"Agent {self.agent_id}: {openai_messages}")
 
         message_id = await self.infe_channel.write_to_receive_queue(
             openai_messages)
         message_id, content = await self.infe_channel.read_from_send_queue(
             message_id)
-        agent_log.info(f"Agent {self.agent_id} receive response: {content}")
+        # agent_log.info(f"Agent {self.agent_id} receive response: {content}")
         return {
             "user_id": self.agent_id,
             "prompt": openai_messages,
             "content": content
         }
 
-    async def perform_action_by_hci(self) -> Any:
-        print("Please choose one function to perform:")
+    async def perform_action_by_hci(self,
+                                    input_content: str,
+                                    selection: int = 0) -> Any:
+        # print("Please choose one function to perform:")
         function_list = self.env.action.get_openai_function_list()
-        for i in range(len(function_list)):
-            agent_log.info(f"Agent {self.agent_id} function: "
-                           f"{function_list[i].func.__name__}")
+        # for i in range(len(function_list)):
+        #     agent_log.info(f"Agent {self.agent_id} function: "
+        #                    f"{function_list[i].func.__name__}")
 
-        selection = int(input("Enter your choice: "))
+        # selection = int(input("Enter your choice: "))
         if not 0 <= selection < len(function_list):
             agent_log.error(f"Agent {self.agent_id} invalid input.")
             return
@@ -273,7 +375,8 @@ class SocialAgent:
         for param in params.values():
             while True:
                 try:
-                    value = input(f"Enter value for {param.name}: ")
+                    # value = input(f"Enter value for {param.name}: ")
+                    value = input_content
                     args.append(value)
                     break
                 except ValueError:
@@ -288,7 +391,7 @@ class SocialAgent:
             if function_list[i].func.__name__ == func_name:
                 func = function_list[i].func
                 result = await func(*args, **kwargs)
-                agent_log.info(f"Agent {self.agent_id}: {result}")
+                # agent_log.info(f"Agent {self.agent_id}: {result}")
                 return result
         raise ValueError(f"Function {func_name} not found in the list.")
 

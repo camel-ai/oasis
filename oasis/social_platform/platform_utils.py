@@ -12,18 +12,26 @@
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import json
-import os
 from datetime import datetime
 
 
 class PlatformUtils:
 
-    def __init__(self, db, db_cursor, start_time, sandbox_clock, show_score):
+    def __init__(
+        self,
+        db,
+        db_cursor,
+        start_time,
+        sandbox_clock,
+        show_score,
+        current_timestep,
+    ):
         self.db = db
         self.db_cursor = db_cursor
         self.start_time = start_time
         self.sandbox_clock = sandbox_clock
         self.show_score = show_score
+        self.current_timestep = current_timestep
 
     @staticmethod
     def _not_signup_error_message(agent_id):
@@ -181,7 +189,7 @@ class PlatformUtils:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.current_timestep
 
         trace_insert_query = (
             "INSERT INTO trace (user_id, created_at, action, info) "
