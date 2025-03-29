@@ -223,14 +223,14 @@ class SocialAgent(ChatAgent):
                 return
             self.agent_graph.remove_edge(self.social_agent_id, followee_id)
             agent_log.info(
-                f"Agent {self.social_agent_id} unfollowed {followee_id}")
+                f"Agent {self.social_agent_id} unfollowed Agent {followee_id}")
         elif "follow" in action_name:
             followee_id: int | None = arguments.get("followee_id", None)
             if followee_id is None:
                 return
             self.agent_graph.add_edge(self.social_agent_id, followee_id)
             agent_log.info(
-                f"Agent {self.social_agent_id} followed {followee_id}")
+                f"Agent {self.social_agent_id} followed Agent {followee_id}")
 
     def __str__(self) -> str:
         return (f"{self.__class__.__name__}(agent_id={self.social_agent_id}, "
