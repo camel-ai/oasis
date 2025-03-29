@@ -24,28 +24,30 @@ import pandas as pd
 import tqdm
 from camel.memories import MemoryRecord
 from camel.messages import BaseMessage
+from camel.models import BaseModelBackend
 from camel.types import ModelType, OpenAIBackendRole
 
 from oasis.social_agent import AgentGraph, SocialAgent
 from oasis.social_platform import Channel, Platform
 from oasis.social_platform.config import Neo4jConfig, UserInfo
+from oasis.social_platform.typing import ActionType
 
 
 async def generate_agents(
     agent_info_path: str,
     twitter_channel: Channel,
-    inference_channel: Channel,
+    model: BaseModelBackend,
     start_time,
     recsys_type: str = "twitter",
     twitter: Platform = None,
     num_agents: int = 26,
-    action_space_prompt: str = None,
+    available_actions: list[ActionType] = None,
     model_random_seed: int = 42,
     cfgs: list[Any] | None = None,
     neo4j_config: Neo4jConfig | None = None,
-    is_openai_model: bool = False,
 ) -> AgentGraph:
-    """Generate and return a dictionary of agents from the agent
+    """TODO: need update the description of args and check
+    Generate and return a dictionary of agents from the agent
     information CSV file. Each agent is added to the database and
     their respective profiles are updated.
 
@@ -69,7 +71,7 @@ async def generate_agents(
     model_temperatures = []
     model_config_dict = {}
     for _, cfg in enumerate(cfgs):
-        model_type = ModelType(cfg["model_type"])
+        model_type = cfg["model_type"]
         model_config_dict[model_type] = cfg
         model_types.extend([model_type] * cfg["num"])
         temperature = cfg.get("temperature", 0.0)
@@ -125,17 +127,13 @@ async def generate_agents(
             recsys_type=recsys_type,
         )
 
-        model_type: ModelType = model_types[agent_id]
-
         agent = SocialAgent(
             agent_id=agent_id,
             user_info=user_info,
             twitter_channel=twitter_channel,
-            inference_channel=inference_channel,
-            model_type=model_type,
+            model=model,
             agent_graph=agent_graph,
-            action_space_prompt=action_space_prompt,
-            is_openai_model=is_openai_model,
+            available_actions=available_actions,
         )
 
         agent_graph.add_agent(agent)
@@ -224,17 +222,17 @@ async def generate_agents(
 async def generate_agents_100w(
     agent_info_path: str,
     twitter_channel: Channel,
-    inference_channel: Channel,
     start_time,
+    model: BaseModelBackend,
     recsys_type: str = "twitter",
     twitter: Platform = None,
     num_agents: int = 26,
-    action_space_prompt: str = None,
+    available_actions: list[ActionType] = None,
     model_random_seed: int = 42,
     cfgs: list[Any] | None = None,
-    neo4j_config: Neo4jConfig | None = None,
 ) -> List:
-    """Generate and return a dictionary of agents from the agent
+    """ TODO: need update the description of args.
+    Generate and return a dictionary of agents from the agent
     information CSV file. Each agent is added to the database and
     their respective profiles are updated.
 
@@ -245,9 +243,6 @@ async def generate_agents_100w(
         action_space_prompt (str): determine the action space of agents.
         model_random_seed (int): Random seed to randomly assign model to
             each agent. (default: 42)
-        cfgs (list, optional): List of configuration. (default: `None`)
-        neo4j_config (Neo4jConfig, optional): Neo4j graph database
-            configuration. (default: `None`)
 
     Returns:
         dict: A dictionary of agent IDs mapped to their respective agent
@@ -336,10 +331,9 @@ async def generate_agents_100w(
             agent_id=agent_id,
             user_info=user_info,
             twitter_channel=twitter_channel,
-            inference_channel=inference_channel,
-            model_type=model_type,
+            model=model,
             agent_graph=agent_graph,
-            action_space_prompt=action_space_prompt,
+            available_actions=available_actions,
         )
 
         agent_graph.append(agent)
@@ -508,14 +502,12 @@ async def gen_control_agents_with_data(
 async def generate_reddit_agents(
     agent_info_path: str,
     twitter_channel: Channel,
-    inference_channel: Channel,
     agent_graph: AgentGraph | None = AgentGraph,
     agent_user_id_mapping: dict[int, int] | None = None,
     follow_post_agent: bool = False,
     mute_post_agent: bool = False,
-    action_space_prompt: str = None,
-    model_type: str = "llama-3",
-    is_openai_model: bool = False,
+    model: BaseModelBackend = None,
+    available_actions: list[ActionType] = None,
 ) -> AgentGraph:
     if agent_user_id_mapping is None:
         agent_user_id_mapping = {}
@@ -552,11 +544,9 @@ async def generate_reddit_agents(
             agent_id=i + control_user_num,
             user_info=user_info,
             twitter_channel=twitter_channel,
-            inference_channel=inference_channel,
-            model_type=model_type,
             agent_graph=agent_graph,
-            action_space_prompt=action_space_prompt,
-            is_openai_model=is_openai_model,
+            model=model,
+            available_actions=available_actions,
         )
 
         # Add agent to the agent graph

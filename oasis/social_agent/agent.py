@@ -17,17 +17,17 @@ import inspect
 import logging
 import sys
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 from camel.agents import ChatAgent
 from camel.messages import BaseMessage
-from camel.models import ModelFactory
-from camel.types import ModelPlatformType, ModelType
+from camel.models import BaseModelBackend
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
 from oasis.social_platform import Channel
 from oasis.social_platform.config import UserInfo
+from oasis.social_platform.typing import ActionType
 
 if TYPE_CHECKING:
     from oasis.social_agent import AgentGraph
@@ -55,46 +55,33 @@ class SocialAgent(ChatAgent):
         agent_id: int,
         user_info: UserInfo,
         twitter_channel: Channel,
-        inference_channel: Channel = None,  # TODO: will deprecate
-        model_type: str = "gpt-4o-mini",
+        model: Optional[Union[BaseModelBackend,
+                              List[BaseModelBackend]]] = None,
         agent_graph: "AgentGraph" = None,
-        action_space_prompt: str = None,  # TODO: will deprecate
-        is_openai_model: bool = False,
+        available_actions: list[ActionType] = None,
     ):
         self.social_agent_id = agent_id
         self.user_info = user_info
         self.twitter_channel = twitter_channel
-        self.infe_channel = inference_channel
         self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
-        self.model_type = model_type
-        self.is_openai_model = is_openai_model
-        if self.is_openai_model:
-            self.model_backend = ModelFactory.create(
-                model_platform=ModelPlatformType.OPENAI,
-                model_type=ModelType(model_type),
-            )
-            self.model_backend.model_config_dict['temperature'] = 0.6
-        else:
-            self.model_backend = ModelFactory.create(
-                model_platform=ModelPlatformType.VLLM,
-                model_type=ModelType(model_type),
-                url="http://localhost:8000/v1",  # TODO: change to server url
-                model_config_dict={"temperature":
-                                   0.5},  # TODO: Need to be customized
-            )
-        # context_creator = ScoreBasedContextCreator(
-        #     OpenAITokenCounter(ModelType.GPT_3_5_TURBO),
-        #     4096,
-        # )
-        # self.memory = ChatHistoryMemory(context_creator, window_size=5)
+
         system_message = BaseMessage.make_assistant_message(
             role_name="system",
             content=self.user_info.to_system_message(),  # system prompt
         )
+        if not available_actions:
+            agent_log.info("No available actions defined, using all actions.")
+            self.action_tools = self.env.action.get_openai_function_list()
+        else:
+            self.action_tools = [
+                tool for tool in self.env.action.get_openai_function_list()
+                if tool.func.__name__ in available_actions
+            ]
 
         super().__init__(system_message=system_message,
-                         model=self.model_backend,
-                         tools=self.env.action.get_openai_function_list())
+                         model=model,
+                         scheduling_strategy="random",
+                         tools=self.action_tools)
         self.agent_graph = agent_graph
         self.test_prompt = (
             "\n"
@@ -111,16 +98,11 @@ class SocialAgent(ChatAgent):
         env_prompt = await self.env.to_text_prompt()
         user_msg = BaseMessage.make_user_message(
             role_name="User",
-            # content=(
-            #     f"Please perform social media actions after observing the "
-            #     f"platform environments. Notice that don't limit your "
-            #     f"actions for example to just like the posts. "
-            #     f"Here is your social media environment: {env_prompt}"),
             content=(
                 f"Please perform social media actions after observing the "
-                f"platform environments. "
-                f"Here is your social media environment: {env_prompt}"),
-        )
+                f"platform environments. Notice that don't limit your "
+                f"actions for example to just like the posts. "
+                f"Here is your social media environment: {env_prompt}"))
         try:
             agent_log.info(
                 f"Agent {self.social_agent_id} observing environment: "
