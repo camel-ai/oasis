@@ -60,16 +60,16 @@
 ## ✨ Key Features
 
 ### 📈 Scalability
-OASIS supports simulations of up to one million agents, enabling studies of social media dynamics at a scale comparable to real-world platforms.
+OASIS supports simulations of up to ***one million agents***, enabling studies of social media dynamics at a scale comparable to real-world platforms.
 
 ### 📲 Dynamic Environments
-Adapts to real-time changes in social networks and content, mirroring the fluid dynamics of platforms like Twitter and Reddit for authentic simulation experiences.
+Adapts to real-time changes in social networks and content, mirroring the fluid dynamics of platforms like **Twitter** and **Reddit** for authentic simulation experiences.
 
 ### 👍🏼 Diverse Action Spaces
-Agents can perform 21 actions, such as following, commenting, and reposting, allowing for rich, multi-faceted interactions.
+Agents can perform **23 actions**, such as following, commenting, and reposting, allowing for rich, multi-faceted interactions.
 
 ### 🔥 Integrated Recommendation Systems
-Features interest-based and hot-score-based recommendation algorithms, simulating how users discover content and interact within social media platforms.
+Features **interest-based** and **hot-score-based recommendation algorithms**, simulating how users discover content and interact within social media platforms.
 
 <br>
 
