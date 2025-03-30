@@ -23,13 +23,13 @@ redis_url = os.getenv("REDIS_URL")
 
 redis = redis_client.from_url(redis_url)
 
-redis.publish(
-    "predict",
-    json.dumps({
-        "action": "start",
-        "predict_id": 1000,
-        "content": """I am 22 Years Old And Want To Learn About meme trading I have watched sajad Ali course but still confused please suggest some channels or strategies where i can learn memecoins trading. """
-    }),
-)
+# redis.publish(
+#     "predict",
+#     json.dumps({
+#         "action": "start",
+#         "predict_id": 1000,
+#         "content": """我们做了一个支持上传knowledge base 的知识问答类型的eigentbot，现在想要提高付费意愿，大家有什么好的观点吗？"""
+#     }),
+# )
 
-# redis.publish("predict_new_1000", "真的会有人买Yeezy的产品吗？我觉得是智商税。 ")
+redis.publish("predict_new_1000", json.dumps("或许这样的chat bot 产品并不会是llm 产品的最终形态，我认为多模态产品或者游戏类型的大型模拟的内容产品会是更好的产品形态。"))

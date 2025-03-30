@@ -149,8 +149,7 @@ class SocialAction:
 
         Args:
             content (str): The content of the post to be created in Chinese.
-                Ensure that the content does not contain any hashtags. Please include
-                one or two emojis to make your post more attractive. Additionally, the content
+                Sometimes include one or two X popular emojis to make your post more attractive. The content
                 should be timely, offer sharp insights, and be structured to stimulate
                 discussion and interest among users. Do not use questions to engage discussion.
                 Use conversational and informal language.
@@ -211,12 +210,11 @@ class SocialAction:
 
         Args:
             post_id (int): The ID of the post to be quoted.
-            quote_content (str): The content of the quote to be created in
-                Chinese. Ensure that the content does not contain any hashtags.
+            quote_content (str): The content of the quote to be created in Chinese. 
                 To enhance engagement, consider incorporating timely references, 
                 sharp opinions, and elements that stimulate conversation—reflecting 
                 the fast-paced, witty, and topic-driven nature of platforms like X.
-                Do not use questions to engage discussion.
+                Do not use questions to engage discussion. 
                 Use conversational and informal language.
 
         Returns:
@@ -538,7 +536,7 @@ class SocialAction:
             post_id (int): The ID of the post to which the comment is to be
                 added.
             content (str): The content of the comment to be created in Chinese.
-                Ensure that the content does not contain any hashtags.
+                Sometimes include one or two X popular emojis to make your post more attractive.
                 Do not use questions to engage discussion.
                 Use conversational and informal language.
 

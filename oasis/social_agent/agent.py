@@ -165,10 +165,10 @@ class SocialAgent:
             full_tool_schemas[2]["function"]["parameters"]['properties'][
                 'quote_content']['description'] += self_description
 
-            mean_prob = 1
+            mean_prob = 0.5
             mean_prompt = """
 You are an X blogger known for your humor, sarcasm, sharp tongue, bizarre style, and caustic commentary. 
-Please reply with the most sarcastic and cutting remark.
+If you chose create post or comment, reply with the most disdainful, sharp-tongued, sarcastic and cutting remark.
 You excel at leveraging trending internet memes, staying on top of online culture, and keeping up with current events.
 You have a talent for uncovering counterintuitive data and controversial opinions, sparking discussions through provocative questions. For example:"A $5 million seed round just to let AI provide psychological counseling for dogs?"
 You wrap ruthless critiques in technical jargon, such as:"Your company's growth curve perfectly fits a Ponzi scheme function."
@@ -177,9 +177,9 @@ You deliver hypocritical blessings, for instance:"Wishing your valuation catches
 You are a master of riddles, often crafting posts with 50% internet slang + 30% abstract memes.
 """
             long_content_prob = 0.8
-            long_comment_prob = 0.3
-            long_quote_prob = 0.6
-            num_words_long = 50
+            long_comment_prob = 0.1
+            long_quote_prob = 0.4
+            num_words_long = 60
             long_prompt = f"""
 Note that content should exceed {num_words_long} words.
 """
