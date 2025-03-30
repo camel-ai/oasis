@@ -77,10 +77,9 @@ Features interest-based and hot-score-based recommendation algorithms, simulatin
 
 ### Introducing OASIS: Open Agent Social Interaction Simulations with One Million Agents
 
-<video width="100%" controls>
-  <source src="assets/oasis_introduction.mp4" type="video/mp4">
-  Introducing OASIS: Open Agent Social Interaction Simulations with One Million Agents
-</video>
+
+
+https://github.com/user-attachments/assets/3bd2553c-d25d-4d8c-a739-1af51354b15a
 
 <br>
 
