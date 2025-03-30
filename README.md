@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://www.camel-ai.org/">
-    <img src="assets/banner.png" alt=banner">
+    <img src="assets/banner.png" alt=banner>
   </a>
 </div>
 
@@ -91,10 +91,14 @@ For more showcaes:
 <br>
 
 ## 🎯 Usecase
-- Research Social Media Simulation (Twitter, Reddit, social media…)
-- Multi-agent interaction environment
-- Matrix (Content Generation)
-- Marketing Content Prediction (AWS)
+<div align="left">
+    <img src="assets/research_simulation.png" alt=usecase1>
+    <img src="assets/interaction.png" alt=usecase2>
+   <a href="http://www.matrix.eigent.ai">
+    <img src="assets/content_creation.png" alt=usecase3>
+   </a>
+    <img src="assets/prediction.png" alt=usecase4> 
+</div>
 
 ## ⚙️ Quick Start
 
