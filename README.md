@@ -20,7 +20,6 @@
 [![Star][star-image]][star-url]
 [![Package License][package-license-image]][package-license-url]
 
-
 <h4 align="center">
 
 [Community](https://github.com/camel-ai/camel#community) |
@@ -30,6 +29,7 @@
 [Citation](https://github.com/camel-ai/oasis#-citation) |
 [Contributing](https://github.com/camel-ai/oasis#-contributing-to-oasis) |
 [CAMEL-AI](https://www.camel-ai.org/)
+
 </h4>
 
 </div>
@@ -40,6 +40,7 @@
   <img src='assets/intro.png'>
 
 🏝️ OASIS is a scalable, open-source social media simulator that integrates large language models with rule-based agents to realistically mimic the behavior of up to one million users on platforms like Twitter and Reddit. It's designed to facilitate the study of complex social phenomena such as information spread, group polarization, and herd behavior, offering a versatile tool for exploring diverse social dynamics and user interactions in digital environments.
+
 </p>
 
 <br>
@@ -60,15 +61,19 @@
 ## ✨ Key Features
 
 ### 📈 Scalability
+
 OASIS supports simulations of up to ***one million agents***, enabling studies of social media dynamics at a scale comparable to real-world platforms.
 
 ### 📲 Dynamic Environments
+
 Adapts to real-time changes in social networks and content, mirroring the fluid dynamics of platforms like **Twitter** and **Reddit** for authentic simulation experiences.
 
 ### 👍🏼 Diverse Action Spaces
+
 Agents can perform **23 actions**, such as following, commenting, and reposting, allowing for rich, multi-faceted interactions.
 
 ### 🔥 Integrated Recommendation Systems
+
 Features **interest-based** and **hot-score-based recommendation algorithms**, simulating how users discover content and interact within social media platforms.
 
 <br>
@@ -77,26 +82,26 @@ Features **interest-based** and **hot-score-based recommendation algorithms**, s
 
 ### Introducing OASIS: Open Agent Social Interaction Simulations with One Million Agents
 
-
-
 https://github.com/user-attachments/assets/3bd2553c-d25d-4d8c-a739-1af51354b15a
 
 <br>
 
 For more showcaes:
+
 - Can 1,000,000 AI agents simulate social media?
-[→Watch demo](https://www.youtube.com/watch?v=lprGHqkApus&t=2s)
+  [→Watch demo](https://www.youtube.com/watch?v=lprGHqkApus&t=2s)
 
 <br>
 
 ## 🎯 Usecase
+
 <div align="left">
     <img src="assets/research_simulation.png" alt=usecase1>
     <img src="assets/interaction.png" alt=usecase2>
    <a href="http://www.matrix.eigent.ai">
     <img src="assets/content_creation.png" alt=usecase3>
    </a>
-    <img src="assets/prediction.png" alt=usecase4> 
+    <img src="assets/prediction.png" alt=usecase4>
 </div>
 
 ## ⚙️ Quick Start
@@ -144,7 +149,7 @@ pip install -e .  # This will install dependencies as specified in pyproject.tom
 
 <br>
 
-> [!TIP]
+> \[!TIP\]
 > For more detailed instructions and additional configuration options, check out the [installation section](tutorials/installation.md).
 
 ### More Tutorials
@@ -155,10 +160,10 @@ To discover how to create profiles for large-scale users, as well as how to visu
   <img src="assets/tutorial.png" alt="Tutorial Overview">
 </div>
 
-
 ## 📢 News
 
-###  Upcoming Features & Contributions
+### Upcoming Features & Contributions
+
 > We welcome community contributions! Join us in building these exciting features.
 
 - [OASIS Refactor: First Release on PyPI](https://github.com/camel-ai/oasis/issues/57)
@@ -166,7 +171,8 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 <!-- - Public release of our dataset on Hugging Face (November 05, 2024) -->
 
-###  Latest Updates
+### Latest Updates
+
 - Support OPENAI Embedding model for Twhin-Bert Recommendation System. - 📆 March 25, 2025
 - Updated social media links and QR codes in the README! Join OASIS & CAMEL on WeChat, X, Reddit, and Discord. - 📆 March 24, 2025
 - Add multi-threading support to speed up LLM inference by 13x - 📆 March 4, 2025
@@ -176,13 +182,11 @@ To discover how to create profiles for large-scale users, as well as how to visu
 - OASIS initially released on arXiv - 📆 November 19, 2024
 - OASIS GitHub repository initially launched - 📆 November 19, 2024
 
-
 ## 🥂 Contributing to OASIS🏝️
 
 > We greatly appreciate your interest in contributing to our open-source initiative. To ensure a smooth collaboration and the success of contributions, we adhere to a set of contributing guidelines similar to those established by CAMEL. For a comprehensive understanding of the steps involved in contributing to our project, please refer to the CAMEL [contributing guidelines](https://github.com/camel-ai/camel/blob/master/CONTRIBUTING.md). 🤝🚀
 >
->An essential part of contributing involves not only submitting new features with accompanying tests (and, ideally, examples) but also ensuring that these contributions pass our automated pytest suite. This approach helps us maintain the project's quality and reliability by verifying compatibility and functionality.
->
+> An essential part of contributing involves not only submitting new features with accompanying tests (and, ideally, examples) but also ensuring that these contributions pass our automated pytest suite. This approach helps us maintain the project's quality and reliability by verifying compatibility and functionality.
 
 ## 📬 Community & Contact
 
@@ -190,13 +194,13 @@ If you're keen on exploring new research opportunities or discoveries with our p
 
 <br>
 
-- Join us ([*Discord*](https://discord.camel-ai.org/) or [*WeChat*](https://ghli.org/camel/wechat.png)) in pushing the boundaries of finding the scaling laws of agents. 
+- Join us ([*Discord*](https://discord.camel-ai.org/) or [*WeChat*](https://ghli.org/camel/wechat.png)) in pushing the boundaries of finding the scaling laws of agents.
 
 - Join WechatGroup for further discussions!
+
 <div align="">
   <img src="assets/wechatgroup.png" alt="WeChat Group QR Code" width="600">
 </div>
-
 
 ## 🌟 Star History
 
