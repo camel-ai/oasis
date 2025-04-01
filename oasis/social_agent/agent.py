@@ -77,8 +77,8 @@ class SocialAgent(ChatAgent):
         else:
             self.model_backend = ModelFactory.create(
                 model_platform=ModelPlatformType.VLLM,
-                model_type=ModelType(model_type),
-                url="http://localhost:8000/v1",  # TODO: change to server url
+                model_type="llama-3",
+                url="http://10.109.16.7:8080/v1",  # TODO: change to server url
                 model_config_dict={"temperature":
                                    0.5},  # TODO: Need to be customized
             )
