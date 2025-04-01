@@ -38,6 +38,8 @@ from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
 from scripts.base.listen import redis, redis_publish
 
+os.environ["HTTP_PROXY"] = "http://127.0.0.1:7890"
+os.environ["HTTPS_PROXY"] = "http://127.0.0.1:7890"
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
@@ -152,7 +154,7 @@ async def running(
             # result = infra.db_cursor.execute(query).fetchone()[0]
             model = ModelFactory.create(
                 model_platform=ModelPlatformType.OPENAI,
-                model_type=ModelType.GPT_4O,
+                model_type=ModelType.GPT_4O_MINI,
             )
             language_judge_agent = ChatAgent(model=model)
             user_message = (
@@ -167,6 +169,13 @@ async def running(
             global language_type
             language_type = response.msgs[0].parsed.language_type
             print(f"language_type: {language_type}")
+            for _, agent in agent_graph.get_agents():
+                if language_type == "chinese":
+                    agent.model_backend = ModelFactory.create(
+                        model_platform=ModelPlatformType.QWEN,
+                        model_type=ModelType.QWEN_PLUS,
+                    )
+                    agent.model_backend.model_config_dict['temperature'] = 1.0
 
         await infra.update_rec_table()
         # social_log.info("update rec table.")

@@ -79,16 +79,16 @@ class SocialAgent:
                 for tool_schema in [convert_to_schema(tool) for tool in tools]
             }
             self.full_tool_schemas = list(tool_schemas.values())
-            # self.model_backend = ModelFactory.create(
-            #     model_platform=ModelPlatformType.OPENAI,
-            #     model_type=ModelType(model_type),
-            # )
-            # self.model_backend.model_config_dict['temperature'] = 0.6
             self.model_backend = ModelFactory.create(
-                model_platform=ModelPlatformType.QWEN,
-                model_type=ModelType.QWEN_PLUS,
+                model_platform=ModelPlatformType.OPENAI,
+                model_type=ModelType(model_type),
             )
-            self.model_backend.model_config_dict['temperature'] = 0.6
+            self.model_backend.model_config_dict['temperature'] = 1
+            # self.model_backend = ModelFactory.create(
+            #     model_platform=ModelPlatformType.QWEN,
+            #     model_type=ModelType.QWEN_PLUS,
+            # )
+            # self.model_backend.model_config_dict['temperature'] = 1
 
         context_creator = ScoreBasedContextCreator(
             OpenAITokenCounter(ModelType.GPT_3_5_TURBO),
