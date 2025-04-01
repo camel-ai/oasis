@@ -142,6 +142,8 @@ async def running(
 
     async def trigger(timestep: int, predict_content: str):
         # os.environ["SANDBOX_TIME"] = str(timestep * 3)
+        activate_prob_celebrity = 0.1
+        activate_prob_normal = 0.2
         infra.current_timestep = str(timestep * 3)
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         # social_log.info(f"timestep:{timestep + 1}.")
@@ -180,19 +182,27 @@ async def running(
         await infra.update_rec_table()
         # social_log.info("update rec table.")
         tasks = []
-        for _, agent in agent_graph.get_agents():
-            if agent.agent_id == 33:
-                assert agent.user_info.profile['other_info'][
-                    'realname'] == "Liu Qiangdong"
-            if agent.user_info.is_controllable is False:
-                if agent.agent_id <= 33:  # celebrity
-                    if random.random() < activate_prob_celebrity:
-                        agent.language_type = language_type
-                        tasks.append(agent.perform_action_by_llm())
-                else:  # normal
-                    if random.random() < activate_prob_normal:
-                        agent.language_type = language_type
-                        tasks.append(agent.perform_action_by_llm())
+        round_num = 1
+        # 爆款概率
+        if random.random() < 0.05:
+            round_num = 3
+        if random.random() < 0.1:
+            activate_prob_celebrity = 0.05
+            activate_prob_normal = 0.05
+        for i in range(round_num):
+            for _, agent in agent_graph.get_agents():
+                if agent.agent_id == 33:
+                    assert agent.user_info.profile['other_info'][
+                        'realname'] == "Liu Qiangdong"
+                if agent.user_info.is_controllable is False:
+                    if agent.agent_id <= 33:  # celebrity
+                        if random.random() < activate_prob_celebrity:
+                            agent.language_type = language_type
+                            tasks.append(agent.perform_action_by_llm())
+                    else:  # normal
+                        if random.random() < activate_prob_normal:
+                            agent.language_type = language_type
+                            tasks.append(agent.perform_action_by_llm())
         random.shuffle(tasks)
         await asyncio.gather(*tasks)
         redis_publish(content_id, {"action": "predict_end", "step": timestep})
