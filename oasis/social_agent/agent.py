@@ -71,6 +71,7 @@ class SocialAgent:
         self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
         self.model_type = model_type
         self.is_openai_model = is_openai_model
+        self.language_type = "english"
         if self.is_openai_model:
             tools = self.env.action.get_openai_function_list()
             tool_schemas = {
@@ -82,7 +83,12 @@ class SocialAgent:
                 model_platform=ModelPlatformType.OPENAI,
                 model_type=ModelType(model_type),
             )
-            self.model_backend.model_config_dict['temperature'] = 0.6
+            self.model_backend.model_config_dict['temperature'] = 1
+            # self.model_backend = ModelFactory.create(
+            #     model_platform=ModelPlatformType.QWEN,
+            #     model_type=ModelType.QWEN_PLUS,
+            # )
+            # self.model_backend.model_config_dict['temperature'] = 1
 
         context_creator = ScoreBasedContextCreator(
             OpenAITokenCounter(ModelType.GPT_3_5_TURBO),
@@ -110,6 +116,7 @@ class SocialAgent:
     async def perform_action_by_llm(self):
         # Get posts:
         env_prompt = await self.env.to_text_prompt()
+        env_prompt = env_prompt.replace("Chinese", self.language_type)
         user_msg = BaseMessage.make_user_message(
             role_name="User",
             # content=(
@@ -120,6 +127,7 @@ class SocialAgent:
             content=(
                 f"Please perform social media actions after observing the "
                 f"platform environments. "
+                f"Notice that if you want to create some content, "
                 f"Here is your social media environment: {env_prompt}"),
         )
         self.memory.write_record(
@@ -159,12 +167,19 @@ class SocialAgent:
 
             mean_prob = 0.5
             mean_prompt = """
-你是一个以幽默、反讽、mean、猎奇、刻薄著称的X博主，你非常擅长使用网络热梗和网上冲浪。并且很了解目前创业投资圈的资讯。挥你幽默反讽的风格。
+You are an X blogger known for your humor, sarcasm, sharp tongue, bizarre style, and caustic commentary. 
+If you chose create post or comment, reply with the most disdainful, sharp-tongued, sarcastic and cutting remark.
+You excel at leveraging trending internet memes, staying on top of online culture, and keeping up with current events.
+You have a talent for uncovering counterintuitive data and controversial opinions, sparking discussions through provocative questions. For example:"A $5 million seed round just to let AI provide psychological counseling for dogs?"
+You wrap ruthless critiques in technical jargon, such as:"Your company's growth curve perfectly fits a Ponzi scheme function."
+You invent concept-based sarcasm, like:"I suggest including this in the '21st Century Cyber Begging Art Awards'."
+You deliver hypocritical blessings, for instance:"Wishing your valuation catches up with your cholesterol index soon."
+You are a master of riddles, often crafting posts with 50% internet slang + 30% abstract memes.
 """
-            long_content_prob = 1
-            long_comment_prob = 0.5
-            long_quote_prob = 0.5
-            num_words_long = 50
+            long_content_prob = 0.8
+            long_comment_prob = 0.1
+            long_quote_prob = 0.4
+            num_words_long = 60
             long_prompt = f"""
 Note that content should exceed {num_words_long} words.
 """
@@ -180,16 +195,34 @@ Note that content should exceed {num_words_long} words.
             if random.random() < long_quote_prob:
                 full_tool_schemas[2]["function"]["parameters"]['properties'][
                     'quote_content']['description'] += long_prompt
+
+            full_tool_schemas[0]["function"]["parameters"]['properties'][
+                'content']['description'] = (
+                    full_tool_schemas[0]["function"]["parameters"]
+                    ['properties']['content']['description'].replace(
+                        "Chinese", self.language_type))
+            full_tool_schemas[1]["function"]["parameters"]['properties'][
+                'content']['description'] = (
+                    full_tool_schemas[1]["function"]["parameters"]
+                    ['properties']['content']['description'].replace(
+                        "Chinese", self.language_type))
+            full_tool_schemas[2]["function"]["parameters"]['properties'][
+                'quote_content']['description'] = (
+                    full_tool_schemas[2]["function"]["parameters"]
+                    ['properties']['quote_content']['description'].replace(
+                        "Chinese", self.language_type))
+            # print(f"full_tool_schemas: {full_tool_schemas}")
+            # exit()
             try:
                 response = await self.model_backend._arun(
-                    openai_messages, tools=self.full_tool_schemas)
+                    openai_messages, tools=full_tool_schemas)
                 # agent_log.info(f"Agent {self.agent_id} response: {response}")
                 # print(f"Agent {self.agent_id} response: {response}")
                 for tool_call in response.choices[0].message.tool_calls:
                     action_name = tool_call.function.name
                     args = json.loads(tool_call.function.arguments)
-                    print(f"Agent {self.agent_id} is performing "
-                          f"action: {action_name} with args: {args}")
+                    # print(f"Agent {self.agent_id} is performing "
+                    #       f"action: {action_name} with args: {args}")
                     result = await getattr(self.env.action,
                                            action_name)(**args)
                     self.perform_agent_graph_action(action_name, args)
@@ -322,8 +355,10 @@ Note that content should exceed {num_words_long} words.
             "content": content
         }
 
-    async def perform_action_by_hci(self, input_content: str, selection:int = 0) -> Any:
-        print("Please choose one function to perform:")
+    async def perform_action_by_hci(self,
+                                    input_content: str,
+                                    selection: int = 0) -> Any:
+        # print("Please choose one function to perform:")
         function_list = self.env.action.get_openai_function_list()
         # for i in range(len(function_list)):
         #     agent_log.info(f"Agent {self.agent_id} function: "

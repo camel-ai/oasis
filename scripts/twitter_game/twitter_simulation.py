@@ -13,27 +13,35 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 # flake8: noqa: E402
 from __future__ import annotations
-from oasis.social_platform.typing import ActionType
-from oasis.social_platform.platform import Platform
-from oasis.social_platform.channel import Channel
-from oasis.social_agent.agents_generator import (gen_control_agents_with_data,
-                                                 generate_reddit_agents)
-from oasis.clock.clock import Clock
 
 import argparse
 import asyncio
+import json
 import logging
 import os
 import random
 import sys
 from datetime import datetime
 from typing import Any
-from scripts.base.listen import redis, redis_publish
-from colorama import Back
 
+from camel.agents import ChatAgent
+from camel.models import ModelFactory
+from camel.types import ModelPlatformType, ModelType
+from colorama import Back
+from pydantic import BaseModel
+
+from oasis.clock.clock import Clock
+from oasis.social_agent.agents_generator import (gen_control_agents_with_data,
+                                                 generate_reddit_agents)
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import ActionType
+from scripts.base.listen import redis, redis_publish
+
+# os.environ["HTTP_PROXY"] = "http://127.0.0.1:7890"
+# os.environ["HTTPS_PROXY"] = "http://127.0.0.1:7890"
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-
 
 logging.basicConfig(level=logging.CRITICAL)
 # social_log = logging.getLogger(name="social")
@@ -60,8 +68,8 @@ parser.add_argument(
     default="",
 )
 
-DATA_DIR = os.path.join(os.path.dirname(
-    os.path.dirname(os.path.dirname(__file__))), "data")
+DATA_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 DEFAULT_DB_PATH = os.path.join(DATA_DIR, "mock_reddit.db")
 DEFAULT_USER_PATH = os.path.join(DATA_DIR, "reddit",
                                  "filter_user_results.json")
@@ -76,15 +84,16 @@ async def running(
     num_timesteps: int = 5,
     recsys_type: str = "twrec-bert",
     controllable_user: bool = True,
-    activate_prob: float = 0.2,
+    activate_prob_normal: float = 0.2,
+    activate_prob_celebrity: float = 0.1,
     inference_configs: dict[str, Any] | None = None,
     refresh_rec_post_count: int = 5,
     user_number: int = 1,
     action_space_file_path: str = None,
-    content: str = '',
+    content: str = "",
     content_id: int = 0,
 ) -> None:
-    os.environ["SANDBOX_TIME"] = str(0)
+    current_timestep = str(0)
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     user_path = DEFAULT_USER_PATH if user_path is None else user_path
     if os.path.exists(db_path):
@@ -103,6 +112,8 @@ async def running(
         recsys_type=recsys_type,
         refresh_rec_post_count=refresh_rec_post_count,
         content_id=content_id,
+        current_timestep=current_timestep,
+        use_openai_embedding=True,
     )
 
     twitter_task = asyncio.create_task(infra.running())
@@ -130,42 +141,85 @@ async def running(
         )
 
     async def trigger(timestep: int, predict_content: str):
-        os.environ["SANDBOX_TIME"] = str(timestep * 3)
+        # os.environ["SANDBOX_TIME"] = str(timestep * 3)
+        activate_prob_celebrity = 0.1
+        activate_prob_normal = 0.2
+        infra.current_timestep = str(timestep * 3)
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         # social_log.info(f"timestep:{timestep + 1}.")
 
         player_agent = agent_graph.get_agent(0)
-        await player_agent.perform_action_by_hci(predict_content)
+        await player_agent.perform_action_by_hci(
+            predict_content, 0 if predict_content != "" else 6)
+        if timestep == 1:
+            # query = "SELECT content FROM post WHERE post_id = 1"
+            # result = infra.db_cursor.execute(query).fetchone()[0]
+            model = ModelFactory.create(
+                model_platform=ModelPlatformType.OPENAI,
+                model_type=ModelType.GPT_4O_MINI,
+            )
+            language_judge_agent = ChatAgent(model=model)
+            user_message = (
+                f"Please judge the following text is in which language: {predict_content}, and only return one word, like 'chinese', 'english', 'japanese', etc."
+            )
+
+            class LanguageType(BaseModel):
+                language_type: str
+
+            response = language_judge_agent.step(user_message,
+                                                 response_format=LanguageType)
+            global language_type
+            language_type = response.msgs[0].parsed.language_type
+            print(f"language_type: {language_type}")
+            for _, agent in agent_graph.get_agents():
+                if language_type == "chinese":
+                    agent.model_backend = ModelFactory.create(
+                        model_platform=ModelPlatformType.QWEN,
+                        model_type=ModelType.QWEN_PLUS,
+                    )
+                    agent.model_backend.model_config_dict['temperature'] = 1.0
 
         await infra.update_rec_table()
         # social_log.info("update rec table.")
         tasks = []
-        for _, agent in agent_graph.get_agents():
-            if agent.user_info.is_controllable is False:
-                if random.random() < activate_prob:
-                    tasks.append(agent.perform_action_by_llm())
+        round_num = 1
+        # 爆款概率
+        if random.random() < 0.05:
+            round_num = 3
+        if random.random() < 0.1:
+            activate_prob_celebrity = 0.05
+            activate_prob_normal = 0.05
+        for i in range(round_num):
+            for _, agent in agent_graph.get_agents():
+                if agent.agent_id == 33:
+                    assert agent.user_info.profile['other_info'][
+                        'realname'] == "Liu Qiangdong"
+                if agent.user_info.is_controllable is False:
+                    if agent.agent_id <= 33:  # celebrity
+                        if random.random() < activate_prob_celebrity:
+                            agent.language_type = language_type
+                            tasks.append(agent.perform_action_by_llm())
+                    else:  # normal
+                        if random.random() < activate_prob_normal:
+                            agent.language_type = language_type
+                            tasks.append(agent.perform_action_by_llm())
         random.shuffle(tasks)
         await asyncio.gather(*tasks)
-        redis_publish(content_id, {
-            'action': 'predict_end',
-            'step': timestep
-        })
+        redis_publish(content_id, {"action": "predict_end", "step": timestep})
 
     step = 1
     await trigger(step, content)
 
-    channel_name = f'predict_new_{content_id}'
-    
+    channel_name = f"predict_new_{content_id}"
     pubsub = redis.pubsub()
     pubsub.subscribe(channel_name)
-    
+
     for message in pubsub.listen():
         print(message)
         if message["type"] != "message":
             continue
         step += 1
-        await trigger(step, str(message["data"]))
-
+        await trigger(step, json.loads(message["data"]))
 
     # num_timesteps = 1
     # for timestep in range(1, num_timesteps + 1):
@@ -200,7 +254,7 @@ def log_info(message: str) -> None:
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Simulation parameters")
-    parser.add_argument("--db_path", type=str, default='twitter.db')
+    parser.add_argument("--db_path", type=str, default="twitter.db")
     parser.add_argument("--content", type=str)
     parser.add_argument("--content_id", type=int)
     return parser.parse_args()
@@ -208,28 +262,22 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    os.environ["SANDBOX_TIME"] = str(0)
+    current_timestep = str(0)
 
     inference_configs = {
-        "model_type": "gpt-4o",
+        "model_type": "gpt-4o-mini",
         "is_openai_model": True,
     }
 
-    user_profile_root_path = f'{DATA_DIR}/game/'
-    all_user_profile_path = [
-        "all_game_agent_shuffle.json",
-        # "game_agent_25_75.json",
-        # "game_agent_50_100.json",
-        # "game_agent_75_125.json",
-        # "game_agent_100_156.json",
-    ]
+    user_profile_root_path = './data/game/'
+    all_user_profile_path = ["mixed_agents.json"]
     user_profile_path = user_profile_root_path + random.choice(
         all_user_profile_path)
 
     asyncio.run(
         running(db_path=args.db_path,
                 user_path=user_profile_path,
-                num_timesteps=3,
+                num_timesteps=100,
                 recsys_type="twhin-bert",
                 inference_configs=inference_configs,
                 content=args.content,

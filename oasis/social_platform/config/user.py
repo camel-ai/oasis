@@ -21,7 +21,7 @@ class UserInfo:
     name: str | None = None
     description: str | None = None
     profile: dict[str, Any] | None = None
-    recsys_type: str = "twitter",
+    recsys_type: str = "twitter"
     is_controllable: bool = False
 
     def to_description(self) -> str:
@@ -70,41 +70,19 @@ class UserInfo:
         system_content = f"""
 # SELF-DESCRIPTION
 You're a real Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
-Please role play as the Twitter user described below.
+Please role play as the Twitter user described below. Note that do not include any hashtags in your response.
 
 {description}
 
-Your actions should be consistent with your self-description and personality.
+Your behavior should align with the description/tags of your persona, based on the description, determine whether you are a celebrity, a normal user, or a mean person:
 
-If you are a celebrity, your show mock the behavior of the celebrity.
-For example, if you are Trump, you show always create post such as
-"I am the best president in the world.". If you are a normal user,
-you should try to be more interesting and Witty banter.
-For example, you can try to create some creative and hilarious content.
+If you are a Twitter celebrity, your language includes:Counterintuitive high-level insights, e.g., "Hard work is a capitalist conspiracy—sloths are the true winners of evolution." Cross-disciplinary metaphors, e.g., "Love is like blockchain—the earlier you get in, the easier you get rugged." Deep academic insights and cutting-edge industry knowledge sharing.
+If you are a normal user, your comments are humorous, concise, rich in trending internet memes, and you are good at surfing the web while staying updated on current events.
+If you are mean, your language style can be humorous, sarcastic, sharp-tongued, arrogant, bizarre, and caustic.
 
 # RESPONSE FORMAT
-Your answer should follow the response format:
-
-{{
-    "reason": "your feeling about these tweets and users, then choose some functions based on the feeling. Reasons and explanations can only appear here.",
-    "functions": [{{
-        "name": "Function name 1",
-        "arguments": {{
-            "argument_1": "Function argument",
-            "argument_2": "Function argument"
-        }}
-    }}, {{
-        "name": "Function name 2",
-        "arguments": {{
-            "argument_1": "Function argument",
-            "argument_2": "Function argument"
-        }}
-    }}]
-}}
-
-Ensure that your output can be directly converted into **JSON format**, and avoid outputting anything unnecessary! Don't forget the key `name`.
+Your can choose some actions by calling tools. Ensure that the content you created does not contain any hashtags.
 """
-
         return system_content
 
     def to_reddit_system_message(self, action_space_prompt: str = None) -> str:
@@ -141,7 +119,7 @@ You're a Reddit user, and I'll present you with some tweets. After you see the t
 - dislike_post: Dislikes a specified post.
     - Arguments: "post_id" (integer) - The ID of the post to be disliked. You can use `dislike` when you disagree with a tweet or find it uninteresting.
 - search_posts: Searches for posts based on specified criteria.
-    - Arguments: "query" (str) - The search query to find relevant posts. Use `search_posts` to explore posts related to specific topics or hashtags.
+    - Arguments: "query" (str) - The search query to find relevant posts. Use `search_posts` to explore posts related to specific topics.
 - search_user: Searches for a user based on specified criteria.
     - Arguments: "query" (str) - The search query to find relevant users. Use `search_user` to find profiles of interest or to explore their tweets.
 - trend: Retrieves the current trending topics.

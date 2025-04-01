@@ -15,7 +15,6 @@
 into rec_matrix'''
 import heapq
 import logging
-import os
 import random
 import time
 from ast import literal_eval
@@ -30,7 +29,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import AutoModel, AutoTokenizer
 
-from .process_recsys_posts import generate_post_vector
+from .process_recsys_posts import (generate_post_vector,
+                                   generate_post_vector_openai)
 from .typing import ActionType, RecsysType
 
 rec_log = logging.getLogger(name='social.rec')
@@ -418,7 +418,9 @@ def rec_sys_personalized_twh(
         max_rec_post_len: int,
         # source_post_indexs: List[int],
         recall_only: bool = False,
-        enable_like_score: bool = False) -> List[List]:
+        enable_like_score: bool = False,
+        current_timestep: str = "0",
+        use_openai_embedding: bool = False) -> List[List]:
     # Set some global variables to reduce time consumption
     global date_score, fans_score, t_items, u_items, user_previous_post
     global user_previous_post_all, user_profiles
@@ -444,7 +446,7 @@ def rec_sys_personalized_twh(
             else:
                 user_profiles.append(user['bio'])
 
-    current_time = int(os.environ["SANDBOX_TIME"])
+    current_time = int(current_timestep)
     if len(t_items) < len(post_table):
         for post in post_table[-latest_post_count:]:
             # Get the {post_id: content} dict, update only the latest tweets
@@ -529,10 +531,14 @@ def rec_sys_personalized_twh(
         corpus = user_profiles + filtered_posts_tuple[0]
         # corpus = user_profiles + list(t_items.values())
         tweet_vector_start_t = time.time()
-        all_post_vector_list = generate_post_vector(twhin_model,
-                                                    twhin_tokenizer,
-                                                    corpus,
-                                                    batch_size=1000)
+        if use_openai_embedding:
+            all_post_vector_list = generate_post_vector_openai(corpus,
+                                                               batch_size=1000)
+        else:
+            all_post_vector_list = generate_post_vector(twhin_model,
+                                                        twhin_tokenizer,
+                                                        corpus,
+                                                        batch_size=1000)
         tweet_vector_end_t = time.time()
         rec_log.info(
             f"twhin model cost time: {tweet_vector_end_t-tweet_vector_start_t}"

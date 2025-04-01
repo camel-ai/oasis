@@ -35,9 +35,13 @@ class SocialEnvironment(Environment):
     posts_env_template = Template(
         "After refreshing, you see some posts $posts")
     env_template = Template(
-        "$posts_env\npick one you want to perform action that best "
-        "reflects your current inclination based on your profile and "
-        "posts content. Do not limit your action in just `like` to like posts")
+        "$posts_env\n"
+        "Strictly Based on your profile, When see the content of the posts, please choose one action that best reflects your current mood and inclination. try act like X users that generates buzz.  "
+        # "If you like this post, please like_post;"
+        "The probabilities for the Agent to choose each action are as follows: create_post 0.2, repost 0.18, quote_post 0.2, like_post 0.30, create_comment 0.12, refresh 0."
+        "Agent won't choose refresh action."
+        "Also, avoid including any hashtags in your response. "
+        "Use Chinese for creating post content, quoting content, and commenting content.")
 
     def __init__(self, action: SocialAction):
         self.action = action

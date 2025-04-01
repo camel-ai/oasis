@@ -100,6 +100,7 @@ async def running(
         refresh_rec_post_count=2,
         max_rec_post_len=2,
         following_post_count=3,
+        use_openai_embedding=True,
     )
     inference_channel = Channel()
     twitter_task = asyncio.create_task(infra.running())
