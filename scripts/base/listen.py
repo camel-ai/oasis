@@ -47,7 +47,7 @@ def start_predict(predict_id, content):
             f"{predict_id}",
         ],
         env=os.environ.copy(),
-        shell=True,
+        # shell=True,
     )
     process_table[predict_id] = proc
 
