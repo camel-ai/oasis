@@ -20,6 +20,7 @@ import json
 import logging
 import os
 import random
+import re
 import sys
 from datetime import datetime
 from typing import Any
@@ -152,24 +153,10 @@ async def running(
         await player_agent.perform_action_by_hci(
             predict_content, 0 if predict_content != "" else 6)
         if timestep == 1:
-            # query = "SELECT content FROM post WHERE post_id = 1"
-            # result = infra.db_cursor.execute(query).fetchone()[0]
-            model = ModelFactory.create(
-                model_platform=ModelPlatformType.OPENAI,
-                model_type=ModelType.GPT_4O_MINI,
-            )
-            language_judge_agent = ChatAgent(model=model)
-            user_message = (
-                f"Please judge the following text is in which language: {predict_content}, and only return one word, like 'chinese', 'english', 'japanese', etc."
-            )
-
-            class LanguageType(BaseModel):
-                language_type: str
-
-            response = language_judge_agent.step(user_message,
-                                                 response_format=LanguageType)
+            # First try rule-based detection for English/Chinese
             global language_type
-            language_type = response.msgs[0].parsed.language_type
+            language_type = detect_language(predict_content)
+
             print(f"language_type: {language_type}")
             for _, agent in agent_graph.get_agents():
                 if language_type == "chinese":
@@ -250,6 +237,49 @@ async def running(
 
 def log_info(message: str) -> None:
     print(f"INFO - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {message}")
+
+
+def detect_language(text: str) -> str:
+    """
+    Detect if text is English, Chinese, or other using rule-based methods.
+    
+    Args:
+        text: The text to analyze
+        
+    Returns:
+        'english', 'chinese', or 'other'
+    """
+    if not text or len(text.strip()) == 0:
+        return "english"  # Default to English for empty text
+    
+    # Remove URLs, mentions, hashtags, and emojis to focus on the actual text
+    cleaned_text = re.sub(r'https?://\S+|@\w+|#\w+|[\U00010000-\U0010ffff]', '', text)
+    cleaned_text = cleaned_text.strip()
+    
+    if not cleaned_text:
+        return "english"  # Default to English if only URLs/mentions/hashtags
+    
+    # Count Chinese characters
+    chinese_chars = len(re.findall(r'[\u4e00-\u9fff]', cleaned_text))
+    
+    # Count total characters (excluding whitespace)
+    total_chars = len(re.sub(r'\s', '', cleaned_text))
+    if total_chars == 0:
+        return "english"
+    
+    # Calculate Chinese character ratio
+    chinese_ratio = chinese_chars / total_chars if total_chars > 0 else 0
+    
+    # If more than 40% characters are Chinese, consider it Chinese
+    if chinese_ratio > 0.4:
+        return "chinese"
+    
+    # If text only contains ASCII characters (0-127), consider it English
+    if all(ord(c) < 128 for c in cleaned_text):
+        return "english"
+    
+    # For any other case, return "other" to trigger OpenAI detection
+    return "other"
 
 
 def parse_args():
