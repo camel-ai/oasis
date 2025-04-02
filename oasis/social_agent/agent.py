@@ -18,7 +18,7 @@ import logging
 import sys
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
-
+import asyncio
 from camel.agents import ChatAgent
 from camel.messages import BaseMessage
 from camel.models import ModelFactory
@@ -28,6 +28,8 @@ from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
 from oasis.social_platform import Channel
 from oasis.social_platform.config import UserInfo
+
+GLOBAL_SEMAPHORE = asyncio.Semaphore(1024) 
 
 if TYPE_CHECKING:
     from oasis.social_agent import AgentGraph
@@ -78,7 +80,7 @@ class SocialAgent(ChatAgent):
             self.model_backend = ModelFactory.create(
                 model_platform=ModelPlatformType.VLLM,
                 model_type="llama-3",
-                url="http://10.109.16.7:8080/v1",  # TODO: change to server url
+                url="http://10.109.15.134:8080/v1",  # TODO: change to server url
                 model_config_dict={"temperature":
                                    0.5},  # TODO: Need to be customized
             )
@@ -94,7 +96,8 @@ class SocialAgent(ChatAgent):
 
         super().__init__(system_message=system_message,
                          model=self.model_backend,
-                         tools=self.env.action.get_openai_function_list())
+                         tools=self.env.action.get_openai_function_list(),
+                         single_iteration=True)
         self.agent_graph = agent_graph
         self.test_prompt = (
             "\n"
@@ -121,19 +124,20 @@ class SocialAgent(ChatAgent):
                 f"platform environments. "
                 f"Here is your social media environment: {env_prompt}"),
         )
-        try:
-            agent_log.info(
-                f"Agent {self.social_agent_id} observing environment: "
-                f"{env_prompt}")
-            response = await self.astep(user_msg)
-            for tool_call in response.info['tool_calls']:
-                action_name = tool_call.tool_name
-                args = tool_call.args
-                agent_log.info(f"Agent {self.social_agent_id} performed "
-                               f"action: {action_name} with args: {args}")
-                self.perform_agent_graph_action(action_name, args)
-        except Exception as e:
-            agent_log.error(f"Agent {self.social_agent_id} error: {e}")
+        async with GLOBAL_SEMAPHORE:
+            try:
+                agent_log.info(
+                    f"Agent {self.social_agent_id} observing environment: "
+                    f"{env_prompt}")
+                response = await self.astep(user_msg)
+                for tool_call in response.info['tool_calls']:
+                    action_name = tool_call.tool_name
+                    args = tool_call.args
+                    agent_log.info(f"Agent {self.social_agent_id} performed "
+                                f"action: {action_name} with args: {args}")
+                    self.perform_agent_graph_action(action_name, args)
+            except Exception as e:
+                agent_log.error(f"Agent {self.social_agent_id} error: {e}") 
 
     async def perform_test(self):
         """
