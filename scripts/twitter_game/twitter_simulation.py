@@ -39,8 +39,8 @@ from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
 from scripts.base.listen import redis, redis_publish
 
-# os.environ["HTTP_PROXY"] = "http://127.0.0.1:7890"
-# os.environ["HTTPS_PROXY"] = "http://127.0.0.1:7890"
+os.environ["HTTP_PROXY"] = "http://127.0.0.1:7890"
+os.environ["HTTPS_PROXY"] = "http://127.0.0.1:7890"
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
@@ -145,6 +145,7 @@ async def running(
         # os.environ["SANDBOX_TIME"] = str(timestep * 3)
         activate_prob_celebrity = 0.1
         activate_prob_normal = 0.2
+        round_num = 1
         infra.current_timestep = str(timestep * 3)
         print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         # social_log.info(f"timestep:{timestep + 1}.")
@@ -153,6 +154,7 @@ async def running(
         await player_agent.perform_action_by_hci(
             predict_content, 0 if predict_content != "" else 6)
         if timestep == 1:
+            round_num = 2
             # First try rule-based detection for English/Chinese
             global language_type
             language_type = detect_language(predict_content)
@@ -169,10 +171,9 @@ async def running(
         await infra.update_rec_table()
         # social_log.info("update rec table.")
         tasks = []
-        round_num = 1
         # 爆款概率
         if random.random() < 0.05:
-            round_num = 3
+            round_num = 10
         if random.random() < 0.1:
             activate_prob_celebrity = 0.05
             activate_prob_normal = 0.05

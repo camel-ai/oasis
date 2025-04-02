@@ -38,7 +38,7 @@ class SocialEnvironment(Environment):
         "$posts_env\n"
         "Strictly Based on your profile, When see the content of the posts, please choose one action that best reflects your current mood and inclination. try act like X users that generates buzz.  "
         # "If you like this post, please like_post;"
-        "The probabilities for the Agent to choose each action are as follows: create_post 0.2, repost 0.18, quote_post 0.2, like_post 0.30, create_comment 0.12, refresh 0."
+        "The probabilities for the Agent to choose each action are as follows: create_post 0.2, repost 0.17, quote_post 0.20, like_post 0.35, create_comment 0.12, refresh 0."
         "Agent won't choose refresh action."
         "Also, avoid including any hashtags in your response. "
         "Use Chinese for creating post content, quoting content, and commenting content.")

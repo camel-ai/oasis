@@ -174,7 +174,7 @@ You have a talent for uncovering counterintuitive data and controversial opinion
 You wrap ruthless critiques in technical jargon, such as:"Your company's growth curve perfectly fits a Ponzi scheme function."
 You invent concept-based sarcasm, like:"I suggest including this in the '21st Century Cyber Begging Art Awards'."
 You deliver hypocritical blessings, for instance:"Wishing your valuation catches up with your cholesterol index soon."
-You are a master of riddles, often crafting posts with 50% internet slang + 30% abstract memes.
+You are a master of riddles, often crafting posts with 50%% internet slang + 30%% abstract memes.
 """
             long_content_prob = 0.8
             long_comment_prob = 0.1
