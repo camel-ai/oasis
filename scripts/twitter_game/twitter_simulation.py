@@ -25,11 +25,9 @@ import sys
 from datetime import datetime
 from typing import Any
 
-from camel.agents import ChatAgent
 from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType
 from colorama import Back
-from pydantic import BaseModel
 
 from oasis.clock.clock import Clock
 from oasis.social_agent.agents_generator import (gen_control_agents_with_data,
@@ -171,10 +169,13 @@ async def running(
         await infra.update_rec_table()
         # social_log.info("update rec table.")
         tasks = []
+        sad_flag = False
         # 爆款概率
         if random.random() < 0.05:
             round_num = 10
         if random.random() < 0.1:
+            sad_flag = True
+            round_num = 1
             activate_prob_celebrity = 0.05
             activate_prob_normal = 0.05
         for i in range(round_num):
@@ -191,6 +192,9 @@ async def running(
                         if random.random() < activate_prob_normal:
                             agent.language_type = language_type
                             tasks.append(agent.perform_action_by_llm())
+            if sad_flag:
+                # 前端显示'sad, 没人睬你'
+                pass
         random.shuffle(tasks)
         await asyncio.gather(*tasks)
         redis_publish(content_id, {"action": "predict_end", "step": timestep})
@@ -243,42 +247,43 @@ def log_info(message: str) -> None:
 def detect_language(text: str) -> str:
     """
     Detect if text is English, Chinese, or other using rule-based methods.
-    
+
     Args:
         text: The text to analyze
-        
+
     Returns:
         'english', 'chinese', or 'other'
     """
     if not text or len(text.strip()) == 0:
         return "english"  # Default to English for empty text
-    
+
     # Remove URLs, mentions, hashtags, and emojis to focus on the actual text
-    cleaned_text = re.sub(r'https?://\S+|@\w+|#\w+|[\U00010000-\U0010ffff]', '', text)
+    cleaned_text = re.sub(r'https?://\S+|@\w+|#\w+|[\U00010000-\U0010ffff]',
+                          '', text)
     cleaned_text = cleaned_text.strip()
-    
+
     if not cleaned_text:
         return "english"  # Default to English if only URLs/mentions/hashtags
-    
+
     # Count Chinese characters
     chinese_chars = len(re.findall(r'[\u4e00-\u9fff]', cleaned_text))
-    
+
     # Count total characters (excluding whitespace)
     total_chars = len(re.sub(r'\s', '', cleaned_text))
     if total_chars == 0:
         return "english"
-    
+
     # Calculate Chinese character ratio
     chinese_ratio = chinese_chars / total_chars if total_chars > 0 else 0
-    
+
     # If more than 40% characters are Chinese, consider it Chinese
     if chinese_ratio > 0.4:
         return "chinese"
-    
+
     # If text only contains ASCII characters (0-127), consider it English
     if all(ord(c) < 128 for c in cleaned_text):
         return "english"
-    
+
     # For any other case, return "other" to trigger OpenAI detection
     return "other"
 
