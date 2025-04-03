@@ -29,6 +29,8 @@ from yaml import safe_load
 
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+from camel.models import ModelFactory
+from camel.types import ModelPlatformType, ModelType
 
 from oasis.clock.clock import Clock
 from oasis.social_agent.agents_generator import (gen_control_agents_with_data,
@@ -80,7 +82,6 @@ async def running(
     db_path: str | None = DEFAULT_DB_PATH,
     user_path: str | None = DEFAULT_USER_PATH,
     pair_path: str | None = DEFAULT_PAIR_PATH,
-    round_post_num: str | None = ROUND_POST_NUM,
     num_timesteps: int = 3,
     clock_factor: int = 60,
     recsys_type: str = "reddit",
@@ -91,10 +92,9 @@ async def running(
     activate_prob: float = 0.1,
     follow_post_agent: bool = False,
     mute_post_agent: bool = True,
-    model_configs: dict[str, Any] | None = None,
     inference_configs: dict[str, Any] | None = None,
     refresh_rec_post_count: int = 10,
-    action_space_file_path: str = None,
+    available_actions: list[ActionType] = None,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     user_path = DEFAULT_USER_PATH if user_path is None else user_path
@@ -105,9 +105,6 @@ async def running(
     start_time = datetime(2024, 8, 6, 8, 0)
     clock = Clock(k=clock_factor)
     twitter_channel = Channel()
-    print(action_space_file_path)
-    with open(action_space_file_path, "r", encoding="utf-8") as file:
-        action_space_prompt = file.read()
 
     infra = Platform(
         db_path,
@@ -124,12 +121,13 @@ async def running(
     await infra.sign_up_product(2, "Mistify")
     await infra.sign_up_product(3, "ZenCloud")
 
-    inference_channel = Channel()
-
     twitter_task = asyncio.create_task(infra.running())
 
     if inference_configs["model_type"][:3] == "gpt":
-        is_openai_model = True
+        model = ModelFactory.create(
+            model_platform=ModelPlatformType.OPENAI,
+            model_type=ModelType(inference_configs["model_type"]),
+        )
     if not controllable_user:
         raise ValueError("Uncontrollable user is not supported")
     else:
@@ -138,16 +136,14 @@ async def running(
             1,
         )
         agent_graph = await generate_reddit_agents(
-            user_path,
-            twitter_channel,
-            inference_channel,
-            agent_graph,
-            id_mapping,
-            follow_post_agent,
-            mute_post_agent,
-            action_space_prompt,
-            inference_configs["model_type"],
-            is_openai_model,
+            agent_info_path=user_path,
+            twitter_channel=twitter_channel,
+            agent_graph=agent_graph,
+            agent_user_id_mapping=id_mapping,
+            follow_post_agent=follow_post_agent,
+            mute_post_agent=mute_post_agent,
+            model=model,
+            available_actions=available_actions,
         )
     with open(pair_path, "r") as f:
         pairs = json.load(f)
@@ -206,13 +202,11 @@ if __name__ == "__main__":
             cfg = safe_load(f)
         data_params = cfg.get("data")
         simulation_params = cfg.get("simulation")
-        model_configs = cfg.get("model")
         inference_params = cfg.get("inference")
         asyncio.run(
             running(
                 **data_params,
                 **simulation_params,
-                model_configs=model_configs,
                 inference_configs=inference_params,
             ),
             debug=True,

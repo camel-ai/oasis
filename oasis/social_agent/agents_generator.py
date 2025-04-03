@@ -67,24 +67,8 @@ async def generate_agents(
             class instances.
     """
     random.seed(model_random_seed)
-    model_types = []
-    model_temperatures = []
-    model_config_dict = {}
-    for _, cfg in enumerate(cfgs):
-        model_type = cfg["model_type"]
-        model_config_dict[model_type] = cfg
-        model_types.extend([model_type] * cfg["num"])
-        temperature = cfg.get("temperature", 0.0)
-        model_temperatures.extend([temperature] * cfg["num"])
-    random.shuffle(model_types)
-    assert len(model_types) == num_agents
-    agent_info = pd.read_csv(agent_info_path)
-    # agent_info = agent_info[:10000]
-    assert len(model_types) == len(agent_info), (
-        f"Mismatch between the number of agents "
-        f"and the number of models, with {len(agent_info)} "
-        f"agents and {len(model_types)} models.")
 
+    agent_info = pd.read_csv(agent_info_path)
     mbti_types = ["INTJ", "ENTP", "INFJ", "ENFP"]
 
     freq = list(agent_info["activity_level_frequency"])

@@ -73,15 +73,23 @@ class SocialAgent(ChatAgent):
             agent_log.info("No available actions defined, using all actions.")
             self.action_tools = self.env.action.get_openai_function_list()
         else:
+            all_tools = self.env.action.get_openai_function_list()
+            all_possible_actions = [tool.func.__name__ for tool in all_tools]
+
+            for action in available_actions:
+                if action not in all_possible_actions:
+                    agent_log.warning(
+                        f"Action {action} is not supported. Supported actions "
+                        f"are: {', '.join(all_possible_actions)}")
             self.action_tools = [
-                tool for tool in self.env.action.get_openai_function_list()
+                tool for tool in all_tools
                 if tool.func.__name__ in available_actions
             ]
-
         super().__init__(system_message=system_message,
                          model=model,
-                         scheduling_strategy="random",
-                         tools=self.action_tools)
+                         scheduling_strategy='random_model',
+                         tools=self.action_tools,
+                         single_iteration=True)
         self.agent_graph = agent_graph
         self.test_prompt = (
             "\n"
