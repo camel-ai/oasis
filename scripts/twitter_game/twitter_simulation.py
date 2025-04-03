@@ -195,8 +195,7 @@ async def running(
         random.shuffle(tasks)
         await asyncio.gather(*tasks)
         if sad_flag:
-            # 前端显示'sad, 没人睬你'
-            pass
+            redis_publish(content_id, {"action": "trigger_sad"})
         redis_publish(content_id, {"action": "predict_end", "step": timestep})
 
     step = 1
