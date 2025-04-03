@@ -192,11 +192,11 @@ async def running(
                         if random.random() < activate_prob_normal:
                             agent.language_type = language_type
                             tasks.append(agent.perform_action_by_llm())
-            if sad_flag:
-                # 前端显示'sad, 没人睬你'
-                pass
         random.shuffle(tasks)
         await asyncio.gather(*tasks)
+        if sad_flag:
+            # 前端显示'sad, 没人睬你'
+            pass
         redis_publish(content_id, {"action": "predict_end", "step": timestep})
 
     step = 1
