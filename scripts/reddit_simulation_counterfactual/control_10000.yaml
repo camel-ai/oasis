@@ -20,8 +20,6 @@ simulation:
   action_space_file_path: ./scripts/reddit_simulation_counterfactual/action_space_prompt.txt
 inference:
   model_type: llama-3
-  model_path: Orenguteng/Llama-3-8B-Lexi-Uncensored
-  stop_tokens: [<|eot_id|>, <|end_of_text|>]
   server_url:
     - host: 10.109.1.8
       ports: [8002, 8003, 8005]

@@ -22,15 +22,17 @@ from datetime import datetime
 from typing import Any
 
 import pandas as pd
+from camel.models import ModelFactory
+from camel.types import ModelPlatformType
 from colorama import Back
 from yaml import safe_load
 
 from oasis.clock.clock import Clock
-from oasis.inference.inference_manager import InferencerManager
 from oasis.social_agent.agents_generator import generate_agents_100w
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
+from scripts.utils import create_model_urls
 
 social_log = logging.getLogger(name='social')
 social_log.setLevel('DEBUG')
@@ -68,6 +70,7 @@ async def running(
     recsys_type: str = "twitter",
     model_configs: dict[str, Any] | None = None,
     inference_configs: dict[str, Any] | None = None,
+    available_actions: list[ActionType] = None,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     csv_path = DEFAULT_CSV_PATH if csv_path is None else csv_path
@@ -89,13 +92,15 @@ async def running(
                      refresh_rec_post_count=2,
                      max_rec_post_len=2,
                      following_post_count=3)
-    inference_channel = Channel()
-    infere = InferencerManager(
-        inference_channel,
-        **inference_configs,
-    )
+    model_urls = create_model_urls(inference_configs["server_url"])
+    models = [
+        ModelFactory.create(
+            model_platform=ModelPlatformType.VLLM,
+            model_type=inference_configs["model_type"],
+            url=url,
+        ) for url in model_urls
+    ]
     twitter_task = asyncio.create_task(infra.running())
-    inference_task = asyncio.create_task(infere.run())
 
     try:
         all_topic_df = pd.read_csv("data/label_clean_v7.csv")
@@ -118,11 +123,11 @@ async def running(
     agent_graph = await generate_agents_100w(
         agent_info_path=csv_path,
         twitter_channel=twitter_channel,
-        inference_channel=inference_channel,
         start_time=start_time,
         recsys_type=recsys_type,
         twitter=infra,
-        **model_configs,
+        model=models,
+        available_actions=available_actions,
     )
     # agent_graph.visualize("initial_social_graph.png")
 
@@ -170,8 +175,7 @@ async def running(
         # agent_graph.visualize(f"timestep_{timestep}_social_graph.png")
 
     await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
-    await infere.stop()
-    await twitter_task, inference_task
+    await twitter_task
 
 
 if __name__ == "__main__":
@@ -182,13 +186,11 @@ if __name__ == "__main__":
             cfg = safe_load(f)
         data_params = cfg.get("data")
         simulation_params = cfg.get("simulation")
-        model_configs = cfg.get("model")
         inference_configs = cfg.get("inference")
 
         asyncio.run(
             running(**data_params,
                     **simulation_params,
-                    model_configs=model_configs,
                     inference_configs=inference_configs))
     else:
         asyncio.run(running())

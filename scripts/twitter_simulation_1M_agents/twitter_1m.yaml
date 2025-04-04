@@ -6,16 +6,6 @@ simulation:
   num_timesteps: 60
   clock_factor: 60
   recsys_type: twhin-bert
-model:
-  num_agents: 1000197
-  model_random_seed: 42
-  cfgs:
-    - model_type: llama-3
-      num: 1000197
-      server_url: http://10.140.1.129:8002/v1  # eg, http://10.160.2.154:8000/v1
-      model_path: models/Meta-Llama-3-8B-Instruct
-      stop_tokens: [<|eot_id|>, <|end_of_text|>]
-      temperature: 0.0
 inference:
   model_type: llama-3
   model_path: models/Meta-Llama-3-8B-Instruct
