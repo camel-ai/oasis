@@ -17,7 +17,7 @@ import ast
 import asyncio
 import json
 import random
-from typing import Any, List
+from typing import List, Union
 
 import numpy as np
 import pandas as pd
@@ -25,7 +25,7 @@ import tqdm
 from camel.memories import MemoryRecord
 from camel.messages import BaseMessage
 from camel.models import BaseModelBackend
-from camel.types import ModelType, OpenAIBackendRole
+from camel.types import OpenAIBackendRole
 
 from oasis.social_agent import AgentGraph, SocialAgent
 from oasis.social_platform import Channel, Platform
@@ -36,14 +36,11 @@ from oasis.social_platform.typing import ActionType
 async def generate_agents(
     agent_info_path: str,
     twitter_channel: Channel,
-    model: BaseModelBackend,
+    model: Union[BaseModelBackend, List[BaseModelBackend]],
     start_time,
     recsys_type: str = "twitter",
     twitter: Platform = None,
-    num_agents: int = 26,
     available_actions: list[ActionType] = None,
-    model_random_seed: int = 42,
-    cfgs: list[Any] | None = None,
     neo4j_config: Neo4jConfig | None = None,
 ) -> AgentGraph:
     """TODO: need update the description of args and check
@@ -66,8 +63,6 @@ async def generate_agents(
         dict: A dictionary of agent IDs mapped to their respective agent
             class instances.
     """
-    random.seed(model_random_seed)
-
     agent_info = pd.read_csv(agent_info_path)
     mbti_types = ["INTJ", "ENTP", "INFJ", "ENFP"]
 
@@ -207,13 +202,10 @@ async def generate_agents_100w(
     agent_info_path: str,
     twitter_channel: Channel,
     start_time,
-    model: BaseModelBackend,
+    model: Union[BaseModelBackend, List[BaseModelBackend]],
     recsys_type: str = "twitter",
     twitter: Platform = None,
-    num_agents: int = 26,
     available_actions: list[ActionType] = None,
-    model_random_seed: int = 42,
-    cfgs: list[Any] | None = None,
 ) -> List:
     """ TODO: need update the description of args.
     Generate and return a dictionary of agents from the agent
@@ -232,25 +224,7 @@ async def generate_agents_100w(
         dict: A dictionary of agent IDs mapped to their respective agent
             class instances.
     """
-    random.seed(model_random_seed)
-    model_types = []
-    model_temperatures = []
-    model_config_dict = {}
-    for _, cfg in enumerate(cfgs):
-        model_type = ModelType(cfg["model_type"])
-        model_config_dict[model_type] = cfg
-        model_types.extend([model_type] * cfg["num"])
-        temperature = cfg.get("temperature", 0.0)
-        model_temperatures.extend([temperature] * cfg["num"])
-    random.shuffle(model_types)
-    assert len(model_types) == num_agents
     agent_info = pd.read_csv(agent_info_path)
-    # agent_info = agent_info[:10000]
-    assert len(model_types) == len(agent_info), (
-        f"Mismatch between the number of agents "
-        f"and the number of models, with {len(agent_info)} "
-        f"agents and {len(model_types)} models.")
-
     mbti_types = ["INTJ", "ENTP", "INFJ", "ENFP"]
 
     freq = list(agent_info["activity_level_frequency"])
@@ -308,8 +282,6 @@ async def generate_agents_100w(
             profile=profile,
             recsys_type=recsys_type,
         )
-
-        model_type: ModelType = model_types[agent_id]
 
         agent = SocialAgent(
             agent_id=agent_id,
