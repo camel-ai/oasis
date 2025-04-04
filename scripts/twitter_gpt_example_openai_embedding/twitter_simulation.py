@@ -30,6 +30,8 @@ from yaml import safe_load
 
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+from camel.models import ModelFactory
+from camel.types import ModelPlatformType, ModelType
 
 from oasis.clock.clock import Clock
 from oasis.social_agent.agents_generator import generate_agents
@@ -38,6 +40,7 @@ from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
 
 social_log = logging.getLogger(name="social")
+social_log.propagate = False
 social_log.setLevel("DEBUG")
 
 file_handler = logging.FileHandler("social.log")
@@ -74,9 +77,9 @@ async def running(
     num_timesteps: int = 3,
     clock_factor: int = 60,
     recsys_type: str = "twhin-bert",
-    model_configs: dict[str, Any] | None = None,
     inference_configs: dict[str, Any] | None = None,
-    actions: dict[str, Any] | None = None,
+    available_actions: list[ActionType] = None,
+    use_openai_embedding: bool = True,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     csv_path = DEFAULT_CSV_PATH if csv_path is None else csv_path
@@ -88,7 +91,6 @@ async def running(
         start_time = datetime.now()
     else:
         start_time = 0
-    social_log.info(f"Start time: {start_time}")
     clock = Clock(k=clock_factor)
     twitter_channel = Channel()
     infra = Platform(
@@ -100,11 +102,14 @@ async def running(
         refresh_rec_post_count=2,
         max_rec_post_len=2,
         following_post_count=3,
+        use_openai_embedding=use_openai_embedding,
     )
-    inference_channel = Channel()
     twitter_task = asyncio.create_task(infra.running())
     if inference_configs["model_type"][:3] == "gpt":
-        is_openai_model = True
+        model = ModelFactory.create(
+            model_platform=ModelPlatformType.OPENAI,
+            model_type=ModelType(inference_configs["model_type"]),
+        )
 
     try:
         all_topic_df = pd.read_csv("data/twitter_dataset/all_topics.csv")
@@ -120,38 +125,20 @@ async def running(
             start_hour = int(source_post_time.split(":")[0]) + float(
                 int(source_post_time.split(":")[1]) / 60)
     except Exception:
-        print("No real-world data, let start_hour be 1PM")
+        social_log.info("No real-world data, let start_hour be 1PM")
         start_hour = 13
 
-    model_configs = model_configs or {}
-
-    # construct action space prompt if actions is not None
-    action_prompt = None
-    if actions:
-        action_prompt = "# OBJECTIVE\nYou're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.\n\n"
-        for action_name, action_info in actions.items():
-            action_prompt += f"- {action_name}: {action_info['description']}\n"
-            if action_info.get('arguments'):
-                action_prompt += "    - Arguments:\n"
-                for arg in action_info['arguments']:
-                    action_prompt += f"        \"{arg['name']}\" ({arg['type']}) - {arg['description']}\n"
-
-    agent_graph = await generate_agents(
-        agent_info_path=csv_path,
-        twitter_channel=twitter_channel,
-        inference_channel=inference_channel,
-        start_time=start_time,
-        recsys_type=recsys_type,
-        action_space_prompt=action_prompt,
-        twitter=infra,
-        is_openai_model=is_openai_model,
-        **model_configs,
-    )
+    agent_graph = await generate_agents(agent_info_path=csv_path,
+                                        twitter_channel=twitter_channel,
+                                        start_time=start_time,
+                                        model=model,
+                                        recsys_type=recsys_type,
+                                        available_actions=available_actions,
+                                        twitter=infra)
     # agent_graph.visualize("initial_social_graph.png")
 
     for timestep in range(1, num_timesteps + 1):
         os.environ["SANDBOX_TIME"] = str(timestep * 3)
-        social_log.info(f"timestep:{timestep}")
         db_file = db_path.split("/")[-1]
         print(Back.GREEN + f"DB:{db_file} timestep:{timestep}" + Back.RESET)
         # if you want to disable recsys, please comment this line
@@ -185,16 +172,12 @@ if __name__ == "__main__":
             cfg = safe_load(f)
         data_params = cfg.get("data")
         simulation_params = cfg.get("simulation")
-        model_configs = cfg.get("model")
         inference_configs = cfg.get("inference")
-        actions = cfg.get("actions")
 
         asyncio.run(
             running(**data_params,
                     **simulation_params,
-                    model_configs=model_configs,
-                    inference_configs=inference_configs,
-                    actions=actions))
+                    inference_configs=inference_configs))
     else:
         asyncio.run(running())
     social_log.info("Simulation finished.")
