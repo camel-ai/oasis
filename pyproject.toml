@@ -33,6 +33,7 @@ tenacity = "8.5.0"
 redis = "5.2.1"
 python-dotenv = "1.0.1"
 requests-oauthlib = "2.0.0"
+transformers = "4.45.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
