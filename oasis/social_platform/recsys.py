@@ -45,11 +45,11 @@ tfidf_vectorizer = TfidfVectorizer()
 # Prepare the twhin model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-twhin_tokenizer = AutoTokenizer.from_pretrained(
-    pretrained_model_name_or_path="Twitter/twhin-bert-base",
-    model_max_length=512)  # TODO change the pretrained_model_path
-twhin_model = AutoModel.from_pretrained(
-    pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
+# twhin_tokenizer = AutoTokenizer.from_pretrained(
+#     pretrained_model_name_or_path="Twitter/twhin-bert-base",
+#     model_max_length=512)  # TODO change the pretrained_model_path
+# twhin_model = AutoModel.from_pretrained(
+#     pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
 
 # All historical tweets and the most recent tweet of each user
 user_previous_post_all = {}
