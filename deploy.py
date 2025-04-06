@@ -32,7 +32,7 @@ def check_port_open(host, port):
 
 
 if __name__ == "__main__":
-    host = "172.17.0.1"
+    host = "172.17.0.1"  # 平台 IP 地址
     ports = [
         [8002, 8003, 8005],
         [8006, 8007, 8008],
@@ -43,7 +43,7 @@ if __name__ == "__main__":
         [8021, 8022, 8023],
         [8024, 8025, 8026],
     ]
-    gpus = [0]
+    gpus = [0]  # GPU 设备编号
 
     all_ports = [port for i in gpus for port in ports[i]]
     print("All ports: ", all_ports, '\n\n')
@@ -54,8 +54,8 @@ if __name__ == "__main__":
             cmd = (
                 f"CUDA_VISIBLE_DEVICES={gpu} python -m "
                 f"vllm.entrypoints.openai.api_server --model "
-                f"'/root/model-dir/Qwen2.5-7B-Instruct' "
-                f"--served-model-name 'Qwen2.5-7B' "
+                f"'/root/model-dir/Qwen2.5-7B-Instruct' "  # 模型路径
+                f"--served-model-name 'Qwen2.5-7B' "  # 模型名称
                 f"--host {host} --port {ports[j][i]} --gpu-memory-utilization "
                 f"0.3 --disable-log-stats")
             t = threading.Thread(target=subprocess.run,
