@@ -69,6 +69,7 @@ class SocialAgent(ChatAgent):
             role_name="system",
             content=self.user_info.to_system_message(),  # system prompt
         )
+
         if not available_actions:
             agent_log.info("No available actions defined, using all actions.")
             self.action_tools = self.env.action.get_openai_function_list()

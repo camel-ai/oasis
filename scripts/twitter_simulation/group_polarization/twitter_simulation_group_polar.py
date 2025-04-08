@@ -26,7 +26,10 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType
 from colorama import Back
 from yaml import safe_load
-
+import sys
+scripts_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(scripts_dir)
+from utils import create_model_urls
 from oasis.clock.clock import Clock
 from oasis.social_agent.agents_generator import generate_agents_100w
 from oasis.social_platform.channel import Channel
@@ -35,6 +38,7 @@ from oasis.social_platform.typing import ActionType
 from scripts.utils import create_model_urls
 
 social_log = logging.getLogger(name='social')
+social_log.propagate = False
 social_log.setLevel('DEBUG')
 
 file_handler = logging.FileHandler('social.log')
