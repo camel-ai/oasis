@@ -52,7 +52,10 @@ if __name__ == "__main__":
     for i in range(3):
         for j, gpu in enumerate(gpus):
             cmd = (
-                f"python -m "
+                f"export TF_ENABLE_DEPRECATION_WARNINGS=1 "
+                f"export VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 "
+                f"export VLLM_ENFORCE_CUDA_GRAPH=1 "
+                f"python3 -m "
                 f"vllm.entrypoints.openai.api_server --model "
                 f"--tensor-parallel-size 8 "
                 f"'/data/Qwen2.5-7B-Instruct' "  # 模型路径
