@@ -43,7 +43,7 @@ if __name__ == "__main__":
         [8021, 8022, 8023],
         [8024, 8025, 8026],
     ]
-    # gpus = [0]  # GPU 设备编号
+    gpus = [0]  # GPU 设备编号
 
     all_ports = [port for i in gpus for port in ports[i]]
     print("All ports: ", all_ports, '\n\n')
