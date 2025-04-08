@@ -43,7 +43,7 @@ if __name__ == "__main__":
         [8021, 8022, 8023],
         [8024, 8025, 8026],
     ]
-    gpus = [0]  # GPU 设备编号
+    # gpus = [0]  # GPU 设备编号
 
     all_ports = [port for i in gpus for port in ports[i]]
     print("All ports: ", all_ports, '\n\n')
@@ -52,12 +52,13 @@ if __name__ == "__main__":
     for i in range(3):
         for j, gpu in enumerate(gpus):
             cmd = (
-                f"CUDA_VISIBLE_DEVICES={gpu} python -m "
+                f"python -m "
                 f"vllm.entrypoints.openai.api_server --model "
-                f"'/root/model-dir/Qwen2.5-7B-Instruct' "  # 模型路径
+                f"--tensor-parallel-size 8 "
+                f"'/data/Qwen2.5-7B-Instruct' "  # 模型路径
                 f"--served-model-name 'Qwen2.5-7B' "  # 模型名称
                 f"--host {host} --port {ports[j][i]} --gpu-memory-utilization "
-                f"0.3 --disable-log-stats")
+                f"0.95 --disable-log-stats")
             t = threading.Thread(target=subprocess.run,
                                  args=(cmd, ),
                                  kwargs={"shell": True},
