@@ -57,9 +57,9 @@ if __name__ == "__main__":
                 f"export VLLM_ENFORCE_CUDA_GRAPH=1 "
                 f"python3 -m "
                 f"vllm.entrypoints.openai.api_server --model "
-                f"--tensor-parallel-size 8 "
                 f"'/data/Qwen2.5-7B-Instruct' "  # 模型路径
                 f"--served-model-name 'Qwen2.5-7B' "  # 模型名称
+                f"--tensor-parallel-size 8 "  # GPU 并行数
                 f"--host {host} --port {ports[j][i]} --gpu-memory-utilization "
                 f"0.95 --disable-log-stats")
             t = threading.Thread(target=subprocess.run,
