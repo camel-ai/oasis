@@ -424,6 +424,7 @@ async def generate_controllable_agents(
 async def gen_control_agents_with_data(
     channel: Channel,
     control_user_num: int,
+    models: list[BaseModelBackend],
 ) -> tuple[AgentGraph, dict]:
     agent_graph = AgentGraph()
     agent_user_id_mapping = {}
@@ -442,7 +443,14 @@ async def gen_control_agents_with_data(
             recsys_type="reddit",
         )
         # controllable的agent_id全都在llm agent的agent_id的前面
-        agent = SocialAgent(i, user_info, channel, agent_graph=agent_graph)
+        agent = SocialAgent(
+            agent_id=i,
+            user_info=user_info,
+            twitter_channel=channel,
+            agent_graph=agent_graph,
+            model=models,
+            available_actions=None,
+        )
         # Add agent to the agent graph
         agent_graph.add_agent(agent)
         user_name = "momo"

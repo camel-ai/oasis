@@ -25,16 +25,19 @@ from typing import Any
 from camel.models import ModelFactory
 from camel.types import ModelPlatformType
 from yaml import safe_load
-
+import sys
+scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(scripts_dir)
+from utils import create_model_urls
 from oasis.clock.clock import Clock
 from oasis.social_agent.agents_generator import (gen_control_agents_with_data,
                                                  generate_reddit_agents)
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
-from scripts.utils import create_model_urls
 
 social_log = logging.getLogger(name="social")
+social_log.propagate = False
 social_log.setLevel("DEBUG")
 now = datetime.now()
 file_handler = logging.FileHandler(f"./log/social-{str(now)}.log",
@@ -129,6 +132,7 @@ async def running(
         agent_graph, id_mapping = await gen_control_agents_with_data(
             twitter_channel,
             2,
+            models,
         )
         agent_graph = await generate_reddit_agents(
             agent_info_path=user_path,

@@ -22,7 +22,7 @@ simulation:
     - dislike_comment
     - like_post
     - dislike_post
-    - search_post
+    - search_posts
     - search_user
     - trend
     - refresh

@@ -17,9 +17,19 @@ simulation:
   mute_post_agent: false
   refresh_rec_post_count: 5
   init_post_score: -1
-  action_space_file_path: ./scripts/reddit_simulation_counterfactual/action_space_prompt.txt
+  available_actions:
+    - like_comment
+    - dislike_comment
+    - like_post
+    - dislike_post
+    - search_posts
+    - search_user
+    - trend
+    - refresh
+    - do_nothing
+    - create_comment
 inference:
-  model_type: llama-3
+  model_type: qwen-2
   server_url:
     - host: 10.109.1.8
       ports: [8002, 8003, 8005]
