@@ -32,7 +32,7 @@ def check_port_open(host, port):
 
 
 if __name__ == "__main__":
-    host = "172.17.0.1"  # 平台 IP 地址
+    host = "172.17.0.6"  # 平台 IP 地址
     ports = [
         [8002, 8003, 8005],
         [8006, 8007, 8008],
