@@ -26,15 +26,18 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType
 from colorama import Back
 from yaml import safe_load
-
+import sys
+scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(scripts_dir)
+from utils import create_model_urls
 from oasis.clock.clock import Clock
 from oasis.social_agent.agents_generator import generate_agents_100w
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
-from scripts.utils import create_model_urls
 
 social_log = logging.getLogger(name='social')
+social_log.propagate = False
 social_log.setLevel('DEBUG')
 
 file_handler = logging.FileHandler('social.log')
@@ -144,7 +147,7 @@ async def running(
                 agent_ac_prob = random.random()
                 threshold = agent.user_info.profile['other_info'][
                     'active_threshold'][int(simulation_time_hour % 24)]
-                if agent.agent_id < 197:
+                if agent.social_agent_id < 197:
                     if agent_ac_prob < 0.1:
                         tasks.append(agent.perform_action_by_llm())
                 else:

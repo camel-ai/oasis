@@ -6,6 +6,11 @@ simulation:
   num_timesteps: 60
   clock_factor: 60
   recsys_type: twhin-bert
+  available_actions:
+    - do_nothing
+    - repost
+    - like_post
+    - follow
 inference:
   model_type: llama-3
   model_path: models/Meta-Llama-3-8B-Instruct
