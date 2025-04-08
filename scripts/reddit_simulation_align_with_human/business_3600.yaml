@@ -23,5 +23,5 @@ inference:
   model_path: /ibex/user/yangz0h/open_source_llm/llama-3
   stop_tokens: [<|eot_id|>, <|end_of_text|>]
   server_url:
-    - host: 10.109.1.8
+    - host: 10.109.1.9
       ports: [8002, 8003, 8005]
