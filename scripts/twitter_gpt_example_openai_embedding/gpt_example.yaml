@@ -6,16 +6,13 @@ simulation:
   num_timesteps: 3
   clock_factor: 60
   recsys_type: twhin-bert
-model:
-  num_agents: 111
-  model_random_seed: 42
-  cfgs:
-    - model_type: gpt-4o-mini
-      num: 111
-      server_url: null
-      model_path: null
-      stop_tokens: null
-      temperature: null
+  available_actions:
+    - do_nothing
+    - repost
+    - quote_post
+    - like_post
+    - follow
+  use_openai_embedding: true
 inference:
   model_type: gpt-4o-mini  # Name of the OpenAI model
   is_openai_model: true  # Whether it is an OpenAI model

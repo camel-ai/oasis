@@ -109,7 +109,6 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 if model is not None:
     model.to(device)
 else:
-    print('Model not available, using random similarity.')
     pass
 
 

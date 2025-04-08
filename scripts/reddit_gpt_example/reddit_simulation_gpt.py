@@ -29,6 +29,8 @@ from yaml import safe_load
 
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+from camel.models import ModelFactory
+from camel.types import ModelPlatformType, ModelType
 
 from oasis.clock.clock import Clock
 from oasis.social_agent.agents_generator import (gen_control_agents_with_data,
@@ -38,19 +40,25 @@ from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
 
 social_log = logging.getLogger(name="social")
+social_log.propagate = False
 social_log.setLevel("DEBUG")
-now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-file_handler = logging.FileHandler(f"./log/social-{str(now)}.log",
-                                   encoding="utf-8")
-file_handler.setLevel("DEBUG")
-file_handler.setFormatter(
-    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
-social_log.addHandler(file_handler)
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel("DEBUG")
-stream_handler.setFormatter(
-    logging.Formatter("%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
-social_log.addHandler(stream_handler)
+
+if not social_log.handlers:
+    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    file_handler = logging.FileHandler(f"./log/social-{str(now)}.log",
+                                       encoding="utf-8")
+    file_handler.setLevel("DEBUG")
+    file_handler.setFormatter(
+        logging.Formatter(
+            "%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
+    social_log.addHandler(file_handler)
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel("DEBUG")
+    stream_handler.setFormatter(
+        logging.Formatter(
+            "%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
+    social_log.addHandler(stream_handler)
 
 parser = argparse.ArgumentParser(description="Arguments for script.")
 parser.add_argument(
@@ -85,11 +93,10 @@ async def running(
     activate_prob: float = 0.1,
     follow_post_agent: bool = False,
     mute_post_agent: bool = True,
-    model_configs: dict[str, Any] | None = None,
+    available_actions: list[ActionType] = None,
     inference_configs: dict[str, Any] | None = None,
     init_post_score: int = 0,
     refresh_rec_post_count: int = 10,
-    action_space_file_path: str = None,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     user_path = DEFAULT_USER_PATH if user_path is None else user_path
@@ -100,8 +107,6 @@ async def running(
     start_time = datetime(2024, 8, 6, 8, 0)
     clock = Clock(k=clock_factor)
     twitter_channel = Channel()
-    with open(action_space_file_path, "r", encoding="utf-8") as file:
-        action_space_prompt = file.read()
 
     infra = Platform(
         db_path,
@@ -114,12 +119,14 @@ async def running(
         max_rec_post_len=max_rec_post_len,
         refresh_rec_post_count=refresh_rec_post_count,
     )
-    inference_channel = Channel()
 
     twitter_task = asyncio.create_task(infra.running())
 
     if inference_configs["model_type"][:3] == "gpt":
-        is_openai_model = True
+        model = ModelFactory.create(
+            model_platform=ModelPlatformType.OPENAI,
+            model_type=ModelType(inference_configs["model_type"]),
+        )
     if not controllable_user:
         raise ValueError("Uncontrollable user is not supported")
     else:
@@ -128,16 +135,14 @@ async def running(
             2,
         )
         agent_graph = await generate_reddit_agents(
-            user_path,
-            twitter_channel,
-            inference_channel,
-            agent_graph,
-            id_mapping,
-            follow_post_agent,
-            mute_post_agent,
-            action_space_prompt,
-            inference_configs["model_type"],
-            is_openai_model,
+            agent_info_path=user_path,
+            twitter_channel=twitter_channel,
+            agent_graph=agent_graph,
+            agent_user_id_mapping=id_mapping,
+            follow_post_agent=follow_post_agent,
+            mute_post_agent=mute_post_agent,
+            model=model,
+            available_actions=available_actions,
         )
     with open(pair_path, "r") as f:
         pairs = json.load(f)
@@ -214,14 +219,12 @@ if __name__ == "__main__":
             cfg = safe_load(f)
         data_params = cfg.get("data")
         simulation_params = cfg.get("simulation")
-        model_configs = cfg.get("model")
         inference_params = cfg.get("inference")
 
         asyncio.run(
             running(
                 **data_params,
                 **simulation_params,
-                model_configs=model_configs,
                 inference_configs=inference_params,
             ),
             debug=True,
