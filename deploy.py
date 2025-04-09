@@ -43,7 +43,7 @@ if __name__ == "__main__":
         [8021, 8022, 8023],
         [8024, 8025, 8026],
     ]
-    gpus = [8, 9, 10, 11, 12, 13, 14, 15]  # GPU 设备编号
+    gpus = [0]  # GPU 设备编号
 
     all_ports = [port for i in gpus for port in ports[i]]
     print("All ports: ", all_ports, '\n\n')
@@ -55,7 +55,7 @@ if __name__ == "__main__":
                 f"TF_ENABLE_DEPRECATION_WARNINGS=1 "
                 f"VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 "
                 f"VLLM_ENFORCE_CUDA_GRAPH=1 "
-                f"CUDA_VISIBLE_DEVICES={gpus} "  # 指定 GPU
+                f"CUDA_VISIBLE_DEVICES=8 "  # 指定 GPU
                 f"python3 -m "
                 f"vllm.entrypoints.openai.api_server --model "
                 f"'/data/Qwen2.5-7B-Instruct' "  # 模型路径
