@@ -59,7 +59,7 @@ if __name__ == "__main__":
                 f"vllm.entrypoints.openai.api_server --model "
                 f"'/data/Qwen2.5-7B-Instruct' "  # 模型路径
                 f"--served-model-name 'Qwen2.5-7B' "  # 模型名称
-                f"--tensor-parallel-size 7 "  # GPU 并行数
+                f"--tensor-parallel-size 16 "  # GPU 并行数
                 f"--host {host} --port {ports[j][i]} --gpu-memory-utilization "
                 f"0.9 --disable-log-stats")
             t = threading.Thread(target=subprocess.run,
