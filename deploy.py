@@ -43,7 +43,7 @@ if __name__ == "__main__":
         [8021, 8022, 8023],
         [8024, 8025, 8026],
     ]
-    gpus = [0]  # GPU 设备编号
+    gpus = [8, 9, 10, 11, 12, 13, 14, 15]  # GPU 设备编号
 
     all_ports = [port for i in gpus for port in ports[i]]
     print("All ports: ", all_ports, '\n\n')
@@ -59,7 +59,7 @@ if __name__ == "__main__":
                 f"vllm.entrypoints.openai.api_server --model "
                 f"'/data/Qwen2.5-7B-Instruct' "  # 模型路径
                 f"--served-model-name 'Qwen2.5-7B' "  # 模型名称
-                f"--tensor-parallel-size 1 "  # GPU 并行数
+                # f"--tensor-parallel-size 1 "  # GPU 并行数
                 f"--host {host} --port {ports[j][i]} --gpu-memory-utilization "
                 f"0.9 --disable-log-stats")
             t = threading.Thread(target=subprocess.run,
