@@ -55,6 +55,7 @@ if __name__ == "__main__":
                 f"TF_ENABLE_DEPRECATION_WARNINGS=1 "
                 f"VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 "
                 f"VLLM_ENFORCE_CUDA_GRAPH=1 "
+                f"CUDA_VISIBLE_DEVICES={gpus} "  # 指定 GPU
                 f"python3 -m "
                 f"vllm.entrypoints.openai.api_server --model "
                 f"'/data/Qwen2.5-7B-Instruct' "  # 模型路径
