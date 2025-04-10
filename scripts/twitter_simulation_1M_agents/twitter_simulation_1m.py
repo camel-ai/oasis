@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# flake8: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -18,6 +19,7 @@ import asyncio
 import logging
 import os
 import random
+import sys
 from datetime import datetime
 from typing import Any
 
@@ -26,10 +28,11 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType
 from colorama import Back
 from yaml import safe_load
-import sys
+
 scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(scripts_dir)
 from utils import create_model_urls
+
 from oasis.clock.clock import Clock
 from oasis.social_agent.agents_generator import generate_agents_100w
 from oasis.social_platform.channel import Channel
@@ -133,7 +136,7 @@ async def running(
     # agent_graph.visualize("initial_social_graph.png")
 
     for timestep in range(1, num_timesteps + 1):
-        os.environ["SANDBOX_TIME"] = str(timestep * 3)
+        clock.time_step = timestep * 3
         social_log.info(f"timestep:{timestep}")
         db_file = db_path.split("/")[-1]
         print(Back.GREEN + f"DB:{db_file} timestep:{timestep}" + Back.RESET)
