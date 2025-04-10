@@ -34,8 +34,8 @@ class OasisEnv:
     def __init__(
         self,
         platform: Union[DefaultPlatformType, Platform],
-        database_path: str,
         agent_profile_path: str,
+        database_path: str = None,
         agent_models: Optional[Union[BaseModelBackend,
                                      List[BaseModelBackend]]] = None,
         available_actions: list[ActionType] = None,
@@ -63,6 +63,9 @@ class OasisEnv:
         # Use a semaphore to limit the number of concurrent requests
         self.llm_semaphore = asyncio.Semaphore(semaphore)
         if isinstance(platform, DefaultPlatformType):
+            if database_path is None:
+                raise ValueError(
+                    "database_path is required for DefaultPlatformType")
             self.platform = platform
             if platform == DefaultPlatformType.TWITTER:
                 self.channel = Channel()
@@ -92,6 +95,9 @@ class OasisEnv:
                                  "DefaultPlatformType.TWITTER or "
                                  "DefaultPlatformType.REDDIT are supported.")
         elif isinstance(platform, Platform):
+            if database_path != platform.db_path:
+                env_log.warning("database_path is not the same as the "
+                                "platform.db_path, using the platform.db_path")
             self.platform = platform
             self.channel = platform.channel
             if platform.recsys_type == RecsysType.REDDIT:
@@ -190,5 +196,5 @@ class OasisEnv:
             (None, None, ActionType.EXIT))
         await self.platform_task
         env_log.info("Simulation finished! Please check the results in the "
-                     f"database: {self.platform.db_path}. Note that the trace"
+                     f"database: {self.platform.db_path}. Note that the trace "
                      "table stored all the actions of the agents.")
