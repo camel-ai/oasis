@@ -23,7 +23,7 @@ from typing import Any
 
 import pandas as pd
 from camel.models import ModelFactory
-from camel.types import ModelPlatformType
+from camel.types import ModelPlatformType, ModelType
 from colorama import Back
 from yaml import safe_load
 import sys
@@ -96,9 +96,15 @@ async def running(
                      refresh_rec_post_count=2,
                      max_rec_post_len=2,
                      following_post_count=3)
-    model_urls = create_model_urls(inference_configs["server_url"])
-    models = [
-        ModelFactory.create(
+    if inference_configs["model_type"][:3] == "gpt":
+        models = ModelFactory.create(
+            model_platform=ModelPlatformType.OPENAI,
+            model_type=ModelType(inference_configs["model_type"]),
+        )
+    else:
+        model_urls = create_model_urls(inference_configs["server_url"])
+        models = [
+            ModelFactory.create(
             model_platform=ModelPlatformType.VLLM,
             model_type=inference_configs["model_type"],
             url=url,
@@ -144,9 +150,10 @@ async def running(
 
         if (timestep - 1) % 10 == 0:
             test_results_list = []
+            # TODO adaptive number of test agents
             test_tasks = [
                 agent.perform_test() for agent in agent_graph
-                if agent.agent_id < 197
+                if agent.social_agent_id < 10
             ]
             test_results = await asyncio.gather(*test_tasks)
             for result in test_results:
@@ -166,7 +173,7 @@ async def running(
                 agent_ac_prob = random.random()
                 threshold = agent.user_info.profile['other_info'][
                     'active_threshold'][int(simulation_time_hour % 24)]
-                if agent.agent_id < 197:
+                if agent.social_agent_id < 10:
                     if agent_ac_prob < 0.1:
                         tasks.append(agent.perform_action_by_llm())
                 else:

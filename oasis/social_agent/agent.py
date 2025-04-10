@@ -21,7 +21,8 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 from camel.agents import ChatAgent
 from camel.messages import BaseMessage
-from camel.models import BaseModelBackend
+from camel.models import BaseModelBackend, ModelFactory
+from camel.types import ModelPlatformType, ModelType
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
@@ -135,7 +136,8 @@ class SocialAgent(ChatAgent):
         # user conduct test to agent
         _ = BaseMessage.make_user_message(role_name="User",
                                           content=("You are a twitter user."))
-        # TODO error occurs
+        # TODO error occurs.
+        # Test memory should not be writed to memory.
         # self.memory.write_record(MemoryRecord(user_msg,
         #                                       OpenAIBackendRole.USER))
 
@@ -150,12 +152,13 @@ class SocialAgent(ChatAgent):
             "role": "user",
             "content": self.test_prompt
         }])
-        agent_log.info(f"Agent {self.social_agent_id}: {openai_messages}")
 
-        message_id = await self.infe_channel.write_to_receive_queue(
-            openai_messages)
-        message_id, content = await self.infe_channel.read_from_send_queue(
-            message_id)
+        agent_log.info(f"Agent {self.social_agent_id}: {openai_messages}")
+        # TODO this is a temporary solution. 
+        # Camel can not stop updating the agents' memory after stop and astop now.
+        response = self._get_model_response(openai_messages=openai_messages, 
+                                            num_tokens=num_tokens)
+        content = response.output_messages[0].content
         agent_log.info(
             f"Agent {self.social_agent_id} receive response: {content}")
         return {
