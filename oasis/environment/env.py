@@ -39,6 +39,7 @@ class OasisEnv:
         agent_models: Optional[Union[BaseModelBackend,
                                      List[BaseModelBackend]]] = None,
         available_actions: list[ActionType] = None,
+        semaphore: int = 128,
     ) -> None:
         r"""Init the oasis environment.
 
@@ -59,6 +60,8 @@ class OasisEnv:
         self.agent_profile_path = agent_profile_path
         self.agent_models = agent_models
         self.available_actions = available_actions
+        # Use a semaphore to limit the number of concurrent requests
+        self.llm_semaphore = asyncio.Semaphore(semaphore)
         if isinstance(platform, DefaultPlatformType):
             self.platform = platform
             if platform == DefaultPlatformType.TWITTER:
@@ -101,6 +104,8 @@ class OasisEnv:
                 "DefaultPlatformType or a Platform instance.")
 
     async def reset(self) -> None:
+        r"""Start the platform and sign up the agents.
+        """
         self.platform_task = asyncio.create_task(self.platform.running())
         if self.platform_type == DefaultPlatformType.TWITTER:
             self.agent_graph = await generate_agents(
@@ -120,11 +125,29 @@ class OasisEnv:
             )
 
     async def _perform_control_action(self, action: SingleAction) -> None:
+        r"""Perform a control action.
+
+        Args:
+            action(SingleAction): The action to perform.
+        """
         control_agent = self.agent_graph.get_agent(action.agent_id)
         await control_agent.perform_action_by_data(action.action,
                                                    **action.args)
 
+    async def _perform_llm_action(self, agent):
+        r"""Send the request to the llm model and execute the action.
+        """
+        async with self.llm_semaphore:
+            return await agent.perform_action_by_llm()
+
     async def step(self, action: EnvAction) -> None:
+        r"""Perform some control actions, update the recommendation system,
+        and let some llm agents perform actions.
+
+        Args:
+            action(EnvAction): The activate agents and control actions to
+                perform.
+        """
         # Control some agents to perform actions
         control_tasks = [
             self._perform_control_action(single_action)
@@ -151,7 +174,7 @@ class OasisEnv:
         llm_tasks = []
         for agent_id in activate_agents:
             agent = self.agent_graph.get_agent(agent_id)
-            llm_tasks.append(agent.perform_action_by_llm())
+            llm_tasks.append(self._perform_llm_action(agent))
 
         await asyncio.gather(*llm_tasks)
         env_log.info("performed llm actions.")
@@ -160,8 +183,11 @@ class OasisEnv:
             self.platform.clock.time_step += 1
 
     async def close(self) -> None:
+        r"""Stop the platform and close the environment.
+        """
         await self.channel.write_to_receive_queue(
             (None, None, ActionType.EXIT))
         await self.platform_task
         env_log.info("Simulation finished! Please check the results in the "
-                     f"database: {self.platform.db_path}")
+                     f"database: {self.platform.db_path}. Note that the trace"
+                     "table stored all the actions of the agents.")
