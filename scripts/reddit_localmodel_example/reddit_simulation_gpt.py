@@ -120,6 +120,8 @@ async def running(
 
     if inference_configs["model_type"][:3] == "gpt":
         is_openai_model = True
+    else:
+        is_openai_model = False
     if not controllable_user:
         raise ValueError("Uncontrollable user is not supported")
     else:
