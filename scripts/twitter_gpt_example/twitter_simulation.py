@@ -136,7 +136,7 @@ async def running(
     # agent_graph.visualize("initial_social_graph.png")
 
     for timestep in range(1, num_timesteps + 1):
-        os.environ["SANDBOX_TIME"] = str(timestep * 3)
+        clock.time_step = timestep * 3
         db_file = db_path.split("/")[-1]
         print(Back.GREEN + f"DB:{db_file} timestep:{timestep}" + Back.RESET)
         # if you want to disable recsys, please comment this line

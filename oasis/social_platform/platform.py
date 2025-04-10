@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 import random
 import sqlite3
 import sys
@@ -64,18 +63,15 @@ class Platform:
         self.db_path = db_path
         self.recsys_type = recsys_type
         # import pdb; pdb.set_trace()
-        if self.recsys_type == "reddit":
-            # If no clock is specified, default the platform's time
-            # magnification factor to 60
-            if sandbox_clock is None:
-                sandbox_clock = Clock(60)
-            if start_time is None:
-                start_time = datetime.now()
-            self.start_time = start_time
-            self.sandbox_clock = sandbox_clock
-        else:
-            self.start_time = 0
-            self.sandbox_clock = None
+
+        # If no clock is specified, default the platform's time
+        # magnification factor to 60
+        if sandbox_clock is None:
+            sandbox_clock = Clock(60)
+        if start_time is None:
+            start_time = datetime.now()
+        self.start_time = start_time
+        self.sandbox_clock = sandbox_clock
 
         self.db, self.db_cursor = create_db(self.db_path)
         self.db.execute("PRAGMA synchronous = OFF")
@@ -115,6 +111,7 @@ class Platform:
             self.start_time,
             self.sandbox_clock,
             self.show_score,
+            self.recsys_type,
         )
 
     async def running(self):
@@ -173,7 +170,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_insert_query = (
                 "INSERT INTO user (user_id, agent_id, user_name, name, bio, "
@@ -215,7 +212,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         # try:
         user_id = agent_id
         # Check if a like record already exists
@@ -253,7 +250,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
             # Retrieve all post_ids for a given user_id from the rec table
@@ -383,7 +380,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
@@ -413,7 +410,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
@@ -488,7 +485,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
@@ -546,7 +543,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -650,7 +647,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -842,7 +839,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
             # Check if a follow record already exists
@@ -949,7 +946,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
             # Check if a mute record already exists
@@ -1016,7 +1013,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
             # Calculate the start time for the search
@@ -1063,7 +1060,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -1096,7 +1093,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
@@ -1204,7 +1201,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
@@ -1259,6 +1256,11 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def undo_dislike_comment(self, agent_id: int, comment_id: int):
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
@@ -1300,18 +1302,23 @@ class Platform:
             }
             self.pl_utils._record_trace(user_id,
                                         ActionType.UNDO_DISLIKE_COMMENT.value,
-                                        action_info)
+                                        action_info, current_time)
             return {"success": True, "comment_dislike_id": comment_dislike_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def do_nothing(self, agent_id: int):
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
             action_info = {}
             self.pl_utils._record_trace(user_id, ActionType.DO_NOTHING.value,
-                                        action_info)
+                                        action_info, current_time)
             return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}
