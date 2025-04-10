@@ -78,13 +78,17 @@ class SocialAgent(ChatAgent):
             all_possible_actions = [tool.func.__name__ for tool in all_tools]
 
             for action in available_actions:
-                if action not in all_possible_actions:
+                action_name = action.value if isinstance(
+                    action, ActionType) else action
+                if action_name not in all_possible_actions:
                     agent_log.warning(
-                        f"Action {action} is not supported. Supported actions "
-                        f"are: {', '.join(all_possible_actions)}")
+                        f"Action {action_name} is not supported. Supported "
+                        f"actions are: {', '.join(all_possible_actions)}")
             self.action_tools = [
-                tool for tool in all_tools
-                if tool.func.__name__ in available_actions
+                tool for tool in all_tools if tool.func.__name__ in [
+                    a.value if isinstance(a, ActionType) else a
+                    for a in available_actions
+                ]
             ]
         super().__init__(system_message=system_message,
                          model=model,
@@ -192,6 +196,8 @@ class SocialAgent(ChatAgent):
         return result
 
     async def perform_action_by_data(self, func_name, *args, **kwargs) -> Any:
+        func_name = func_name.value if isinstance(func_name,
+                                                  ActionType) else func_name
         function_list = self.env.action.get_openai_function_list()
         for i in range(len(function_list)):
             if function_list[i].func.__name__ == func_name:

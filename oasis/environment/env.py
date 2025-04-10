@@ -17,7 +17,7 @@ from typing import List, Optional, Union
 
 from camel.models import BaseModelBackend
 
-from oasis.environment.dataclass import EnvAction, SingleAction
+from oasis.environment.env_action import EnvAction, SingleAction
 from oasis.social_agent.agents_generator import (generate_agents,
                                                  generate_reddit_agents)
 from oasis.social_platform.channel import Channel
@@ -71,6 +71,7 @@ class OasisEnv:
                     max_rec_post_len=2,
                     following_post_count=3,
                 )
+                self.platform_type = DefaultPlatformType.TWITTER
             elif platform == DefaultPlatformType.REDDIT:
                 self.channel = Channel()
                 self.platform = Platform(
@@ -82,6 +83,7 @@ class OasisEnv:
                     max_rec_post_len=100,
                     refresh_rec_post_count=5,
                 )
+                self.platform_type = DefaultPlatformType.REDDIT
             else:
                 raise ValueError(f"Invalid platform: {platform}. Only "
                                  "DefaultPlatformType.TWITTER or "
@@ -101,7 +103,7 @@ class OasisEnv:
     async def reset(self) -> None:
         self.platform_task = asyncio.create_task(self.platform.running())
         if self.platform_type == DefaultPlatformType.TWITTER:
-            self.agent_graph = generate_agents(
+            self.agent_graph = await generate_agents(
                 agent_info_path=self.agent_profile_path,
                 twitter_channel=self.channel,
                 model=self.agent_models,
@@ -110,7 +112,7 @@ class OasisEnv:
                 twitter=self.platform,
             )
         elif self.platform_type == DefaultPlatformType.REDDIT:
-            self.agent_graph = generate_reddit_agents(
+            self.agent_graph = await generate_reddit_agents(
                 agent_info_path=self.agent_profile_path,
                 twitter_channel=self.channel,
                 model=self.agent_models,
@@ -118,7 +120,7 @@ class OasisEnv:
             )
 
     async def _perform_control_action(self, action: SingleAction) -> None:
-        control_agent = await self.agent_graph.get_agent(action.agent_id)
+        control_agent = self.agent_graph.get_agent(action.agent_id)
         await control_agent.perform_action_by_data(action.action,
                                                    **action.args)
 
@@ -148,7 +150,7 @@ class OasisEnv:
 
         llm_tasks = []
         for agent_id in activate_agents:
-            agent = await self.agent_graph.get_agent(agent_id)
+            agent = self.agent_graph.get_agent(agent_id)
             llm_tasks.append(agent.perform_action_by_llm())
 
         await asyncio.gather(*llm_tasks)

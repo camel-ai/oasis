@@ -466,7 +466,7 @@ async def gen_control_agents_with_data(
 async def generate_reddit_agents(
     agent_info_path: str,
     twitter_channel: Channel,
-    agent_graph: AgentGraph | None = AgentGraph,
+    agent_graph: AgentGraph | None = None,
     agent_user_id_mapping: dict[int, int] | None = None,
     follow_post_agent: bool = False,
     mute_post_agent: bool = False,
