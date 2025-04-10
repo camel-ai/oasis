@@ -36,8 +36,8 @@ class SingleAction:
 
 @dataclass
 class EnvAction:
-    activate_agents: List[int] | None
-    intervention: List[SingleAction] | None
+    activate_agents: List[int] | None = None
+    intervention: List[SingleAction] | None = None
     r"""All actions in a single timestep to perform in the Oasis environment.
 
     Args:

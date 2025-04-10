@@ -350,6 +350,7 @@ class Platform:
                 trace_table,
                 rec_matrix,
                 self.max_rec_post_len,
+                self.sandbox_clock.time_step,
                 use_openai_embedding=self.use_openai_embedding,
             )
         elif self.recsys_type == RecsysType.REDDIT:

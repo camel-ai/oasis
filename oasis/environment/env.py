@@ -112,7 +112,8 @@ class OasisEnv:
                 agent_info_path=self.agent_profile_path,
                 twitter_channel=self.channel,
                 model=self.agent_models,
-                recsys_type=RecsysType.TWHIN_BERT,
+                recsys_type=RecsysType.TWHIN,
+                start_time=self.platform.sandbox_clock.time_step,
                 available_actions=self.available_actions,
                 twitter=self.platform,
             )
@@ -149,12 +150,13 @@ class OasisEnv:
                 perform.
         """
         # Control some agents to perform actions
-        control_tasks = [
-            self._perform_control_action(single_action)
-            for single_action in action.intervention
-        ]
-        await asyncio.gather(*control_tasks)
-        env_log.info("performed control actions.")
+        if action.intervention:
+            control_tasks = [
+                self._perform_control_action(single_action)
+                for single_action in action.intervention
+            ]
+            await asyncio.gather(*control_tasks)
+            env_log.info("performed control actions.")
 
         # Update the recommendation system
         await self.platform.update_rec_table()
@@ -165,8 +167,7 @@ class OasisEnv:
             env_log.warning(
                 "activate_agents is None, default to activate all agents.")
             activate_agents = [
-                agent.social_agent_id
-                for agent in self.agent_graph.get_agents()
+                agent_id for agent_id, _ in self.agent_graph.get_agents()
             ]
         else:
             activate_agents = action.activate_agents
@@ -180,7 +181,7 @@ class OasisEnv:
         env_log.info("performed llm actions.")
         # Update the clock
         if self.platform_type == DefaultPlatformType.TWITTER:
-            self.platform.clock.time_step += 1
+            self.platform.sandbox_clock.time_step += 1
 
     async def close(self) -> None:
         r"""Stop the platform and close the environment.
