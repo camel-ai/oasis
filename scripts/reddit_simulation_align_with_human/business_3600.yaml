@@ -19,9 +19,9 @@ simulation:
   refresh_rec_post_count: 1
   action_space_file_path: ./scripts/reddit_simulation_align_with_human/action_space_prompt.txt
 inference:
-  model_type: llama-3
-  model_path: /ibex/user/yangz0h/open_source_llm/llama-3
+  model_type: Qwen2.5-7b
+  model_path: /data/Qwen2.5-7B-Instruct
   stop_tokens: [<|eot_id|>, <|end_of_text|>]
   server_url:
-    - host: 10.109.1.8
+    - host: 127.0.0.1
       ports: [8002, 8003, 8005]

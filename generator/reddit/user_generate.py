@@ -19,7 +19,14 @@ from datetime import datetime
 from openai import OpenAI
 
 # Set your OpenAI API key
-client = OpenAI(api_key='sk-xxx')
+# client = OpenAI(api_key='sk-xxx')
+openai_api_key = "EMPTY"
+openai_api_base = "http://localhost:8002/v1"
+
+client = OpenAI(
+    api_key=openai_api_key,
+    base_url=openai_api_base,
+)
 
 # Gender ratio
 gender_ratio = [0.351, 0.636]
@@ -83,7 +90,7 @@ def get_random_country():
     country = random.choices(countries, country_ratio)[0]
     if country == "Other":
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="Qwen2.5-7B",
             messages=[{
                 "role": "system",
                 "content": "Select a real country name randomly:"
@@ -116,7 +123,7 @@ def get_interested_topics(mbti, age, gender, country, profession):
     [list of topic numbers]
     Ensure your output could be parsed to **list**, don't output anything else."""  # noqa: E501
 
-    response = client.chat.completions.create(model="gpt-3.5-turbo",
+    response = client.chat.completions.create(model="Qwen2.5-7B",
                                               messages=[{
                                                   "role": "system",
                                                   "content": prompt
@@ -143,7 +150,7 @@ def generate_user_profile(age, gender, mbti, profession, topics):
     }}
     Ensure the output can be directly parsed to **JSON**, do not output anything else."""  # noqa: E501
 
-    response = client.chat.completions.create(model="gpt-3.5-turbo",
+    response = client.chat.completions.create(model="Qwen2.5-7B",
                                               messages=[{
                                                   "role": "system",
                                                   "content": prompt
