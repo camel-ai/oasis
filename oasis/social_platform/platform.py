@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from oasis.clock.clock import Clock
+from oasis.social_platform.channel import Channel
 from oasis.social_platform.database import (create_db,
                                             fetch_rec_table_as_matrix,
                                             fetch_table_from_db)
@@ -49,7 +50,7 @@ class Platform:
     def __init__(
         self,
         db_path: str,
-        channel: Any,
+        channel: Any = None,
         sandbox_clock: Clock | None = None,
         start_time: datetime | None = None,
         show_score: bool = False,
@@ -76,7 +77,7 @@ class Platform:
         self.db, self.db_cursor = create_db(self.db_path)
         self.db.execute("PRAGMA synchronous = OFF")
 
-        self.channel = channel
+        self.channel = channel or Channel()
 
         self.recsys_type = RecsysType(recsys_type)
 

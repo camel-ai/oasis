@@ -47,3 +47,8 @@ class RecsysType(Enum):
     TWHIN = "twhin-bert"
     REDDIT = "reddit"
     RANDOM = "random"
+
+
+class DefaultPlatformType(Enum):
+    TWITTER = "twitter"
+    REDDIT = "reddit"
