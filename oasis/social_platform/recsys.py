@@ -15,7 +15,6 @@
 into rec_matrix'''
 import heapq
 import logging
-import os
 import random
 import time
 from ast import literal_eval
@@ -46,11 +45,11 @@ tfidf_vectorizer = TfidfVectorizer()
 # Prepare the twhin model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-twhin_tokenizer = AutoTokenizer.from_pretrained(
-    pretrained_model_name_or_path="Twitter/twhin-bert-base",
-    model_max_length=512)  # TODO change the pretrained_model_path
-twhin_model = AutoModel.from_pretrained(
-    pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
+# twhin_tokenizer = AutoTokenizer.from_pretrained(
+#     pretrained_model_name_or_path="Twitter/twhin-bert-base",
+#     model_max_length=512)  # TODO change the pretrained_model_path
+# twhin_model = AutoModel.from_pretrained(
+#     pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
 
 # All historical tweets and the most recent tweet of each user
 user_previous_post_all = {}
@@ -420,6 +419,7 @@ def rec_sys_personalized_twh(
         # source_post_indexs: List[int],
         recall_only: bool = False,
         enable_like_score: bool = False,
+        current_timestep: str = "0",
         use_openai_embedding: bool = False) -> List[List]:
     # Set some global variables to reduce time consumption
     global date_score, fans_score, t_items, u_items, user_previous_post
@@ -446,7 +446,7 @@ def rec_sys_personalized_twh(
             else:
                 user_profiles.append(user['bio'])
 
-    current_time = int(os.environ["SANDBOX_TIME"])
+    current_time = int(current_timestep)
     if len(t_items) < len(post_table):
         for post in post_table[-latest_post_count:]:
             # Get the {post_id: content} dict, update only the latest tweets
