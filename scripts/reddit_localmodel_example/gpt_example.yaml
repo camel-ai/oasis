@@ -20,7 +20,7 @@ simulation:
   action_space_file_path: ./scripts/reddit_gpt_example/action_space_prompt.txt  # Path to the action_space_prompt file
 inference:
   model_type: Qwen2.5-7b
-  model_path: /data/Qwen2.5-7B-Instruct
+  model_path: /models/Qwen2.5-7B-Instruct
   stop_tokens: [<|eot_id|>, <|end_of_text|>]
   server_url:
     - host: 127.0.0.1

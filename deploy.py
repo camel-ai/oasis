@@ -48,7 +48,7 @@ if __name__ == "__main__":
     ports = [port for row in ports for port in row]  # 转换为一维数组
 
     # all_ports = [port for i in gpus for port in ports[i]]
-    all_ports = ports[:len(gpus)]
+    all_ports = ports[:len(gpus)]  # 输出将会使用的端口
     print("All ports: ", all_ports, '\n\n')
 
     t = None
@@ -60,7 +60,7 @@ if __name__ == "__main__":
             f"CUDA_VISIBLE_DEVICES={gpu} "  # 指定 GPU
             f"python3 -m "
             f"vllm.entrypoints.openai.api_server --model "
-            f"'/data/Qwen2.5-7B-Instruct' "  # 模型路径
+            f"'/models/Qwen2.5-7B-Instruct' "  # 模型路径
             f"--served-model-name 'Qwen2.5-7B' "  # 模型名称
             # f"--tensor-parallel-size 1 "  # GPU 并行数
             f"--host {host} --port {ports[i]} --gpu-memory-utilization "
