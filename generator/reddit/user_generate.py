@@ -93,7 +93,8 @@ def get_random_country():
             model="Qwen2.5-7B",
             messages=[{
                 "role": "system",
-                "content": "Select a real country name randomly:"
+                "content": "Select a real country name randomly, you shall only give the country name, "
+                "no other information, no explanation, no extra words."
             }])
         return response.choices[0].message.content.strip()
     return country
