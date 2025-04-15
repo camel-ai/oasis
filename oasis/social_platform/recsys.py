@@ -25,12 +25,10 @@ from typing import Any, Dict, List
 
 import numpy as np
 import torch
-from transformers import AutoModel, AutoTokenizer
-
+from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-
-from sentence_transformers import SentenceTransformer
+from transformers import AutoModel, AutoTokenizer
 
 from .process_recsys_posts import (generate_post_vector,
                                    generate_post_vector_openai)
