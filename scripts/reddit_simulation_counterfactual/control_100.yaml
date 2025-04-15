@@ -21,7 +21,7 @@ simulation:
   action_space_file_path: ./scripts/reddit_simulation_counterfactual/action_space_prompt.txt  # 动作空间提示文件路径
 
 inference:
-  model_type: Qwen2.5-7b  # 使用的模型名称（Qwen2.5-7b）
+  model_type: Qwen2.5-7B  # 使用的模型名称（Qwen2.5-7b）
   model_path: /models/Qwen2.5-7B-Instruct  # 本地模型路径
   stop_tokens: [<|eot_id|>, <|end_of_text|>]  # 停止生成的标记
   server_url:  # 本地模型服务器的地址和端口

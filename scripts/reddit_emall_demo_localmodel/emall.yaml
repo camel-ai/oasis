@@ -18,7 +18,7 @@ simulation:
   refresh_rec_post_count: 5  # Number of posts an agent sees each time they refresh
   action_space_file_path: ./scripts/reddit_emall_demo/action_space_prompt.txt  # Path to the action_space_prompt file
 inference:
-  model_type: Qwen2.5-7b
+  model_type: Qwen2.5-7B
   model_path: /models/Qwen2.5-7B-Instruct
   stop_tokens: [<|eot_id|>, <|end_of_text|>]
   server_url:
