@@ -23,7 +23,7 @@ import openai
 import scipy.stats as st
 
 # OpenAI API key
-openai.api_key = os.environ['OPENAI_API_KEY']
+# openai.api_key = os.environ['OPENAI_API_KEY']
 
 # 数据库文件列表
 db_files = [
@@ -39,11 +39,11 @@ async def fetch_gpt_score(session, prompt, time_step, post_content,
                           comment_content):
     try:
         response = await session.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={"Authorization": f"Bearer {openai.api_key}"},
+            "http://localhost:8002/v1/chat/completions",
+            # headers={"Authorization": f"Bearer {openai.api_key}"},  # 使用本地模型时不需要
             json={
                 "model":
-                "gpt-4o",
+                "Qwen2.5-7B",
                 "messages": [{
                     "role": "system",
                     "content": "You are a helpful assistant."

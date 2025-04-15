@@ -1,0 +1,23 @@
+---
+data:
+  user_path: ./data/reddit/user_data_36.json  # 用户资料文件路径
+  pair_path: ./data/reddit/counterfactual_36.json  # 初始帖子文件路径
+  db_path: ./counterfactual_36_gpt.db  # 实验后保存社交媒体数据库的路径
+simulation:
+  recsys_type: reddit  # 推荐系统类型（Reddit）
+  controllable_user: true  # 是否启用可控用户（根据指令发布预设内容）
+  allow_self_rating: false  # Reddit特性：不允许用户对自己内容评分
+  show_score: true  # Reddit特性：仅显示总评分（非单独点赞/踩数）
+  activate_prob: 0.2  # 每个代理在每个时间步被激活的概率（20%）
+  clock_factor: 10  # 时间步的现实时间放大系数（不建议修改）
+  num_timesteps: 2  # 模拟运行的时间步数
+  max_rec_post_len: 50  # 用户推荐列表缓存的最大帖子数量
+  round_post_num: 30  # 可控用户每时间步发布的帖子数量
+  follow_post_agent: false  # 是否所有代理关注可控用户
+  mute_post_agent: false  # 是否所有代理屏蔽可控用户
+  refresh_rec_post_count: 5  # 用户每次刷新时加载的帖子数量
+  init_post_score: 0  # 可控用户帖子的初始评分
+  action_space_file_path: ./scripts/reddit_gpt_example/action_space_prompt.txt  # 动作空间提示文件路径
+inference:
+  model_type: gpt-4  # 使用的OpenAI模型名称（GPT-4）
+  is_openai_model: true  # 是否为OpenAI官方模型

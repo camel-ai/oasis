@@ -1,27 +1,29 @@
 ---
 data:
-  user_path: ./experiment_dataset/user_data/user_data_100.json
-  pair_path: ./experiment_dataset/agent_36/couterfact.json
-  db_path: ./experiments/reddit_simulation_counterfactual/counterfactual_100_control.db
+  user_path: ./experiment_dataset/user_data/user_data_100.json  # 用户资料文件路径
+  pair_path: ./experiment_dataset/agent_36/couterfact.json  # 初始帖子文件路径
+  db_path: ./experiments/reddit_simulation_counterfactual/counterfactual_100_control.db  # 实验后保存社交媒体数据库的路径
+
 simulation:
-  recsys_type: reddit
-  controllable_user: true
-  allow_self_rating: false
-  show_score: true
-  activate_prob: 0.1
-  clock_factor: 10
-  num_timesteps: 30
-  max_rec_post_len: 50
-  round_post_num: 30
-  follow_post_agent: false
-  mute_post_agent: false
-  refresh_rec_post_count: 5
-  init_post_score: 0
-  action_space_file_path: ./scripts/reddit_simulation_counterfactual/action_space_prompt.txt
+  recsys_type: reddit  # 推荐系统类型（Reddit）
+  controllable_user: true  # 是否启用可控用户（根据指令发布预设内容）
+  allow_self_rating: false  # Reddit特性：不允许用户对自己内容评分
+  show_score: true  # Reddit特性：仅显示总评分（非单独点赞/踩数）
+  activate_prob: 0.1  # 每个代理在每个时间步被激活的概率（10%）
+  clock_factor: 10  # 时间步的现实时间放大系数（不建议修改）
+  num_timesteps: 30  # 模拟运行的时间步数
+  max_rec_post_len: 50  # 用户推荐列表缓存的最大帖子数量
+  round_post_num: 30  # 可控用户每时间步发布的帖子数量
+  follow_post_agent: false  # 是否所有代理关注可控用户
+  mute_post_agent: false  # 是否所有代理屏蔽可控用户
+  refresh_rec_post_count: 5  # 用户每次刷新时加载的帖子数量
+  init_post_score: 0  # 可控用户帖子的初始评分
+  action_space_file_path: ./scripts/reddit_simulation_counterfactual/action_space_prompt.txt  # 动作空间提示文件路径
+
 inference:
-  model_type: Qwen2.5-7b
-  model_path: /models/Qwen2.5-7B-Instruct
-  stop_tokens: [<|eot_id|>, <|end_of_text|>]
-  server_url:
-    - host: 127.0.0.1
-      ports: [8002, 8003, 8005]
+  model_type: Qwen2.5-7b  # 使用的模型名称（Qwen2.5-7b）
+  model_path: /models/Qwen2.5-7B-Instruct  # 本地模型路径
+  stop_tokens: [<|eot_id|>, <|end_of_text|>]  # 停止生成的标记
+  server_url:  # 本地模型服务器的地址和端口
+    - host: 127.0.0.1  # 服务器主机地址
+      ports: [8002, 8003, 8005]  # 可用的端口列表
