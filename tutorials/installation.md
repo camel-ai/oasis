@@ -217,4 +217,4 @@ The Reddit recommendation system is highly time-sensitive. Currently, one time s
 
 ## 🚢 More Tutorials
 
-To discover how to create profiles for large-scale users, as well as how to visualize and analyze social simulation data once your experiment concludes, please refer to [More Tutorials](tutorials/tutorial.md) for detailed guidance.
+To discover how to create profiles for large-scale users, as well as how to visualize and analyze social simulation data once your experiment concludes, please refer to [More Tutorials](tutorial.md) for detailed guidance.
