@@ -1,7 +1,7 @@
 ---
 data:
   user_path: ./experiment_dataset/user_data/user_data_1000.json
-  pair_path: ./experiment_dataset/agent_360/couterfact.json
+  pair_path: ./experiment_dataset/agent_360/counterfact.json
   db_path: ./experiments/reddit_simulation_counterfactual/counterfactual_1000_down.db
 simulation:
   recsys_type: reddit

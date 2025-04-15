@@ -1,7 +1,7 @@
 ---
 data:
   user_path: ./experiment_dataset/user_data/user_data_100.json  # 用户资料文件路径
-  pair_path: ./experiment_dataset/agent_36/couterfact.json  # 初始帖子文件路径
+  pair_path: ./experiment_dataset/agent_36/counterfact.json  # 初始帖子文件路径
   db_path: ./experiments/reddit_simulation_counterfactual/counterfactual_100_control.db  # 实验后保存社交媒体数据库的路径
 
 simulation:
