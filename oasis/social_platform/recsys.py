@@ -25,7 +25,6 @@ from typing import Any, Dict, List
 
 import numpy as np
 import torch
-from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import AutoModel, AutoTokenizer
@@ -33,6 +32,8 @@ from transformers import AutoModel, AutoTokenizer
 from .process_recsys_posts import (generate_post_vector,
                                    generate_post_vector_openai)
 from .typing import ActionType, RecsysType
+
+from sentence_transformers import SentenceTransformer
 
 rec_log = logging.getLogger(name='social.rec')
 rec_log.setLevel('DEBUG')
