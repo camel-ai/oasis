@@ -136,7 +136,6 @@ class SocialAgent(ChatAgent):
         # user conduct test to agent
         _ = BaseMessage.make_user_message(role_name="User",
                                           content=("You are a twitter user."))
-        # TODO error occurs.
         # Test memory should not be writed to memory.
         # self.memory.write_record(MemoryRecord(user_msg,
         #                                       OpenAIBackendRole.USER))
