@@ -168,9 +168,12 @@ async def running(
             if rs_rc_index >= len(pairs):
                 return
             else:
-                content = pairs[rs_rc_index]["RC_1"]["body"]
+                title = pairs[rs_rc_index]["RS"]["title"]
+                content = pairs[rs_rc_index]["RS"]["selftext"]
+                formatted_content = f"Title: {title}.\nContent: {content}"
+
                 response = await post_agent.perform_action_by_data(
-                    "create_post", content=content)
+                    "create_post", content=formatted_content)
                 post_id = response["post_id"]
                 for i in range(1, 11):
                     key_name = f"RC_{i}"

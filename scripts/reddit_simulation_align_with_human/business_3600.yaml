@@ -30,5 +30,5 @@ simulation:
 inference:
   model_type: llama-3
   server_url:
-    - host: 10.109.1.8
+    - host: 10.109.1.9
       ports: [8002, 8003, 8005]
