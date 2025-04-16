@@ -108,11 +108,11 @@ async def running(
         model_urls = create_model_urls(inference_configs["server_url"])
         models = [
             ModelFactory.create(
-            model_platform=ModelPlatformType.VLLM,
-            model_type=inference_configs["model_type"],
-            url=url,
-        ) for url in model_urls
-    ]
+                model_platform=ModelPlatformType.VLLM,
+                model_type=inference_configs["model_type"],
+                url=url,
+            ) for url in model_urls
+        ]
     twitter_task = asyncio.create_task(infra.running())
 
     try:

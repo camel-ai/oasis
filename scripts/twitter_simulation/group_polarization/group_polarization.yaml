@@ -6,10 +6,6 @@ simulation:
   num_timesteps: 30
   clock_factor: 60
   recsys_type: twhin-bert
-inference:
-  model_type: llama-3
-  model_path: /mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct
-  stop_tokens: [<|eot_id|>, <|end_of_text|>]
   available_actions:
     - do_nothing
     - repost
@@ -19,6 +15,10 @@ inference:
     - create_comment
     - like_comment
     - like_comment
+inference:
+  model_type: llama-3
+  model_path: /mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct
+  stop_tokens: [<|eot_id|>, <|end_of_text|>]
   server_url:
     - host: 10.140.1.129
       ports:

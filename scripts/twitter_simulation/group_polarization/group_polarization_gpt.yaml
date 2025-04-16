@@ -6,10 +6,6 @@ simulation:
   num_timesteps: 30
   clock_factor: 60
   recsys_type: twhin-bert
-inference:
-  model_type: llama-3
-  model_path: /mnt/hwfile/trustai/models/Meta-Llama-3-8B-Instruct
-  stop_tokens: [<|eot_id|>, <|end_of_text|>]
   available_actions:
     - do_nothing
     - repost
@@ -18,7 +14,7 @@ inference:
     - follow
     - create_comment
     - like_comment
-    - like_comment
+    - dislike_comment
 inference:
   model_type: gpt-4o-mini  # Name of the OpenAI model
   is_openai_model: true  # Whether it is an OpenAI model
