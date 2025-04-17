@@ -49,7 +49,6 @@ async def generate_agents(
     Args:
         agent_info_path (str): The file path to the agent information CSV file.
         channel (Channel): Information channel.
-        num_agents (int): Number of agents.
         action_space_prompt (str): determine the action space of agents.
         model_random_seed (int): Random seed to randomly assign model to
             each agent. (default: 42)
@@ -102,7 +101,8 @@ async def generate_agents(
 
         agent_graph.add_agent(agent)
         # TODO we should not use following_count and followers_count
-        # We should calculate the number of followings and followers based on the graph because the following situation is dynamic.
+        # We should calculate the number of followings and followers
+        # based on the graph because the following situation is dynamic.
         num_followings = 0
         num_followers = 0
 
@@ -193,7 +193,6 @@ async def generate_agents_100w(
     Args:
         agent_info_path (str): The file path to the agent information CSV file.
         channel (Channel): Information channel.
-        num_agents (int): Number of agents.
         action_space_prompt (str): determine the action space of agents.
         model_random_seed (int): Random seed to randomly assign model to
             each agent. (default: 42)

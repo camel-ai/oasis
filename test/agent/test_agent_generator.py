@@ -43,17 +43,6 @@ async def running():
         inferencer_channel,
         twitter=infra,
         start_time=0,
-        num_agents=111,
-        cfgs=[
-            {
-                "model_type": ModelType.LLAMA_3,
-                "num": 100
-            },
-            {
-                "model_type": ModelType.GPT_3_5_TURBO,
-                "num": 11
-            },
-        ],
     )
     await twitter_channel.write_to_receive_queue((None, None, "exit"))
     await task
