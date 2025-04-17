@@ -64,7 +64,6 @@ async def generate_agents(
             class instances.
     """
     agent_info = pd.read_csv(agent_info_path)
-    mbti_types = ["INTJ", "ENTP", "INFJ", "ENFP"]
 
     freq = list(agent_info["activity_level_frequency"])
     all_freq = np.array([ast.literal_eval(fre) for fre in freq])
@@ -94,7 +93,6 @@ async def generate_agents(
         }
         profile["other_info"]["user_profile"] = agent_info["user_char"][
             agent_id]
-        profile["other_info"]["mbti"] = random.choice(mbti_types)
         profile["other_info"]["activity_level_frequency"] = ast.literal_eval(
             agent_info["activity_level_frequency"][agent_id])
         profile["other_info"]["active_threshold"] = prob_list[agent_id]
@@ -225,7 +223,6 @@ async def generate_agents_100w(
             class instances.
     """
     agent_info = pd.read_csv(agent_info_path)
-    mbti_types = ["INTJ", "ENTP", "INFJ", "ENFP"]
 
     freq = list(agent_info["activity_level_frequency"])
     all_freq = np.array([ast.literal_eval(fre) for fre in freq])
@@ -269,7 +266,6 @@ async def generate_agents_100w(
         }
         profile["other_info"]["user_profile"] = agent_info["user_char"][
             agent_id]
-        profile["other_info"]["mbti"] = random.choice(mbti_types)
         profile['other_info'][
             'activity_level_frequency'] = activity_level_frequencies[agent_id]
         profile["other_info"]["active_threshold"] = prob_list[agent_id]
