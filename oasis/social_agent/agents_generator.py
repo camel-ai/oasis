@@ -65,13 +65,6 @@ async def generate_agents(
     """
     agent_info = pd.read_csv(agent_info_path)
 
-    freq = list(agent_info["activity_level_frequency"])
-    all_freq = np.array([ast.literal_eval(fre) for fre in freq])
-    normalized_prob = all_freq / np.max(all_freq)
-    # Make sure probability is not too small
-    normalized_prob[normalized_prob < 0.6] += 0.1
-    normalized_prob = np.round(normalized_prob, 2)
-    prob_list: list[float] = normalized_prob.tolist()
 
     agent_graph = (AgentGraph() if neo4j_config is None else AgentGraph(
         backend="neo4j",
@@ -93,13 +86,9 @@ async def generate_agents(
         }
         profile["other_info"]["user_profile"] = agent_info["user_char"][
             agent_id]
-        profile["other_info"]["activity_level_frequency"] = ast.literal_eval(
-            agent_info["activity_level_frequency"][agent_id])
-        profile["other_info"]["active_threshold"] = prob_list[agent_id]
 
         user_info = UserInfo(
             name=agent_info["username"][agent_id],
-            description=agent_info["description"][agent_id],
             profile=profile,
             recsys_type=recsys_type,
         )
@@ -224,14 +213,6 @@ async def generate_agents_100w(
     """
     agent_info = pd.read_csv(agent_info_path)
 
-    freq = list(agent_info["activity_level_frequency"])
-    all_freq = np.array([ast.literal_eval(fre) for fre in freq])
-    normalized_prob = all_freq / np.max(all_freq)
-    # Make sure probability is not too small
-    normalized_prob[normalized_prob < 0.6] += 0.1
-    normalized_prob = np.round(normalized_prob, 2)
-    prob_list: list[float] = normalized_prob.tolist()
-
     # TODO when setting 100w agents, the agentgraph class is too slow.
     # I use the list.
     agent_graph = []
@@ -251,8 +232,6 @@ async def generate_agents_100w(
     _ = agent_info["following_agentid_list"].apply(ast.literal_eval)
     previous_tweets_lists = agent_info["previous_tweets"].apply(
         ast.literal_eval)
-    activity_level_frequencies = agent_info["activity_level_frequency"].apply(
-        ast.literal_eval)
     previous_tweets_lists = agent_info['previous_tweets'].apply(
         ast.literal_eval)
     following_id_lists = agent_info["following_agentid_list"].apply(
@@ -266,15 +245,11 @@ async def generate_agents_100w(
         }
         profile["other_info"]["user_profile"] = agent_info["user_char"][
             agent_id]
-        profile['other_info'][
-            'activity_level_frequency'] = activity_level_frequencies[agent_id]
-        profile["other_info"]["active_threshold"] = prob_list[agent_id]
         # TODO if you simulate one million agents, use active threshold below.
         # profile['other_info']['active_threshold'] = [0.01] * 24
 
         user_info = UserInfo(
             name=agent_info["username"][agent_id],
-            description=agent_info["description"][agent_id],
             profile=profile,
             recsys_type=recsys_type,
         )
@@ -495,7 +470,6 @@ async def generate_reddit_agents(
 
         user_info = UserInfo(
             name=agent_info[i]["username"],
-            description=agent_info[i]["bio"],
             profile=profile,
             recsys_type="reddit",
         )
