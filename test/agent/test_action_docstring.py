@@ -13,14 +13,14 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 from typing import List
 
-from camel.toolkits import OpenAIFunction
+from camel.toolkits import FunctionTool
 
 from oasis.social_agent.agent import SocialAction
 
 
 def test_transfer_to_openai_function():
-    action_funcs: List[OpenAIFunction] = [
-        OpenAIFunction(func) for func in [
+    action_funcs: List[FunctionTool] = [
+        FunctionTool(func) for func in [
             SocialAction.sign_up,
             SocialAction.refresh,
             SocialAction.create_post,

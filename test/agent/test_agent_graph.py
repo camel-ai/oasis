@@ -31,25 +31,21 @@ def neo4j_vars_set() -> bool:
 
 def test_agent_graph(tmp_path):
     twitter_channel = Channel()
-    inference_channel = Channel()
     graph = AgentGraph()
     agent_0 = SocialAgent(
         agent_id=0,
         user_info=UserInfo(name="0"),
         twitter_channel=twitter_channel,
-        inference_channel=inference_channel,
     )
     agent_1 = SocialAgent(
         agent_id=1,
         user_info=UserInfo(name="1"),
         twitter_channel=twitter_channel,
-        inference_channel=inference_channel,
     )
     agent_2 = SocialAgent(
         agent_id=2,
         user_info=UserInfo(name="2"),
         twitter_channel=twitter_channel,
-        inference_channel=inference_channel,
     )
 
     graph.add_agent(agent_0)

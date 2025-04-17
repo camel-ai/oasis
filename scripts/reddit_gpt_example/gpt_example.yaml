@@ -17,7 +17,21 @@ simulation:
   mute_post_agent: false  # Whether all agents mute the controllable_user
   refresh_rec_post_count: 5  # Number of posts an agent sees each time they refresh
   init_post_score: 0  # Initial score of posts made by controllable_user
-  action_space_file_path: ./scripts/reddit_gpt_example/action_space_prompt.txt  # Path to the action_space_prompt file
+  available_actions:
+    - like_comment
+    - dislike_comment
+    - like_post
+    - dislike_post
+    - search_posts
+    - search_user
+    - trend
+    - refresh
+    - do_nothing
+    - create_comment
+    - follow
+    - mute
+    - repost
+    - quote_post
 inference:
   model_type: gpt-4  # Name of the OpenAI model
   is_openai_model: true  # Whether it is an OpenAI model

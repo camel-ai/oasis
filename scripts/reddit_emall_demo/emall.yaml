@@ -12,11 +12,19 @@ simulation:
   clock_factor: 10  # Magnification factor of the first timestep in real-world time, not recommended to change
   num_timesteps: 1  # Number of timesteps the simulation experiment runs
   max_rec_post_len: 50  # Number of posts in each user's recommendation list cache
-  round_post_num: 30  # Number of posts sent by controllable_user at each timestep
   follow_post_agent: false  # Whether all agents follow the controllable_user
   mute_post_agent: false  # Whether all agents mute the controllable_user
   refresh_rec_post_count: 5  # Number of posts an agent sees each time they refresh
-  action_space_file_path: ./scripts/reddit_emall_demo/action_space_prompt.txt  # Path to the action_space_prompt file
+  available_actions:
+    - like_comment
+    - like_post
+    - dislike_post
+    - do_nothing
+    - create_comment
+    - follow
+    - mute
+    - repost
+    - purchase_product
 inference:
   model_type: gpt-4o-mini  # Name of the OpenAI model
   is_openai_model: true  # Whether it is an OpenAI model

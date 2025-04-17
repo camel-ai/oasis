@@ -12,18 +12,21 @@
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import json
-import os
 from datetime import datetime
+
+from oasis.social_platform.typing import RecsysType
 
 
 class PlatformUtils:
 
-    def __init__(self, db, db_cursor, start_time, sandbox_clock, show_score):
+    def __init__(self, db, db_cursor, start_time, sandbox_clock, show_score,
+                 recsys_type):
         self.db = db
         self.db_cursor = db_cursor
         self.start_time = start_time
         self.sandbox_clock = sandbox_clock
         self.show_score = show_score
+        self.recsys_type = recsys_type
 
     @staticmethod
     def _not_signup_error_message(agent_id):
@@ -177,11 +180,11 @@ class PlatformUtils:
         If only the trace table needs to record time, use the entry time into
         _record_trace as the time for the trace record.
         """
-        if self.sandbox_clock:
+        if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
 
         trace_insert_query = (
             "INSERT INTO trace (user_id, created_at, action, info) "
