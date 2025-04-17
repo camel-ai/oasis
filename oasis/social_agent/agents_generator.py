@@ -16,10 +16,8 @@ from __future__ import annotations
 import ast
 import asyncio
 import json
-import random
 from typing import List, Union
 
-import numpy as np
 import pandas as pd
 import tqdm
 from camel.memories import MemoryRecord
@@ -65,7 +63,6 @@ async def generate_agents(
     """
     agent_info = pd.read_csv(agent_info_path)
 
-
     agent_graph = (AgentGraph() if neo4j_config is None else AgentGraph(
         backend="neo4j",
         neo4j_config=neo4j_config,
@@ -108,7 +105,7 @@ async def generate_agents(
         # We should calculate the number of followings and followers based on the graph because the following situation is dynamic.
         num_followings = 0
         num_followers = 0
-    
+
         sign_up_list.append((
             agent_id,
             agent_id,
@@ -156,15 +153,14 @@ async def generate_agents(
         "UPDATE user SET num_followings = num_followings + 1 "
         "WHERE user_id = ?")
     twitter.pl_utils._execute_many_db_command(user_update_query1,
-                                                user_update1,
-                                                commit=True)
+                                              user_update1,
+                                              commit=True)
 
-    user_update_query2 = (
-        "UPDATE user SET num_followers = num_followers + 1 "
-        "WHERE user_id = ?")
+    user_update_query2 = ("UPDATE user SET num_followers = num_followers + 1 "
+                          "WHERE user_id = ?")
     twitter.pl_utils._execute_many_db_command(user_update_query2,
-                                                user_update2,
-                                                commit=True)
+                                              user_update2,
+                                              commit=True)
 
     # generate_log.info('twitter followee update finished.')
 
