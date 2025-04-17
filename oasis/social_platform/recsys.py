@@ -65,8 +65,6 @@ u_items = {}
 # Get the creation times of all tweets, assigning scores based on how recent
 # they are
 date_score = []
-# Get the fan counts of all tweet authors
-fans_score = []
 
 
 def load_model(model_name):
@@ -115,14 +113,13 @@ else:
 def reset_globals():
     global user_previous_post_all, user_previous_post
     global user_profiles, t_items, u_items
-    global date_score, fans_score
+    global date_score
     user_previous_post_all = {}
     user_previous_post = {}
     user_profiles = []
     t_items = {}
     u_items = {}
     date_score = []
-    fans_score = []
 
 
 def rec_sys_random(post_table: List[Dict[str, Any]], rec_matrix: List[List],
@@ -421,7 +418,7 @@ def rec_sys_personalized_twh(
         enable_like_score: bool = False,
         use_openai_embedding: bool = False) -> List[List]:
     # Set some global variables to reduce time consumption
-    global date_score, fans_score, t_items, u_items, user_previous_post
+    global date_score, t_items, u_items, user_previous_post
     global user_previous_post_all, user_profiles
     # Get the uid: follower_count dict
     # Update only once, unless adding the feature to include new users midway.
@@ -458,20 +455,8 @@ def rec_sys_personalized_twh(
             date_score.append(
                 np.log(
                     (271.8 - (current_time - int(post['created_at']))) / 100))
-            # Get the audience size of the post, score based on the number of
-            # followers
-            try:
-                fans_score.append(
-                    np.log(u_items[post['user_id']] + 1) / np.log(1000))
-            except Exception as e:
-                print(f"Error on fan score calculating: {e}")
-                import pdb
-                pdb.set_trace()
 
     date_score_np = np.array(date_score)
-    # fan_score [1, 2.x]
-    fans_score_np = np.array(fans_score)
-    fans_score_np = np.where(fans_score_np < 1, 1, fans_score_np)
 
     if enable_like_score:
         # Calculate similarity with previously liked content, first gather
@@ -483,9 +468,6 @@ def rec_sys_personalized_twh(
                                              ActionType.LIKE_POST.value,
                                              trace_table)
             like_post_ids_all.append(like_post_ids)
-    # enable fans_score when the broadcasting effect of superuser should be
-    # taken in count
-    # ßscores = date_score_np * fans_score_np
     scores = date_score_np
     new_rec_matrix = []
     if len(post_table) <= max_rec_post_len:

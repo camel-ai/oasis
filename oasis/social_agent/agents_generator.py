@@ -16,10 +16,8 @@ from __future__ import annotations
 import ast
 import asyncio
 import json
-import random
 from typing import List, Union
 
-import numpy as np
 import pandas as pd
 import tqdm
 from camel.memories import MemoryRecord
@@ -51,7 +49,6 @@ async def generate_agents(
     Args:
         agent_info_path (str): The file path to the agent information CSV file.
         channel (Channel): Information channel.
-        num_agents (int): Number of agents.
         action_space_prompt (str): determine the action space of agents.
         model_random_seed (int): Random seed to randomly assign model to
             each agent. (default: 42)
@@ -64,15 +61,6 @@ async def generate_agents(
             class instances.
     """
     agent_info = pd.read_csv(agent_info_path)
-    mbti_types = ["INTJ", "ENTP", "INFJ", "ENFP"]
-
-    freq = list(agent_info["activity_level_frequency"])
-    all_freq = np.array([ast.literal_eval(fre) for fre in freq])
-    normalized_prob = all_freq / np.max(all_freq)
-    # Make sure probability is not too small
-    normalized_prob[normalized_prob < 0.6] += 0.1
-    normalized_prob = np.round(normalized_prob, 2)
-    prob_list: list[float] = normalized_prob.tolist()
 
     agent_graph = (AgentGraph() if neo4j_config is None else AgentGraph(
         backend="neo4j",
@@ -94,10 +82,6 @@ async def generate_agents(
         }
         profile["other_info"]["user_profile"] = agent_info["user_char"][
             agent_id]
-        profile["other_info"]["mbti"] = random.choice(mbti_types)
-        profile["other_info"]["activity_level_frequency"] = ast.literal_eval(
-            agent_info["activity_level_frequency"][agent_id])
-        profile["other_info"]["active_threshold"] = prob_list[agent_id]
 
         user_info = UserInfo(
             name=agent_info["username"][agent_id],
@@ -116,13 +100,11 @@ async def generate_agents(
         )
 
         agent_graph.add_agent(agent)
+        # TODO we should not use following_count and followers_count
+        # We should calculate the number of followings and followers
+        # based on the graph because the following situation is dynamic.
         num_followings = 0
         num_followers = 0
-        # print('agent_info["following_count"]', agent_info["following_count"])
-        if not agent_info["following_count"].empty:
-            num_followings = int(agent_info["following_count"][agent_id])
-        if not agent_info["followers_count"].empty:
-            num_followers = int(agent_info["followers_count"][agent_id])
 
         sign_up_list.append((
             agent_id,
@@ -167,22 +149,18 @@ async def generate_agents(
     twitter.pl_utils._execute_many_db_command(follow_insert_query,
                                               follow_list,
                                               commit=True)
+    user_update_query1 = (
+        "UPDATE user SET num_followings = num_followings + 1 "
+        "WHERE user_id = ?")
+    twitter.pl_utils._execute_many_db_command(user_update_query1,
+                                              user_update1,
+                                              commit=True)
 
-    if not (agent_info["following_count"].empty
-            and agent_info["followers_count"].empty):
-        user_update_query1 = (
-            "UPDATE user SET num_followings = num_followings + 1 "
-            "WHERE user_id = ?")
-        twitter.pl_utils._execute_many_db_command(user_update_query1,
-                                                  user_update1,
-                                                  commit=True)
-
-        user_update_query2 = (
-            "UPDATE user SET num_followers = num_followers + 1 "
-            "WHERE user_id = ?")
-        twitter.pl_utils._execute_many_db_command(user_update_query2,
-                                                  user_update2,
-                                                  commit=True)
+    user_update_query2 = ("UPDATE user SET num_followers = num_followers + 1 "
+                          "WHERE user_id = ?")
+    twitter.pl_utils._execute_many_db_command(user_update_query2,
+                                              user_update2,
+                                              commit=True)
 
     # generate_log.info('twitter followee update finished.')
 
@@ -215,7 +193,6 @@ async def generate_agents_100w(
     Args:
         agent_info_path (str): The file path to the agent information CSV file.
         channel (Channel): Information channel.
-        num_agents (int): Number of agents.
         action_space_prompt (str): determine the action space of agents.
         model_random_seed (int): Random seed to randomly assign model to
             each agent. (default: 42)
@@ -225,15 +202,6 @@ async def generate_agents_100w(
             class instances.
     """
     agent_info = pd.read_csv(agent_info_path)
-    mbti_types = ["INTJ", "ENTP", "INFJ", "ENFP"]
-
-    freq = list(agent_info["activity_level_frequency"])
-    all_freq = np.array([ast.literal_eval(fre) for fre in freq])
-    normalized_prob = all_freq / np.max(all_freq)
-    # Make sure probability is not too small
-    normalized_prob[normalized_prob < 0.6] += 0.1
-    normalized_prob = np.round(normalized_prob, 2)
-    prob_list: list[float] = normalized_prob.tolist()
 
     # TODO when setting 100w agents, the agentgraph class is too slow.
     # I use the list.
@@ -254,8 +222,6 @@ async def generate_agents_100w(
     _ = agent_info["following_agentid_list"].apply(ast.literal_eval)
     previous_tweets_lists = agent_info["previous_tweets"].apply(
         ast.literal_eval)
-    activity_level_frequencies = agent_info["activity_level_frequency"].apply(
-        ast.literal_eval)
     previous_tweets_lists = agent_info['previous_tweets'].apply(
         ast.literal_eval)
     following_id_lists = agent_info["following_agentid_list"].apply(
@@ -269,10 +235,6 @@ async def generate_agents_100w(
         }
         profile["other_info"]["user_profile"] = agent_info["user_char"][
             agent_id]
-        profile["other_info"]["mbti"] = random.choice(mbti_types)
-        profile['other_info'][
-            'activity_level_frequency'] = activity_level_frequencies[agent_id]
-        profile["other_info"]["active_threshold"] = prob_list[agent_id]
         # TODO if you simulate one million agents, use active threshold below.
         # profile['other_info']['active_threshold'] = [0.01] * 24
 
