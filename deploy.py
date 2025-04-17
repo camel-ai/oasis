@@ -60,8 +60,9 @@ if __name__ == "__main__":
     for i, gpu in enumerate(gpus):
         cmd = (
             f"TF_ENABLE_DEPRECATION_WARNINGS=1 "  # 启用TensorFlow的弃用功能警告
-            f"VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 "  # 允许模型支持超过默认最大长度的上下文
+            # f"VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 "  # 允许模型支持超过默认最大长度的上下文
             f"VLLM_ENFORCE_CUDA_GRAPH=1 "  # 强制使用CUDA Graph优化推理流程
+            f"VLLM_FORCE_USE_CUDA_GRAPH=1 "  # 强制使用CUDA Graph优化推理流程
             f"CUDA_VISIBLE_DEVICES={gpu} "  # 指定 GPU
             f"python3 -m "
             f"vllm.entrypoints.openai.api_server "
