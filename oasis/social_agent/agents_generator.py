@@ -89,6 +89,7 @@ async def generate_agents(
 
         user_info = UserInfo(
             name=agent_info["username"][agent_id],
+            description=agent_info["description"][agent_id],
             profile=profile,
             recsys_type=recsys_type,
         )
@@ -103,14 +104,11 @@ async def generate_agents(
         )
 
         agent_graph.add_agent(agent)
+        # TODO we should not use following_count and followers_count
+        # We should calculate the number of followings and followers based on the graph because the following situation is dynamic.
         num_followings = 0
         num_followers = 0
-        # print('agent_info["following_count"]', agent_info["following_count"])
-        if not agent_info["following_count"].empty:
-            num_followings = int(agent_info["following_count"][agent_id])
-        if not agent_info["followers_count"].empty:
-            num_followers = int(agent_info["followers_count"][agent_id])
-
+    
         sign_up_list.append((
             agent_id,
             agent_id,
@@ -154,22 +152,19 @@ async def generate_agents(
     twitter.pl_utils._execute_many_db_command(follow_insert_query,
                                               follow_list,
                                               commit=True)
+    user_update_query1 = (
+        "UPDATE user SET num_followings = num_followings + 1 "
+        "WHERE user_id = ?")
+    twitter.pl_utils._execute_many_db_command(user_update_query1,
+                                                user_update1,
+                                                commit=True)
 
-    if not (agent_info["following_count"].empty
-            and agent_info["followers_count"].empty):
-        user_update_query1 = (
-            "UPDATE user SET num_followings = num_followings + 1 "
-            "WHERE user_id = ?")
-        twitter.pl_utils._execute_many_db_command(user_update_query1,
-                                                  user_update1,
-                                                  commit=True)
-
-        user_update_query2 = (
-            "UPDATE user SET num_followers = num_followers + 1 "
-            "WHERE user_id = ?")
-        twitter.pl_utils._execute_many_db_command(user_update_query2,
-                                                  user_update2,
-                                                  commit=True)
+    user_update_query2 = (
+        "UPDATE user SET num_followers = num_followers + 1 "
+        "WHERE user_id = ?")
+    twitter.pl_utils._execute_many_db_command(user_update_query2,
+                                                user_update2,
+                                                commit=True)
 
     # generate_log.info('twitter followee update finished.')
 
@@ -250,6 +245,7 @@ async def generate_agents_100w(
 
         user_info = UserInfo(
             name=agent_info["username"][agent_id],
+            description=agent_info["description"][agent_id],
             profile=profile,
             recsys_type=recsys_type,
         )
@@ -470,6 +466,7 @@ async def generate_reddit_agents(
 
         user_info = UserInfo(
             name=agent_info[i]["username"],
+            description=agent_info[i]["bio"],
             profile=profile,
             recsys_type="reddit",
         )
