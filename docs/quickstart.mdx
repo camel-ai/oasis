@@ -1,0 +1,154 @@
+---
+title: 'Quickstart'
+description: 'Start using OASIS for social simulations in under 5 minutes'
+---
+
+## Setup your environment
+
+Learn how to set up OASIS and run your first social simulation.
+
+### Installation
+
+<AccordionGroup>
+  <Accordion icon="github" title="Clone the repository">
+    First, clone the OASIS repository to your local machine:
+    ```bash
+    git clone https://github.com/camel-ai/oasis.git
+    cd oasis
+    ```
+  </Accordion>
+  <Accordion icon="download" title="Install dependencies">
+    Install the required dependencies:
+    ```bash
+    pip install -e .
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Running simulations
+
+OASIS supports different types of LLM backends for running simulations. Choose the option that works best for your needs.
+
+### Using OpenAI API
+
+<AccordionGroup>
+  <Accordion icon="key" title="Set up your API key">
+    Add your OpenAI API key to your environment variables:
+
+    **For Bash (Linux, macOS, Git Bash on Windows):**
+    ```bash
+    export OPENAI_API_KEY=<insert your OpenAI API key>
+    export OPENAI_API_BASE_URL=<insert your OpenAI API BASE URL>  # Optional: for proxy services
+    ```
+
+    **For Windows Command Prompt:**
+    ```bash
+    set OPENAI_API_KEY=<insert your OpenAI API key>
+    set OPENAI_API_BASE_URL=<insert your OpenAI API BASE URL>  # Optional: for proxy services
+    ```
+
+    **For Windows PowerShell:**
+    ```bash
+    $env:OPENAI_API_KEY="<insert your OpenAI API key>"
+    $env:OPENAI_API_BASE_URL="<insert your OpenAI API BASE URL>"  # Optional: for proxy services
+    ```
+  </Accordion>
+  <Accordion icon="play" title="Run a Reddit simulation">
+    Execute the Reddit simulation script:
+    ```bash
+    python scripts/environment/reddit_simulation.py
+    ```
+    This will start a simulation of user interactions in a Reddit-like environment.
+  </Accordion>
+</AccordionGroup>
+
+### Using local open-source models with VLLM
+
+<AccordionGroup>
+  <Accordion icon="server" title="Set up VLLM">
+    1. Install VLLM by following the instructions in the [VLLM repository](https://github.com/vllm-project/vllm)
+    
+    2. Download a model (e.g., Qwen 2.5) to your local machine:
+    ```bash
+    pip install huggingface_hub
+    
+    huggingface-cli download --resume-download "Qwen/Qwen2.5-7B-Instruct" \
+      --local-dir "YOUR_LOCAL_MODEL_DIRECTORY" \
+      --local-dir-use-symlinks False \
+      --resume-download \
+      --token "YOUR_HUGGING_FACE_TOKEN"
+    ```
+    
+    3. Deploy the VLLM API server:
+    ```bash
+    vllm serve /path/to/Qwen2.5-7B-Instruct --host 0.0.0.0 --port 8000 \
+      --served-model-name 'qwen-2' \
+      --enable-auto-tool-choice \
+      --tool-call-parser hermes
+    ```
+    
+    4. Test if VLLM is correctly deployed:
+    ```bash
+    curl http://$ip:$port/v1/models
+    ```
+  </Accordion>
+  <Accordion icon="play" title="Run a Twitter simulation with local models">
+    1. Edit the `scripts/environment/twitter_simulation.py` file to use your VLLM deployment:
+    ```python
+    vllm_model_1 = ModelFactory.create(
+        model_platform=ModelPlatformType.VLLM,
+        model_type="qwen-2",
+        url="http://$ip:$port",
+    )
+    vllm_model_2 = ModelFactory.create(
+        model_platform=ModelPlatformType.VLLM,
+        model_type="qwen-2",
+        url="http://$ip:$port",
+    )
+    models = [vllm_model_1, vllm_model_2]
+    ```
+    
+    2. Run the Twitter simulation:
+    ```bash
+    python scripts/environment/twitter_simulation.py
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+Now that you've run your first simulation, explore more of what OASIS has to offer:
+
+<CardGroup>
+  <Card
+    title="Tutorials"
+    icon="book-open"
+    href="https://github.com/camel-ai/oasis/tree/main/tutorials"
+  >
+    Learn how to create custom user profiles and configure simulation parameters
+  </Card>
+
+  <Card
+    title="Advanced Configuration"
+    icon="sliders"
+    href="https://oasis.camel-ai.org"
+  >
+    Discover how to customize recommendation algorithms and agent behaviors
+  </Card>
+
+  <Card
+    title="API Reference"
+    icon="code"
+    href="https://oasis.camel-ai.org"
+  >
+    Explore the full OASIS API for building custom simulations
+  </Card>
+
+  <Card
+    title="Community"
+    icon="users"
+    href="https://github.com/camel-ai/oasis#-community--contact"
+  >
+    Join our Discord and WeChat groups to connect with other OASIS users
+  </Card>
+</CardGroup>

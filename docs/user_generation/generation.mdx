@@ -1,0 +1,38 @@
+# User Generation
+
+The first step in using OASIS is to generate user data. This section provides a detailed overview of how user data should be prepared for simulation.
+
+## Data Format
+
+Currently, OASIS stores user data in CSV files. Each user (agent) in the simulation requires the following information:
+
+| Field | Description |
+|-------|-------------|
+| **user_id** | A unique identifier assigned to each agent |
+| **name** | The real name of the agent |
+| **username** | The username of the agent within the system |
+| **created_at** | The registration timestamp of the agent on the platform (agents will perform a sign-up action at the start of the simulation) |
+| **following_agentid_list** | A list containing the IDs of other agents this user follows |
+| **previous_tweets** | Initial tweets from the user, which are injected into the environment during simulation |
+| **user_char** | A brief self-description of the agent (included in the agent's system prompt to establish an initial identity) |
+| **description** | Similar to `user_char`, serving as the agent's self-description |
+
+## Example CSV Format
+
+| user_id | name | username | following_agentid_list | previous_tweets | user_char | description |
+|---------|------|----------|------------------------|-----------------|-----------|-------------|
+| 14529063 | user_9 | user9 | [32] | ["hello world"] | Beach bum, web developer, nerd 🤓, crocheter, avid reader 📚, a singer in the shower, a notorious heart breaker. I blog about books @ https://t.co/JjnKtEnq4R | Beach bum, web developer, nerd 🤓, crocheter, avid reader 📚, a singer in the shower, a notorious heart breaker. I blog about books @ https://t.co/JjnKtEnq4R |
+
+## Preparing User Data
+
+When preparing user data for OASIS, consider the following:
+
+1. **Diverse Personalities**: Create agents with varied interests, opinions, and communication styles to simulate realistic social dynamics.
+
+2. **Realistic Social Connections**: The `following_agentid_list` should reflect plausible social networks based on shared interests or characteristics.
+
+3. **Initial Content**: `previous_tweets` help establish the agent's voice and interests from the beginning of the simulation.
+
+4. **Consistent Identity**: Ensure that `user_char` and `description` align with the agent's intended personality and behavior in the simulation.
+
+In the next sections, we'll explore how to use this user data to configure and run simulations in OASIS.
