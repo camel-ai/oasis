@@ -30,28 +30,13 @@
             "group": "Environment Settings",
             "pages": [
               "environment_settings/basic_settings",
-              "environment_settings/recommendation_settings",
-              "environment_settings/simulation_settings"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "API Documentation",
-            "pages": [
-              "api-reference/introduction"
+              "environment_settings/recommendation_settings"
             ]
           },
           {
-            "group": "Endpoint Examples",
+            "group": "Simulation Settings",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "simulation_settings/simulation_settings"
             ]
           }
         ]
