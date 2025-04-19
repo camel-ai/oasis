@@ -1,0 +1,148 @@
+---
+title: 'Basic Environment Settings'
+description: 'Configure the fundamental settings for your OASIS simulation environment'
+---
+
+# Basic Environment Settings
+
+OASIS provides a powerful simulation environment for social media platforms. This guide covers the basic configuration options for setting up your simulation environment.
+
+## Environment Initialization
+
+To create a simulation environment, use the `make` function from OASIS:
+
+```python
+import oasis
+from oasis import DefaultPlatformType
+
+env = oasis.make(
+    platform=DefaultPlatformType.TWITTER,  # or DefaultPlatformType.REDDIT
+    database_path="./data/simulation.db",
+    agent_profile_path="./data/profiles/users.csv",
+    agent_models=models,
+    available_actions=available_actions,
+)
+```
+
+## Core Environment Parameters
+
+When initializing the OASIS environment, you can configure the following core parameters:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `platform` | `DefaultPlatformType` or `Platform` | The platform type to use (`TWITTER` or `REDDIT`) or a custom `Platform` instance |
+| `database_path` | `str` | Path to create a SQLite database (must end with `.db`) |
+| `agent_profile_path` | `str` | Path to agent profiles data |
+| `agent_models` | `BaseModelBackend` or `List[BaseModelBackend]` | Model backend(s) for agent responses |
+| `available_actions` | `list[ActionType]` | List of allowed actions for agents |
+| `semaphore` | `int` | Limit on concurrent LLM requests (default: 128) |
+
+## Platform Types
+
+OASIS supports two built-in platform types, which can be specified during environment creation:
+
+### Twitter-like Platform
+
+```python
+env = oasis.make(
+    platform=DefaultPlatformType.TWITTER,
+    database_path="./data/twitter_simulation.db",
+    agent_profile_path="./data/profiles/twitter_users.csv",
+    agent_models=models,
+    available_actions=available_actions,
+)
+```
+
+The Twitter-like platform simulates a microblogging service with features like posts, likes, retweets, and following.
+
+### Reddit-like Platform
+
+```python
+env = oasis.make(
+    platform=DefaultPlatformType.REDDIT,
+    database_path="./data/reddit_simulation.db",
+    agent_profile_path="./data/profiles/reddit_users.json",
+    agent_models=models,
+    available_actions=available_actions,
+)
+```
+
+The Reddit-like platform simulates a forum-based discussion site with posts, comments, upvotes, and downvotes.
+
+## Available Actions
+
+When configuring your environment, you can specify which actions are available to agents using the `ActionType` enum:
+
+```python
+from oasis import ActionType
+
+available_actions = [
+    ActionType.CREATE_POST,
+    ActionType.LIKE_POST,
+    ActionType.REPOST,
+    ActionType.FOLLOW,
+    ActionType.DO_NOTHING,
+    # Add more as needed
+]
+```
+
+Common action types include:
+
+| Action Type | Description |
+|-------------|-------------|
+| `CREATE_POST` | Create a new post |
+| `LIKE_POST` | Like a post |
+| `DISLIKE_POST` | Dislike a post (downvote) |
+| `FOLLOW` | Follow another user |
+| `REPOST` | Repost content (retweet) |
+| `QUOTE_POST` | Quote a post with additional content |
+| `CREATE_COMMENT` | Create a comment on a post |
+| `SEARCH_POSTS` | Search for posts |
+| `SEARCH_USER` | Search for users |
+| `TREND` | Get trending content |
+| `REFRESH` | Refresh the timeline |
+| `DO_NOTHING` | Do nothing (pass) |
+
+## Environment Lifecycle
+
+The OASIS environment has a simple lifecycle you can manage with these methods:
+
+```python
+# Initialize the environment
+await env.reset()
+
+# Run simulation steps
+await env.step(env_actions)
+
+# Close the environment when done
+await env.close()
+```
+
+## Environment Actions
+
+You can intervene in the simulation using `EnvAction` and `SingleAction`:
+
+```python
+from oasis import EnvAction, SingleAction, ActionType
+
+# Create an action for a specific agent
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.CREATE_POST,
+    args={"content": "Hello, OASIS world!"}
+)
+
+# Create an environment action to activate agents and include interventions
+env_action = EnvAction(
+    activate_agents=[0, 1, 2, 3],  # List of agent IDs to activate
+    intervention=[action]  # List of interventions
+)
+
+# Step the environment with the action
+await env.step(env_action)
+```
+
+## Next Steps
+
+- Learn about [Recommendation Settings](/environment_settings/recommendation_settings) to configure how content is recommended to agents
+- Explore [Simulation Settings](/environment_settings/simulation_settings) for advanced simulation configuration 

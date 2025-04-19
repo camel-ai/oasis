@@ -1,11 +1,11 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "OASIS",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#6D28D9",
+    "light": "#A78BFA",
+    "dark": "#4C1D95"
   },
   "favicon": "/favicon.svg",
   "navigation": {
@@ -24,6 +24,14 @@
             "group": "User Generation",
             "pages": [
               "user_generation/generation"
+            ]
+          },
+          {
+            "group": "Environment Settings",
+            "pages": [
+              "environment_settings/basic_settings",
+              "environment_settings/recommendation_settings",
+              "environment_settings/simulation_settings"
             ]
           }
         ]
