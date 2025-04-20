@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
+<config>
+    <module name="network">
+        <param name="inputNetworkFile" value="example_network.xml" />
+    </module>
+
+    <module name="plans">
+        <param name="inputPlansFile" value="example_plans.xml" />
+    </module>
+
+    <module name="controler">
+        <param name="outputDirectory" value="./output" />
+        <param name="firstIteration" value="0" />
+        <param name="lastIteration" value="10" />
+        <param name="writeEventsInterval" value="1" />
+        <param name="writePlansInterval" value="1" />
+    </module>
+
+    <module name="qsim">
+        <param name="startTime" value="00:00:00" />
+        <param name="endTime" value="30:00:00" />
+        <param name="flowCapacityFactor" value="1.0" />
+        <param name="storageCapacityFactor" value="1.0" />
+        <param name="numberOfThreads" value="4" />
+        <param name="snapshotStyle" value="queue" />
+    </module>
+
+    <module name="planCalcScore">
+        <!-- Scoring parameters for activities -->
+        <parameterset type="activityParams">
+            <param name="activityType" value="home" />
+            <param name="typicalDuration" value="12:00:00" />
+            <param name="minimalDuration" value="08:00:00" />
+        </parameterset>
+        <parameterset type="activityParams">
+            <param name="activityType" value="work" />
+            <param name="typicalDuration" value="08:00:00" />
+            <param name="minimalDuration" value="06:00:00" />
+            <param name="openingTime" value="07:00:00" />
+            <param name="latestStartTime" value="09:00:00" />
+            <param name="earliestEndTime" value="16:00:00" />
+            <param name="closingTime" value="18:00:00" />
+        </parameterset>
+        <parameterset type="activityParams">
+            <param name="activityType" value="shopping" />
+            <param name="typicalDuration" value="01:00:00" />
+            <param name="openingTime" value="08:00:00" />
+            <param name="closingTime" value="20:00:00" />
+        </parameterset>
+
+        <!-- Scoring parameters for traveling -->
+        <parameterset type="modeParams">
+            <param name="mode" value="car" />
+            <param name="marginalUtilityOfTraveling_util_hr" value="-6.0" />
+            <param name="monetaryDistanceRate" value="-0.0002" />
+        </parameterset>
+    </module>
+
+    <module name="strategy">
+        <param name="maxAgentPlanMemorySize" value="5" />
+        
+        <!-- Strategy modules configuration -->
+        <parameterset type="strategysettings">
+            <param name="strategyName" value="BestScore" />
+            <param name="weight" value="0.7" />
+        </parameterset>
+        <parameterset type="strategysettings">
+            <param name="strategyName" value="ReRoute" />
+            <param name="weight" value="0.1" />
+        </parameterset>
+        <parameterset type="strategysettings">
+            <param name="strategyName" value="TimeAllocationMutator" />
+            <param name="weight" value="0.1" />
+        </parameterset>
+        <parameterset type="strategysettings">
+            <param name="strategyName" value="ChangeExpBeta" />
+            <param name="weight" value="0.1" />
+        </parameterset>
+    </module>
+</config>
