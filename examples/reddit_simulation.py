@@ -83,9 +83,6 @@ async def main():
     # Close the environment
     await env.close()
 
-    # Print the results
-    # print_db_contents(db_path)
-
 
 if __name__ == "__main__":
     asyncio.run(main())

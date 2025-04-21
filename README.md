@@ -155,7 +155,7 @@ async def main():
   # Make the environment
   env = oasis.make(
       platform=oasis.DefaultPlatformType.REDDIT,
-      database_path="./data/reddit_simulation.db",
+      database_path="reddit_simulation.db",
       agent_profile_path="./data/reddit/user_data_36.json",
       agent_models=openai_model,
       available_actions=available_actions,

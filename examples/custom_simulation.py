@@ -15,26 +15,20 @@ import asyncio
 import os
 
 from camel.models import ModelFactory
-from camel.types import ModelPlatformType
+from camel.types import ModelPlatformType, ModelType
 
 import oasis
-from oasis import ActionType, EnvAction, SingleAction
+from oasis import ActionType, EnvAction, Platform, SingleAction
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.typing import RecsysType
 
 
 async def main():
-    # Define the models for agents. Agents will select models based on
-    # pre-defined scheduling strategies
-    vllm_model_1 = ModelFactory.create(
-        model_platform=ModelPlatformType.VLLM,
-        model_type="qwen-2",
-        url="http://127.0.0.1:8001",
+    # Define the models for agents.
+    models = ModelFactory.create(
+        model_platform=ModelPlatformType.OPENAI,
+        model_type=ModelType.GPT_4O_MINI,
     )
-    vllm_model_2 = ModelFactory.create(
-        model_platform=ModelPlatformType.VLLM,
-        model_type="qwen-2",
-        url="http://127.0.0.1:8002",
-    )
-    models = [vllm_model_1, vllm_model_2]
 
     # Define the available actions for the agents
     available_actions = [
@@ -43,7 +37,6 @@ async def main():
         ActionType.REPOST,
         ActionType.FOLLOW,
         ActionType.DO_NOTHING,
-        ActionType.QUOTE_POST,
     ]
 
     # Define the path to the database
@@ -53,10 +46,19 @@ async def main():
     if os.path.exists(db_path):
         os.remove(db_path)
 
+    channel = Channel()
+    customize_platform = Platform(
+        db_path=db_path,
+        channel=channel,
+        recsys_type=RecsysType.TWHIN,
+        allow_self_rating=False,  # Not allow agents to rate themselves
+        show_score=True,  # Show the scores of posts for agents, instead of
+        # only showing the number of likes and dislikes
+    )
+
     # Make the environment
     env = oasis.make(
-        platform=oasis.DefaultPlatformType.TWITTER,
-        database_path=db_path,
+        platform=customize_platform,
         agent_profile_path=("data/twitter_dataset/anonymous_topic_200_1h/"
                             "False_Business_0.csv"),
         agent_models=models,
@@ -80,25 +82,19 @@ async def main():
     env_actions_2 = EnvAction(activate_agents=[2, 4, 6, 8, 10],
                               intervention=[action_2])
 
-    empty_action = EnvAction()  # Means activate all agents and no intervention
-
     all_env_actions = [
         env_actions_1,
         env_actions_2,
-        empty_action,
     ]
 
-    # Simulate 3 timesteps
-    for i in range(3):
+    # Simulate 2 timesteps
+    for i in range(2):
         env_actions = all_env_actions[i]
         # Perform the actions
         await env.step(env_actions)
 
     # Close the environment
     await env.close()
-
-    # Print the results
-    # print_db_contents(db_path)
 
 
 if __name__ == "__main__":
