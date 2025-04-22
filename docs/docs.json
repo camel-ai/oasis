@@ -27,16 +27,20 @@
             ]
           },
           {
-            "group": "Environment Settings",
+            "group": "Key Modules",
             "pages": [
-              "environment_settings/basic_settings",
-              "environment_settings/recommendation_settings"
+              "key_modules/environments",
+              "key_modules/actions",
+              "key_modules/models",
+              "key_modules/recommendation_systems",
+              "key_modules/simulation"
             ]
           },
           {
-            "group": "Simulation Settings",
+            "group": "Cookbooks",
             "pages": [
-              "simulation_settings/simulation_settings"
+              "cookbooks/twitter_simulation",
+              "cookbooks/reddit_simulation"
             ]
           }
         ]
