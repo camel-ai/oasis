@@ -13,6 +13,8 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import asyncio
 import logging
+import os
+from datetime import datetime
 from typing import List, Optional, Union
 
 from camel.models import BaseModelBackend
@@ -25,8 +27,23 @@ from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import (ActionType, DefaultPlatformType,
                                           RecsysType)
 
+# Create log directory if it doesn't exist
+log_dir = "./log"
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+# Configure logger
 env_log = logging.getLogger("oasis.env")
-env_log.setLevel("DEBUG")
+env_log.setLevel("INFO")
+
+# Add file handler to save logs to file
+current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+file_handler = logging.FileHandler(f"{log_dir}/oasis-{current_time}.log",
+                                   encoding="utf-8")
+file_handler.setLevel("INFO")
+file_handler.setFormatter(
+    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+env_log.addHandler(file_handler)
 
 
 class OasisEnv:
