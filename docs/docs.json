@@ -37,10 +37,14 @@
             "pages": [
               "key_modules/environments",
               "key_modules/actions",
-              "key_modules/models",
               "key_modules/platform",
-              "key_modules/recommendation_system",
-              "key_modules/simulation"
+              "key_modules/recommendation_system"
+            ]
+          },
+          {
+            "group": "Simulation",
+            "pages": [
+              "simulation/simulation"
             ]
           },
           {
@@ -48,6 +52,12 @@
             "pages": [
               "cookbooks/twitter_simulation",
               "cookbooks/reddit_simulation"
+            ]
+          },
+          {
+            "group": "Visualization",
+            "pages": [
+              "visualization/visualization"
             ]
           }
         ]
