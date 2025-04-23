@@ -24,7 +24,7 @@ env = oasis.make(
 )
 ```
 
-## Core Environment Parameters
+### Core Environment Parameters
 
 When initializing the OASIS environment, you can configure the following core parameters:
 
@@ -37,71 +37,6 @@ When initializing the OASIS environment, you can configure the following core pa
 | `available_actions` | `list[ActionType]` | List of allowed actions for agents |
 | `semaphore` | `int` | Limit on concurrent LLM requests (default: 128) |
 
-## Platform Types
-
-OASIS supports two built-in platform types, which can be specified during environment creation:
-
-### Twitter-like Platform
-
-```python
-env = oasis.make(
-    platform=DefaultPlatformType.TWITTER,
-    database_path="./data/twitter_simulation.db",
-    agent_profile_path="./data/profiles/twitter_users.csv",
-    agent_models=models,
-    available_actions=available_actions,
-)
-```
-
-The Twitter-like platform simulates a microblogging service with features like posts, likes, retweets, and following.
-
-### Reddit-like Platform
-
-```python
-env = oasis.make(
-    platform=DefaultPlatformType.REDDIT,
-    database_path="./data/reddit_simulation.db",
-    agent_profile_path="./data/profiles/reddit_users.json",
-    agent_models=models,
-    available_actions=available_actions,
-)
-```
-
-The Reddit-like platform simulates a forum-based discussion site with posts, comments, upvotes, and downvotes.
-
-## Available Actions
-
-When configuring your environment, you can specify which actions are available to agents using the `ActionType` enum:
-
-```python
-from oasis import ActionType
-
-available_actions = [
-    ActionType.CREATE_POST,
-    ActionType.LIKE_POST,
-    ActionType.REPOST,
-    ActionType.FOLLOW,
-    ActionType.DO_NOTHING,
-    # Add more as needed
-]
-```
-
-Common action types include:
-
-| Action Type | Description |
-|-------------|-------------|
-| `CREATE_POST` | Create a new post |
-| `LIKE_POST` | Like a post |
-| `DISLIKE_POST` | Dislike a post (downvote) |
-| `FOLLOW` | Follow another user |
-| `REPOST` | Repost content (retweet) |
-| `QUOTE_POST` | Quote a post with additional content |
-| `CREATE_COMMENT` | Create a comment on a post |
-| `SEARCH_POSTS` | Search for posts |
-| `SEARCH_USER` | Search for users |
-| `TREND` | Get trending content |
-| `REFRESH` | Refresh the timeline |
-| `DO_NOTHING` | Do nothing (pass) |
 
 ## Environment Lifecycle
 
@@ -112,7 +47,8 @@ The OASIS environment has a simple lifecycle you can manage with these methods:
 await env.reset()
 
 # Run simulation steps
-await env.step(env_actions)
+for _ in range(n):
+    await env.step(env_actions)
 
 # Close the environment when done
 await env.close()
@@ -120,7 +56,10 @@ await env.close()
 
 ## Environment Actions
 
-You can intervene in the simulation using `EnvAction` and `SingleAction`:
+Got it! Here's a more concise version:
+
+The environment update through the `step` method, which uses `EnvAction`. 
+`EnvAction` includes a list of activated agent IDs and predefined `SingleAction` interventions. During the step, interventions are applied, the recommendation system cache is refreshed, and activated agents perform actions based on LLMs.
 
 ```python
 from oasis import EnvAction, SingleAction, ActionType
@@ -142,7 +81,4 @@ env_action = EnvAction(
 await env.step(env_action)
 ```
 
-## Next Steps
-
-- Learn about [Recommendation Settings](/environment_settings/recommendation_settings) to configure how content is recommended to agents
-- Explore [Simulation Settings](/environment_settings/simulation_settings) for advanced simulation configuration 
+For more action details, see [Actions Module](key_modules/actions)

@@ -8,25 +8,19 @@ description: 'Start using OASIS for social simulations in under 5 minutes'
 Learn how to set up OASIS and run your first social simulation.
 
 ### Installation
+You can install OASIS in two ways:
 
 <AccordionGroup>
-  <Accordion icon="github" title="Clone the repository">
-    You can install OASIS in two ways:
-    
-    Option 1: Clone the repository
-    ```bash
-    git clone https://github.com/camel-ai/oasis.git
-    cd oasis
-    ```
-    
-    Option 2: Install via pip
+  <Accordion icon="download" title="Option 1: Install via pip">
     ```bash
     pip install camel-oasis
     ```
   </Accordion>
-  <Accordion icon="download" title="Install dependencies">
-    Install the required dependencies:
+  <Accordion icon="github" title="Option 2: Clone the repository">
     ```bash
+    git clone https://github.com/camel-ai/oasis.git
+    cd oasis
+
     pip install --upgrade pip setuptools
     pip install -e . # This will install dependencies as specified in pyproject.toml
     ```
@@ -60,6 +54,9 @@ OASIS supports different types of LLM backends for running simulations. Choose t
     $env:OPENAI_API_KEY="<insert your OpenAI API key>"
     $env:OPENAI_API_BASE_URL="<insert your OpenAI API BASE URL>"  # Optional: for proxy services
     ```
+  </Accordion>
+  <Accordion icon="face-smile" title="Prepare the user profiles">
+    If you install with `pip`, download [this file](https://github.com/camel-ai/oasis/blob/main/data/reddit/user_data_36.json) to your own `./data/reddit/user_data_36.json` directory.
   </Accordion>
   <Accordion icon="play" title="Run a Reddit simulation">
     Execute the Reddit simulation script:
@@ -115,8 +112,9 @@ OASIS supports different types of LLM backends for running simulations. Choose t
     )
     models = [vllm_model_1, vllm_model_2]
     ```
-    
-    2. Run the Twitter simulation:
+    2. Prepare the user profiles:
+    If you install with `pip`, download [this file](https://github.com/camel-ai/oasis/blob/refactor/data/twitter_dataset/anonymous_topic_200_1h/False_Business_0.csv) to your own `data/twitter_dataset/anonymous_topic_200_1h/False_Business_0.csv` directory.
+    3. Run the Twitter simulation:
     ```bash
     python scripts/environment/twitter_simulation.py
     ```

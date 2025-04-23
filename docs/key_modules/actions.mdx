@@ -7,7 +7,7 @@ description: 'Comprehensive guide to all available actions in the OASIS simulati
 
 Actions are the core interaction mechanisms available to agents in an OASIS simulation. This guide provides detailed information about all available actions and how to configure them in your simulation environment.
 
-## Available Actions
+## Available `ActionType`
 
 When configuring your OASIS environment, you can specify which actions are available to agents using the `ActionType` enum. These actions determine what your simulated users can do within the platform.
 
@@ -28,68 +28,53 @@ available_actions = [
 
 OASIS provides a comprehensive set of actions that simulate real social media behaviors:
 
-| Action Type | Description | Platform Compatibility |
-|-------------|-------------|------------------------|
-| `SIGNUP` | Register a new user with username, name, and bio | All platforms |
-| `CREATE_POST` | Create a new post with text content | All platforms |
-| `LIKE_POST` | Like or upvote a post | All platforms |
-| `UNLIKE_POST` | Remove a like from a previously liked post | All platforms |
-| `DISLIKE_POST` | Dislike or downvote a post | Reddit-like platforms |
-| `UNDO_DISLIKE_POST` | Remove a dislike from a previously disliked post | Reddit-like platforms |
-| `REPOST` | Repost content without modification (equivalent to retweet) | Twitter-like platforms |
-| `QUOTE_POST` | Repost with additional commentary | Twitter-like platforms |
-| `CREATE_COMMENT` | Create a comment on a post | All platforms |
-| `LIKE_COMMENT` | Like a comment | All platforms |
-| `UNLIKE_COMMENT` | Remove a like from a previously liked comment | All platforms |
-| `DISLIKE_COMMENT` | Dislike a comment | Reddit-like platforms |
-| `UNDO_DISLIKE_COMMENT` | Remove a dislike from a previously disliked comment | Reddit-like platforms |
-| `FOLLOW` | Follow another user | All platforms |
-| `UNFOLLOW` | Unfollow a previously followed user | All platforms |
-| `MUTE` | Mute another user (hide their content without unfollowing) | Twitter-like platforms |
-| `UNMUTE` | Unmute a previously muted user | Twitter-like platforms |
-| `SEARCH_POSTS` | Search for posts by keywords, post ID, or user ID | All platforms |
-| `SEARCH_USER` | Search for users by username, name, bio, or user ID | All platforms |
-| `TREND` | Get trending content based on popularity metrics | All platforms |
-| `REFRESH` | Refresh the timeline to get recommended posts | All platforms |
-| `DO_NOTHING` | Perform no action (pass the turn) | All platforms |
-| `PURCHASE_PRODUCT` | Purchase a product (for e-commerce simulations) | E-commerce platforms |
+| Action Type | Description |
+|-------------|-------------|
+| `SIGNUP` | Register a new user with username, name, and bio |
+| `CREATE_POST` | Create a new post with text content |
+| `LIKE_POST` | Like or upvote a post | 
+| `UNLIKE_POST` | Remove a like from a previously liked post |
+| `DISLIKE_POST` | Dislike or downvote a post | 
+| `UNDO_DISLIKE_POST` | Remove a dislike from a previously disliked post | 
+| `REPOST` | Repost content without modification (equivalent to retweet) | 
+| `QUOTE_POST` | Repost with additional commentary | 
+| `CREATE_COMMENT` | Create a comment on a post | 
+| `LIKE_COMMENT` | Like a comment | 
+| `UNLIKE_COMMENT` | Remove a like from a previously liked comment | 
+| `DISLIKE_COMMENT` | Dislike a comment | 
+| `UNDO_DISLIKE_COMMENT` | Remove a dislike from a previously disliked comment |
+| `FOLLOW` | Follow another user | 
+| `UNFOLLOW` | Unfollow a previously followed user | 
+| `MUTE` | Mute another user (hide their content without unfollowing) | 
+| `UNMUTE` | Unmute a previously muted user | 
+| `SEARCH_POSTS` | Search for posts by keywords, post ID, or user ID | 
+| `SEARCH_USER` | Search for users by username, name, bio, or user ID | 
+| `TREND` | Get trending content based on popularity metrics | 
+| `REFRESH` | Refresh the timeline to get recommended posts | 
+| `DO_NOTHING` | Perform no action (pass the turn) | 
+| `PURCHASE_PRODUCT` | Purchase a product (for e-commerce simulations) | 
 
-## Implementing Custom Actions
 
-For advanced simulations, you can extend the available actions by implementing custom action types. This requires creating a custom Platform class that supports your new actions.
+## `SingleAction`
+`SingleAction` is used to predefine specific actions for interventions in the environment. It includes the agent ID to specify which agent performs the action, the action type, and the corresponding arguments.
+Different actions require different parameters when used. 
 
 ```python
-from oasis import ActionType, Platform
-from enum import Enum, auto
+@dataclass
+class SingleAction:
+    agent_id: int
+    action: ActionType
+    args: Dict[str, Any]
+    r"""Some predefined social platform actions that need to be executed by
+    certain agents.
 
-# Define custom action types
-class MyActionType(Enum):
-    CUSTOM_ACTION = auto()
-    
-# Create a custom platform with extended actions
-class MyPlatform(Platform):
-    def __init__(self):
-        super().__init__()
-        # Register handler for custom action
-        self.register_action_handler(MyActionType.CUSTOM_ACTION, self.handle_custom_action)
-    
-    async def handle_custom_action(self, agent_id, **kwargs):
-        # Implementation of custom action
-        pass
+    Args:
+        agent_id: The ID of the agent that will perform the action.
+        action: The action to perform.
+        args: The arguments to pass to the action.
+    """
 ```
-
-## Action Parameters
-
-Different actions require different parameters when used. Here are the parameters for each action type:
-
-### SIGNUP
-```python
-action = SingleAction(
-    agent_id=0,
-    action=ActionType.SIGNUP,
-    args={"user_name": "johndoe", "name": "John Doe", "bio": "AI enthusiast and developer"}
-)
-```
+Here are the parameters for each action type:
 
 ### CREATE_POST
 ```python
@@ -289,26 +274,23 @@ action = SingleAction(
 )
 ```
 
-## Action Response Format
+## `EnvAction`
 
-Each action returns a response with a standard format:
-
+To step the environment, `EnvStep` contains all necessary information, including a list of `SingleAction`s and a list of active agent IDs. When the environment executes `step`, the `SingleAction`s are performed, the recommendation system refreshes its cache, and the active agents retrieve posts with comments from the cache to perform actions via the LLM.
 ```python
-{
-    "success": True,  # Boolean indicating whether the action was successful
-    # Additional data specific to the action type
-}
+@dataclass
+class EnvAction:
+    activate_agents: List[int] | None = None
+    intervention: List[SingleAction] | None = None
+    r"""
+    Represents all actions to be performed in a single timestep within the Oasis environment.
+
+    Args:
+        activate_agents: A list of agent IDs to be activated during this timestep.
+        intervention: A list of predefined `SingleAction`s to be executed as interventions.
+    """
 ```
-
-For example:
-- Create post: `{"success": True, "post_id": 123}`
-- Like post: `{"success": True, "like_id": 456}`
-- Follow user: `{"success": True, "follow_id": 789}`
-- Search posts: `{"success": True, "posts": [{"post_id": 123, "user_id": 456, "content": "...", ...}]}`
-
-## Environment Actions and Interventions
-
-You can intervene in the simulation using the `EnvAction` and `SingleAction` classes:
+Here is an example demonstrating how to use `SingleAction`, `EnvAction`, and the environment's `step` method.
 
 ```python
 from oasis import EnvAction, SingleAction, ActionType
@@ -328,18 +310,40 @@ env_action = EnvAction(
 
 # Step the environment with the action
 await env.step(env_action)
+```You can control the simulation by sending `EnvAction` objects to the environment during each step:
+
+```python
+from oasis import EnvAction, SingleAction, ActionType
+
+# Create a custom intervention
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.CREATE_POST,
+    args={"content": "Test post for the simulation"}
+)
+
+# Create an environment action to activate specific agents
+env_action = EnvAction(
+    activate_agents=[0, 1, 2, 3, 4],  # Only these agents will be active
+    intervention=[action]              # Optional interventions
+)
+
+# Step the environment with the action
+await env.step(env_action)
 ```
 
-## Designing Realistic Action Patterns
+### Activating Agents
 
-When designing simulations, consider these tips for creating realistic agent behavior:
+You can control which agents are active during each simulation step:
 
-1. **Balance action distribution**: Real users don't post constantly; they often browse and occasionally interact
-2. **Context-aware actions**: Actions should be contextually appropriate (e.g., comments should relate to the post content)
-3. **Time-dependent patterns**: Consider implementing different action patterns based on simulated time of day
-4. **Agent personality reflection**: Different agents should have different propensities for certain actions
+- Activate specific agents: `activate_agents=[1, 3, 5, 7, 9]`
+- Activate all agents: `EnvAction()` (empty action with no parameters)
 
-## Next Steps
+### Empty Action
 
-- Return to [Basic Environment Settings](/environment_settings/basic_settings) for fundamental configuration options
-- Explore [Recommendation Settings](/environment_settings/recommendation_settings) to configure how content is recommended to agents
+To simply advance the simulation with all agents active and no interventions:
+
+```python
+empty_action = EnvAction()  # Activate all agents with no intervention
+await env.step(empty_action)
+```

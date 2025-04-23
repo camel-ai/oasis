@@ -39,11 +39,12 @@ Here's how OASIS operates in a typical simulation:
 
 2. **Simulation Cycle**:
    - For each simulation step:
-     - Active agents observe their current state (timeline, notifications)
-     - Agents decide what actions to take based on LLM reasoning
-     - The platform processes these actions and updates the environment
-     - The recommendation system refreshes content feeds
      - Time advances according to the simulation clock
+     - A subset of agents performs actions based on a predefined action list as an intervention
+     - The recommendation system refreshes content feeds
+     - Active agents observe their current state (posts with comments from the recommendation system)
+     - Active agents decide what actions to take based on LLM reasoning
+     - The platform processes these actions and updates the environment
 
 3. **Agent Decision-Making**:
    - Each agent receives an observation of their current state
@@ -78,7 +79,6 @@ OASIS provides extensive customization options:
 - **Recommendation Algorithms**: Configure how content is distributed to agents
 - **Agent Profiles**: Define diverse user demographics and personalities
 - **Available Actions**: Control which social actions agents can perform
-- **Time Settings**: Adjust the pace of the simulation
 - **Model Selection**: Use different LLM backends for agent decision-making
 
 ## Integration with LLMs

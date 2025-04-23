@@ -3,6 +3,36 @@ title: 'Platform'
 description: 'Documentation for the Oasis Social Platform module'
 ---
 
+## Platform Types
+
+OASIS supports two built-in platform types, which can be specified during environment creation:
+
+### Twitter-like Platform
+
+```python
+env = oasis.make(
+    platform=DefaultPlatformType.TWITTER,
+    database_path="./data/twitter_simulation.db",
+    agent_profile_path="./data/profiles/twitter_users.csv",
+    agent_models=models,
+    available_actions=available_actions,
+)
+```
+
+The Twitter-like platform simulates a microblogging service with features like posts, likes, retweets, and following.
+
+### Reddit-like Platform
+
+```python
+env = oasis.make(
+    platform=DefaultPlatformType.REDDIT,
+    database_path="./data/reddit_simulation.db",
+    agent_profile_path="./data/profiles/reddit_users.json",
+    agent_models=models,
+    available_actions=available_actions,
+)
+```
+
 # Social Platform
 
 The Social Platform module is a core component of Oasis that simulates a social media environment for agent interactions. It provides a complete infrastructure for social network activities, including user management, content creation, engagement metrics, recommendation systems, and user interactions.
