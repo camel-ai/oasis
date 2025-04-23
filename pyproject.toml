@@ -1,15 +1,24 @@
 [tool.poetry]
-name = "oasis"
-version = "0.0.1"
+name = "oasis-ai"
+version = "0.1.0"
+
 description = "Open Agents Social Interaction Simulations on a Large Scale"
-authors = ["TODO <TODO@gmail.com>"]
+authors = ["CAMEL-AI.org"]
 readme = "README.md"
+license = "Apache License 2.0"
 keywords = [
-    "LLM",
-    "agent",
-    "social-network",
-    "graph",
     "recommendation-system",
+    "communicative-ai",
+    "ai-societies",
+    "social-simulations",
+    "artificial-intelligence",
+    "deep-learning",
+    "multi-agent-systems",
+    "natural-language-processing",
+    "large-language-models",
+]
+packages = [
+    { include = "oasis" },
 ]
 repository = "https://github.com/camel-ai/oasis.git"
 
@@ -28,12 +37,8 @@ prance = "23.6.21.0"
 openapi-spec-validator = "0.7.1"
 slack_sdk = "3.31.0"
 neo4j = "5.23.0"
-camel-ai = "0.2.23a0"
-tenacity = "8.5.0"
-redis = "5.2.1"
-python-dotenv = "1.0.1"
-requests-oauthlib = "2.0.0"
-transformers = "4.45.2"
+camel-ai = "0.2.43"
+requests_oauthlib = "2.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

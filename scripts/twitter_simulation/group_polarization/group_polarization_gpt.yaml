@@ -1,0 +1,20 @@
+---
+data:
+  db_path: data/db/group_polarization.db
+  csv_path: data/twitter_dataset/group_polarization/197_baoshou.csv
+simulation:
+  num_timesteps: 30
+  clock_factor: 60
+  recsys_type: twhin-bert
+  available_actions:
+    - do_nothing
+    - repost
+    - like_post
+    - dislike_post
+    - follow
+    - create_comment
+    - like_comment
+    - dislike_comment
+inference:
+  model_type: gpt-4o-mini  # Name of the OpenAI model
+  is_openai_model: true  # Whether it is an OpenAI model

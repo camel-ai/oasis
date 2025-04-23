@@ -1,0 +1,110 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "OASIS",
+  "colors": {
+    "primary": "#6D28D9",
+    "light": "#A78BFA",
+    "dark": "#4C1D95"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "User Generation",
+            "pages": [
+              "user_generation/generation"
+            ]
+          },
+          {
+            "group": "Overview",
+            "pages": [
+              "overview"
+            ]
+          },
+          {
+            "group": "Key Modules",
+            "pages": [
+              "key_modules/environments",
+              "key_modules/actions",
+              "key_modules/platform",
+              "key_modules/recommendation_system"
+            ]
+          },
+          {
+            "group": "Simulation",
+            "pages": [
+              "simulation/simulation"
+            ]
+          },
+          {
+            "group": "Cookbooks",
+            "pages": [
+              "cookbooks/twitter_simulation",
+              "cookbooks/reddit_simulation"
+            ]
+          },
+          {
+            "group": "Visualization",
+            "pages": [
+              "visualization/visualization"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Documentation",
+          "href": "https://mintlify.com/docs",
+          "icon": "book-open-cover"
+        },
+        {
+          "anchor": "Community",
+          "href": "https://mintlify.com/community",
+          "icon": "slack"
+        },
+        {
+          "anchor": "Blog",
+          "href": "https://mintlify.com/blog",
+          "icon": "newspaper"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:hi@mintlify.com"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://dashboard.mintlify.com"
+    }
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/mintlify",
+      "github": "https://github.com/mintlify",
+      "linkedin": "https://linkedin.com/company/mintlify"
+    }
+  }
+}

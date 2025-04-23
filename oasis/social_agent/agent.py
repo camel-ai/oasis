@@ -14,13 +14,13 @@
 from __future__ import annotations
 
 import inspect
-import json
 import logging
 import random
 import sys
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, List, Optional, Union
 
+<<<<<<< HEAD
 from camel.agents._utils import convert_to_schema
 from camel.memories import (ChatHistoryMemory, MemoryRecord,
                             ScoreBasedContextCreator)
@@ -29,11 +29,17 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType, OpenAIBackendRole
 from camel.utils import OpenAITokenCounter
 from tenacity import retry, stop_after_attempt, wait_random_exponential
+=======
+from camel.agents import ChatAgent
+from camel.messages import BaseMessage
+from camel.models import BaseModelBackend
+>>>>>>> afb798543c7767d1495b430d99a785ceb691e64b
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
 from oasis.social_platform import Channel
 from oasis.social_platform.config import UserInfo
+from oasis.social_platform.typing import ActionType
 
 if TYPE_CHECKING:
     from oasis.social_agent import AgentGraph
@@ -41,16 +47,19 @@ if TYPE_CHECKING:
 if "sphinx" not in sys.modules:
     agent_log = logging.getLogger(name="social.agent")
     agent_log.setLevel("DEBUG")
-    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    file_handler = logging.FileHandler(f"./log/social.agent-{str(now)}.log")
-    file_handler.setLevel("DEBUG")
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
-    agent_log.addHandler(file_handler)
+
+    if not agent_log.handlers:
+        now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        file_handler = logging.FileHandler(
+            f"./log/social.agent-{str(now)}.log")
+        file_handler.setLevel("DEBUG")
+        file_handler.setFormatter(
+            logging.Formatter(
+                "%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
+        agent_log.addHandler(file_handler)
 
 
-class SocialAgent:
+class SocialAgent(ChatAgent):
     r"""Social Agent."""
 
     def __init__(
@@ -58,17 +67,16 @@ class SocialAgent:
         agent_id: int,
         user_info: UserInfo,
         twitter_channel: Channel,
-        inference_channel: Channel = None,
-        model_type: str = "llama-3",
+        model: Optional[Union[BaseModelBackend,
+                              List[BaseModelBackend]]] = None,
         agent_graph: "AgentGraph" = None,
-        action_space_prompt: str = None,
-        is_openai_model: bool = False,
+        available_actions: list[ActionType] = None,
     ):
-        self.agent_id = agent_id
+        self.social_agent_id = agent_id
         self.user_info = user_info
         self.twitter_channel = twitter_channel
-        self.infe_channel = inference_channel
         self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
+<<<<<<< HEAD
         self.model_type = model_type
         self.is_openai_model = is_openai_model
         self.language_type = "english"
@@ -99,7 +107,39 @@ class SocialAgent:
             role_name="System",
             content=self.user_info.to_system_message(
                 action_space_prompt),  # system prompt
+=======
+
+        system_message = BaseMessage.make_assistant_message(
+            role_name="system",
+            content=self.user_info.to_system_message(),  # system prompt
+>>>>>>> afb798543c7767d1495b430d99a785ceb691e64b
         )
+
+        if not available_actions:
+            agent_log.info("No available actions defined, using all actions.")
+            self.action_tools = self.env.action.get_openai_function_list()
+        else:
+            all_tools = self.env.action.get_openai_function_list()
+            all_possible_actions = [tool.func.__name__ for tool in all_tools]
+
+            for action in available_actions:
+                action_name = action.value if isinstance(
+                    action, ActionType) else action
+                if action_name not in all_possible_actions:
+                    agent_log.warning(
+                        f"Action {action_name} is not supported. Supported "
+                        f"actions are: {', '.join(all_possible_actions)}")
+            self.action_tools = [
+                tool for tool in all_tools if tool.func.__name__ in [
+                    a.value if isinstance(a, ActionType) else a
+                    for a in available_actions
+                ]
+            ]
+        super().__init__(system_message=system_message,
+                         model=model,
+                         scheduling_strategy='random_model',
+                         tools=self.action_tools,
+                         single_iteration=True)
         self.agent_graph = agent_graph
         self.test_prompt = (
             "\n"
@@ -119,13 +159,9 @@ class SocialAgent:
         env_prompt = env_prompt.replace("Chinese", self.language_type)
         user_msg = BaseMessage.make_user_message(
             role_name="User",
-            # content=(
-            #     f"Please perform social media actions after observing the "
-            #     f"platform environments. Notice that don't limit your "
-            #     f"actions for example to just like the posts. "
-            #     f"Here is your social media environment: {env_prompt}"),
             content=(
                 f"Please perform social media actions after observing the "
+<<<<<<< HEAD
                 f"platform environments. "
                 f"Notice that if you want to create some content, "
                 f"Here is your social media environment: {env_prompt}"),
@@ -319,15 +355,40 @@ Note that content should exceed {num_words_long} words.
 
             if retry == 0:
                 content = "No response."
+=======
+                f"platform environments. Notice that don't limit your "
+                f"actions for example to just like the posts. "
+                f"Here is your social media environment: {env_prompt}"))
+        try:
+            agent_log.info(
+                f"Agent {self.social_agent_id} observing environment: "
+                f"{env_prompt}")
+            response = await self.astep(user_msg)
+            for tool_call in response.info['tool_calls']:
+                action_name = tool_call.tool_name
+                args = tool_call.args
+                agent_log.info(f"Agent {self.social_agent_id} performed "
+                               f"action: {action_name} with args: {args}")
+                # Abort graph action for if 100w Agent
+                # self.perform_agent_graph_action(action_name, args)
+        except Exception as e:
+            agent_log.error(f"Agent {self.social_agent_id} error: {e}")
+>>>>>>> afb798543c7767d1495b430d99a785ceb691e64b
 
     async def perform_test(self):
         """
         doing test for all agents.
+        TODO: rewrite the function according to the ChatAgent.
         """
         # user conduct test to agent
         _ = BaseMessage.make_user_message(role_name="User",
+<<<<<<< HEAD
                                           content="You are a twitter user.")
         # TODO error occurs
+=======
+                                          content=("You are a twitter user."))
+        # Test memory should not be writed to memory.
+>>>>>>> afb798543c7767d1495b430d99a785ceb691e64b
         # self.memory.write_record(MemoryRecord(user_msg,
         #                                       OpenAIBackendRole.USER))
 
@@ -342,6 +403,7 @@ Note that content should exceed {num_words_long} words.
             "role": "user",
             "content": self.test_prompt
         }])
+<<<<<<< HEAD
         # agent_log.info(f"Agent {self.agent_id}: {openai_messages}")
 
         message_id = await self.infe_channel.write_to_receive_queue(
@@ -349,8 +411,20 @@ Note that content should exceed {num_words_long} words.
         message_id, content = await self.infe_channel.read_from_send_queue(
             message_id)
         # agent_log.info(f"Agent {self.agent_id} receive response: {content}")
+=======
+
+        agent_log.info(f"Agent {self.social_agent_id}: {openai_messages}")
+        # NOTE: this is a temporary solution.
+        # Camel can not stop updating the agents' memory after stop and astep
+        # now.
+        response = self._get_model_response(openai_messages=openai_messages,
+                                            num_tokens=num_tokens)
+        content = response.output_messages[0].content
+        agent_log.info(
+            f"Agent {self.social_agent_id} receive response: {content}")
+>>>>>>> afb798543c7767d1495b430d99a785ceb691e64b
         return {
-            "user_id": self.agent_id,
+            "user_id": self.social_agent_id,
             "prompt": openai_messages,
             "content": content
         }
@@ -360,13 +434,19 @@ Note that content should exceed {num_words_long} words.
                                     selection: int = 0) -> Any:
         # print("Please choose one function to perform:")
         function_list = self.env.action.get_openai_function_list()
+<<<<<<< HEAD
         # for i in range(len(function_list)):
         #     agent_log.info(f"Agent {self.agent_id} function: "
         #                    f"{function_list[i].func.__name__}")
+=======
+        for i in range(len(function_list)):
+            agent_log.info(f"Agent {self.social_agent_id} function: "
+                           f"{function_list[i].func.__name__}")
+>>>>>>> afb798543c7767d1495b430d99a785ceb691e64b
 
         # selection = int(input("Enter your choice: "))
         if not 0 <= selection < len(function_list):
-            agent_log.error(f"Agent {self.agent_id} invalid input.")
+            agent_log.error(f"Agent {self.social_agent_id} invalid input.")
             return
         func = function_list[selection].func
 
@@ -386,12 +466,18 @@ Note that content should exceed {num_words_long} words.
         return result
 
     async def perform_action_by_data(self, func_name, *args, **kwargs) -> Any:
+        func_name = func_name.value if isinstance(func_name,
+                                                  ActionType) else func_name
         function_list = self.env.action.get_openai_function_list()
         for i in range(len(function_list)):
             if function_list[i].func.__name__ == func_name:
                 func = function_list[i].func
                 result = await func(*args, **kwargs)
+<<<<<<< HEAD
                 # agent_log.info(f"Agent {self.agent_id}: {result}")
+=======
+                agent_log.info(f"Agent {self.social_agent_id}: {result}")
+>>>>>>> afb798543c7767d1495b430d99a785ceb691e64b
                 return result
         raise ValueError(f"Function {func_name} not found in the list.")
 
@@ -407,15 +493,17 @@ Note that content should exceed {num_words_long} words.
             followee_id: int | None = arguments.get("followee_id", None)
             if followee_id is None:
                 return
-            self.agent_graph.remove_edge(self.agent_id, followee_id)
-            agent_log.info(f"Agent {self.agent_id} unfollowed {followee_id}")
+            self.agent_graph.remove_edge(self.social_agent_id, followee_id)
+            agent_log.info(
+                f"Agent {self.social_agent_id} unfollowed Agent {followee_id}")
         elif "follow" in action_name:
             followee_id: int | None = arguments.get("followee_id", None)
             if followee_id is None:
                 return
-            self.agent_graph.add_edge(self.agent_id, followee_id)
-            agent_log.info(f"Agent {self.agent_id} followed {followee_id}")
+            self.agent_graph.add_edge(self.social_agent_id, followee_id)
+            agent_log.info(
+                f"Agent {self.social_agent_id} followed Agent {followee_id}")
 
     def __str__(self) -> str:
-        return (f"{self.__class__.__name__}(agent_id={self.agent_id}, "
+        return (f"{self.__class__.__name__}(agent_id={self.social_agent_id}, "
                 f"model_type={self.model_type.value})")

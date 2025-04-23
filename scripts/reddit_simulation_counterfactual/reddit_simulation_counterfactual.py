@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# flake8: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -19,14 +20,20 @@ import json
 import logging
 import os
 import random
+import sys
 from datetime import datetime, timedelta
 from typing import Any
 
+from camel.models import ModelFactory
+from camel.types import ModelPlatformType
 from colorama import Back
 from yaml import safe_load
 
+scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(scripts_dir)
+from utils import create_model_urls
+
 from oasis.clock.clock import Clock
-from oasis.inference.inference_manager import InferencerManager
 from oasis.social_agent.agents_generator import (gen_control_agents_with_data,
                                                  generate_reddit_agents)
 from oasis.social_platform.channel import Channel
@@ -34,6 +41,7 @@ from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
 
 social_log = logging.getLogger(name="social")
+social_log.propagate = False
 social_log.setLevel("DEBUG")
 now = datetime.now()
 file_handler = logging.FileHandler(f"./log/social-{str(now)}.log",
@@ -81,11 +89,10 @@ async def running(
     activate_prob: float = 0.1,
     follow_post_agent: bool = False,
     mute_post_agent: bool = True,
-    model_configs: dict[str, Any] | None = None,
     inference_configs: dict[str, Any] | None = None,
     init_post_score: int = 0,
     refresh_rec_post_count: int = 10,
-    action_space_file_path: str = None,
+    available_actions: list[ActionType] = None,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     user_path = DEFAULT_USER_PATH if user_path is None else user_path
@@ -96,8 +103,15 @@ async def running(
     start_time = datetime(2024, 8, 6, 8, 0)
     clock = Clock(k=clock_factor)
     twitter_channel = Channel()
-    with open(action_space_file_path, "r", encoding="utf-8") as file:
-        action_space_prompt = file.read()
+
+    model_urls = create_model_urls(inference_configs["server_url"])
+    models = [
+        ModelFactory.create(
+            model_platform=ModelPlatformType.VLLM,
+            model_type=inference_configs["model_type"],
+            url=url,
+        ) for url in model_urls
+    ]
 
     infra = Platform(
         db_path,
@@ -110,14 +124,8 @@ async def running(
         max_rec_post_len=max_rec_post_len,
         refresh_rec_post_count=refresh_rec_post_count,
     )
-    inference_channel = Channel()
-    print("inference_configs:", inference_configs)
-    infere = InferencerManager(
-        inference_channel,
-        **inference_configs,
-    )
+
     twitter_task = asyncio.create_task(infra.running())
-    inference_task = asyncio.create_task(infere.run())
 
     if not controllable_user:
         raise ValueError("Uncontrollable user is not supported")
@@ -125,16 +133,17 @@ async def running(
         agent_graph, id_mapping = await gen_control_agents_with_data(
             twitter_channel,
             2,
+            models,
         )
         agent_graph = await generate_reddit_agents(
-            user_path,
-            twitter_channel,
-            inference_channel,
-            agent_graph,
-            id_mapping,
-            follow_post_agent,
-            mute_post_agent,
-            action_space_prompt,
+            agent_info_path=user_path,
+            twitter_channel=twitter_channel,
+            agent_graph=agent_graph,
+            agent_user_id_mapping=id_mapping,
+            follow_post_agent=follow_post_agent,
+            mute_post_agent=mute_post_agent,
+            available_actions=available_actions,
+            model=models,
         )
     with open(pair_path, "r") as f:
         pairs = json.load(f)
@@ -197,8 +206,7 @@ async def running(
             social_log.info(f"clock_factor: {clock_factor}")
 
     await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
-    await infere.stop()
-    await twitter_task, inference_task
+    await twitter_task
 
     social_log.info("Simulation finish!")
 
@@ -211,14 +219,12 @@ if __name__ == "__main__":
             cfg = safe_load(f)
         data_params = cfg.get("data")
         simulation_params = cfg.get("simulation")
-        model_configs = cfg.get("model")
         inference_params = cfg.get("inference")
 
         asyncio.run(
             running(
                 **data_params,
                 **simulation_params,
-                model_configs=model_configs,
                 inference_configs=inference_params,
             ),
             debug=True,

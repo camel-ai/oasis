@@ -1,0 +1,345 @@
+---
+title: 'Actions'
+description: 'Comprehensive guide to all available actions in the OASIS simulation environment'
+---
+
+# OASIS Actions
+
+Actions are the core interaction mechanisms available to agents in an OASIS simulation. This guide provides detailed information about all available actions and how to configure them in your simulation environment.
+
+## Available Actions
+
+When configuring your OASIS environment, you can specify which actions are available to agents using the `ActionType` enum. These actions determine what your simulated users can do within the platform.
+
+```python
+from oasis import ActionType
+
+available_actions = [
+    ActionType.CREATE_POST,
+    ActionType.LIKE_POST,
+    ActionType.REPOST,
+    ActionType.FOLLOW,
+    ActionType.DO_NOTHING,
+    # Add more as needed
+]
+```
+
+## Action Types Reference
+
+OASIS provides a comprehensive set of actions that simulate real social media behaviors:
+
+| Action Type | Description | Platform Compatibility |
+|-------------|-------------|------------------------|
+| `SIGNUP` | Register a new user with username, name, and bio | All platforms |
+| `CREATE_POST` | Create a new post with text content | All platforms |
+| `LIKE_POST` | Like or upvote a post | All platforms |
+| `UNLIKE_POST` | Remove a like from a previously liked post | All platforms |
+| `DISLIKE_POST` | Dislike or downvote a post | Reddit-like platforms |
+| `UNDO_DISLIKE_POST` | Remove a dislike from a previously disliked post | Reddit-like platforms |
+| `REPOST` | Repost content without modification (equivalent to retweet) | Twitter-like platforms |
+| `QUOTE_POST` | Repost with additional commentary | Twitter-like platforms |
+| `CREATE_COMMENT` | Create a comment on a post | All platforms |
+| `LIKE_COMMENT` | Like a comment | All platforms |
+| `UNLIKE_COMMENT` | Remove a like from a previously liked comment | All platforms |
+| `DISLIKE_COMMENT` | Dislike a comment | Reddit-like platforms |
+| `UNDO_DISLIKE_COMMENT` | Remove a dislike from a previously disliked comment | Reddit-like platforms |
+| `FOLLOW` | Follow another user | All platforms |
+| `UNFOLLOW` | Unfollow a previously followed user | All platforms |
+| `MUTE` | Mute another user (hide their content without unfollowing) | Twitter-like platforms |
+| `UNMUTE` | Unmute a previously muted user | Twitter-like platforms |
+| `SEARCH_POSTS` | Search for posts by keywords, post ID, or user ID | All platforms |
+| `SEARCH_USER` | Search for users by username, name, bio, or user ID | All platforms |
+| `TREND` | Get trending content based on popularity metrics | All platforms |
+| `REFRESH` | Refresh the timeline to get recommended posts | All platforms |
+| `DO_NOTHING` | Perform no action (pass the turn) | All platforms |
+| `PURCHASE_PRODUCT` | Purchase a product (for e-commerce simulations) | E-commerce platforms |
+
+## Implementing Custom Actions
+
+For advanced simulations, you can extend the available actions by implementing custom action types. This requires creating a custom Platform class that supports your new actions.
+
+```python
+from oasis import ActionType, Platform
+from enum import Enum, auto
+
+# Define custom action types
+class MyActionType(Enum):
+    CUSTOM_ACTION = auto()
+    
+# Create a custom platform with extended actions
+class MyPlatform(Platform):
+    def __init__(self):
+        super().__init__()
+        # Register handler for custom action
+        self.register_action_handler(MyActionType.CUSTOM_ACTION, self.handle_custom_action)
+    
+    async def handle_custom_action(self, agent_id, **kwargs):
+        # Implementation of custom action
+        pass
+```
+
+## Action Parameters
+
+Different actions require different parameters when used. Here are the parameters for each action type:
+
+### SIGNUP
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.SIGNUP,
+    args={"user_name": "johndoe", "name": "John Doe", "bio": "AI enthusiast and developer"}
+)
+```
+
+### CREATE_POST
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.CREATE_POST,
+    args={"content": "Hello, OASIS world!"}
+)
+```
+
+### LIKE_POST
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.LIKE_POST,
+    args={"post_id": 123}
+)
+```
+
+### UNLIKE_POST
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.UNLIKE_POST,
+    args={"post_id": 123}
+)
+```
+
+### DISLIKE_POST
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.DISLIKE_POST,
+    args={"post_id": 123}
+)
+```
+
+### UNDO_DISLIKE_POST
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.UNDO_DISLIKE_POST,
+    args={"post_id": 123}
+)
+```
+
+### REPOST
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.REPOST,
+    args={"post_id": 123}
+)
+```
+
+### QUOTE_POST
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.QUOTE_POST,
+    args={"post_id": 123, "quote_content": "This is amazing content!"}
+)
+```
+
+### CREATE_COMMENT
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.CREATE_COMMENT,
+    args={"post_id": 123, "content": "Great post! I completely agree."}
+)
+```
+
+### LIKE_COMMENT
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.LIKE_COMMENT,
+    args={"comment_id": 456}
+)
+```
+
+### UNLIKE_COMMENT
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.UNLIKE_COMMENT,
+    args={"comment_id": 456}
+)
+```
+
+### DISLIKE_COMMENT
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.DISLIKE_COMMENT,
+    args={"comment_id": 456}
+)
+```
+
+### UNDO_DISLIKE_COMMENT
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.UNDO_DISLIKE_COMMENT,
+    args={"comment_id": 456}
+)
+```
+
+### FOLLOW
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.FOLLOW,
+    args={"followee_id": 789}
+)
+```
+
+### UNFOLLOW
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.UNFOLLOW,
+    args={"followee_id": 789}
+)
+```
+
+### MUTE
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.MUTE,
+    args={"mutee_id": 789}
+)
+```
+
+### UNMUTE
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.UNMUTE,
+    args={"mutee_id": 789}
+)
+```
+
+### SEARCH_POSTS
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.SEARCH_POSTS,
+    args={"query": "artificial intelligence"}
+)
+```
+
+### SEARCH_USER
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.SEARCH_USER,
+    args={"query": "john"}
+)
+```
+
+### TREND
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.TREND,
+    args={}
+)
+```
+
+### REFRESH
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.REFRESH,
+    args={}
+)
+```
+
+### DO_NOTHING
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.DO_NOTHING,
+    args={}
+)
+```
+
+### PURCHASE_PRODUCT
+```python
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.PURCHASE_PRODUCT,
+    args={"product_name": "Premium Subscription", "purchase_num": 1}
+)
+```
+
+## Action Response Format
+
+Each action returns a response with a standard format:
+
+```python
+{
+    "success": True,  # Boolean indicating whether the action was successful
+    # Additional data specific to the action type
+}
+```
+
+For example:
+- Create post: `{"success": True, "post_id": 123}`
+- Like post: `{"success": True, "like_id": 456}`
+- Follow user: `{"success": True, "follow_id": 789}`
+- Search posts: `{"success": True, "posts": [{"post_id": 123, "user_id": 456, "content": "...", ...}]}`
+
+## Environment Actions and Interventions
+
+You can intervene in the simulation using the `EnvAction` and `SingleAction` classes:
+
+```python
+from oasis import EnvAction, SingleAction, ActionType
+
+# Create an action for a specific agent
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.CREATE_POST,
+    args={"content": "Hello, OASIS world!"}
+)
+
+# Create an environment action to activate agents and include interventions
+env_action = EnvAction(
+    activate_agents=[0, 1, 2, 3],  # List of agent IDs to activate
+    intervention=[action]  # List of interventions
+)
+
+# Step the environment with the action
+await env.step(env_action)
+```
+
+## Designing Realistic Action Patterns
+
+When designing simulations, consider these tips for creating realistic agent behavior:
+
+1. **Balance action distribution**: Real users don't post constantly; they often browse and occasionally interact
+2. **Context-aware actions**: Actions should be contextually appropriate (e.g., comments should relate to the post content)
+3. **Time-dependent patterns**: Consider implementing different action patterns based on simulated time of day
+4. **Agent personality reflection**: Different agents should have different propensities for certain actions
+
+## Next Steps
+
+- Return to [Basic Environment Settings](/environment_settings/basic_settings) for fundamental configuration options
+- Explore [Recommendation Settings](/environment_settings/recommendation_settings) to configure how content is recommended to agents

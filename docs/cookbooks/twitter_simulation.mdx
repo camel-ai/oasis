@@ -1,0 +1,52 @@
+---
+title: 'Twitter Simulation'
+description: 'Comprehensive guide to all available actions in the OASIS simulation environment'
+---
+
+# Twitter Simulation
+
+This cookbook provides a comprehensive guide to running a Twitter simulation using OASIS.
+
+```python
+# Define the models for agents
+models = [model_1, model_2]  # LLM models
+
+# Define the available actions for the agents
+available_actions = [
+    ActionType.CREATE_POST,
+    ActionType.LIKE_POST,
+    ActionType.REPOST,
+    ActionType.FOLLOW,
+    ActionType.DO_NOTHING,
+    ActionType.QUOTE_POST,
+]
+
+# Create the environment
+env = oasis.make(
+    platform=oasis.DefaultPlatformType.TWITTER,
+    database_path="./data/twitter_simulation.db",
+    agent_profile_path="path/to/agent_profiles.csv",
+    agent_models=models,
+    available_actions=available_actions,
+)
+
+# Run the simulation
+await env.reset()  # Initialize the environment
+
+# Create interventions (like specific posts)
+action = SingleAction(
+    agent_id=0,
+    action=ActionType.CREATE_POST,
+    args={"content": "Some interesting content."}
+)
+
+# Execute actions and activate agents
+env_actions = EnvAction(
+    activate_agents=[1, 2, 3],  # Activate specific agents
+    intervention=[action]  # Add interventions
+)
+
+# Run simulation steps
+await env.step(env_actions)
+```
+

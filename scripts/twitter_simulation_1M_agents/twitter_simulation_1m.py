@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# flake8: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -18,21 +19,28 @@ import asyncio
 import logging
 import os
 import random
+import sys
 from datetime import datetime
 from typing import Any
 
 import pandas as pd
+from camel.models import ModelFactory
+from camel.types import ModelPlatformType
 from colorama import Back
 from yaml import safe_load
 
+scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(scripts_dir)
+from utils import create_model_urls
+
 from oasis.clock.clock import Clock
-from oasis.inference.inference_manager import InferencerManager
 from oasis.social_agent.agents_generator import generate_agents_100w
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
 
 social_log = logging.getLogger(name='social')
+social_log.propagate = False
 social_log.setLevel('DEBUG')
 
 file_handler = logging.FileHandler('social.log')
@@ -66,7 +74,7 @@ async def running(
     num_timesteps: int = 3,
     clock_factor: int = 60,
     recsys_type: str = "twitter",
-    model_configs: dict[str, Any] | None = None,
+    available_actions: list[ActionType] = None,
     inference_configs: dict[str, Any] | None = None,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
@@ -89,13 +97,15 @@ async def running(
                      refresh_rec_post_count=2,
                      max_rec_post_len=2,
                      following_post_count=3)
-    inference_channel = Channel()
-    infere = InferencerManager(
-        inference_channel,
-        **inference_configs,
-    )
+    model_urls = create_model_urls(inference_configs["server_url"])
+    models = [
+        ModelFactory.create(
+            model_platform=ModelPlatformType.VLLM,
+            model_type=inference_configs["model_type"],
+            url=url,
+        ) for url in model_urls
+    ]
     twitter_task = asyncio.create_task(infra.running())
-    inference_task = asyncio.create_task(infere.run())
 
     try:
         all_topic_df = pd.read_csv("data/label_clean_v7.csv")
@@ -114,20 +124,19 @@ async def running(
         print("No real-world data, let start_hour be 13")
         start_hour = 13
 
-    model_configs = model_configs or {}
     agent_graph = await generate_agents_100w(
         agent_info_path=csv_path,
         twitter_channel=twitter_channel,
-        inference_channel=inference_channel,
         start_time=start_time,
         recsys_type=recsys_type,
         twitter=infra,
-        **model_configs,
+        model=models,
+        available_actions=available_actions,
     )
     # agent_graph.visualize("initial_social_graph.png")
 
     for timestep in range(1, num_timesteps + 1):
-        os.environ["SANDBOX_TIME"] = str(timestep * 3)
+        clock.time_step = timestep * 3
         social_log.info(f"timestep:{timestep}")
         db_file = db_path.split("/")[-1]
         print(Back.GREEN + f"DB:{db_file} timestep:{timestep}" + Back.RESET)
@@ -141,7 +150,7 @@ async def running(
                 agent_ac_prob = random.random()
                 threshold = agent.user_info.profile['other_info'][
                     'active_threshold'][int(simulation_time_hour % 24)]
-                if agent.agent_id < 197:
+                if agent.social_agent_id < 197:
                     if agent_ac_prob < 0.1:
                         tasks.append(agent.perform_action_by_llm())
                 else:
@@ -154,8 +163,7 @@ async def running(
         # agent_graph.visualize(f"timestep_{timestep}_social_graph.png")
 
     await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
-    await infere.stop()
-    await twitter_task, inference_task
+    await twitter_task
 
 
 if __name__ == "__main__":
@@ -166,13 +174,11 @@ if __name__ == "__main__":
             cfg = safe_load(f)
         data_params = cfg.get("data")
         simulation_params = cfg.get("simulation")
-        model_configs = cfg.get("model")
         inference_configs = cfg.get("inference")
 
         asyncio.run(
             running(**data_params,
                     **simulation_params,
-                    model_configs=model_configs,
                     inference_configs=inference_configs))
     else:
         asyncio.run(running())

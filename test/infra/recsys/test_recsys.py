@@ -122,14 +122,13 @@ def test_rec_sys_personalized_twhin():
     expected = [["1", "2"], ["1", "2"], ["1", "2"], ["1", "2"]]
 
     reset_globals()
-    result = rec_sys_personalized_twh(
-        user_table,
-        post_table,
-        latest_post_count,
-        trace_table,
-        rec_matrix,
-        max_rec_post_len,
-    )
+    result = rec_sys_personalized_twh(user_table,
+                                      post_table,
+                                      latest_post_count,
+                                      trace_table,
+                                      rec_matrix,
+                                      max_rec_post_len,
+                                      current_time=1)
     assert result == expected
 
 
@@ -300,14 +299,13 @@ def test_rec_sys_personalized_twhin_sample_posts():
     max_rec_post_len = 2  # Maximum recommendation length set to 2
     latest_post_count = len(post_table)
     reset_globals()
-    result = rec_sys_personalized_twh(
-        user_table,
-        post_table,
-        latest_post_count,
-        trace_table,
-        rec_matrix,
-        max_rec_post_len,
-    )
+    result = rec_sys_personalized_twh(user_table,
+                                      post_table,
+                                      latest_post_count,
+                                      trace_table,
+                                      rec_matrix,
+                                      max_rec_post_len,
+                                      current_time=1)
     # Validate that each user received 2 tweet IDs
     for rec in result:
         assert len(rec) == max_rec_post_len

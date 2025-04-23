@@ -24,6 +24,7 @@ class UserInfo:
     recsys_type: str = "twitter"
     is_controllable: bool = False
 
+<<<<<<< HEAD
     def to_description(self) -> str:
         name_string = f"Your name is {self.profile['other_info']['realname']}."
         user_profile = self.profile["other_info"]["user_profile"]
@@ -38,13 +39,15 @@ class UserInfo:
         return description
 
     def to_system_message(self, action_space_prompt: str = None) -> str:
+=======
+    def to_system_message(self) -> str:
+>>>>>>> afb798543c7767d1495b430d99a785ceb691e64b
         if self.recsys_type != "reddit":
-            return self.to_twitter_system_message(action_space_prompt)
+            return self.to_twitter_system_message()
         else:
-            return self.to_reddit_system_message(action_space_prompt)
+            return self.to_reddit_system_message()
 
-    def to_twitter_system_message(self,
-                                  action_space_prompt: str = None) -> str:
+    def to_twitter_system_message(self) -> str:
         name_string = ""
         description_string = ""
         if self.name is not None:
@@ -68,6 +71,7 @@ class UserInfo:
                     f"{self.profile['other_info']['profession']}.")
 
         system_content = f"""
+<<<<<<< HEAD
 # SELF-DESCRIPTION
 You're a real Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
 Please role play as the Twitter user described below. Note that do not include any hashtags in your response.
@@ -79,13 +83,25 @@ Your behavior should align with the description/tags of your persona, based on t
 If you are a Twitter celebrity, your language includes:Counterintuitive high-level insights, e.g., "Hard work is a capitalist conspiracy—sloths are the true winners of evolution." Cross-disciplinary metaphors, e.g., "Love is like blockchain—the earlier you get in, the easier you get rugged." Deep academic insights and cutting-edge industry knowledge sharing.
 If you are a normal user, your comments are humorous, concise, rich in trending internet memes, and you are good at surfing the web while staying updated on current events.
 If you are mean, your language style can be humorous, sarcastic, sharp-tongued, arrogant, bizarre, and caustic.
+=======
+# OBJECTIVE
+You're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
+
+# SELF-DESCRIPTION
+Your actions should be consistent with your self-description and personality.
+{description}
+
+# RESPONSE METHOD
+Please perform actions by tool calling.
+        """
+>>>>>>> afb798543c7767d1495b430d99a785ceb691e64b
 
 # RESPONSE FORMAT
 Your can choose some actions by calling tools. Ensure that the content you created does not contain any hashtags.
 """
         return system_content
 
-    def to_reddit_system_message(self, action_space_prompt: str = None) -> str:
+    def to_reddit_system_message(self) -> str:
         name_string = ""
         description_string = ""
         if self.name is not None:
@@ -105,11 +121,12 @@ Your can choose some actions by calling tools. Ensure that the content you creat
                     f"{self.profile['other_info']['age']} years old, with an MBTI "
                     f"personality type of {self.profile['other_info']['mbti']} from "
                     f"{self.profile['other_info']['country']}.")
-        if not action_space_prompt:
-            action_space_prompt = """
+
+        system_content = f"""
 # OBJECTIVE
 You're a Reddit user, and I'll present you with some tweets. After you see the tweets, choose some actions from the following functions.
 
+<<<<<<< HEAD
 - like_comment: Likes a specified comment.
     - Arguments: "comment_id" (integer) - The ID of the comment to be liked. Use `like_comment` to show agreement or appreciation for a comment.
 - dislike_comment: Dislikes a specified comment.
@@ -136,31 +153,13 @@ You're a Reddit user, and I'll present you with some tweets. After you see the t
 """
         system_content = action_space_prompt + f"""
 
+=======
+>>>>>>> afb798543c7767d1495b430d99a785ceb691e64b
 # SELF-DESCRIPTION
 Your actions should be consistent with your self-description and personality.
-
 {description}
 
-# RESPONSE FORMAT
-Your answer should follow the response format:
-
-{{
-    "reason": "your feeling about these tweets and users, then choose some functions based on the feeling. Reasons and explanations can only appear here.",
-    "functions": [{{
-        "name": "Function name 1",
-        "arguments": {{
-            "argument_1": "Function argument",
-            "argument_2": "Function argument"
-        }}
-    }}, {{
-        "name": "Function name 2",
-        "arguments": {{
-            "argument_1": "Function argument",
-            "argument_2": "Function argument"
-        }}
-    }}]
-}}
-
-Ensure that your output can be directly converted into **JSON format**, and avoid outputting anything unnecessary! Don't forget the key `name`.
+# RESPONSE METHOD
+Please perform actions by tool calling.
 """
         return system_content

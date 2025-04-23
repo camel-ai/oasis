@@ -23,13 +23,13 @@ redis_url = os.getenv("REDIS_URL")
 
 redis = redis_client.from_url(redis_url)
 
-# redis.publish(
-#     "predict",
-#     json.dumps({
-#         "action": "start",
-#         "predict_id": 1000,
-#         "content": """What do you think of the llm agent in 2025?"""
-#     }),
-# )
+redis.publish(
+    "predict",
+    json.dumps({
+        "action": "start",
+        "predict_id": 1000,
+        "content": """What do you think of the llm agent in 2025?"""
+    }),
+)
 
-redis.publish("predict_new_1000", json.dumps("Do you know owl or camel? A framework can let llm agent to manipulate your computer. Can it a good idea to build a company?"))
+# redis.publish("predict_new_1000", json.dumps("Do you know owl or camel? A framework can let llm agent to manipulate your computer. Can it a good idea to build a company?"))
