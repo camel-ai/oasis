@@ -32,7 +32,7 @@
               "key_modules/environments",
               "key_modules/actions",
               "key_modules/models",
-              "key_modules/recommendation_systems",
+              "key_modules/recommendation_system",
               "key_modules/simulation"
             ]
           },
