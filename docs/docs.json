@@ -27,6 +27,12 @@
             ]
           },
           {
+            "group": "Overview",
+            "pages": [
+              "overview"
+            ]
+          },
+          {
             "group": "Key Modules",
             "pages": [
               "key_modules/environments",
