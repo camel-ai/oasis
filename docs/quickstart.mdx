@@ -11,16 +11,24 @@ Learn how to set up OASIS and run your first social simulation.
 
 <AccordionGroup>
   <Accordion icon="github" title="Clone the repository">
-    First, clone the OASIS repository to your local machine:
+    You can install OASIS in two ways:
+    
+    Option 1: Clone the repository
     ```bash
     git clone https://github.com/camel-ai/oasis.git
     cd oasis
+    ```
+    
+    Option 2: Install via pip
+    ```bash
+    pip install camel-oasis
     ```
   </Accordion>
   <Accordion icon="download" title="Install dependencies">
     Install the required dependencies:
     ```bash
-    pip install -e .
+    pip install --upgrade pip setuptools
+    pip install -e . # This will install dependencies as specified in pyproject.toml
     ```
   </Accordion>
 </AccordionGroup>
@@ -114,41 +122,3 @@ OASIS supports different types of LLM backends for running simulations. Choose t
     ```
   </Accordion>
 </AccordionGroup>
-
-## Next steps
-
-Now that you've run your first simulation, explore more of what OASIS has to offer:
-
-<CardGroup>
-  <Card
-    title="Tutorials"
-    icon="book-open"
-    href="https://github.com/camel-ai/oasis/tree/main/tutorials"
-  >
-    Learn how to create custom user profiles and configure simulation parameters
-  </Card>
-
-  <Card
-    title="Advanced Configuration"
-    icon="sliders"
-    href="https://oasis.camel-ai.org"
-  >
-    Discover how to customize recommendation algorithms and agent behaviors
-  </Card>
-
-  <Card
-    title="API Reference"
-    icon="code"
-    href="https://oasis.camel-ai.org"
-  >
-    Explore the full OASIS API for building custom simulations
-  </Card>
-
-  <Card
-    title="Community"
-    icon="users"
-    href="https://github.com/camel-ai/oasis#-community--contact"
-  >
-    Join our Discord and WeChat groups to connect with other OASIS users
-  </Card>
-</CardGroup>
