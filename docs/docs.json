@@ -32,6 +32,7 @@
               "key_modules/environments",
               "key_modules/actions",
               "key_modules/models",
+              "key_modules/platform",
               "key_modules/recommendation_system",
               "key_modules/simulation"
             ]
