@@ -192,11 +192,11 @@ if __name__ == "__main__":
 <br>
 
 > \[!TIP\]
-> For more detailed instructions and additional configuration options, check out the [installation section](tutorials/installation.md).
+> For more detailed instructions and additional configuration options, check out the documentation(coming soon).
 
 ### More Tutorials
 
-To discover how to create profiles for large-scale users, as well as how to visualize and analyze social simulation data once your experiment concludes, please refer to [More Tutorials](tutorials/tutorial.md) for detailed guidance.
+To discover how to create profiles for large-scale users, as well as how to visualize and analyze social simulation data once your experiment concludes, please refer to [More Tutorials](examples/experiment/user_generation_visualization.md) for detailed guidance.
 
 <div align="center">
   <img src="assets/tutorial.png" alt="Tutorial Overview">
