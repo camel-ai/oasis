@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import random
 import sqlite3
 import sys
@@ -31,6 +32,11 @@ from oasis.social_platform.recsys import (rec_sys_personalized_twh,
                                           rec_sys_personalized_with_trace,
                                           rec_sys_random, rec_sys_reddit)
 from oasis.social_platform.typing import ActionType, RecsysType
+
+# Create log directory if it doesn't exist
+log_dir = "./log"
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
 
 if "sphinx" not in sys.modules:
     twitter_log = logging.getLogger(name="social.twitter")
