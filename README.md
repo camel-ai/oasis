@@ -117,7 +117,11 @@ pip install camel-oasis
 2. **Set up your OpenAI API key:**
 
 ```bash
-export OPENAI_API_KEY='your_openai_api_key'
+# For Bash shell (Linux, macOS, Git Bash on Windows):
+export OPENAI_API_KEY=<insert your OpenAI API key>
+
+# For Windows Command Prompt:
+set OPENAI_API_KEY=<insert your OpenAI API key>
 ```
 
 3. **Prepare the agent profile file:**
