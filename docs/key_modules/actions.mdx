@@ -32,32 +32,32 @@ OASIS provides a comprehensive set of actions that simulate real social media be
 |-------------|-------------|
 | `SIGNUP` | Register a new user with username, name, and bio |
 | `CREATE_POST` | Create a new post with text content |
-| `LIKE_POST` | Like or upvote a post | 
+| `LIKE_POST` | Like or upvote a post |
 | `UNLIKE_POST` | Remove a like from a previously liked post |
-| `DISLIKE_POST` | Dislike or downvote a post | 
-| `UNDO_DISLIKE_POST` | Remove a dislike from a previously disliked post | 
-| `REPOST` | Repost content without modification (equivalent to retweet) | 
-| `QUOTE_POST` | Repost with additional commentary | 
-| `CREATE_COMMENT` | Create a comment on a post | 
-| `LIKE_COMMENT` | Like a comment | 
-| `UNLIKE_COMMENT` | Remove a like from a previously liked comment | 
-| `DISLIKE_COMMENT` | Dislike a comment | 
+| `DISLIKE_POST` | Dislike or downvote a post |
+| `UNDO_DISLIKE_POST` | Remove a dislike from a previously disliked post |
+| `REPOST` | Repost content without modification (equivalent to retweet) |
+| `QUOTE_POST` | Repost with additional commentary |
+| `CREATE_COMMENT` | Create a comment on a post |
+| `LIKE_COMMENT` | Like a comment |
+| `UNLIKE_COMMENT` | Remove a like from a previously liked comment |
+| `DISLIKE_COMMENT` | Dislike a comment |
 | `UNDO_DISLIKE_COMMENT` | Remove a dislike from a previously disliked comment |
-| `FOLLOW` | Follow another user | 
-| `UNFOLLOW` | Unfollow a previously followed user | 
-| `MUTE` | Mute another user (hide their content without unfollowing) | 
-| `UNMUTE` | Unmute a previously muted user | 
-| `SEARCH_POSTS` | Search for posts by keywords, post ID, or user ID | 
-| `SEARCH_USER` | Search for users by username, name, bio, or user ID | 
-| `TREND` | Get trending content based on popularity metrics | 
-| `REFRESH` | Refresh the timeline to get recommended posts | 
-| `DO_NOTHING` | Perform no action (pass the turn) | 
-| `PURCHASE_PRODUCT` | Purchase a product (for e-commerce simulations) | 
+| `FOLLOW` | Follow another user |
+| `UNFOLLOW` | Unfollow a previously followed user |
+| `MUTE` | Mute another user (hide their content without unfollowing) |
+| `UNMUTE` | Unmute a previously muted user |
+| `SEARCH_POSTS` | Search for posts by keywords, post ID, or user ID |
+| `SEARCH_USER` | Search for users by username, name, bio, or user ID |
+| `TREND` | Get trending content based on popularity metrics |
+| `REFRESH` | Refresh the timeline to get recommended posts |
+| `DO_NOTHING` | Perform no action (pass the turn) |
+| `PURCHASE_PRODUCT` | Purchase a product (for e-commerce simulations) |
 
 
 ## `SingleAction`
 `SingleAction` is used to predefine specific actions for interventions in the environment. It includes the agent ID to specify which agent performs the action, the action type, and the corresponding arguments.
-Different actions require different parameters when used. 
+Different actions require different parameters when used.
 
 ```python
 @dataclass

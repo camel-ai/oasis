@@ -142,18 +142,18 @@ if __name__ == "__main__":
 <AccordionGroup>
   <Accordion icon="server" title="Set up VLLM">
     1. Install VLLM by following the instructions in the [VLLM repository](https://github.com/vllm-project/vllm)
-    
+
     2. Download a model (e.g., Qwen 2.5) to your local machine:
     ```bash
     pip install huggingface_hub
-    
+
     huggingface-cli download --resume-download "Qwen/Qwen2.5-7B-Instruct" \
       --local-dir "YOUR_LOCAL_MODEL_DIRECTORY" \
       --local-dir-use-symlinks False \
       --resume-download \
       --token "YOUR_HUGGING_FACE_TOKEN"
     ```
-    
+
     3. Deploy the VLLM API server:
     ```bash
     vllm serve /path/to/Qwen2.5-7B-Instruct --host 0.0.0.0 --port 8000 \
@@ -161,7 +161,7 @@ if __name__ == "__main__":
       --enable-auto-tool-choice \
       --tool-call-parser hermes
     ```
-    
+
     4. Test if VLLM is correctly deployed:
     ```bash
     curl http://$ip:$port/v1/models

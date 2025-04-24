@@ -190,7 +190,7 @@ async def run_simulation():
         model_platform=ModelPlatformType.OPENAI,
         model_type=ModelType.GPT_4O_MINI,
     )
-    
+
     # Define available actions
     available_actions = [
         ActionType.CREATE_POST,
@@ -199,16 +199,16 @@ async def run_simulation():
         ActionType.FOLLOW,
         ActionType.DO_NOTHING,
     ]
-    
+
     # Setup custom time
     start_time = datetime(2023, 1, 1, 12, 0, 0)  # Jan 1, 2023, 12:00 PM
     sandbox_clock = Clock(magnification_factor=120)  # 120x speed
-    
+
     # Database path
     db_path = "./data/custom_simulation.db"
     if os.path.exists(db_path):
         os.remove(db_path)
-    
+
     # Setup custom platform
     channel = Channel()
     platform = Platform(
@@ -223,7 +223,7 @@ async def run_simulation():
         show_score=False,
         allow_self_rating=False,
     )
-    
+
     # Create environment
     env = oasis.make(
         platform=platform,
@@ -232,33 +232,33 @@ async def run_simulation():
         available_actions=available_actions,
         semaphore=64,
     )
-    
+
     # Initialize the environment
     await env.reset()
-    
+
     # Create initial actions
     action1 = SingleAction(
         agent_id=0,
         action=ActionType.CREATE_POST,
         args={"content": "First post in our simulation!"}
     )
-    
+
     env_action1 = EnvAction(
         activate_agents=[0, 1, 2, 3, 4],
         intervention=[action1]
     )
-    
+
     # Step 1: Run with initial post
     await env.step(env_action1)
-    
+
     # Step 2: Activate a different set of agents
     env_action2 = EnvAction(activate_agents=[5, 6, 7, 8, 9])
     await env.step(env_action2)
-    
+
     # Step 3: Run with all agents
     env_action3 = EnvAction()  # Empty action = all agents, no intervention
     await env.step(env_action3)
-    
+
     # Clean up
     await env.close()
 
@@ -280,4 +280,4 @@ print_db_contents("./data/simulation.db")
 ## Related Topics
 
 - [Basic Environment Settings](/environment_settings/basic_settings)
-- [Recommendation Settings](/environment_settings/recommendation_settings) 
+- [Recommendation Settings](/environment_settings/recommendation_settings)

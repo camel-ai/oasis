@@ -138,7 +138,7 @@ async def update_rec_table(self):
             post_ids,
         )
     elif self.recsys_type == RecsysType.RANDOM:
-        user_ids = fetch_table_from_db(self.db, "user", "user_id", None, 
+        user_ids = fetch_table_from_db(self.db, "user", "user_id", None,
                                         columns=["user_id"])
         post_ids = fetch_table_from_db(self.db, "post", "post_id", None)
         user_ids = [user_id[0] for user_id in user_ids]
@@ -181,4 +181,4 @@ For advanced use cases, you can implement custom recommendation algorithms by cr
 ## Related Topics
 
 - [Basic Environment Settings](/environment_settings/basic_settings)
-- [Simulation Settings](/environment_settings/simulation_settings) 
+- [Simulation Settings](/environment_settings/simulation_settings)
