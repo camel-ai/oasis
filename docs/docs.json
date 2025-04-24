@@ -21,12 +21,6 @@
             ]
           },
           {
-            "group": "User Generation",
-            "pages": [
-              "user_generation/generation"
-            ]
-          },
-          {
             "group": "Overview",
             "pages": [
               "overview"
@@ -36,10 +30,10 @@
             "group": "Key Modules",
             "pages": [
               "key_modules/environments",
-              "key_modules/actions",
-              "key_modules/models",
               "key_modules/platform",
-              "key_modules/recommendation_system"
+              "user_generation/generation",
+              "key_modules/models",
+              "key_modules/actions"
             ]
           },
           {

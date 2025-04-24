@@ -2,12 +2,14 @@
 title: 'Platform'
 description: 'Documentation for the Oasis Social Platform module'
 ---
+The Social Platform module is a core component of Oasis that simulates a social media environment for agent interactions. It provides a complete infrastructure for social network activities, including user management, content creation, engagement metrics, recommendation systems, and user interactions.
 
-## Platform Types
+We support passing in two types of platforms. One is the `DefaultPlatformType`, which includes Twitter and Reddit. Otherwise, you can customize the `Platform` settings and pass them in.
+# Default Platform Type (Recommend)
 
 OASIS supports two built-in platform types, which can be specified during environment creation:
 
-### Twitter-like Platform
+## Twitter-like Platform
 
 ```python
 env = oasis.make(
@@ -21,7 +23,7 @@ env = oasis.make(
 
 The Twitter-like platform simulates a microblogging service with features like posts, likes, retweets, and following.
 
-### Reddit-like Platform
+## Reddit-like Platform
 
 ```python
 env = oasis.make(
@@ -33,21 +35,7 @@ env = oasis.make(
 )
 ```
 
-# Social Platform
-
-The Social Platform module is a core component of Oasis that simulates a social media environment for agent interactions. It provides a complete infrastructure for social network activities, including user management, content creation, engagement metrics, recommendation systems, and user interactions.
-
-## Overview
-
-The Platform class serves as the central orchestrator for the social media simulation. It manages:
-
-- User accounts and profiles
-- Posts, comments, and engagement actions
-- Social connections (following/muting)
-- Content recommendation systems 
-- Search functionality
-- Trending content identification
-- Product purchasing simulation
+# Customized Platform
 
 The platform uses an asynchronous architecture to handle agent actions and maintain a consistent timeline within the simulation.
 
@@ -69,44 +57,18 @@ Several recommendation system types are supported:
 - **TWHin**: Advanced recommendation using graph embedding (optional OpenAI embedding integration)
 
 ### Social Actions
-The platform supports a wide range of social media actions:
+The platform supports a wide range of social media actions.
 
-**Profile Management:**
-- Sign up with username, display name, and bio
-- Follow/unfollow other users
-- Mute/unmute users
-
-**Content Creation:**
-- Create posts
-- Repost content
-- Quote posts with additional commentary
-- Comment on posts
-
-**Engagement:**
-- Like/unlike posts and comments
-- Dislike/undo dislike for posts and comments
-- Search for posts or users
-- View trending content
-
-**E-commerce Integration:**
-- Sign up products
-- Purchase products
-
-## Usage
-
-### Initialization
+## Initialization
 
 ```python
 from oasis.social_platform.platform import Platform
 from oasis.clock.clock import Clock
 
-# Initialize with default settings
-platform = Platform(db_path="social_platform.db")
-
 # Initialize with custom configuration
 platform = Platform(
     db_path="social_platform.db",
-    sandbox_clock=Clock(magnification_factor=60),
+    sandbox_clock=Clock(k=60),
     show_score=True,
     allow_self_rating=False,
     recsys_type="twitter",
@@ -122,108 +84,27 @@ platform = Platform(
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `db_path` | str | Required | Path to SQLite database |
-| `channel` | Any | None | Communication channel for agent interactions |
-| `sandbox_clock` | Clock | Clock(60) | Time management for the simulation |
-| `start_time` | datetime | datetime.now() | Initial time for the simulation |
+| `channel` | Any | Channel() | Communication channel for agent interactions |
+| `sandbox_clock` | Clock | Clock(60) | Time management for the simulation(for reddit recommendation system) |
+| `start_time` | datetime | datetime.now() | Initial time for the simulation(for reddit recommendation system)  |
 | `show_score` | bool | False | Show combined score (Reddit style) instead of separate likes/dislikes |
 | `allow_self_rating` | bool | True | Allow users to like/dislike their own content |
 | `recsys_type` | str/RecsysType | "reddit" | Recommendation system type ("random", "reddit", "twitter", "twhin") |
 | `refresh_rec_post_count` | int | 1 | Number of posts returned per refresh |
 | `max_rec_post_len` | int | 2 | Maximum posts per user in recommendation buffer |
 | `following_post_count` | int | 3 | Number of posts from followed users |
-| `use_openai_embedding` | bool | False | Use OpenAI embeddings for TWHin recommendation system |
+| `use_openai_embedding` | bool | False | Use OpenAI embeddings for TWHin recommendation system. If false, use the local TWHIN-BERT model to get embeddings.
 
-### Running the Platform
-
-The platform can be run as an asynchronous service:
-
-```python
-# Run the platform (blocking)
-platform.run()
-
-# Or manually control the event loop
-import asyncio
-async def main():
-    await platform.running()
-    
-asyncio.run(main())
-```
-
-## Social Network Actions
-
-Agents can interact with the platform through a variety of actions:
-
-```python
-# User management
-await platform.sign_up(agent_id, (username, name, bio))
-await platform.follow(agent_id, followee_id)
-await platform.unfollow(agent_id, followee_id)
-await platform.mute(agent_id, mutee_id)
-await platform.unmute(agent_id, mutee_id)
-
-# Content creation
-await platform.create_post(agent_id, content)
-await platform.repost(agent_id, post_id)
-await platform.quote_post(agent_id, (post_id, quote_content))
-await platform.create_comment(agent_id, (post_id, content))
-
-# Engagement
-await platform.like_post(agent_id, post_id)
-await platform.unlike_post(agent_id, post_id)
-await platform.dislike_post(agent_id, post_id)
-await platform.undo_dislike_post(agent_id, post_id)
-await platform.like_comment(agent_id, comment_id)
-await platform.unlike_comment(agent_id, comment_id)
-await platform.dislike_comment(agent_id, comment_id)
-await platform.undo_dislike_comment(agent_id, comment_id)
-
-# Discovery
-await platform.refresh(agent_id)
-await platform.search_posts(agent_id, query)
-await platform.search_user(agent_id, query)
-await platform.trend(agent_id)
-
-# E-commerce
-await platform.sign_up_product(product_id, product_name)
-await platform.purchase_product(agent_id, (product_name, purchase_num))
-```
 
 ## Recommendation System
 
-The platform includes an internal recommendation system that can be refreshed:
-
-```python
-await platform.update_rec_table()
-```
-
 Different recommendation algorithms can be configured through the `recsys_type` parameter:
 
-1. **Random**: Provides random post recommendations
-2. **Reddit**: Recommends posts based on popularity metrics
-3. **Twitter**: Personalized recommendations based on user activity
-4. **TWHin**: Advanced graph-based recommendation system
+The available recommendation system types are:
 
-## Database Schema
-
-The platform utilizes a SQLite database with tables for:
-- Users and their profiles
-- Posts and content
-- Comments and replies
-- Likes and dislikes
-- Following relationships
-- Muting relationships
-- Recommendation buffer
-- Action traces
-- Products and purchases
-
-## Extending the Platform
-
-The Platform class can be extended to add custom functionality:
-- Create new action types in the ActionType enum
-- Add corresponding methods to the Platform class
-- Integrate with additional recommendation algorithms
-- Create custom analytics or visualization tools
-
-## Integration with Agent Systems
-
-The platform is designed to work seamlessly with multi-agent systems, providing a realistic social media environment for agent interactions and experiments.
+| RecsysType | Description |
+|------------|-------------|
+| `TWITTER` | Standard Twitter-like recommendation system |
+| `TWHIN`(Recommend) | TWHINBert-based recommendation system for Twitter-like platforms |
+| `REDDIT` | Reddit-style recommendation system |
+| `RANDOM` | Random content recommendation (for baseline testing) |

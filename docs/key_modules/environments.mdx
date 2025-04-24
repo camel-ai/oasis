@@ -1,5 +1,5 @@
 ---
-title: 'Environments'
+title: 'Environment'
 description: 'Configure the fundamental settings for your OASIS simulation environment'
 ---
 
@@ -37,7 +37,7 @@ When initializing the OASIS environment, you can configure the following core pa
 | `available_actions` | `list[ActionType]` | List of allowed actions for agents |
 | `semaphore` | `int` | Limit on concurrent LLM requests (default: 128) |
 
-
+    For more details, see the [Platform](key_modules/platform), [Agent Profile](user_generation/user_generation), [Model](key_modules/models) and [Actions](key_modules/actions) Module.
 ## Environment Lifecycle
 
 The OASIS environment has a simple lifecycle you can manage with these methods:
@@ -55,8 +55,6 @@ await env.close()
 ```
 
 ## Environment Actions
-
-Got it! Here's a more concise version:
 
 The environment update through the `step` method, which uses `EnvAction`. 
 `EnvAction` includes a list of activated agent IDs and predefined `SingleAction` interventions. During the step, interventions are applied, the recommendation system cache is refreshed, and activated agents perform actions based on LLMs.

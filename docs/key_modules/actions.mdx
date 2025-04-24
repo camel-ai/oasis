@@ -310,26 +310,6 @@ env_action = EnvAction(
 
 # Step the environment with the action
 await env.step(env_action)
-```You can control the simulation by sending `EnvAction` objects to the environment during each step:
-
-```python
-from oasis import EnvAction, SingleAction, ActionType
-
-# Create a custom intervention
-action = SingleAction(
-    agent_id=0,
-    action=ActionType.CREATE_POST,
-    args={"content": "Test post for the simulation"}
-)
-
-# Create an environment action to activate specific agents
-env_action = EnvAction(
-    activate_agents=[0, 1, 2, 3, 4],  # Only these agents will be active
-    intervention=[action]              # Optional interventions
-)
-
-# Step the environment with the action
-await env.step(env_action)
 ```
 
 ### Activating Agents
