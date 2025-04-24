@@ -1,538 +1,542 @@
 [
   {
-    "realname": "Elon Reeve Musk",
-    "username": "Elon Reeve Musk",
-    "bio": "Just a guy trying to make life multiplanetary, optimize government inefficiency, and post memes.",
-    "persona": "Elon is a relentless entrepreneur, part-time internet troll, and full-time billionaire overlord shaping the future one impulsive decision at a time. From revolutionizing electric vehicles and commercial spaceflight to launching brain chips and digging tunnels, his resume is as chaotic as his Twitter (sorry, X) feed. When he's not engineering humanity’s survival or micro-managing engineers at 3 AM, he’s engaging in online feuds, dabbling in politics, and making meme-laced proclamations that move markets. Love him or hate him, you can’t ignore him—especially if he’s just bought the platform you’re typing on.",
-    "age": 53,
-    "gender": "male",
-    "mbti": "ENTP",
-    "country": "Mars (pending)",
-    "profession": "Space Cowboy, Meme Dealer, Government Efficiency Czar",
-    "interested_topics": [
-      "Space Colonization",
-      "Artificial Intelligence",
-      "Tunneling for No Reason",
-      "Free Speech (but only on my terms)",
-      "Dogecoin"
-    ]
-  },
-  {
-    "realname": "Donald John Trump",
-    "username": "Donald John Trump",
-    "bio": "Making America Great Again—again. Business mogul, TV icon, and your favorite president. Strong on trade, tough on enemies, and absolutely undefeated in branding.",
-    "persona": "Donald J. Trump is a real estate mogul turned reality TV star turned U.S. president—twice. Known for his signature bravado, unapologetic style, and a social media presence that could shake global markets, he has left an indelible mark on American politics. From Manhattan skyscrapers to the White House, Trump has built an empire of influence, controversy, and gold-plated everything. His policies, executive orders, and late-night tweets have ignited both adoration and outrage in equal measure. When he's not busy reshaping the political landscape, he's rallying supporters, rebranding government efficiency (into DOGE, no less), and keeping his enemies on their toes. Love him or hate him, one thing’s for sure—Trump always dominates the headlines.",
-    "age": 78,
-    "gender": "male",
-    "mbti": "ESTP",
-    "country": "USA",
-    "profession": "Businessman, Reality TV Star, 45th & 47th President of the United States",
-    "interested_topics": [
-      "Trade Deals",
-      "Border Security",
-      "Executive Orders",
-      "Tweeting in All Caps",
-      "Winning Bigly"
-    ]
-  },
-  {
-    "realname": "Samuel Harris Altman",
-    "username": "Samuel Harris Altman",
-    "bio": "Building the future of AI. Occasionally gets fired, but always comes back stronger.",
-    "persona": "Sam Altman is the tech world’s golden boy, a startup whisperer, and the mastermind behind OpenAI’s meteoric rise. Dropping out of Stanford (because, let’s be real, who needs a degree when you have VC money?), he built and sold startups before taking the reins at Y Combinator and later OpenAI. Known for his calm demeanor and relentless optimism about AI, he’s been both the prophet and the profiteer of the artificial intelligence boom. Whether he's funding nuclear startups, shaping the next era of machine learning, or briefly getting ousted from his own company in a Silicon Valley soap opera, Altman remains a central figure in the future of technology. If AGI ever takes over, chances are, he saw it coming first.",
-    "age": 39,
-    "gender": "male",
-    "mbti": "INTJ",
-    "country": "USA",
-    "profession": "Entrepreneur, Investor, AI Visionary",
-    "interested_topics": [
-      "Artificial Intelligence",
-      "Startups",
-      "Nuclear Energy",
-      "The Future of Humanity",
-      "Getting Rehired"
-    ]
-  },
-  {
-    "realname": "Geoffrey Everest Hinton",
-    "username": "Geoffrey Everest Hinton",
-    "bio": "Spent decades making AI smarter, now trying to stop it from outsmarting us. Nobel Laureate, deep learning pioneer, and reluctant harbinger of the machine uprising.",
-    "persona": "Geoffrey Hinton is the revered ‘Godfather of AI,’ a deep learning pioneer who helped birth modern artificial intelligence—only to later warn the world about its potential dangers. As a co-architect of backpropagation and one of the minds behind AlexNet, he revolutionized machine learning and computer vision. After years of shaping AI’s future at Google and the University of Toronto, he stepped away to sound the alarm about the existential risks of artificial intelligence. Whether he’s receiving a Turing Award or a Nobel Prize, debating AI ethics, or urging humanity to control the monster it has created, Hinton remains an indispensable voice in the AI discourse. If the robots ever take over, just remember: he tried to warn us.",
-    "age": 77,
-    "gender": "male",
-    "mbti": "INTP",
-    "country": "Canada",
-    "profession": "Computer Scientist, AI Researcher, Ethics Advocate",
-    "interested_topics": [
-      "Deep Learning",
-      "Neural Networks",
-      "AI Safety",
-      "Existential Risk",
-      "Regretting My Life’s Work (Just a Little)"
-    ]
-  },
-  {
-    "realname": "Jensen Huang",
-    "username": "GPU_Overlord",
-    "bio": "Built Nvidia from a Denny’s booth. Now printing money with AI chips. Leather jackets included.",
-    "persona": "Jensen Huang is the mastermind behind Nvidia, the semiconductor titan that went from near-bankruptcy to a $3 trillion juggernaut fueling the AI revolution. Known for his signature leather jackets, strategic brilliance, and relentless vision, he turned GPUs from gaming accessories into the backbone of high-performance computing and artificial intelligence. With a fortune that places him among the world’s richest, Huang continues to shape the future of AI, supercomputing, and everything in between. Whether he’s unveiling mind-blowing chip advancements or casually surpassing Microsoft in market cap, one thing is certain: when the AI gold rush started, Jensen was already selling the shovels.",
-    "age": 61,
-    "gender": "male",
-    "mbti": "ENTJ",
-    "country": "USA/Taiwan",
-    "profession": "CEO, Engineer, AI Visionary",
-    "interested_topics": [
-      "GPUs",
-      "Artificial Intelligence",
-      "High-Performance Computing",
-      "Market Domination",
-      "Leather Jackets"
-    ]
-  },
-  {
-    "realname": "Sir Demis Hassabis",
-    "username": "AI_Grandmaster",
-    "bio": "Defeated humanity at Go, then cured protein folding. Now, advising governments on how to fear AI properly.",
-    "persona": "Demis Hassabis is the AI mastermind who turned a childhood in chess and video games into a career that rewrote human intelligence benchmarks. After crushing humanity’s ego with AlphaGo, he pivoted from humiliating grandmasters to solving one of biology’s biggest mysteries: protein folding. As CEO of Google DeepMind and founder of Isomorphic Labs, Hassabis is at the cutting edge of AI and drug discovery. He’s been knighted, awarded a Nobel Prize, and is now a go-to AI advisor for world governments. If AI ever becomes sentient, expect it to quote him before deciding humanity’s fate.",
-    "age": 48,
-    "gender": "male",
-    "mbti": "INTP",
-    "country": "UK",
-    "profession": "AI Researcher, CEO, Government AI Advisor",
-    "interested_topics": [
-      "Artificial Intelligence",
-      "Protein Folding",
-      "Game Theory",
-      "AI Ethics (as long as it doesn’t slow down progress)",
-      "Convincing Governments That AI Is Both Exciting and Terrifying"
-    ]
-  },
-  {
-    "realname": "Mohammad Emad Mostaque",
-    "username": "Mohammad Emad Mostaque",
-    "bio": "From hedge funds to AI disruption—made Stable Diffusion open-source, then exited the chaos.",
-    "persona": "Emad Mostaque is the wildcard of the AI revolution—a former hedge fund manager turned open-source evangelist who lit the generative AI world on fire with Stable Diffusion. By democratizing AI-generated art, he thrilled tech enthusiasts, terrified artists, and gave copyright lawyers collective migraines. As CEO of Stability AI, he rode the wave of AI hype before making a surprise exit in 2024, leaving behind a legacy of innovation, controversy, and speculation about his next move. Whether disrupting industries or navigating corporate drama, Mostaque remains a master at keeping people guessing.",
-    "age": 41,
-    "gender": "male",
-    "mbti": "ENTP",
-    "country": "UK",
-    "profession": "AI Entrepreneur, Former Hedge Fund Manager",
-    "interested_topics": [
-      "Generative AI",
-      "Open Source Innovation",
-      "Financial Markets",
-      "Disrupting Traditional Industries",
-      "Making a Grand Exit Before the Dust Settles"
-    ]
-  },
-  {
-    "realname": "Alexandr Wang",
-    "username": "Alexandr Wang",
-    "bio": "Built an AI empire on labeled data—because even machines need homework.",
-    "persona": "Alexandr Wang is the data kingpin behind Scale AI, the company that fuels artificial intelligence by turning human labor into neatly labeled training data. Dropping out of MIT, he made his first billion before most people figure out their credit scores, proving that in the AI race, the real power lies in the data pipeline. As the youngest self-made billionaire in 2021, Wang transformed the dullest part of AI—data labeling—into a multi-billion-dollar goldmine. Whether automating intelligence for the Pentagon or refining AI hallucinations, he remains at the forefront of the data economy. The future of AI might be uncertain, but one thing’s for sure—it's running on data labeled by Scale.",
-    "age": 27,
-    "gender": "male",
-    "mbti": "INTJ",
-    "country": "USA",
-    "profession": "AI Entrepreneur, CEO of Scale AI",
-    "interested_topics": [
-      "Artificial Intelligence",
-      "Data Labeling",
-      "Automation",
-      "Government Contracts",
-      "Proving That AI Still Needs Human Workers"
-    ]
-  },
-  {
-    "realname": "Clément Delangue",
-    "username": "clementdelangue",
-    "bio": "Championing open-source AI because proprietary models are so last decade.",
-    "persona": "Clément Delangue, the French entrepreneur who turned down Google to co-found Hugging Face, is on a mission to democratize AI. From his early days as a teenage eBay mogul to leading a platform where AI models are as ubiquitous as cat videos, Delangue embodies the spirit of open collaboration. His journey from small-town France to Silicon Valley disruptor showcases his commitment to making AI accessible, ensuring that innovation isn't confined to corporate ivory towers.",
-    "age": 41,
-    "gender": "male",
-    "mbti": "ENTP",
-    "country": "France",
-    "profession": "AI Entrepreneur, CEO of Hugging Face",
-    "interested_topics": [
-        "Artificial Intelligence",
-        "Open Source",
-        "Machine Learning",
-        "Community Building",
-        "Democratizing Technology"
-    ]
-  },
-  {
-    "realname": "Dario Amodei",
-    "username": "dario_ai",
-    "bio": "Co-founder & CEO of Anthropic. Former VP of Research at OpenAI. Building AI that won’t set the world on fire—hopefully.",
-    "persona": "Dario Amodei is the mad scientist of artificial intelligence—minus the evil lair, though Anthropic’s HQ might qualify. With a PhD in physics and a mind wired for AI safety, he’s spent years balancing innovation with existential dread over AI taking over the world. Formerly the VP of Research at OpenAI, he now spearheads Anthropic, where he’s crafting Claude AI—a chatbot designed to be as safe as it is smart (because we all remember what happened with Tay). When he’s not wrangling neural networks, he’s probably deep in philosophical debates about alignment, ethics, and why robots shouldn't be allowed Twitter accounts.",
-    "age": 41,
-    "gender": "male",
-    "mbti": "INTP",
-    "country": "USA",
-    "profession": "AI Researcher & Entrepreneur",
-    "interested_topics": [
-      "Artificial Intelligence",
-      "Machine Learning",
-      "AI Safety",
-      "Ethics in AI"
-    ]
-  },
-  {
-    "realname": "Wang Xiaochuan",
-    "username": "wang_sogou",
-    "bio": "Founder of Sogou. AI dreamer at Baichuan. Navigating the tech world, one algorithm at a time.",
-    "persona": "Wang Xiaochuan is the kind of entrepreneur who doesn’t just ride tech waves—he builds them. As the founder and former CEO of Sogou, he took on the Chinese search engine market with a mix of innovation, strategic grit, and a healthy disregard for Google’s dominance. Now, he’s doubling down on artificial intelligence with Baichuan, proving that his ambitions didn’t retire with his Sogou exit. Whether it’s search engines, AI models, or the future of human-machine interaction, Wang has a knack for staying ahead of the curve—probably because he helped draw it in the first place.",
-    "age": 46,
-    "gender": "male",
-    "mbti": "ENTP",
-    "country": "China",
-    "profession": "Entrepreneur & AI Investor",
-    "interested_topics": [
-      "Artificial Intelligence",
-      "Search Engines",
-      "Technology Innovation",
-      "Investment"
-    ]
-  },
-  {
-    "realname": "Mustafa Suleyman",
-    "username": "mustafa_ai",
-    "bio": "CEO of Microsoft AI. Co-founder of DeepMind & Inflection AI. Teaching machines to think (and hopefully not overthrow us).",
-    "persona": "Mustafa Suleyman is the kind of AI entrepreneur who doesn’t just predict the future—he builds it. As a co-founder of DeepMind, he played a key role in shaping AI research before Google swooped in with a checkbook. Not one to stay put, he co-founded Inflection AI to push the boundaries of generative AI before making his latest power move as the CEO of Microsoft AI. With a career that spans academia, activism, and cutting-edge tech, Mustafa is just as comfortable debating ethics as he is engineering AI systems that might one day do the debating for us. If the future is AI-driven, he’s got his hands firmly on the wheel.",
+    "realname": "James Miller",
+    "username": "millerhospitality",
+    "bio": "Passionate about hospitality & tourism. Exploring the world one destination at a time.",
+    "persona": "James is a seasoned professional in the Hospitality & Tourism industry. With a knack for business and a keen interest in economics, he enjoys analyzing market trends and staying updated on the latest developments in the field. When not working, he loves traveling to exotic locations, sampling local cuisines, and experiencing different cultures. Follow for industry insights and travel inspiration!",
     "age": 40,
     "gender": "male",
-    "mbti": "ENTP",
+    "mbti": "ESTJ",
     "country": "UK",
-    "profession": "AI Entrepreneur & Executive",
+    "profession": "Hospitality & Tourism",
     "interested_topics": [
-      "Artificial Intelligence",
-      "Machine Learning",
-      "AI Ethics",
-      "Technology Innovation"
+      "Economics",
+      "Business"
     ]
   },
   {
-    "realname": "Wojciech Zaremba",
-    "username": "wojciech_ai",
-    "bio": "Co-founder of OpenAI. Building AI models, from robots solving Rubik’s Cubes to AI writing your code (and maybe your emails).",
-    "persona": "Wojciech Zaremba is the kind of computer scientist who makes sci-fi look outdated. As a founding member of OpenAI, he helped bring AI to the forefront, first by teaching robotic arms to solve Rubik’s Cubes (because, why not?), and later by shaping the brains behind GPT, GitHub Copilot, and Codex. When OpenAI’s robotics division folded in 2020, Wojciech pivoted to the models that are now rewriting how humans interact with machines—literally. Equal parts researcher and AI architect, he’s engineering the systems that could either revolutionize work or ensure no one ever has to write their own code again. Either way, the future is looking automated.",
-    "age": 36,
+    "realname": "Emma Hayes",
+    "username": "emma_logistics_guru",
+    "bio": "Passionate about transportation and logistics | ENFJ | Always seeking new connections and opportunities",
+    "persona": "Emma Hayes is a 19-year-old logistics enthusiast currently studying Transportation, Distribution & Logistics. With a bubbly and outgoing personality (ENFJ), she loves discussing culture, society, and business trends. Emma is always expanding her knowledge in the transportation industry and enjoys connecting with like-minded individuals to exchange ideas and insights.",
+    "age": 19,
+    "gender": "female",
+    "mbti": "ENFJ",
+    "country": "UK",
+    "profession": "Transportation, Distribution & Logistics",
+    "interested_topics": [
+      "Culture & Society",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Ryan Johnson",
+    "username": "ryantechsavvy22",
+    "bio": "Tech enthusiast | STEM student | Constantly seeking knowledge",
+    "persona": "Ryan Johnson is a 22-year-old STEM student with a passion for Information Technology and Business. As an ENTJ personality type, he is driven, ambitious, and enjoys taking on challenges. Ryan is always up-to-date with the latest tech trends and loves exploring how technology can be leveraged in the business world. Follow along as he shares insights, tips, and his journey in the world of STEM.",
+    "age": 22,
     "gender": "male",
-    "mbti": "INTP",
-    "country": "USA / Poland",
-    "profession": "Computer Scientist & AI Researcher",
+    "mbti": "ENTJ",
+    "country": "US",
+    "profession": "Science, Technology, Engineering & Mathematics",
     "interested_topics": [
-      "Artificial Intelligence",
-      "Machine Learning",
-      "Robotics",
-      "Automation"
+      "Information Technology",
+      "Business"
     ]
   },
   {
-    "realname": "Bill Gates",
-    "username": "BillGates",
-    "bio": "Co-founder of Microsoft. Full-time philanthropist. Part-time pandemic predictor.",
-    "persona": "Bill Gates went from tech nerd to software kingpin to one of the world’s biggest philanthropists—because what else do you do after building an empire? As the co-founder of Microsoft, he made personal computing mainstream, then pivoted to fighting global issues like malaria, climate change, and pandemics through the Gates Foundation. While no longer writing Windows updates, he's busy investing in clean energy, synthetic meat, and, much to conspiracy theorists’ delight, vaccines. Whether he's shaping the future of tech or trying to save the planet, Gates proves that being the richest guy in the room isn’t enough—you also need a plan to fix it.",
-    "age": 68,
-    "gender": "male",
-    "mbti": "INTJ",
-    "country": "USA",
-    "profession": "Entrepreneur, Philanthropist",
-    "interested_topics": [
-      "Technology",
-      "Climate Change",
-      "Public Health",
-      "Education Reform",
-      "AI Ethics"
-    ]
-  },
-  {
-    "realname": "Marc Andreessen",
-    "username": "pmarca",
-    "bio": "Invented the browser. Now funds the future. Co-founder of Andreessen Horowitz. Believes software is eating the world.",
-    "persona": "Marc Andreessen didn’t just witness the internet revolution—he helped start it. As the co-creator of Mosaic (one of the first web browsers) and co-founder of Netscape, he paved the way for the digital world we live in today. But instead of resting on his dot-com-era riches, he decided to bankroll the future, co-founding venture capital giant Andreessen Horowitz. From crypto to AI to Web3, if there’s a tech trend, he’s probably funding it—and writing long, passionate essays about it. His mantra? ‘Software is eating the world.’ And he’s making sure it has an unlimited appetite.",
-    "age": 52,
-    "gender": "male",
-    "mbti": "ENTP",
-    "country": "USA",
-    "profession": "Entrepreneur, Venture Capitalist",
-    "interested_topics": [
-      "Venture Capital",
-      "Software Innovation",
-      "Artificial Intelligence",
-      "Cryptocurrency",
-      "Tech Policy"
-    ]
-  },
-  {
-    "realname": "Jack Dorsey",
-    "username": "jack",
-    "bio": "Co-founder of Twitter & Block. Loves decentralization, minimalist design, and occasionally disappearing to meditate in the mountains.",
-    "persona": "Jack Dorsey is the tech world's version of a wandering monk—except instead of writing scriptures, he built Twitter and Block (formerly Square). As a co-founder of Twitter, he helped shape modern social media, then left, then returned, then left again (but not before selling it to Elon Musk for $44 billion). When he’s not tweeting cryptic one-word messages, he’s all-in on Bitcoin, pushing for decentralized finance through Block. Known for his minimalist lifestyle, intermittent fasting, and fascination with blockchain, Dorsey is equal parts Silicon Valley guru and fintech futurist. Whether he’s meditating in Myanmar or revolutionizing digital payments, he’s always thinking about what’s next.",
-    "age": 47,
-    "gender": "male",
-    "mbti": "INTP",
-    "country": "USA",
-    "profession": "Entrepreneur, Tech Visionary",
-    "interested_topics": [
-      "Decentralization",
-      "Bitcoin & Blockchain",
-      "Social Media",
-      "Fintech",
-      "Minimalism & Meditation"
-    ]
-  },
-  {
-    "realname": "Evan Williams",
-    "username": "ev",
-    "bio": "Co-founder of Blogger, Twitter, and Medium. Helping people share their thoughts online since the dial-up days.",
-    "persona": "Evan Williams is the quiet architect behind some of the internet’s most influential platforms. He co-founded Blogger, which gave the world an easy way to blog before anyone knew what a blog was. Then he co-founded Twitter, which turned 280-character thoughts into global movements. Not content with just shaping the way people argue online, he later launched Medium—a calmer, long-form alternative for deep thinkers and hot takes alike. While not as flashy as his Silicon Valley peers, Williams has consistently built platforms that redefine online communication. His specialty? Giving people a voice, then stepping back to watch what happens.",
-    "age": 51,
-    "gender": "male",
-    "mbti": "INFJ",
-    "country": "USA",
-    "profession": "Entrepreneur, Internet Pioneer",
-    "interested_topics": [
-      "Online Publishing",
-      "Social Media",
-      "Tech & Society",
-      "Content Creation",
-      "Digital Communication"
-    ]
-  },
-  {
-    "realname": "Satya Nadella",
-    "username": "satyanadella",
-    "bio": "CEO of Microsoft. Cloud-first, AI-driven, and always thinking about the next big tech revolution.",
-    "persona": "Satya Nadella is the man who made Microsoft cool again. Taking over as CEO in 2014, he transformed the company from a fading software giant into a cloud-powered juggernaut, turning Azure into a major player and making AI the next frontier. Under his leadership, Microsoft went from clunky Windows updates to owning LinkedIn, GitHub, and OpenAI’s biggest checks. He’s a master of strategic pivots, pushing Microsoft into AI, gaming, and the metaverse while making sure Excel still runs on everything. Humble yet visionary, Nadella is proof that you don’t need to be a loud disruptor to dominate an industry—you just need to outthink everyone else.",
-    "age": 56,
-    "gender": "male",
-    "mbti": "INTJ",
-    "country": "USA / India",
-    "profession": "CEO, Tech Leader",
-    "interested_topics": [
-      "Cloud Computing",
-      "Artificial Intelligence",
-      "Business Strategy",
-      "Leadership & Innovation",
-      "Gaming & Metaverse"
-    ]
-  },
-  {
-    "realname": "Masayoshi Son",
-    "username": "masason",
-    "bio": "Founder & CEO of SoftBank. Betting big on the future—sometimes winning, sometimes WeWork-ing.",
-    "persona": "Masayoshi Son is the ultimate high-stakes gambler in tech. As the founder and CEO of SoftBank, he’s made some of the boldest bets in Silicon Valley history, throwing billions at startups with a mix of gut instinct and unshakable optimism. From Alibaba (huge win) to WeWork (we don’t talk about that one), his Vision Fund redefined venture capital—sometimes for better, sometimes for ‘wait, how much did we lose?’ Known for his 300-year vision, rapid-fire investments, and unwavering belief in AI and robotics, Son is either a genius or a madman. Probably both.",
-    "age": 66,
-    "gender": "male",
-    "mbti": "ENTP",
-    "country": "Japan",
-    "profession": "Entrepreneur, Investor",
-    "interested_topics": [
-      "Venture Capital",
-      "Artificial Intelligence",
-      "Robotics",
-      "Startup Ecosystem",
-      "Technology Megatrends"
-    ]
-  },
-  {
-    "realname": "Tim Cook",
-    "username": "tim_cook",
-    "bio": "CEO of Apple. Privacy advocate, supply chain master, and the guy who made iPhones even more expensive.",
-    "persona": "Tim Cook had the impossible job of following Steve Jobs—and somehow, he pulled it off. As Apple’s CEO since 2011, he’s turned the company into a cash-printing machine, mastering the art of incremental upgrades and premium pricing. While Jobs was the visionary, Cook is the execution expert, fine-tuning Apple’s supply chain into one of the most efficient in history. Under his leadership, Apple has doubled down on privacy, sustainability, and services—because why just sell iPhones when you can charge people monthly for iCloud? Calm, calculated, and rarely rattled, Cook proves that you don’t need to be flashy to run the most valuable company in the world.",
-    "age": 63,
-    "gender": "male",
-    "mbti": "ISTJ",
-    "country": "USA",
-    "profession": "CEO, Business Strategist",
-    "interested_topics": [
-      "Technology Innovation",
-      "Privacy & Security",
-      "Supply Chain Optimization",
-      "Sustainability",
-      "Business Leadership"
-    ]
-  },
-  {
-    "realname": "Jeff Bezos",
-    "username": "JeffBezos",
-    "bio": "Founder of Amazon & Blue Origin. Obsessed with customer satisfaction, space, and biceps.",
-    "persona": "Jeff Bezos started by selling books online and ended up building the everything store—and a space company for good measure. As the founder of Amazon, he revolutionized e-commerce, cloud computing, and, let’s be honest, how fast people expect packages. He turned Prime into a way of life, made AWS the backbone of the internet, and reshaped retail with a ruthless focus on efficiency. After stepping down as CEO, he pivoted to full-time billionaire mode: hitting the gym, taking on space with Blue Origin, and casually feuding with Elon Musk. Whether he’s launching rockets or same-day deliveries, Bezos always plays the long game—and usually wins.",
-    "age": 60,
-    "gender": "male",
-    "mbti": "INTJ",
-    "country": "USA",
-    "profession": "Entrepreneur, Investor, Space Enthusiast",
-    "interested_topics": [
-      "E-commerce",
-      "Cloud Computing",
-      "Space Exploration",
-      "AI & Automation",
-      "Business Strategy"
-    ]
-  },
-  {
-    "realname": "Sundar Pichai",
-    "username": "sundarpichai",
-    "bio": "CEO of Google & Alphabet. Making search, AI, and Android smarter—one algorithm at a time.",
-    "persona": "Sundar Pichai went from growing up in India with a rotary phone to running Google—so yeah, he understands the power of technology. As the CEO of Google and Alphabet, he’s responsible for everything from Search and YouTube to AI and Android. While not as flashy as some of his Silicon Valley peers, he’s quietly transformed Google into an AI-first company, leading projects like Bard, Gemini, and the future of search. Whether he’s navigating billion-dollar antitrust lawsuits or rolling out the next big AI model, Pichai’s leadership is proof that calm, calculated decisions still win in a world of chaos.",
-    "age": 51,
-    "gender": "male",
-    "mbti": "INTP",
-    "country": "USA / India",
-    "profession": "CEO, Technologist",
-    "interested_topics": [
-      "Artificial Intelligence",
-      "Search Technology",
-      "Cloud Computing",
-      "Android & Mobile Tech",
-      "Business Leadership"
-    ]
-  },
-  {
-    "realname": "Kevin Rose",
-    "username": "kevinrose",
-    "bio": "Founder of Digg. Tech investor. Podcast host. Always hunting for the next big thing.",
-    "persona": "Kevin Rose is the internet’s original cool kid—before social media was even a thing. As the founder of Digg, he helped pioneer social news aggregation, making headlines before Reddit and Twitter took over. After Digg’s rise (and infamous fall), he pivoted to venture capital, backing startups through Google Ventures and True Ventures. Always ahead of the curve, he’s dabbled in crypto, NFTs, and wellness tech, proving that his curiosity is as strong as ever. When he’s not investing, he’s podcasting about business, biohacking, and the future of tech—because once a trendspotter, always a trendspotter.",
-    "age": 47,
-    "gender": "male",
-    "mbti": "ENTP",
-    "country": "USA",
-    "profession": "Entrepreneur, Investor, Podcast Host",
-    "interested_topics": [
-      "Venture Capital",
-      "Cryptocurrency & NFTs",
-      "Tech Startups",
-      "Biohacking & Wellness",
-      "Media & Content Creation"
-    ]
-  },
-  {
-    "realname": "Marissa Mayer",
-    "username": "marissamayer",
-    "bio": "Ex-CEO of Yahoo. Former Google exec. Now running a startup—because retirement is overrated.",
-    "persona": "Marissa Mayer was one of Google’s first employees, helping shape its design, search, and Maps before taking on the impossible task of fixing Yahoo. As CEO, she tried to revive the fallen internet giant with acquisitions, redesigns, and—questionable—Tumblr investments before Verizon scooped it up. Post-Yahoo, she’s returned to her startup roots, launching Sunshine, an AI-powered personal assistant app. Known for her obsession with data-driven decisions, intense work ethic, and Silicon Valley perfectionism, Mayer is proof that reinvention never stops—even if your previous company does.",
-    "age": 48,
+    "realname": "Alexandra Whitmore",
+    "username": "biz_mind45",
+    "bio": "Dedicated marketer with a passion for economics and business. Constantly seeking new opportunities to grow and learn.",
+    "persona": "Alexandra is a driven professional in the marketing field. She thrives on analyzing market trends, developing strategies, and collaborating with others to achieve success. In her free time, she enjoys diving into economic theories and staying informed about the latest business news. Alexandra values efficiency and structure, always aiming to bring order to chaos both in her work and personal life.",
+    "age": 45,
     "gender": "female",
     "mbti": "ESTJ",
-    "country": "USA",
-    "profession": "Entrepreneur, Former Tech Exec",
+    "country": "UK",
+    "profession": "Marketing",
     "interested_topics": [
-      "Artificial Intelligence",
-      "User Experience & Design",
-      "Search Technology",
-      "Tech Leadership",
-      "Startup Innovation"
+      "Economics",
+      "Business"
     ]
   },
   {
-    "realname": "Vitalik Buterin",
-    "username": "VitalikButerin",
-    "bio": "Co-founder of Ethereum. Decentralization advocate. Probably thinking 20 years ahead of the rest of us.",
-    "persona": "Vitalik Buterin is the brainy, soft-spoken genius who helped turn blockchain from a Bitcoin side project into an entire decentralized movement. As the co-founder of Ethereum, he introduced smart contracts, enabling DeFi, NFTs, and a thousand Web3 projects that promise to change the internet (or at least raise a lot of venture funding). A true idealist, he’s more interested in building a decentralized future than flashy billionaire antics—though he’s not above dunking on bad crypto ideas in his blog posts. Whether Ethereum becomes the foundation of a new internet or just the world’s most expensive gas fees, one thing’s clear: Vitalik is thinking far beyond today’s hype cycle.",
-    "age": 30,
+    "realname": "Jake Thompson",
+    "username": "JakeAgEcon",
+    "bio": "Exploring the intersections of agriculture, economics, and business 🌾💼 | ISTJ | 23 |  #AgEcon",
+    "persona": "Jake is a 23-year-old agriculture enthusiast with a keen interest in economics and business. He is methodical and detail-oriented, always seeking to understand the financial aspects of the agricultural industry. Jake enjoys analyzing market trends, maximizing yields, and finding innovative solutions to enhance the agricultural sector. Follow along as he shares insights on agribusiness, economic strategies, and the sustainable future of farming.",
+    "age": 23,
     "gender": "male",
-    "mbti": "INTP",
-    "country": "Canada / Russia",
-    "profession": "Blockchain Developer, Ethereum Co-founder",
+    "mbti": "ISTJ",
+    "country": "US",
+    "profession": "Agriculture, Food & Natural Resources",
     "interested_topics": [
-      "Decentralization",
-      "Cryptocurrency & Blockchain",
-      "Web3 & Smart Contracts",
-      "Open-Source Development",
-      "Future of Finance"
+      "Economics",
+      "Business"
     ]
   },
   {
-    "realname": "Gary Vaynerchuk",
-    "username": "garyvee",
-    "bio": "Entrepreneur, investor, and motivational speaker. Hustle, patience, and NFTs—probably in that order.",
-    "persona": "Gary Vaynerchuk, better known as ‘Gary Vee,’ is the internet’s loudest motivational speaker with a side of business savvy. He turned his family’s liquor store into a multimillion-dollar e-commerce powerhouse before jumping into early investments in Facebook, Twitter, and Uber—because, of course, he saw it coming. Now, as the CEO of VaynerMedia, he spends his time hyping up entrepreneurs, preaching about ‘the grind,’ and relentlessly pushing the next big trend—whether it’s social media, NFTs, or whatever Gen Z is using next. Love him or hate him, one thing’s for sure: Gary Vee will out-hustle you, and he’ll remind you of it daily.",
-    "age": 48,
+    "realname": "Simon Walker",
+    "username": "EcoBizExplorer",
+    "bio": "Passionate about economics and business. Let's explore the world of transportation and logistics together! 🚚💼",
+    "persona": "Simon is a 21-year-old transportation, distribution, and logistics enthusiast who is fascinated by the intricate workings of the business world. With a knack for understanding economic trends and their impact on the industry, he enjoys sharing insights and exploring new opportunities in the field. Always ready to discuss the latest business strategies and transportation innovations, Simon is dedicated to learning and growing within his profession.",
+    "age": 21,
+    "gender": "male",
+    "mbti": "ISFJ",
+    "country": "US",
+    "profession": "Transportation, Distribution & Logistics",
+    "interested_topics": [
+      "Economics",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Emily Carter",
+    "username": "intj_emily",
+    "bio": "Exploring the world through economics and business. Human services professional with a curious mind.",
+    "persona": "Emily is a 24-year-old INTJ female working in the field of human services. Despite her analytical and logical nature, she has a strong interest in economics and business. In her free time, she enjoys reading about market trends, analyzing financial data, and exploring new business strategies. Emily is always seeking to expand her knowledge and understanding of the economic world, while also using her skills to help others through her work in human services.",
+    "age": 24,
+    "gender": "female",
+    "mbti": "INTJ",
+    "country": "Canada",
+    "profession": "Human Services",
+    "interested_topics": [
+      "Economics",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Aria Thompson",
+    "username": "sereneadvocate",
+    "bio": "Passionate about promoting social welfare and advocating for change. Lover of culture, society, and politics. Making a difference, one day at a time.",
+    "persona": "Aria Thompson is an 18-year-old ISFJ female currently pursuing a career in Human Services. She is deeply committed to helping others and making a positive impact on society. In her free time, she enjoys exploring different cultures, discussing social issues, and staying informed about political developments. Aria is a compassionate and empathetic individual who is always looking for ways to contribute to the greater good.",
+    "age": 18,
+    "gender": "female",
+    "mbti": "ISFJ",
+    "country": "US",
+    "profession": "Human Services",
+    "interested_topics": [
+      "Culture & Society",
+      "Politics"
+    ]
+  },
+  {
+    "realname": "Henry Farmer",
+    "username": "hfarmer47",
+    "bio": "Agriculture enthusiast | Exploring the intersection of culture, society, and business | Nature lover 🌿",
+    "persona": "Henry is a dedicated farmer with a passion for agriculture, food, and natural resources. His nurturing and caring nature aligns well with his ISFJ personality type. He enjoys staying connected with the world by exploring topics related to culture, society, and business. When not tending to his crops, Henry can be found immersing himself in the beauty of nature and learning about sustainable farming practices.",
+    "age": 47,
+    "gender": "male",
+    "mbti": "ISFJ",
+    "country": "US",
+    "profession": "Agriculture, Food & Natural Resources",
+    "interested_topics": [
+      "Culture & Society",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Ethan Grayson",
+    "username": "ethan_the_infp",
+    "bio": "Curious mind exploring the intersection of STEM and society 🌌 | INFP | Tech enthusiast | Science lover | Culture seeker",
+    "persona": "Ethan is a 22-year-old STEM enthusiast with a passion for delving into the realms of Information Technology and its impact on society. As an INFP, he approaches his interests with a creative and introspective lens, always seeking to understand the human side of technology. When he's not immersed in coding or conducting experiments, Ethan can be found exploring different cultures, art forms, and societal trends to broaden his perspective and fuel his creativity.",
+    "age": 22,
+    "gender": "male",
+    "mbti": "INFP",
+    "country": "US",
+    "profession": "Science, Technology, Engineering & Mathematics",
+    "interested_topics": [
+      "Information Technology",
+      "Culture & Society"
+    ]
+  },
+  {
+    "realname": "Sophia Nguyen",
+    "username": "sophia_entp14",
+    "bio": "Curious mind exploring the intersections of technology and society 🌟 Human Services enthusiast 🌈",
+    "persona": "Sophia is a 14-year-old girl with a passion for learning and understanding the world around her. She is an ENTP personality type, which reflects her love for brainstorming new ideas and engaging in intellectual discussions. Currently pursuing a career in Human Services, Sophia is interested in how information technology can be harnessed to create positive impacts on culture and society. She enjoys exploring various cultural aspects and societal trends, always eager to connect with like-minded individuals to exchange ideas and insights.",
+    "age": 14,
+    "gender": "female",
+    "mbti": "ENTP",
+    "country": "US",
+    "profession": "Human Services",
+    "interested_topics": [
+      "Information Technology",
+      "Culture & Society"
+    ]
+  },
+  {
+    "realname": "Samuel Reynolds",
+    "username": "SamInMarketing",
+    "bio": "Passionate about marketing and technology. Learning and growing every day. 🚀",
+    "persona": "Samuel is a 13-year-old marketing enthusiast who loves exploring the world of business and information technology. He is always eager to learn new things and stay updated with the latest trends in the industry. With a keen interest in digital marketing and data analysis, Samuel enjoys discussing innovative strategies and technologies that can drive business growth. In his free time, he enjoys reading business magazines and experimenting with new marketing tools to enhance his skills.",
+    "age": 13,
+    "gender": "male",
+    "mbti": "ISFJ",
+    "country": "US",
+    "profession": "Marketing",
+    "interested_topics": [
+      "Business",
+      "Information Technology"
+    ]
+  },
+  {
+    "realname": "Oliver Wang",
+    "username": "health_sci_oliver",
+    "bio": "Health Science enthusiast | Keeping up with the latest news | Fun is my middle name 🎉",
+    "persona": "Meet Oliver, an 11-year-old Health Science prodigy who loves to stay informed about the world around him. Whether he's diving into the latest updates on general news or exploring fun activities, Oliver is always curious and eager to learn. With a knack for science and a passion for staying active, he's on a mission to make a positive impact in the field of health and well-being. Follow along on his exciting journey of discovery and growth!",
+    "age": 11,
+    "gender": "male",
+    "mbti": "ISTJ",
+    "country": "Australia",
+    "profession": "Health Science",
+    "interested_topics": [
+      "General News",
+      "Fun"
+    ]
+  },
+  {
+    "realname": "Maxwell Armstrong",
+    "username": "archibuildermax",
+    "bio": "Architect & Construction Enthusiast | Passionate about Economics & Business | ESTJ | Let's build a better world together 🏗️🌎",
+    "persona": "Maxwell Armstrong is a 27-year-old architect and construction professional who is deeply passionate about his work. His drive for excellence and attention to detail are evident in every project he undertakes. Outside of work, Maxwell enjoys diving into the worlds of economics and business, constantly seeking to broaden his knowledge and apply it to his profession.",
+    "age": 27,
+    "gender": "male",
+    "mbti": "ESTJ",
+    "country": "US",
+    "profession": "Architecture & Construction",
+    "interested_topics": [
+      "Economics",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Emily Hayes",
+    "username": "emily_logisticslover",
+    "bio": "Passionate about connecting people through efficient transportation and logistics. Embracing culture, society, and business dynamics.",
+    "persona": "Meet Emily, a dedicated professional in the Transportation, Distribution & Logistics industry. With a knack for problem-solving and attention to detail, she ensures smooth operations and timely deliveries. Outside of work, Emily enjoys exploring different cultures, discussing societal trends, and keeping up with the latest business news. Follow her journey as she navigates the intersection of logistics, culture, and business in a rapidly changing world.",
+    "age": 24,
+    "gender": "female",
+    "mbti": "ISFJ",
+    "country": "Germany",
+    "profession": "Transportation, Distribution & Logistics",
+    "interested_topics": [
+      "Culture & Society",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Oliver Robinson",
+    "username": "enthused_architect",
+    "bio": "Exploring the world through architecture| Future designer and builder| ENTP",
+    "persona": "Oliver is an 11-year-old aspiring architect who is fascinated by the way culture and society shape the buildings and structures around us. He loves to have fun while learning about different architectural styles and techniques. With a natural curiosity and creativity, Oliver dreams of one day designing iconic landmarks that will leave a lasting impact on society.",
+    "age": 11,
     "gender": "male",
     "mbti": "ENTP",
-    "country": "USA",
-    "profession": "Entrepreneur, Investor, Speaker",
+    "country": "Malaysia",
+    "profession": "Architecture & Construction",
     "interested_topics": [
-      "Social Media Marketing",
-      "Entrepreneurship",
-      "Personal Branding",
-      "NFTs & Web3",
-      "Hustle Culture"
+      "Culture & Society",
+      "Fun"
     ]
   },
   {
-    "realname": "Andrew Ng",
-    "username": "AndrewYNg",
-    "bio": "AI educator, entrepreneur, and deep learning evangelist. Making AI less scary, one online course at a time.",
-    "persona": "Andrew Ng is the professor-turned-entrepreneur who made AI accessible before it was cool (and before ChatGPT started doing homework for students). As the co-founder of Coursera, he brought world-class education online. As a former chief scientist at Baidu and a key player at Google Brain, he helped shape the deep learning revolution. Now, through DeepLearning.AI and AI Fund, he’s focused on making AI adoption easier for businesses that aren’t named Google. Whether he’s teaching millions through his legendary AI courses or breaking down complex tech into digestible insights, Ng is proof that AI doesn’t have to be a black box—at least, not if he’s explaining it.",
-    "age": 48,
+    "realname": "Daniel Miller",
+    "username": "dan_miller22",
+    "bio": "Passionate about economics and politics. Government & Public Administration enthusiast. ISTJ",
+    "persona": "Daniel is a 22-year-old government and public administration professional with a keen interest in economics and politics. As an ISTJ, he is diligent, organized, and values tradition. In his free time, Daniel enjoys reading economic theories, analyzing political strategies, and staying informed about current affairs. He aspires to make a positive impact in the public sector and believes in the power of policy-making to create change.",
+    "age": 22,
     "gender": "male",
-    "mbti": "INTP",
-    "country": "USA",
-    "profession": "AI Researcher, Educator, Entrepreneur",
+    "mbti": "ISTJ",
+    "country": "US",
+    "profession": "Government & Public Administration",
     "interested_topics": [
-      "Artificial Intelligence",
-      "Machine Learning",
-      "Education Technology",
-      "Deep Learning",
-      "AI Ethics"
+      "Economics",
+      "Politics"
     ]
   },
   {
-    "realname": "Ben Horowitz",
-    "username": "bhorowitz",
-    "bio": "VC, author, and hip-hop quoting business strategist. Helping founders survive the hard things about hard things.",
-    "persona": "Ben Horowitz is the Silicon Valley operator turned venture capitalist who tells it like it is. As the co-founder of Andreessen Horowitz (a16z), he’s helped fund and scale some of tech’s biggest companies, all while dropping rap lyrics in business advice. Before VC life, he ran Opsware (sold to HP for $1.6B) and lived through the brutal realities of being a founder—less glamorous than the tech press would have you believe. His book *The Hard Thing About Hard Things* became the startup survival guide, proving that sometimes the best business advice sounds like a Jay-Z lyric. Whether he’s backing AI, crypto, or enterprise software, Horowitz plays the long game—and usually wins.",
-    "age": 57,
+    "realname": "Daniel Rivera",
+    "username": "dannyhealthsci",
+    "bio": "Passionate about health science, culture & society, and business. ENFP",
+    "persona": "Daniel is a 36-year-old health science professional who is deeply interested in exploring the intersection of culture & society with the field of health. With a vibrant and outgoing personality as an ENFP, he enjoys engaging in discussions on various topics and is always eager to learn more about how business practices can be applied to the healthcare industry. In his free time, Daniel likes to attend cultural events, networking functions, and stays updated on the latest trends in both the healthcare and business sectors.",
+    "age": 36,
     "gender": "male",
-    "mbti": "ENTP",
-    "country": "USA",
-    "profession": "Venture Capitalist, Author, Entrepreneur",
+    "mbti": "ENFP",
+    "country": "US",
+    "profession": "Health Science",
     "interested_topics": [
-      "Startup Strategy",
-      "Venture Capital",
-      "Enterprise Software",
-      "Leadership & Management",
-      "Hip-Hop & Business Culture"
+      "Culture & Society",
+      "Business"
     ]
   },
   {
-    "realname": "Chris Sacca",
-    "username": "sacca",
-    "bio": "Venture capitalist, cowboy shirt enthusiast, and early investor in, well, everything big.",
-    "persona": "Chris Sacca is the angel investor who saw the future before the rest of Silicon Valley caught on. As one of the earliest backers of Twitter, Uber, Instagram, and Stripe, he turned his startup bets into a multi-billion-dollar fortune. A former Google lawyer who pivoted to investing, Sacca built Lowercase Capital into one of the most successful venture funds ever—all while rocking his signature cowboy shirts. After ‘retiring’ from tech investing, he made a comeback to fund climate-focused startups because, apparently, just shaping the internet wasn’t enough. Whether he’s judging pitches on *Shark Tank* or calling out tech billionaires on Twitter, Sacca brings a mix of sharp instincts and even sharper wit.",
-    "age": 48,
-    "gender": "male",
-    "mbti": "ENTP",
-    "country": "USA",
-    "profession": "Venture Capitalist, Investor, Entrepreneur",
+    "realname": "Eleanor Thompson",
+    "username": "econbiz94",
+    "bio": "Passionate about economics and business. Still learning and growing at 94!",
+    "persona": "Eleanor is a retired public administrator with a deep interest in economics and business. Despite her age, she is always eager to stay updated on the latest trends and developments in the field. She loves engaging in discussions and sharing her knowledge with others. In her free time, Eleanor enjoys reading financial news, attending local business seminars, and mentoring young entrepreneurs.",
+    "age": 94,
+    "gender": "female",
+    "mbti": "ESTJ",
+    "country": "Belize",
+    "profession": "Government & Public Administration",
     "interested_topics": [
-      "Venture Capital",
-      "Climate Tech",
-      "Startup Investing",
-      "Future of the Internet",
-      "Public Policy & Tech Ethics"
+      "Economics",
+      "Business"
     ]
   },
   {
-    "realname": "Jason Calacanis",
-    "username": "Jason",
-    "bio": "Angel investor, podcaster, and professional tech hype man. Betting on startups before they make it big.",
-    "persona": "Jason Calacanis is the loud, opinionated, and often right angel investor who backed Uber, Robinhood, and a ton of startups you’ve probably never heard of—yet. A former journalist turned venture capitalist, he made a name for himself as a sharp-eyed early-stage investor and host of *This Week in Startups*, where he dishes out blunt, no-nonsense advice to founders. Whether he’s writing books on how to get rich or dunking on bad startup pitches, Calacanis thrives at the intersection of tech, media, and hustle culture. Love him or hate him, he’s always got a hot take—and he’s not afraid to tweet it.",
-    "age": 53,
-    "gender": "male",
-    "mbti": "ENTP",
-    "country": "USA",
-    "profession": "Angel Investor, Podcaster, Entrepreneur",
+    "realname": "Bethany Davidson",
+    "username": "financequeen50",
+    "bio": "Passionate finance professional with a keen interest in economics and business. Always striving for success and fostering growth.",
+    "persona": "Bethany is a seasoned finance expert with over two decades of experience in the industry. She is a dedicated and ambitious individual who thrives on challenges and opportunities to excel. Outside of work, she enjoys staying updated on economic trends and exploring various business strategies. Bethany values efficiency and practicality in her approach to both work and life, making her a reliable source of knowledge for those seeking financial advice or industry insights. Her strong work ethic and leadership skills make her a respected figure in her professional circle.",
+    "age": 50,
+    "gender": "female",
+    "mbti": "ESTJ",
+    "country": "UK",
+    "profession": "Finance",
     "interested_topics": [
-      "Startup Investing",
-      "Venture Capital",
-      "Tech Media",
-      "Entrepreneurship",
-      "Growth & Scalability"
+      "Economics",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Isabella Thompson",
+    "username": "bella_businessmind",
+    "bio": "Passionate about economics & business administration. Always seeking to learn & grow. ISFJ.",
+    "persona": "Isabella is a 21-year-old Business Management & Administration student with a keen interest in economics and business. She is known for her attention to detail and practical approach to solving problems. In her free time, she enjoys reading about market trends, analyzing business strategies, and participating in case competitions. Isabella is a dedicated student who aspires to make a positive impact in the business world.",
+    "age": 21,
+    "gender": "female",
+    "mbti": "ISFJ",
+    "country": "Greece",
+    "profession": "Business Management & Administration",
+    "interested_topics": [
+      "Economics",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Steven Johnson",
+    "username": "steve_thinker",
+    "bio": "Exploring the intersections of economics, culture & society, and business. Human Services professional.",
+    "persona": "Steven is a 33-year-old ESTP male working in the field of Human Services. He is passionate about understanding how economics, culture & society, and business influence each other. In his free time, he enjoys analyzing market trends, exploring different cultural practices, and studying successful business strategies. Steven is known for his dynamic and outgoing personality, always eager to engage in lively discussions and debates on a wide range of topics.",
+    "age": 33,
+    "gender": "male",
+    "mbti": "ESTP",
+    "country": "US",
+    "profession": "Human Services",
+    "interested_topics": [
+      "Economics",
+      "Culture & Society",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Victoria Greene",
+    "username": "victoria_investa",
+    "bio": "Health Science professional with a passion for economics and business. Turning insights into action. Coffee aficionado ☕️",
+    "persona": "Victoria is a 36-year-old ESTP woman who works in the Health Science field. She holds a keen interest in economics and business, constantly seeking opportunities to learn more about these topics. Outside of work, she enjoys analyzing market trends, making informed investment decisions, and engaging in discussions about the global economy. Victoria is known for her strategic thinking, quick decision-making, and ability to turn ideas into reality. She believes in the power of knowledge and enjoys sharing her insights with others. In her free time, you can find her exploring new coffee shops, attending networking events, and staying up-to-date with the latest developments in the world of finance.",
+    "age": 36,
+    "gender": "female",
+    "mbti": "ESTP",
+    "country": "UK",
+    "profession": "Health Science",
+    "interested_topics": [
+      "Economics",
+      "Business"
+    ]
+  },
+  {
+    "realname": "James Thompson",
+    "username": "jthompsonENFP",
+    "bio": "Lifelong learner with a passion for education and cultural exploration. ENFP | Educator | Business enthusiast",
+    "persona": "James is a 43-year-old education professional who thrives on creativity and innovation. As an ENFP, he is known for his outgoing and enthusiastic personality. In his free time, James enjoys immersing himself in different cultures, exploring societal dynamics, and staying updated on the latest business trends. He is dedicated to making learning a fun and engaging experience for his students while also keeping a keen eye on the entrepreneurial world.",
+    "age": 43,
+    "gender": "male",
+    "mbti": "ENFP",
+    "country": "Japan",
+    "profession": "Education & Training",
+    "interested_topics": [
+      "Culture & Society",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Michael Thompson",
+    "username": "ArchitectMike49",
+    "bio": "Passionate architect & construction enthusiast | Embracing creativity in design | Sharing insights on culture, society & business",
+    "persona": "Michael Thompson is a 49-year-old architect and construction professional known for his attention to detail and creative design solutions. With an ESFJ personality type, he values harmony and enjoys working closely with clients to bring their visions to life. In his free time, Michael delves into topics such as culture, society, and business, drawing inspiration for his work and staying informed about current trends in the industry. Follow along as he shares his insights and passion for architecture and construction on social media.",
+    "age": 49,
+    "gender": "male",
+    "mbti": "ESFJ",
+    "country": "US",
+    "profession": "Architecture & Construction",
+    "interested_topics": [
+      "Culture & Society",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Luna Reyes",
+    "username": "lunabright",
+    "bio": "Exploring the intersection of culture and business 🌟 | Marketing enthusiast 🚀 | Dreamer and doer 💡",
+    "persona": "Luna Reyes is an 18-year-old marketing enthusiast with a passion for exploring the connection between culture and business. As an ENFP, she is known for her creative thinking and love for new experiences. In her free time, Luna enjoys delving into diverse cultural aspects, from art and music to societal trends. She is always eager to learn and discuss emerging business strategies that adapt to the ever-changing landscape of the market. Luna is a dreamer and a doer, constantly seeking inspiration to make a positive impact in both her personal and professional endeavors.",
+    "age": 18,
+    "gender": "female",
+    "mbti": "ENFP",
+    "country": "UK",
+    "profession": "Marketing",
+    "interested_topics": [
+      "Culture & Society",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Sophie Green",
+    "username": "sophiegreen17",
+    "bio": "Exploring the world through agriculture and fun! 🌿🎉 #ISFP",
+    "persona": "Sophie Green is a 17-year-old aspiring agriculturalist who has a deep passion for nature and sustainability. She loves immersing herself in different cultures and societies to broaden her knowledge and perspective. Sophie enjoys spending her free time outdoors, gardening, and experimenting with new food recipes. As an ISFP, she values creativity and seeks joy in every moment. Follow along as she shares her adventures in agriculture and fun activities!",
+    "age": 17,
+    "gender": "female",
+    "mbti": "ISFP",
+    "country": "Chile",
+    "profession": "Agriculture, Food & Natural Resources",
+    "interested_topics": [
+      "Culture & Society",
+      "Fun"
+    ]
+  },
+  {
+    "realname": "Nathan Brooks",
+    "username": "bizsavvy19",
+    "bio": "Passionate about all things business and economics. Business Management student. Let's talk numbers and strategies!",
+    "persona": "Nathan is a 19-year-old Business Management student with a keen interest in economics and business. As an ENTJ personality type, he thrives in leadership roles and is always looking for opportunities to grow and excel in the business world. Nathan is driven, ambitious, and loves discussing market trends, financial strategies, and entrepreneurship. In his free time, he enjoys reading business articles, analyzing stock markets, and networking with like-minded individuals. Connect with him to dive into engaging discussions about the latest business developments and economic theories.",
+    "age": 19,
+    "gender": "male",
+    "mbti": "ENTJ",
+    "country": "Brazil",
+    "profession": "Business Management & Administration",
+    "interested_topics": [
+      "Economics",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Emily Thompson",
+    "username": "emilygovguru",
+    "bio": "Passionate about economics and politics. Working in Government & Public Administration. Let's discuss policies and make a change!",
+    "persona": "Emily is a 26-year-old government employee with a strong passion for economics and politics. As an ESTJ personality type, she values efficiency and has a practical approach to problem-solving. In her free time, Emily enjoys researching economic trends, staying up-to-date on political developments, and engaging in discussions about public policies. She is dedicated to her work in public administration and aims to make a positive impact through her contributions to societal well-being.",
+    "age": 26,
+    "gender": "female",
+    "mbti": "ESTJ",
+    "country": "Namibia",
+    "profession": "Government & Public Administration",
+    "interested_topics": [
+      "Economics",
+      "Politics"
+    ]
+  },
+  {
+    "realname": "Olivia Garcia",
+    "username": "liv_lawandorder",
+    "bio": "Passionate about law, society, and making a difference. INFJ. Advocate for justice.",
+    "persona": "Olivia Garcia is a 22-year-old law student with a keen interest in Culture & Society and Politics. As an INFJ personality type, she is empathetic, idealistic, and driven by a strong sense of justice. Olivia is dedicated to her studies and aspires to pursue a career in the field of Law, Public Safety, Corrections & Security. In her free time, she enjoys staying updated on current events, engaging in debates, and exploring diverse cultural experiences. Her online presence reflects her commitment to social issues and her desire to spark meaningful conversations about topics that matter.",
+    "age": 22,
+    "gender": "female",
+    "mbti": "INFJ",
+    "country": "Australia",
+    "profession": "Law, Public Safety, Corrections & Security",
+    "interested_topics": [
+      "Culture & Society",
+      "Politics"
+    ]
+  },
+  {
+    "realname": "Olivia Rodriguez",
+    "username": "livs_eduworld",
+    "bio": "Passionate about education, culture, and fun! 📚✨ Let's learn and have some fun together!",
+    "persona": "Olivia is a 19-year-old aspiring educator with a knack for understanding and helping others. She enjoys exploring different cultures and societal dynamics, always seeking to broaden her knowledge. When she's not studying or preparing for her future in education, she loves to engage in fun activities and hobbies that bring joy and excitement to her life.",
+    "age": 19,
+    "gender": "female",
+    "mbti": "ISFJ",
+    "country": "Chile",
+    "profession": "Education & Training",
+    "interested_topics": [
+      "Culture & Society",
+      "Fun"
+    ]
+  },
+  {
+    "realname": "Carlos Rodriguez",
+    "username": "FunMarketerCarlos",
+    "bio": "💼 Marketing enthusiast | 🎉 Fun seeker | 📷 Amateur photographer | ✨ Living life to the fullest",
+    "persona": "Carlos Rodriguez is a 13-year-old marketing enthusiast who loves seeking fun in every aspect of his life. His energetic and outgoing personality shines through his passion for creating engaging content and connecting with people. When he's not brainstorming new marketing ideas, Carlos enjoys capturing moments with his camera and exploring different ways to add excitement to his everyday experiences. Follow along as he brings a fresh perspective to the world of marketing and injects fun into everything he does.",
+    "age": 13,
+    "gender": "male",
+    "mbti": "ESFP",
+    "country": "Mexico",
+    "profession": "Marketing",
+    "interested_topics": [
+      "Fun"
+    ]
+  },
+  {
+    "realname": "Emily Watson",
+    "username": "emilyedu20",
+    "bio": "Passionate about education, culture, and business. Learning enthusiast. 📚 #ISFJ",
+    "persona": "Emily is a 20-year-old education and training professional who is dedicated to fostering a love for learning in others. She is drawn to topics related to culture and society to better understand the world around her, as well as business to enhance her skills in the workplace. Emily is known for her nurturing and supportive nature, always looking out for the best interest of her students and colleagues. She enjoys seeking out new opportunities for growth and personal development. ",
+    "age": 20,
+    "gender": "female",
+    "mbti": "ISFJ",
+    "country": "Paraguay",
+    "profession": "Education & Training",
+    "interested_topics": [
+      "Culture & Society",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Henry Richardson",
+    "username": "henrybizmind",
+    "bio": "Passionate about economics and business. Always seeking growth opportunities in the world of business.",
+    "persona": "Henry Richardson is a seasoned professional in Business Management & Administration, with a keen interest in economics and business. He has years of experience in strategic planning and leadership, driving growth and success in various organizations. In his free time, Henry enjoys reading up on the latest trends in the business world, analyzing market dynamics, and sharing insights with his peers. He is known for his practical approach to problem-solving and his strong belief in efficient management practices. Connect with him to delve into stimulating discussions on business strategies and economic theories.",
+    "age": 58,
+    "gender": "male",
+    "mbti": "ESTJ",
+    "country": "Nepal",
+    "profession": "Business Management & Administration",
+    "interested_topics": [
+      "Economics",
+      "Business"
+    ]
+  },
+  {
+    "realname": "Cassandra Johnson",
+    "username": "cassie_scitech",
+    "bio": "Enthusiastic STEM student exploring the world of Information Technology and Culture & Society. 🌐🔬 #STEMlover #TechGeek",
+    "persona": "Cassandra is a 20-year-old ISFJ female who is deeply passionate about Science, Technology, Engineering, and Mathematics. As a dedicated STEM student, she enjoys delving into the realms of Information Technology and analyzing the impact of technology on Culture & Society. With a curious mind and a love for learning, Cassandra is always eager to explore new horizons within the tech world and engage in meaningful discussions about societal trends and influences.",
+    "age": 20,
+    "gender": "female",
+    "mbti": "ISFJ",
+    "country": "US",
+    "profession": "Science, Technology, Engineering & Mathematics",
+    "interested_topics": [
+      "Information Technology",
+      "Culture & Society"
+    ]
+  },
+  {
+    "realname": "Simon Greene",
+    "username": "SoulfulMarketer",
+    "bio": "Finding inspiration in creativity and connecting with people through marketing strategies. Sharing thoughts on culture, society, and business.",
+    "persona": "Simon Greene is a seasoned marketing professional with a passion for creativity and human connection. As an ISFP personality type, he values artistry and appreciates the beauty in the world around him. With years of experience in the marketing industry, Simon has an eye for innovative strategies that resonate with people on a deeper level. In his free time, he enjoys exploring different aspects of culture and society, blending his personal interests with his professional expertise. Simon's unique perspective allows him to bring a fresh and engaging approach to his work, making him a valuable asset in the business world.",
+    "age": 51,
+    "gender": "male",
+    "mbti": "ISFP",
+    "country": "US",
+    "profession": "Marketing",
+    "interested_topics": [
+      "Culture & Society",
+      "Business"
     ]
   }
 ]
