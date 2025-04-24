@@ -419,7 +419,6 @@ async def gen_control_agents_with_data(
         name = "momo"
         bio = "None."
         response = await agent.env.action.sign_up(user_name, name, bio)
-        print(response)
         user_id = response["user_id"]
         agent_user_id_mapping[i] = user_id
 
@@ -459,14 +458,12 @@ async def generate_reddit_agents(
         profile["other_info"]["gender"] = agent_info[i]["gender"]
         profile["other_info"]["age"] = agent_info[i]["age"]
         profile["other_info"]["country"] = agent_info[i]["country"]
-        profile["other_info"]["profession"] = agent_info[i]["profession"]
-        profile["other_info"]["realname"] = agent_info[i]["realname"]
 
         user_info = UserInfo(
             name=agent_info[i]["username"],
             description=agent_info[i]["bio"],
             profile=profile,
-            recsys_type="twitter",
+            recsys_type="reddit",
         )
 
         agent = SocialAgent(

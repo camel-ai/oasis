@@ -67,6 +67,5 @@ repos:
       - id: check-license
         name: Check License
         entry: python licenses/update_license.py . licenses/license_template.txt
-        language: python
-        language_version: python3.10
+        language: system
         types: [python]

@@ -19,30 +19,14 @@ from oasis.social_platform.typing import RecsysType
 
 class PlatformUtils:
 
-<<<<<<< HEAD
-    def __init__(
-        self,
-        db,
-        db_cursor,
-        start_time,
-        sandbox_clock,
-        show_score,
-        current_timestep,
-    ):
-=======
     def __init__(self, db, db_cursor, start_time, sandbox_clock, show_score,
                  recsys_type):
->>>>>>> afb798543c7767d1495b430d99a785ceb691e64b
         self.db = db
         self.db_cursor = db_cursor
         self.start_time = start_time
         self.sandbox_clock = sandbox_clock
         self.show_score = show_score
-<<<<<<< HEAD
-        self.current_timestep = current_timestep
-=======
         self.recsys_type = recsys_type
->>>>>>> afb798543c7767d1495b430d99a785ceb691e64b
 
     @staticmethod
     def _not_signup_error_message(agent_id):
@@ -200,11 +184,7 @@ class PlatformUtils:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-<<<<<<< HEAD
-            current_time = self.current_timestep
-=======
             current_time = self.sandbox_clock.get_time_step()
->>>>>>> afb798543c7767d1495b430d99a785ceb691e64b
 
         trace_insert_query = (
             "INSERT INTO trace (user_id, created_at, action, info) "
