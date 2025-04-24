@@ -51,7 +51,7 @@ class Platform:
     def __init__(
         self,
         db_path: str,
-        channel: Any = None,
+        channel: Any = Channel(),
         sandbox_clock: Clock | None = None,
         start_time: datetime | None = None,
         show_score: bool = False,
