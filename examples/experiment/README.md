@@ -171,7 +171,7 @@ inference:
       ports: [8002, 8003, 8005]  # Input the list of all ports obtained in step 3
 ```
 
-Additionally, you can modify other settings related to data and experimental details in the yaml file. For instructions on this part, refer to `examples/experiment\reddit_gpt_example\gpt_example.yaml`.
+Additionally, you can modify other settings related to data and experimental details in the yaml file. For instructions on this part, refer to `examples\experiment\reddit_gpt_example\gpt_example.yaml`.
 
 ### Step 5: Run the Main Program
 
