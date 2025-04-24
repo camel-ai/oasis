@@ -1,0 +1,41 @@
+---
+title: 'Models'
+description: 'Comprehensive guide to all available models in the OASIS simulation environment'
+---
+
+# Models
+
+Here's a polished version:
+
+OASIS supports all models listed in `camel` here: [https://docs.camel-ai.org/key_modules/models.html](https://docs.camel-ai.org/key_modules/models.html).
+
+Note that only models with tool-calling support can successfully perform actions in OASIS.
+You can pass a `ModelBackend` or a `List[ModelBackend]` as needed.
+
+For example, the OPENAI model:
+```python
+from camel.models import ModelFactory
+from camel.types import ModelPlatformType, ModelType
+from camel.configs import ChatGPTConfig
+
+# Define the model, here in this case we use gpt-4o-mini
+model = ModelFactory.create(
+    model_platform=ModelPlatformType.OPENAI,
+    model_type=ModelType.GPT_4O_MINI,
+    model_config_dict=ChatGPTConfig().as_dict(),
+)
+```
+
+For the vLLM model, note that to deploy the model with tool-calling capabilities, you should refer to the documentation here: https://docs.vllm.ai/en/latest/features/tool_calling.html.
+
+```python
+from camel.models import ModelFactory
+from camel.types import ModelPlatformType
+
+vllm_model = ModelFactory.create(
+    model_platform=ModelPlatformType.VLLM,
+    model_type="microsoft/Phi-3-mini-4k-instruct",
+    url="http://localhost:8000/v1", # Optional
+    model_config_dict={"temperature": 0.0}, # Optional
+)
+```

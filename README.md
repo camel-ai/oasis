@@ -106,55 +106,97 @@ For more showcaes:
 
 ## ⚙️ Quick Start
 
-### 1. Clone the Repository
+1. **Install the OASIS package:**
+
+Installing OASIS is a breeze thanks to its availability on PyPI. Simply open your terminal and run:
 
 ```bash
-git clone https://github.com/camel-ai/oasis.git
-
-cd oasis
+pip install camel-oasis
 ```
 
-### 2. Create and Activate a Virtual Environment
-
-Please choose one of the following methods to set up your environment. You only need to follow one of these methods.
-
-- Option 1: Using Conda (Linux & macOS & windows)
+2. **Set up your OpenAI API key:**
 
 ```bash
-conda create --name oasis python=3.10
-conda activate oasis
+# For Bash shell (Linux, macOS, Git Bash on Windows):
+export OPENAI_API_KEY=<insert your OpenAI API key>
+
+# For Windows Command Prompt:
+set OPENAI_API_KEY=<insert your OpenAI API key>
 ```
 
-- Option 2: Using venv (Linux & macOS)
+3. **Prepare the agent profile file:**
 
-```bash
-python -m venv oasis-venv
-source oasis-venv/bin/activate
-```
+Create the profile you want to assign to the agent. As an example, you can download [user_data_36.json](https://github.com/camel-ai/oasis/blob/main/data/reddit/user_data_36.json) and place it in your local `./data/reddit` folder.
 
-- Option 3: Using venv (Windows)
+4. **Run the following Python code:**
 
-```bash
-python -m venv oasis-venv
-oasis-venv\Scripts\activate
-```
+```python
+import asyncio
+import os
 
-### 3. Install Necessary Packages
+from camel.models import ModelFactory
+from camel.types import ModelPlatformType, ModelType
 
-```bash
-pip install --upgrade pip setuptools
+import oasis
+from oasis import ActionType, EnvAction, SingleAction
 
-pip install -e .  # This will install dependencies as specified in pyproject.toml
+
+async def main():
+  # Define the model for the agents
+  openai_model = ModelFactory.create(
+      model_platform=ModelPlatformType.OPENAI,
+      model_type=ModelType.GPT_4O_MINI,
+  )
+
+  # Define the available actions for the agents
+  available_actions = [
+      ActionType.LIKE_POST,
+      ActionType.CREATE_POST,
+      ActionType.CREATE_COMMENT,
+      ActionType.FOLLOW
+  ]
+
+  # Make the environment
+  env = oasis.make(
+      platform=oasis.DefaultPlatformType.REDDIT,
+      database_path="reddit_simulation.db",
+      agent_profile_path="./data/reddit/user_data_36.json",
+      agent_models=openai_model,
+      available_actions=available_actions,
+  )
+
+  # Run the environment
+  await env.reset()
+
+  action = SingleAction(
+    agent_id=0,
+    action=ActionType.CREATE_POST,
+    args={"content": "Welcome to the OASIS World!"}
+  )
+
+  env_actions = EnvAction(
+    activate_agents=list(range(10)),  # activate the first 10 agents
+    intervention=[action]
+  )
+
+  # Apply interventions to the environment, refresh the recommendation system, and LLM agent perform actions
+  await env.step(env_actions)
+
+  # Close the environment
+  await env.close()
+
+if __name__ == "__main__":
+  asyncio.run(main())
 ```
 
 <br>
 
 > \[!TIP\]
-> For more detailed instructions and additional configuration options, check out the [installation section](tutorials/installation.md).
+> For more detailed instructions and additional configuration options, check out the documentation(coming soon).
 
 ### More Tutorials
 
-To discover how to create profiles for large-scale users, as well as how to visualize and analyze social simulation data once your experiment concludes, please refer to [More Tutorials](tutorials/tutorial.md) for detailed guidance.
+To discover how to create profiles for large-scale users, as well as how to visualize and analyze social simulation data once your experiment concludes, please refer to [More Tutorials](examples/experiment/user_generation_visualization.md) for detailed guidance.
 
 <div align="center">
   <img src="assets/tutorial.png" alt="Tutorial Overview">

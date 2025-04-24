@@ -1,0 +1,184 @@
+---
+title: 'Recommendation Systems'
+description: 'Configure the recommendation systems for OASIS simulations'
+---
+
+# Recommendation Settings
+
+OASIS provides various recommendation systems that determine how content is presented to users in the simulation. This guide explains how to configure recommendation settings for your social media platform simulations.
+
+## Recommendation System Types
+
+OASIS supports several recommendation system types through the `RecsysType` enum:
+
+```python
+from oasis.social_platform.typing import RecsysType
+
+# When creating a custom platform
+platform = Platform(
+    db_path="./data/simulation.db",
+    channel=channel,
+    recsys_type=RecsysType.TWHIN,  # Choose your recommendation system
+    # Additional parameters...
+)
+```
+
+The available recommendation system types are:
+
+| RecsysType | Description |
+|------------|-------------|
+| `TWITTER` | Standard Twitter-like recommendation system |
+| `TWHIN` | TWHINBert-based recommendation system for Twitter-like platforms |
+| `REDDIT` | Reddit-style recommendation system |
+| `RANDOM` | Random content recommendation (for baseline testing) |
+
+## Configuring Recommendation Parameters
+
+When initializing a `Platform` object, you can configure various recommendation-related parameters:
+
+```python
+from oasis import Platform
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.typing import RecsysType
+
+channel = Channel()
+platform = Platform(
+    db_path="./data/simulation.db",
+    channel=channel,
+    recsys_type=RecsysType.TWHIN,
+    refresh_rec_post_count=2,      # Number of posts per refresh
+    max_rec_post_len=10,           # Max posts in recommendation buffer
+    following_post_count=3,        # Posts from followed users
+    use_openai_embedding=False,    # Whether to use OpenAI embeddings
+)
+```
+
+### Key Recommendation Parameters
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+| `recsys_type` | `RecsysType` | The recommendation system algorithm | `"reddit"` |
+| `refresh_rec_post_count` | `int` | Number of posts returned per refresh | `1` for Twitter, `5` for Reddit |
+| `max_rec_post_len` | `int` | Maximum number of posts in the recommendation table (buffer) | `2` for Twitter, `100` for Reddit |
+| `following_post_count` | `int` | Number of posts from followed users to show | `3` |
+| `use_openai_embedding` | `bool` | Whether to use OpenAI embeddings for content matching | `False` |
+| `rec_prob` | `float` | Probability balance between random and personalized recommendations | `0.7` |
+
+## Platform-Specific Recommendation Settings
+
+### Twitter-like Platform
+
+For Twitter-like platforms, you can use the TwHIN-Bert recommendation system:
+
+```python
+platform = Platform(
+    db_path="./data/twitter_simulation.db",
+    channel=channel,
+    recsys_type=RecsysType.TWHIN,
+    refresh_rec_post_count=2,
+    max_rec_post_len=2,
+    following_post_count=3,
+)
+```
+
+The TwHIN recommendation system uses embeddings to match content with user interests.
+
+### Reddit-like Platform
+
+For Reddit-like platforms, the recommendation system focuses on post scores and engagement:
+
+```python
+platform = Platform(
+    db_path="./data/reddit_simulation.db",
+    channel=channel,
+    recsys_type=RecsysType.REDDIT,
+    allow_self_rating=True,
+    show_score=True,
+    max_rec_post_len=100,
+    refresh_rec_post_count=5,
+)
+```
+
+Reddit-style recommendations prioritize posts with higher scores (upvotes minus downvotes).
+
+## Content Visibility Settings
+
+### Score Display
+
+The `show_score` parameter determines how content ratings are presented to agents:
+
+- `show_score=True`: Shows a single score (likes minus dislikes), Reddit-style
+- `show_score=False`: Shows likes and dislikes separately, Twitter-style
+
+### Self-Rating
+
+The `allow_self_rating` parameter controls whether users can rate their own content:
+
+- `allow_self_rating=True`: Users can like/dislike their own posts and comments
+- `allow_self_rating=False`: Users cannot rate their own content
+
+## Recommendation System Implementation
+
+The recommendation systems in OASIS are implemented in the platform's `update_rec_table` method, which uses different algorithms based on the configured `recsys_type`:
+
+```python
+async def update_rec_table(self):
+    # Recsys(trace/user/post table), refresh rec table
+    if self.recsys_type == RecsysType.REDDIT:
+        user_ids = fetch_table_from_db(self.db, "user", "user_id", None,
+                                        columns=["user_id"])
+        post_ids = fetch_table_from_db(self.db, "post", "post_id", None)
+        user_ids = [user_id[0] for user_id in user_ids]
+        rec_sys_reddit(
+            self.db,
+            self.db_cursor,
+            self.max_rec_post_len,
+            self.sandbox_clock.get_time_step(),
+            user_ids,
+            post_ids,
+        )
+    elif self.recsys_type == RecsysType.RANDOM:
+        user_ids = fetch_table_from_db(self.db, "user", "user_id", None,
+                                        columns=["user_id"])
+        post_ids = fetch_table_from_db(self.db, "post", "post_id", None)
+        user_ids = [user_id[0] for user_id in user_ids]
+        rec_sys_random(
+            self.db,
+            self.db_cursor,
+            self.max_rec_post_len,
+            user_ids,
+            post_ids,
+        )
+    elif self.recsys_type == RecsysType.TWHIN:
+        user_post_matrix = fetch_rec_table_as_matrix(
+            self.db,
+            "rec_post",
+            "user_id",
+            "post_id",
+            "timestamp",
+        )
+        rec_sys_personalized_twh(
+            self.db,
+            self.db_cursor,
+            self.max_rec_post_len,
+            user_post_matrix,
+            use_openai_embedding=self.use_openai_embedding,
+        )
+    else:
+        trace_data = fetch_table_from_db(self.db, "trace", "trace_id", None)
+        rec_sys_personalized_with_trace(
+            self.db,
+            self.db_cursor,
+            self.max_rec_post_len,
+            trace_data,
+        )
+```
+
+## Custom Recommendation Systems
+
+For advanced use cases, you can implement custom recommendation algorithms by creating a specialized Platform class and overriding the `update_rec_table` method.
+
+## Related Topics
+
+- [Basic Environment Settings](/environment_settings/basic_settings)
+- [Simulation Settings](/environment_settings/simulation_settings)

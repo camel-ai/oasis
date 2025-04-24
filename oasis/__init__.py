@@ -11,4 +11,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-__version__ = "0.0.1"
+__version__ = "0.1.1"
+
+from oasis.environment.env_action import EnvAction, SingleAction
+from oasis.environment.make import make
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import ActionType, DefaultPlatformType
+from oasis.testing.show_db import print_db_contents
+
+__all__ = [
+    "make",
+    "Platform",
+    "ActionType",
+    "DefaultPlatformType",
+    "EnvAction",
+    "SingleAction",
+    "print_db_contents",
+]

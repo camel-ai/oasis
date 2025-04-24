@@ -1,0 +1,18 @@
+---
+data:
+  db_path: data/simu_db/yaml_200/False_Business_0.db
+  csv_path: data/twitter_dataset/anonymous_topic_200_1h/False_Business_0.csv
+simulation:
+  num_timesteps: 30
+  clock_factor: 60
+  recsys_type: twhin-bert
+  available_actions:
+    - do_nothing
+    - repost
+    - like_post
+    - follow
+inference:
+  model_type: qwen-2
+  server_url:
+    - host: 10.109.8.49
+      ports: [8080]

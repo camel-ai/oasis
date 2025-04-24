@@ -1,0 +1,18 @@
+---
+data:
+  db_path: data/simu_db/yaml_gpt/False_Business_0.db
+  csv_path: data/twitter_dataset/anonymous_topic_200_1h/False_Business_0.csv
+simulation:
+  num_timesteps: 3
+  clock_factor: 60
+  recsys_type: twhin-bert
+  available_actions:
+    - do_nothing
+    - repost
+    - quote_post
+    - like_post
+    - follow
+  use_openai_embedding: true
+inference:
+  model_type: gpt-4o-mini  # Name of the OpenAI model
+  is_openai_model: true  # Whether it is an OpenAI model

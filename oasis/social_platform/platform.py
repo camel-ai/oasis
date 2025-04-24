@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from oasis.clock.clock import Clock
+from oasis.social_platform.channel import Channel
 from oasis.social_platform.database import (create_db,
                                             fetch_rec_table_as_matrix,
                                             fetch_table_from_db)
@@ -31,6 +32,11 @@ from oasis.social_platform.recsys import (rec_sys_personalized_twh,
                                           rec_sys_personalized_with_trace,
                                           rec_sys_random, rec_sys_reddit)
 from oasis.social_platform.typing import ActionType, RecsysType
+
+# Create log directory if it doesn't exist
+log_dir = "./log"
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
 
 if "sphinx" not in sys.modules:
     twitter_log = logging.getLogger(name="social.twitter")
@@ -50,7 +56,7 @@ class Platform:
     def __init__(
         self,
         db_path: str,
-        channel: Any,
+        channel: Any = None,
         sandbox_clock: Clock | None = None,
         start_time: datetime | None = None,
         show_score: bool = False,
@@ -64,23 +70,20 @@ class Platform:
         self.db_path = db_path
         self.recsys_type = recsys_type
         # import pdb; pdb.set_trace()
-        if self.recsys_type == "reddit":
-            # If no clock is specified, default the platform's time
-            # magnification factor to 60
-            if sandbox_clock is None:
-                sandbox_clock = Clock(60)
-            if start_time is None:
-                start_time = datetime.now()
-            self.start_time = start_time
-            self.sandbox_clock = sandbox_clock
-        else:
-            self.start_time = 0
-            self.sandbox_clock = None
+
+        # If no clock is specified, default the platform's time
+        # magnification factor to 60
+        if sandbox_clock is None:
+            sandbox_clock = Clock(60)
+        if start_time is None:
+            start_time = datetime.now()
+        self.start_time = start_time
+        self.sandbox_clock = sandbox_clock
 
         self.db, self.db_cursor = create_db(self.db_path)
         self.db.execute("PRAGMA synchronous = OFF")
 
-        self.channel = channel
+        self.channel = channel or Channel()
 
         self.recsys_type = RecsysType(recsys_type)
 
@@ -115,6 +118,7 @@ class Platform:
             self.start_time,
             self.sandbox_clock,
             self.show_score,
+            self.recsys_type,
         )
 
     async def running(self):
@@ -173,7 +177,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_insert_query = (
                 "INSERT INTO user (user_id, agent_id, user_name, name, bio, "
@@ -189,10 +193,10 @@ class Platform:
             action_info = {"name": name, "user_name": user_name, "bio": bio}
             self.pl_utils._record_trace(user_id, ActionType.SIGNUP.value,
                                         action_info, current_time)
-            twitter_log.info(f"Trace inserted: user_id={user_id}, "
-                             f"current_time={current_time}, "
-                             f"action={ActionType.SIGNUP.value}, "
-                             f"info={action_info}")
+            # twitter_log.info(f"Trace inserted: user_id={user_id}, "
+            #                  f"current_time={current_time}, "
+            #                  f"action={ActionType.SIGNUP.value}, "
+            #                  f"info={action_info}")
             return {"success": True, "user_id": user_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -215,7 +219,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         # try:
         user_id = agent_id
         # Check if a like record already exists
@@ -253,7 +257,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
             # Retrieve all post_ids for a given user_id from the rec table
@@ -309,7 +313,7 @@ class Platform:
                 results)
 
             action_info = {"posts": results_with_comments}
-            twitter_log.info(action_info)
+            # twitter_log.info(action_info)
             self.pl_utils._record_trace(user_id, ActionType.REFRESH.value,
                                         action_info, current_time)
 
@@ -319,6 +323,7 @@ class Platform:
 
     async def update_rec_table(self):
         # Recsys(trace/user/post table), refresh rec table
+        twitter_log.info("Starting to refresh recommendation system cache...")
         user_table = fetch_table_from_db(self.db_cursor, "user")
         post_table = fetch_table_from_db(self.db_cursor, "post")
         trace_table = fetch_table_from_db(self.db_cursor, "trace")
@@ -351,6 +356,7 @@ class Platform:
                 trace_table,
                 rec_matrix,
                 self.max_rec_post_len,
+                self.sandbox_clock.time_step,
                 use_openai_embedding=self.use_openai_embedding,
             )
         elif self.recsys_type == RecsysType.REDDIT:
@@ -382,7 +388,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
@@ -398,10 +404,10 @@ class Platform:
             self.pl_utils._record_trace(user_id, ActionType.CREATE_POST.value,
                                         action_info, current_time)
 
-            twitter_log.info(f"Trace inserted: user_id={user_id}, "
-                             f"current_time={current_time}, "
-                             f"action={ActionType.CREATE_POST.value}, "
-                             f"info={action_info}")
+            # twitter_log.info(f"Trace inserted: user_id={user_id}, "
+            #                  f"current_time={current_time}, "
+            #                  f"action={ActionType.CREATE_POST.value}, "
+            #                  f"info={action_info}")
             return {"success": True, "post_id": post_id}
 
         except Exception as e:
@@ -412,7 +418,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
@@ -487,7 +493,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
@@ -545,7 +551,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -649,7 +655,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -841,7 +847,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
             # Check if a follow record already exists
@@ -885,10 +891,10 @@ class Platform:
             action_info = {"follow_id": follow_id}
             self.pl_utils._record_trace(user_id, ActionType.FOLLOW.value,
                                         action_info, current_time)
-            twitter_log.info(f"Trace inserted: user_id={user_id}, "
-                             f"current_time={current_time}, "
-                             f"action={ActionType.FOLLOW.value}, "
-                             f"info={action_info}")
+            # twitter_log.info(f"Trace inserted: user_id={user_id}, "
+            #                  f"current_time={current_time}, "
+            #                  f"action={ActionType.FOLLOW.value}, "
+            #                  f"info={action_info}")
             return {"success": True, "follow_id": follow_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -948,7 +954,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
             # Check if a mute record already exists
@@ -1015,7 +1021,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
             # Calculate the start time for the search
@@ -1062,7 +1068,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -1095,7 +1101,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
@@ -1203,7 +1209,7 @@ class Platform:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
-            current_time = os.environ["SANDBOX_TIME"]
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
@@ -1258,6 +1264,11 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def undo_dislike_comment(self, agent_id: int, comment_id: int):
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
@@ -1299,18 +1310,23 @@ class Platform:
             }
             self.pl_utils._record_trace(user_id,
                                         ActionType.UNDO_DISLIKE_COMMENT.value,
-                                        action_info)
+                                        action_info, current_time)
             return {"success": True, "comment_dislike_id": comment_dislike_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def do_nothing(self, agent_id: int):
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
 
             action_info = {}
             self.pl_utils._record_trace(user_id, ActionType.DO_NOTHING.value,
-                                        action_info)
+                                        action_info, current_time)
             return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}

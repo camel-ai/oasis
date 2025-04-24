@@ -1,0 +1,96 @@
+---
+data:
+  db_path: data/db/100w.db
+  csv_path: data/100w_misinfo.csv
+simulation:
+  num_timesteps: 60
+  clock_factor: 60
+  recsys_type: twhin-bert
+  available_actions:
+    - do_nothing
+    - repost
+    - like_post
+    - follow
+inference:
+  model_type: llama-3
+  model_path: models/Meta-Llama-3-8B-Instruct
+  stop_tokens: [<|eot_id|>, <|end_of_text|>]
+  server_url:
+    - host: 10.140.1.129
+      ports:
+        - 8002
+        - 8003
+        - 8005
+        - 8006
+        - 8007
+        - 8008
+        - 8011
+        - 8009
+        - 8010
+        - 8014
+        - 8012
+        - 8013
+        - 8017
+        - 8015
+        - 8016
+        - 8020
+        - 8018
+        - 8019
+        - 8021
+        - 8022
+        - 8023
+        - 8024
+        - 8025
+        - 8026
+    - host: 10.140.1.107
+      ports:
+        - 8002
+        - 8003
+        - 8005
+        - 8006
+        - 8007
+        - 8008
+        - 8011
+        - 8009
+        - 8010
+        - 8014
+        - 8012
+        - 8013
+        - 8017
+        - 8015
+        - 8016
+        - 8020
+        - 8018
+        - 8019
+        - 8021
+        - 8022
+        - 8023
+        - 8024
+        - 8025
+        - 8026
+    - host: 10.140.1.173
+      ports:
+        - 8002
+        - 8003
+        - 8005
+        - 8006
+        - 8007
+        - 8008
+        - 8011
+        - 8009
+        - 8010
+        - 8014
+        - 8012
+        - 8013
+        - 8017
+        - 8015
+        - 8016
+        - 8020
+        - 8018
+        - 8019
+        - 8021
+        - 8022
+        - 8023
+        - 8024
+        - 8025
+        - 8026

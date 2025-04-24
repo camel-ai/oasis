@@ -1,0 +1,30 @@
+---
+data:
+  user_path: ./data/reddit/user_data_36.json  # Path to the user profile file
+  pair_path: ./data/emall/product.json  # Path to the initial post file
+  db_path: ./emall.db  # Path for saving the social media database after the experiment
+simulation:
+  recsys_type: reddit
+  controllable_user: true  # Whether to use a controllable user, who posts prepared posts on the simulated social platform according to our instructions
+  allow_self_rating: false  # Reddit feature: does not allow users to rate their own content
+  show_score: true  # Reddit feature: users can only see scores, not separate upvote and downvote counts
+  activate_prob: 0.2  # Probability of each agent being activated to perform an action at each timestep
+  clock_factor: 10  # Magnification factor of the first timestep in real-world time, not recommended to change
+  num_timesteps: 1  # Number of timesteps the simulation experiment runs
+  max_rec_post_len: 50  # Number of posts in each user's recommendation list cache
+  follow_post_agent: false  # Whether all agents follow the controllable_user
+  mute_post_agent: false  # Whether all agents mute the controllable_user
+  refresh_rec_post_count: 5  # Number of posts an agent sees each time they refresh
+  available_actions:
+    - like_comment
+    - like_post
+    - dislike_post
+    - do_nothing
+    - create_comment
+    - follow
+    - mute
+    - repost
+    - purchase_product
+inference:
+  model_type: gpt-4o-mini  # Name of the OpenAI model
+  is_openai_model: true  # Whether it is an OpenAI model
