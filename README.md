@@ -193,7 +193,7 @@ if __name__ == "__main__":
 <br>
 
 > \[!TIP\]
-> For more detailed instructions and additional configuration options, check out the [documentation](https://camel-6d2d1ad0.mintlify.app/).
+> For more detailed instructions and additional configuration options, check out the [documentation](https://docs.oasis.camel-ai.org/).
 
 ### More Tutorials
 
@@ -209,12 +209,14 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 > We welcome community contributions! Join us in building these exciting features.
 
-- [OASIS Refactor: First Release on PyPI](https://github.com/camel-ai/oasis/issues/57)
-- [Write More Documents for OASIS](https://github.com/camel-ai/oasis/issues/60)
+- [Support Multi Modal Platform](https://github.com/camel-ai/oasis/issues/47)
+- [Connect to the Real World](https://github.com/camel-ai/oasis/issues/79)
 
 <!-- - Public release of our dataset on Hugging Face (November 05, 2024) -->
 
 ### Latest Updates
+
+📢 Refactor into the OASIS environment, publish camel-oasis on PyPI, and release the documentation. - 📆 April 24, 2025
 
 - Support OPENAI Embedding model for Twhin-Bert Recommendation System. - 📆 March 25, 2025
 - Updated social media links and QR codes in the README! Join OASIS & CAMEL on WeChat, X, Reddit, and Discord. - 📆 March 24, 2025
@@ -274,7 +276,7 @@ The source code is licensed under Apache 2.0.
 [discord-image]: https://img.shields.io/discord/1082486657678311454?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb
 [discord-url]: https://discord.camel-ai.org/
 [docs-image]: https://img.shields.io/badge/Documentation-EB3ECC
-[docs-url]: https://camel-6d2d1ad0.mintlify.app/
+[docs-url]: https://docs.oasis.camel-ai.org/
 [huggingface-image]: https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-CAMEL--AI-ffc107?color=ffc107&logoColor=white
 [huggingface-url]: https://huggingface.co/camel-ai
 [oasis-image]: https://img.shields.io/badge/WeChat-OASISProject-brightgreen?logo=wechat&logoColor=white
