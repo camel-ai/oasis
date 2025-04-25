@@ -11,6 +11,7 @@
 <h1> OASIS: Open Agent Social Interaction Simulations with One Million Agents
 </h1>
 
+[![Documentation][docs-image]][docs-url]
 [![Discord][discord-image]][discord-url]
 [![X][x-image]][x-url]
 [![Reddit][reddit-image]][reddit-url]
@@ -192,7 +193,7 @@ if __name__ == "__main__":
 <br>
 
 > \[!TIP\]
-> For more detailed instructions and additional configuration options, check out the documentation(coming soon).
+> For more detailed instructions and additional configuration options, check out the [documentation](https://camel-6d2d1ad0.mintlify.app/).
 
 ### More Tutorials
 
@@ -272,6 +273,8 @@ The source code is licensed under Apache 2.0.
 
 [discord-image]: https://img.shields.io/discord/1082486657678311454?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb
 [discord-url]: https://discord.camel-ai.org/
+[docs-image]: https://img.shields.io/badge/Documentation-EB3ECC
+[docs-url]: https://camel-6d2d1ad0.mintlify.app/
 [huggingface-image]: https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-CAMEL--AI-ffc107?color=ffc107&logoColor=white
 [huggingface-url]: https://huggingface.co/camel-ai
 [oasis-image]: https://img.shields.io/badge/WeChat-OASISProject-brightgreen?logo=wechat&logoColor=white
