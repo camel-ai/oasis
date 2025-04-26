@@ -6,6 +6,117 @@ import numpy as np
 import json
 import requests
 from typing import List, Dict, Any
+import xml.dom.minidom as minidom
+import xml.etree.ElementTree as ET
+
+# Add function to the matsim module
+def write_population(population, output_file):
+    """Write a MATSim population to an XML file
+    
+    Args:
+        population: MATSim population object
+        output_file: Path to output XML file
+    """
+    # Create the root element
+    root = ET.Element("population")
+    
+    # Add DOCTYPE 
+    root.append(ET.Comment('DOCTYPE population SYSTEM "http://www.matsim.org/files/dtd/population_v6.dtd"'))
+    
+    # Add each person
+    for person_id, person in population.persons.items():
+        person_elem = ET.SubElement(root, "person", id=str(person_id))
+        
+        # Add plans
+        for i, plan in enumerate(person.plans):
+            selected = "yes" if i == person.selected_plan_index else "no"
+            plan_elem = ET.SubElement(person_elem, "plan", selected=selected)
+            
+            # Add activities and legs alternating
+            elements = []
+            
+            # Add activities
+            for i, activity in enumerate(plan.activities):
+                # Get basic attributes, accommodating different possible property names
+                act_attrs = {"type": activity.type}
+                
+                # Handle link attribute - could be .link or .link_id
+                if hasattr(activity, "link"):
+                    act_attrs["link"] = activity.link
+                elif hasattr(activity, "link_id"):
+                    act_attrs["link"] = activity.link_id
+                    
+                # Handle coordinates
+                if hasattr(activity, "x") and hasattr(activity, "y"):
+                    act_attrs["x"] = str(activity.x)
+                    act_attrs["y"] = str(activity.y)
+                
+                # Handle end time
+                if hasattr(activity, "end_time") and activity.end_time is not None:
+                    act_attrs["end_time"] = format_time(activity.end_time)
+                
+                act_elem = ET.SubElement(plan_elem, "activity", act_attrs)
+                
+                # Add leg after each activity except the last one
+                if i < len(plan.activities) - 1 and i < len(plan.legs):
+                    leg = plan.legs[i]
+                    # Get mode - could be .mode or .transport_mode
+                    leg_mode = leg.mode if hasattr(leg, "mode") else getattr(leg, "transport_mode", "car")
+                    leg_elem = ET.SubElement(plan_elem, "leg", mode=leg_mode)
+                    
+                    # Add route if available
+                    if hasattr(leg, "route") and leg.route is not None:
+                        route = leg.route
+                        route_type = getattr(route, "type", "links")
+                        
+                        # Handle different ways route links might be stored
+                        link_ids = None
+                        if hasattr(route, "link_ids"):
+                            link_ids = route.link_ids
+                        elif hasattr(route, "links"):
+                            link_ids = route.links
+                            
+                        if link_ids is not None:
+                            route_elem = ET.SubElement(leg_elem, "route", type=route_type)
+                            # Handle if links is a string or a list
+                            if isinstance(link_ids, str):
+                                route_elem.text = link_ids
+                            else:
+                                route_elem.text = " ".join(link_ids)
+    
+    # Write to file with pretty formatting
+    tree = ET.ElementTree(root)
+    xml_str = ET.tostring(root, encoding='utf-8')
+    
+    # Pretty print XML
+    dom = minidom.parseString(xml_str)
+    pretty_xml = dom.toprettyxml(indent="    ")
+    
+    # Remove extra blank lines and write to file
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+        f.write('<!DOCTYPE population SYSTEM "http://www.matsim.org/files/dtd/population_v6.dtd">\n')
+        for line in pretty_xml.split("\n")[1:]:  # Skip the XML declaration line
+            if line.strip():  # Skip empty lines
+                f.write(line + "\n")
+                
+def format_time(seconds_or_time_str):
+    """Format time as HH:MM:SS
+    
+    Args:
+        seconds_or_time_str: Either seconds (int/float) or time string
+    
+    Returns:
+        Formatted time string
+    """
+    if isinstance(seconds_or_time_str, (int, float)):
+        # Convert seconds to HH:MM:SS
+        hours, remainder = divmod(seconds_or_time_str, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
+    else:
+        # Already a string, return as is
+        return seconds_or_time_str
 
 class MATSimEnvironment:
     """Environment for MATSim simulation with agent feedback"""
@@ -33,9 +144,7 @@ class MATSimEnvironment:
     def load_files(self):
         """Load network and population files"""
         self.network = matsim.read_network(self.network_file)
-        self.population = matsim.read_population(self.plans_file)
         print(f"Loaded network with {len(self.network.nodes)} nodes and {len(self.network.links)} links")
-        print(f"Loaded population with {len(self.population.persons)} persons")
     
     def run_iteration(self, matsim_jar_path: str) -> Dict[str, Any]:
         """Run a single MATSim iteration
@@ -48,7 +157,6 @@ class MATSimEnvironment:
         """
         # Create iteration-specific plans file
         iter_plans_file = os.path.join(self.output_dir, f"plans_iter_{self.iteration}.xml")
-        matsim.write_population(self.population, iter_plans_file)
         
         # Update config to use the new plans file
         # (In a real implementation, you'd use matsim to modify the config)
@@ -110,7 +218,7 @@ class MATSimEnvironment:
         
         return link_stats
 
-
+# this llm agent is just for testing, later, we will get to 
 class LLMAgent:
     """Agent that uses GPT-4 to make decisions about plan updates"""
     
@@ -385,7 +493,7 @@ def run_simulation(network_file: str, plans_file: str, config_file: str,
             agent.update_plan(network_state)
         
         # Write updated plans file for the next iteration
-        matsim.write_population(env.population, 
+        write_population(env.population, 
                                os.path.join(output_dir, f"updated_plans_{i}.xml"))
     
     print(f"Simulation completed after {num_iterations} iterations")
