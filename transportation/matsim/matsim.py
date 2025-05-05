@@ -158,19 +158,44 @@ class MATSimEnvironment:
         # Create iteration-specific plans file
         iter_plans_file = os.path.join(self.output_dir, f"plans_iter_{self.iteration}.xml")
         
-        # Update config to use the new plans file
-        # (In a real implementation, you'd use matsim to modify the config)
+        # Create iteration-specific output directory
+        iter_output_dir = os.path.join(self.output_dir, f"iteration_{self.iteration}")
+        os.makedirs(iter_output_dir, exist_ok=True)
         
+        # Create a copy of the config file specifically for this iteration
+        iter_config_file = os.path.join(iter_output_dir, f"config_iter_{self.iteration}.xml")
+        
+        # In a real implementation, modify the config to:
+        # 1. Point to the current plans file
+        # 2. Set the output directory to the iteration output dir
+        # 3. Configure event handlers for link statistics
+        with open(self.config_file, 'r') as f:
+            config_content = f.read()
+            
+        # Simple string replacement as a placeholder for proper XML modification
+        # In a real implementation, use proper XML parsing
+        config_content = config_content.replace("<inputPlansFile>", 
+                                               f"<inputPlansFile>{iter_plans_file}")
+        config_content = config_content.replace("<outputDirectory>", 
+                                               f"<outputDirectory>{iter_output_dir}")
+        
+        with open(iter_config_file, 'w') as f:
+            f.write(config_content)
+            
         # Run MATSim (one iteration)
         cmd = [
             "java", "-Xmx4g", 
             "-cp", matsim_jar_path,
             "org.matsim.run.Controler", 
-            self.config_file,
+            iter_config_file,
             "--config:controler.lastIteration", "0"  # Run only one iteration
         ]
         
         print(f"Running MATSim iteration {self.iteration}...")
+        print(f"  - Config file: {iter_config_file}")
+        print(f"  - Plans file: {iter_plans_file}")
+        print(f"  - Output directory: {iter_output_dir}")
+        
         process = subprocess.run(cmd, capture_output=True, text=True)
         
         if process.returncode != 0:
@@ -178,35 +203,65 @@ class MATSimEnvironment:
             return {}
         
         # Extract network state from MATSim output
-        network_state = self._parse_network_state()
+        events_file = os.path.join(iter_output_dir, "output_events.xml.gz")
+        network_state = self._parse_network_state(events_file)
         
         self.iteration += 1
         return network_state
     
-    def _parse_network_state(self) -> Dict[str, Any]:
+    def _parse_network_state(self, events_file: str = None) -> Dict[str, Any]:
         """Parse MATSim output to extract network state
         
-        In a real implementation, you would:
-        1. Parse the events file to get link travel times
-        2. Parse the experienced plans file
-        3. Compute statistics about network congestion
+        Args:
+            events_file: Path to MATSim events file (optional)
         
         Returns:
             Dictionary with link IDs as keys and travel stats as values
         """
-        # Placeholder - in real implementation, parse MATSim output files
-        # For example, you could parse events.xml to get travel times
+        # Check if events file exists and is readable
+        if events_file and os.path.exists(events_file):
+            try:
+                print(f"Parsing events file: {events_file}")
+                # In a real implementation, use matsim.event_reader
+                # For example:
+                # events = matsim.event_reader(events_file)
+                # Then process events to extract link travel times
+                
+                # For now, we'll continue with simulated data
+                print("Using matsim-tools to parse events (placeholder)")
+            except Exception as e:
+                print(f"Error parsing events file: {e}")
+                print("Falling back to simulated data")
+        else:
+            print("Events file not found, using simulated data")
         
-        # Simulating link statistics for demonstration purposes
+        # Simulating link statistics - replace with actual parsing in real implementation
         link_stats = {}
         for link_id in self.network.links:
             link = self.network.links[link_id]
-            # Simulate travel times - replace with actual parsing
+            
+            # Basic link properties
+            from_node_id = link.from_node
+            to_node_id = link.to_node
+            
+            # Get coordinates for visualization (if needed)
+            from_node = self.network.nodes[from_node_id]
+            to_node = self.network.nodes[to_node_id]
+            
+            # Simulate travel times based on link properties
             free_flow_time = link.length / link.freespeed * 60  # minutes
-            # Simulate congestion based on capacity
-            congestion_factor = random.uniform(1.0, 3.0) * (2000 / (link.capacity + 500)) 
+            
+            # Capacity factors - higher capacity means less congestion
+            base_capacity_factor = 2000 / (link.capacity + 500)
+            
+            # Simulate different levels of congestion based on link properties and random factors
+            time_of_day_factor = random.choice([0.7, 1.0, 1.5, 2.0])  # simulate peak hours
+            congestion_factor = random.uniform(1.0, 2.0) * base_capacity_factor * time_of_day_factor
+            
+            # Calculate travel time including congestion
             travel_time = free_flow_time * congestion_factor
             
+            # Store all link information
             link_stats[link_id] = {
                 'travel_time': travel_time,  # minutes
                 'volume': random.randint(0, int(link.capacity * 0.8)),  # vehicles
@@ -214,6 +269,12 @@ class MATSimEnvironment:
                 'length': link.length,  # meters
                 'capacity': link.capacity,  # vehicles per hour
                 'freespeed': link.freespeed * 3.6,  # km/h
+                'from_node': from_node_id,
+                'to_node': to_node_id,
+                'from_coord': (from_node.x, from_node.y),
+                'to_coord': (to_node.x, to_node.y),
+                'lanes': getattr(link, 'lanes', 1),
+                'time_of_day_factor': time_of_day_factor  # additional info for analysis
             }
         
         return link_stats
@@ -505,10 +566,12 @@ if __name__ == "__main__":
     plans_file = "example_plans.xml"
     config_file = "example_config.xml"
     output_dir = "output"
-    matsim_jar_path = "path/to/matsim.jar"
     
-    # Replace with your actual OpenAI API key
-    openai_api_key = "your_openai_api_key_here"
+    # Update this path to point to your downloaded MATSim JAR file
+    matsim_jar_path = "path/to/matsim-13.0.jar"  # Replace with actual path
+    
+    # Replace with your actual OpenAI API key (or leave empty if not using LLM agents)
+    openai_api_key = ""  # Optional if not using LLM features
     
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)

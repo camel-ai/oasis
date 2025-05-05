@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='utf-8'?>
+<configuration><input><net-file value="example_network.net.xml" /><route-files value="example_routes.rou.xml" /><additional-files value="bus_schedule.add.xml" /></input><output><tripinfo-output value="output\iteration_0\tripinfo.xml" /><summary-output value="output\iteration_0\summary.xml" /></output><time><begin value="0" /><end value="3600" /></time></configuration>
