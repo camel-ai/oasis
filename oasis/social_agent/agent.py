@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Any, Callable, List, Optional, Union
 from camel.agents import ChatAgent
 from camel.messages import BaseMessage
 from camel.models import BaseModelBackend
+from camel.prompts import TextPrompt
 from camel.toolkits import FunctionTool
 
 from oasis.social_agent.agent_action import SocialAction
@@ -54,7 +55,8 @@ class SocialAgent(ChatAgent):
     def __init__(self,
                  agent_id: int,
                  user_info: UserInfo,
-                 twitter_channel: Channel,
+                 user_info_template: TextPrompt | None = None,
+                 twitter_channel: Channel | None = None,
                  model: Optional[Union[BaseModelBackend,
                                        List[BaseModelBackend]]] = None,
                  agent_graph: "AgentGraph" = None,
@@ -63,12 +65,16 @@ class SocialAgent(ChatAgent):
                  single_iteration: bool = True):
         self.social_agent_id = agent_id
         self.user_info = user_info
-        self.twitter_channel = twitter_channel
+        self.twitter_channel = twitter_channel or Channel()
         self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
-
+        if user_info_template is None:
+            system_message_content = self.user_info.to_system_message()
+        else:
+            system_message_content = self.user_info.to_custom_system_message(
+                user_info_template)
         system_message = BaseMessage.make_assistant_message(
             role_name="system",
-            content=self.user_info.to_system_message(),  # system prompt
+            content=system_message_content,  # system prompt
         )
 
         if not available_actions:

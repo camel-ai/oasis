@@ -65,7 +65,9 @@ async def test_agents_posting(setup_platform):
         user_info = UserInfo(name=real_name,
                              description=description,
                              profile=profile)
-        agent = SocialAgent(i, user_info, channel)
+        agent = SocialAgent(agent_id=i,
+                            user_info=user_info,
+                            twitter_channel=channel)
         await agent.env.action.sign_up(f"user{i}0101", f"User{i}", "A bio.")
         agents.append(agent)
 
