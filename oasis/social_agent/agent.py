@@ -17,11 +17,12 @@ import inspect
 import logging
 import sys
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Union
 
 from camel.agents import ChatAgent
 from camel.messages import BaseMessage
 from camel.models import BaseModelBackend
+from camel.toolkits import FunctionTool
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
@@ -50,16 +51,16 @@ if "sphinx" not in sys.modules:
 class SocialAgent(ChatAgent):
     r"""Social Agent."""
 
-    def __init__(
-        self,
-        agent_id: int,
-        user_info: UserInfo,
-        twitter_channel: Channel,
-        model: Optional[Union[BaseModelBackend,
-                              List[BaseModelBackend]]] = None,
-        agent_graph: "AgentGraph" = None,
-        available_actions: list[ActionType] = None,
-    ):
+    def __init__(self,
+                 agent_id: int,
+                 user_info: UserInfo,
+                 twitter_channel: Channel,
+                 model: Optional[Union[BaseModelBackend,
+                                       List[BaseModelBackend]]] = None,
+                 agent_graph: "AgentGraph" = None,
+                 available_actions: list[ActionType] = None,
+                 tools: Optional[List[Union[FunctionTool, Callable]]] = None,
+                 single_iteration: bool = True):
         self.social_agent_id = agent_id
         self.user_info = user_info
         self.twitter_channel = twitter_channel
@@ -90,11 +91,12 @@ class SocialAgent(ChatAgent):
                     for a in available_actions
                 ]
             ]
+        all_tools = (tools or []) + (self.action_tools or [])
         super().__init__(system_message=system_message,
                          model=model,
                          scheduling_strategy='random_model',
-                         tools=self.action_tools,
-                         single_iteration=True)
+                         tools=all_tools,
+                         single_iteration=single_iteration)
         self.agent_graph = agent_graph
         self.test_prompt = (
             "\n"
@@ -126,10 +128,12 @@ class SocialAgent(ChatAgent):
                 args = tool_call.args
                 agent_log.info(f"Agent {self.social_agent_id} performed "
                                f"action: {action_name} with args: {args}")
+                return response
                 # Abort graph action for if 100w Agent
                 # self.perform_agent_graph_action(action_name, args)
         except Exception as e:
             agent_log.error(f"Agent {self.social_agent_id} error: {e}")
+            return e
 
     async def perform_test(self):
         """
