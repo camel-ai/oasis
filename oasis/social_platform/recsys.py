@@ -88,9 +88,9 @@ def load_model(model_name):
                                        device=device,
                                        cache_folder="./models")
         elif model_name == 'Twitter/twhin-bert-base':
-            tokenizer = get_twhin_tokenizer()
-            model = get_twhin_model(device)
-            return tokenizer, model
+            twhin_tokenizer = get_twhin_tokenizer()
+            twhin_model = get_twhin_model(device)
+            return twhin_tokenizer, twhin_model
         else:
             raise ValueError(f"Unknown model name: {model_name}")
     except Exception as e:
@@ -428,6 +428,10 @@ def rec_sys_personalized_twh(
         recall_only: bool = False,
         enable_like_score: bool = False,
         use_openai_embedding: bool = False) -> List[List]:
+    global twhin_model, twhin_tokenizer
+    if twhin_model is None or twhin_tokenizer is None:
+        twhin_tokenizer, twhin_model = get_recsys_model(
+            recsys_type="twhin-bert")
     # Set some global variables to reduce time consumption
     global date_score, t_items, u_items, user_previous_post
     global user_previous_post_all, user_profiles
