@@ -360,7 +360,10 @@ async def generate_controllable_agents(
             recsys_type="reddit",
         )
         # controllable的agent_id全都在llm agent的agent_id的前面
-        agent = SocialAgent(i, user_info, channel, agent_graph=agent_graph)
+        agent = SocialAgent(agent_id=i,
+                            user_info=user_info,
+                            twitter_channel=channel,
+                            agent_graph=agent_graph)
         # Add agent to the agent graph
         agent_graph.add_agent(agent)
 
