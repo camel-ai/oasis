@@ -15,6 +15,7 @@ __version__ = "0.1.1"
 
 from oasis.environment.env_action import EnvAction, SingleAction
 from oasis.environment.make import make
+from oasis.social_agent import generate_reddit_agent_graph
 from oasis.social_agent.agent import SocialAgent
 from oasis.social_agent.agent_graph import AgentGraph
 from oasis.social_platform.config import UserInfo
@@ -33,4 +34,5 @@ __all__ = [
     "AgentGraph",
     "SocialAgent",
     "UserInfo",
+    "generate_reddit_agent_graph",
 ]

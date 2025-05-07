@@ -30,7 +30,7 @@ async def main():
     )
     qwen_model = ModelFactory.create(
         model_platform=ModelPlatformType.QWEN,
-        model_type=ModelType.QWEN_TURBO,
+        model_type=ModelType.QWEN_PLUS,
     )
 
     # Define the available actions for the agents
@@ -93,14 +93,20 @@ async def main():
     # Run the environment
     await env.reset()
 
-    action_1 = SingleAction(agent_id=0,
-                            action=ActionType.CREATE_POST,
-                            args={"content": "Which llm model is the best?"})
+    action_1 = SingleAction(
+        agent_id=0,
+        action=ActionType.CREATE_POST,
+        args={
+            "content":
+            ("Could you tell me which large language model (LLM) you are "
+             "based on? Please answer with your model name or type.")
+        })
     action_2 = SingleAction(agent_id=0,
                             action=ActionType.CREATE_COMMENT,
                             args={
                                 "post_id": "1",
-                                "content": "Feel free to share your thoughts!"
+                                "content":
+                                "Feel free to share your information!"
                             })
 
     env_actions = EnvAction(activate_agents=[0, 1],

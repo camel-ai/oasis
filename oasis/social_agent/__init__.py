@@ -13,10 +13,9 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 from .agent import SocialAgent
 from .agent_graph import AgentGraph
-from .agents_generator import generate_agents_100w
+from .agents_generator import generate_agents_100w, generate_reddit_agent_graph
 
 __all__ = [
-    "SocialAgent",
-    "AgentGraph",
-    "generate_agents_100w",
+    "SocialAgent", "AgentGraph", "generate_agents_100w",
+    "generate_reddit_agent_graph"
 ]

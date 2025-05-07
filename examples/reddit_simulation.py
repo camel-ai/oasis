@@ -18,7 +18,8 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType
 
 import oasis
-from oasis import ActionType, EnvAction, SingleAction
+from oasis import (ActionType, EnvAction, SingleAction,
+                   generate_reddit_agent_graph)
 
 
 async def main():
@@ -45,6 +46,12 @@ async def main():
         ActionType.MUTE,
     ]
 
+    agent_graph = await generate_reddit_agent_graph(
+        profile_path="./data/reddit/user_data_36.json",
+        model=openai_model,
+        available_actions=available_actions,
+    )
+
     # Define the path to the database
     db_path = "./data/reddit_simulation.db"
 
@@ -54,11 +61,9 @@ async def main():
 
     # Make the environment
     env = oasis.make(
+        agent_graph=agent_graph,
         platform=oasis.DefaultPlatformType.REDDIT,
         database_path=db_path,
-        agent_profile_path="./data/reddit/user_data_36.json",
-        agent_models=openai_model,
-        available_actions=available_actions,
     )
 
     # Run the environment
