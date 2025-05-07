@@ -41,11 +41,6 @@ async def main():
         ActionType.CREATE_COMMENT,
         ActionType.LIKE_COMMENT,
         ActionType.DISLIKE_COMMENT,
-        ActionType.SEARCH_POSTS,
-        ActionType.SEARCH_USER,
-        ActionType.TREND,
-        ActionType.REFRESH,
-        ActionType.DO_NOTHING,
         ActionType.FOLLOW,
         ActionType.MUTE,
     ]
@@ -59,10 +54,10 @@ async def main():
             description="A girl",
             profile=None,
             recsys_type="reddit",
-        ),  # user_info can be customized
-        agent_graph=agent_graph,  # the inital AgentGraph
-        model=openai_model,  # BaseModelBackend
-        available_actions=available_actions,  # List[ActionType]
+        ),
+        agent_graph=agent_graph,
+        model=openai_model,
+        available_actions=available_actions,
     )
     agent_graph.add_agent(agent_1)
 
@@ -74,10 +69,10 @@ async def main():
             description="A boy",
             profile=None,
             recsys_type="reddit",
-        ),  # user_info can be customized
-        agent_graph=agent_graph,  # the inital AgentGraph
-        model=qwen_model,  # BaseModelBackend
-        available_actions=available_actions,  # List[ActionType]
+        ),
+        agent_graph=agent_graph,
+        model=qwen_model,
+        available_actions=available_actions,
     )
     agent_graph.add_agent(agent_2)
 
@@ -100,12 +95,12 @@ async def main():
 
     action_1 = SingleAction(agent_id=0,
                             action=ActionType.CREATE_POST,
-                            args={"content": "Hello, world!"})
+                            args={"content": "Which llm model is the best?"})
     action_2 = SingleAction(agent_id=0,
                             action=ActionType.CREATE_COMMENT,
                             args={
                                 "post_id": "1",
-                                "content": "Welcome to the OASIS World!"
+                                "content": "Feel free to share your thoughts!"
                             })
 
     env_actions = EnvAction(activate_agents=[0, 1],
