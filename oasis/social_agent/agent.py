@@ -22,6 +22,13 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union
 from camel.agents import ChatAgent
 from camel.messages import BaseMessage
 from camel.models import BaseModelBackend
+from camel.storages.vectordb_storages import QdrantStorage
+from camel.memories import VectorDBMemory
+from camel.memories.context_creators.score_based import (
+    ScoreBasedContextCreator,
+)
+from camel.utils import OpenAITokenCounter
+from camel.types import ModelType
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
@@ -59,6 +66,7 @@ class SocialAgent(ChatAgent):
                               List[BaseModelBackend]]] = None,
         agent_graph: "AgentGraph" = None,
         available_actions: list[ActionType] = None,
+        use_vector_memory: bool = False,
     ):
         self.social_agent_id = agent_id
         self.user_info = user_info
@@ -69,6 +77,21 @@ class SocialAgent(ChatAgent):
             role_name="system",
             content=self.user_info.to_system_message(),  # system prompt
         )
+
+        if use_vector_memory:
+            vector_storage = QdrantStorage(
+                vector_dim=1536,
+                path="./tmp/memory_db",
+            )
+            context_creator = ScoreBasedContextCreator(
+                token_counter=OpenAITokenCounter(ModelType.GPT_4O_MINI),
+                token_limit=2048,
+            )
+            self.memory = VectorDBMemory(
+                storage=vector_storage,
+                context_creator=context_creator,
+                agent_id=self.social_agent_id,
+            )
 
         if not available_actions:
             agent_log.info("No available actions defined, using all actions.")
