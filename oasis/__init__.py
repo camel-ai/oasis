@@ -15,6 +15,9 @@ __version__ = "0.1.1"
 
 from oasis.environment.env_action import EnvAction, SingleAction
 from oasis.environment.make import make
+from oasis.social_agent.agent import SocialAgent
+from oasis.social_agent.agent_graph import AgentGraph
+from oasis.social_platform.config import UserInfo
 from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType, DefaultPlatformType
 from oasis.testing.show_db import print_db_contents
@@ -27,4 +30,7 @@ __all__ = [
     "EnvAction",
     "SingleAction",
     "print_db_contents",
+    "AgentGraph",
+    "SocialAgent",
+    "UserInfo",
 ]

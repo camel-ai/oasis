@@ -15,13 +15,11 @@ import asyncio
 import logging
 import os
 from datetime import datetime
-from typing import List, Optional, Union
-
-from camel.models import BaseModelBackend
+from typing import Union
 
 from oasis.environment.env_action import EnvAction, SingleAction
-from oasis.social_agent.agents_generator import (generate_agents,
-                                                 generate_reddit_agents)
+from oasis.social_agent.agent_graph import AgentGraph
+from oasis.social_agent.agents_generator import generate_custom_agents
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import (ActionType, DefaultPlatformType,
@@ -50,12 +48,13 @@ class OasisEnv:
 
     def __init__(
         self,
+        agent_graph: AgentGraph,
         platform: Union[DefaultPlatformType, Platform],
-        agent_profile_path: str,
+        # agent_profile_path: str,
         database_path: str = None,
-        agent_models: Optional[Union[BaseModelBackend,
-                                     List[BaseModelBackend]]] = None,
-        available_actions: list[ActionType] = None,
+        # agent_models: Optional[Union[BaseModelBackend,
+        #                              List[BaseModelBackend]]] = None,
+        # available_actions: list[ActionType] = None,
         semaphore: int = 128,
     ) -> None:
         r"""Init the oasis environment.
@@ -74,9 +73,10 @@ class OasisEnv:
             available_actions: The actions to use for the agents. Choose from
                 `ActionType`.
         """
-        self.agent_profile_path = agent_profile_path
-        self.agent_models = agent_models
-        self.available_actions = available_actions
+        # self.agent_profile_path = agent_profile_path
+        # self.agent_models = agent_models
+        # self.available_actions = available_actions
+        self.agent_graph = agent_graph
         # Use a semaphore to limit the number of concurrent requests
         self.llm_semaphore = asyncio.Semaphore(semaphore)
         if isinstance(platform, DefaultPlatformType):
@@ -130,23 +130,25 @@ class OasisEnv:
         r"""Start the platform and sign up the agents.
         """
         self.platform_task = asyncio.create_task(self.platform.running())
-        if self.platform_type == DefaultPlatformType.TWITTER:
-            self.agent_graph = await generate_agents(
-                agent_info_path=self.agent_profile_path,
-                twitter_channel=self.channel,
-                model=self.agent_models,
-                recsys_type=RecsysType.TWHIN,
-                start_time=self.platform.sandbox_clock.time_step,
-                available_actions=self.available_actions,
-                twitter=self.platform,
-            )
-        elif self.platform_type == DefaultPlatformType.REDDIT:
-            self.agent_graph = await generate_reddit_agents(
-                agent_info_path=self.agent_profile_path,
-                twitter_channel=self.channel,
-                model=self.agent_models,
-                available_actions=self.available_actions,
-            )
+        # if self.platform_type == DefaultPlatformType.TWITTER:
+        #     self.agent_graph = await generate_agents(
+        #         agent_info_path=self.agent_profile_path,
+        #         twitter_channel=self.channel,
+        #         model=self.agent_models,
+        #         recsys_type=RecsysType.TWHIN,
+        #         start_time=self.platform.sandbox_clock.time_step,
+        #         available_actions=self.available_actions,
+        #         twitter=self.platform,
+        #     )
+        # elif self.platform_type == DefaultPlatformType.REDDIT:
+        #     self.agent_graph = await generate_reddit_agents(
+        #         agent_info_path=self.agent_profile_path,
+        #         twitter_channel=self.channel,
+        #         model=self.agent_models,
+        #         available_actions=self.available_actions,
+        #     )
+        self.agent_graph = await generate_custom_agents(
+            channel=self.channel, agent_graph=self.agent_graph)
 
     async def _perform_control_action(self, action: SingleAction) -> None:
         r"""Perform a control action.

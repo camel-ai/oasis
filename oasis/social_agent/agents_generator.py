@@ -531,3 +531,24 @@ async def generate_reddit_agents(
     await asyncio.gather(*tasks)
 
     return agent_graph
+
+
+async def generate_custom_agents(
+    channel: Channel,
+    agent_graph: AgentGraph | None = None,
+) -> AgentGraph:
+    if agent_graph is None:
+        agent_graph = AgentGraph()
+
+    for _, agent in agent_graph.get_agents():
+        agent.twitter_channel = channel
+        agent.env.action.channel = channel
+
+    sign_up_tasks = [
+        agent.env.action.sign_up(user_name=agent.user_info.user_name,
+                                 name=agent.user_info.name,
+                                 bio=agent.user_info.description)
+        for _, agent in agent_graph.get_agents()
+    ]
+    await asyncio.gather(*sign_up_tasks)
+    return agent_graph
