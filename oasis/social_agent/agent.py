@@ -48,6 +48,8 @@ if "sphinx" not in sys.modules:
                 "%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
         agent_log.addHandler(file_handler)
 
+ALL_SOCIAL_ACTIONS = [action.value for action in ActionType]
+
 
 class SocialAgent(ChatAgent):
     r"""Social Agent."""
@@ -135,9 +137,14 @@ class SocialAgent(ChatAgent):
                 args = tool_call.args
                 agent_log.info(f"Agent {self.social_agent_id} performed "
                                f"action: {action_name} with args: {args}")
-                return response
+                if action_name not in ALL_SOCIAL_ACTIONS:
+                    agent_log.info(
+                        f"Agent {self.social_agent_id} get the result: "
+                        f"{tool_call.result}")
                 # Abort graph action for if 100w Agent
                 # self.perform_agent_graph_action(action_name, args)
+
+                return response
         except Exception as e:
             agent_log.error(f"Agent {self.social_agent_id} error: {e}")
             return e
