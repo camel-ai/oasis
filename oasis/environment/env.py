@@ -51,32 +51,20 @@ class OasisEnv:
         self,
         agent_graph: AgentGraph,
         platform: Union[DefaultPlatformType, Platform],
-        # agent_profile_path: str,
         database_path: str = None,
-        # agent_models: Optional[Union[BaseModelBackend,
-        #                              List[BaseModelBackend]]] = None,
-        # available_actions: list[ActionType] = None,
         semaphore: int = 128,
     ) -> None:
         r"""Init the oasis environment.
 
         Args:
+            agent_graph: The AgentGraph to use in the simulation.
             platform: The platform type to use. Including
                 `DefaultPlatformType.TWITTER` or `DefaultPlatformType.REDDIT`.
                 Or you can pass a custom `Platform` instance.
             database_path: The path to create a sqlite3 database. The file
                 extension must be `.db` such as `twitter_simulation.db`.
-            agent_profile_path: The path to the agent profile. Make sure the
-                data format is align with the `platform`.
-            agent_models: The model backend to use for all agents to generate
-                responses. (default: :obj:`ModelPlatformType.DEFAULT` with
-                `ModelType.DEFAULT`)
-            available_actions: The actions to use for the agents. Choose from
-                `ActionType`.
         """
-        # self.agent_profile_path = agent_profile_path
-        # self.agent_models = agent_models
-        # self.available_actions = available_actions
+        # Initialize the agent graph
         self.agent_graph = agent_graph
         # Use a semaphore to limit the number of concurrent requests
         self.llm_semaphore = asyncio.Semaphore(semaphore)
@@ -128,38 +116,10 @@ class OasisEnv:
                 "DefaultPlatformType or a Platform instance.")
 
     async def reset(self) -> None:
-        r"""Start the platform and sign up the agents.
-        """
+        r"""Start the platform and sign up the agents."""
         self.platform_task = asyncio.create_task(self.platform.running())
-        # if self.platform_type == DefaultPlatformType.TWITTER:
-        #     self.agent_graph = await generate_agents(
-        #         agent_info_path=self.agent_profile_path,
-        #         twitter_channel=self.channel,
-        #         model=self.agent_models,
-        #         recsys_type=RecsysType.TWHIN,
-        #         start_time=self.platform.sandbox_clock.time_step,
-        #         available_actions=self.available_actions,
-        #         twitter=self.platform,
-        #     )
-        # elif self.platform_type == DefaultPlatformType.REDDIT:
-        #     self.agent_graph = await generate_reddit_agents(
-        #         agent_info_path=self.agent_profile_path,
-        #         twitter_channel=self.channel,
-        #         model=self.agent_models,
-        #         available_actions=self.available_actions,
-        #     )
         self.agent_graph = await generate_custom_agents(
             channel=self.channel, agent_graph=self.agent_graph)
-
-    # async def _perform_control_action(self, action: SingleAction) -> None:
-    #     r"""Perform a control action.
-
-    #     Args:
-    #         action(SingleAction): The action to perform.
-    #     """
-    #     control_agent = self.agent_graph.get_agent(action.agent_id)
-    #     await control_agent.perform_action_by_data(action.action,
-    #                                                **action.args)
 
     async def _perform_llm_action(self, agent):
         r"""Send the request to the llm model and execute the action.
@@ -172,12 +132,15 @@ class OasisEnv:
                                                List[Union[ManualAction,
                                                           LLMAction]]]]
     ) -> None:
-        r"""Perform some control actions, update the recommendation system,
-        and let some llm agents perform actions.
+        r"""Update the recommendation system and perform the actions.
 
         Args:
-            action(EnvAction): The activate agents and control actions to
-                perform.
+            actions(dict[SocialAgent, Union[ManualAction, LLMAction,
+                List[Union[ManualAction, LLMAction]]]]): The actions to
+                perform, including the manual(pre-defined) actions and llm
+                actions.
+        Returns:
+            None
         """
         # Update the recommendation system
         await self.platform.update_rec_table()
