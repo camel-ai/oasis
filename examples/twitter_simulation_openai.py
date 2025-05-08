@@ -15,27 +15,18 @@ import asyncio
 import os
 
 from camel.models import ModelFactory
-from camel.types import ModelPlatformType
+from camel.types import ModelPlatformType, ModelType
 
 import oasis
-from oasis import ActionType, EnvAction, SingleAction
+from oasis import (ActionType, EnvAction, SingleAction,
+                   generate_twitter_agent_graph)
 
 
 async def main():
-    # NOTE: You need to deploy the vllm server first
-    vllm_model_1 = ModelFactory.create(
-        model_platform=ModelPlatformType.VLLM,
-        model_type="qwen-2",
-        url="http://10.109.28.7:8080/v1",
+    openai_model = ModelFactory.create(
+        model_platform=ModelPlatformType.OPENAI,
+        model_type=ModelType.GPT_4O_MINI,
     )
-    vllm_model_2 = ModelFactory.create(
-        model_platform=ModelPlatformType.VLLM,
-        model_type="qwen-2",
-        url="http://10.109.27.103:8080/v1",
-    )
-    # Define the models for agents. Agents will select models based on
-    # pre-defined scheduling strategies
-    models = [vllm_model_1, vllm_model_2]
 
     # Define the available actions for the agents
     available_actions = [
@@ -47,6 +38,13 @@ async def main():
         ActionType.QUOTE_POST,
     ]
 
+    agent_graph = await generate_twitter_agent_graph(
+        profile_path=("data/twitter_dataset/anonymous_topic_200_1h/"
+                      "False_Business_0.csv"),
+        model=openai_model,
+        available_actions=available_actions,
+    )
+
     # Define the path to the database
     db_path = "./data/twitter_simulation.db"
 
@@ -56,12 +54,9 @@ async def main():
 
     # Make the environment
     env = oasis.make(
+        agent_graph=agent_graph,
         platform=oasis.DefaultPlatformType.TWITTER,
         database_path=db_path,
-        agent_profile_path=("data/twitter_dataset/anonymous_topic_200_1h/"
-                            "False_Business_0.csv"),
-        agent_models=models,
-        available_actions=available_actions,
     )
 
     # Run the environment

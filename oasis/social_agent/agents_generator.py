@@ -607,3 +607,40 @@ async def generate_reddit_agent_graph(
     tasks = [process_agent(i) for i in range(len(agent_info))]
     await asyncio.gather(*tasks)
     return agent_graph
+
+
+async def generate_twitter_agent_graph(
+    profile_path: str,
+    model: Optional[Union[BaseModelBackend, List[BaseModelBackend]]] = None,
+    available_actions: list[ActionType] = None,
+) -> AgentGraph:
+    agent_info = pd.read_csv(profile_path)
+
+    agent_graph = AgentGraph()
+
+    for agent_id in range(len(agent_info)):
+        profile = {
+            "nodes": [],
+            "edges": [],
+            "other_info": {},
+        }
+        profile["other_info"]["user_profile"] = agent_info["user_char"][
+            agent_id]
+
+        user_info = UserInfo(
+            name=agent_info["username"][agent_id],
+            description=agent_info["description"][agent_id],
+            profile=profile,
+            recsys_type='twitter',
+        )
+
+        agent = SocialAgent(
+            agent_id=agent_id,
+            user_info=user_info,
+            model=model,
+            agent_graph=agent_graph,
+            available_actions=available_actions,
+        )
+
+        agent_graph.add_agent(agent)
+    return agent_graph
