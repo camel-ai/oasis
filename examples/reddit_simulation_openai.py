@@ -70,14 +70,20 @@ async def main():
     await env.reset()
 
     actions_1 = {}
-    actions_1[env.agent_graph.get_agent(0)] = ManualAction(
-        action_type=ActionType.CREATE_POST,
-        action_args={"content": "Hello, world!"})
+    actions_1[env.agent_graph.get_agent(0)] = [
+        ManualAction(action_type=ActionType.CREATE_POST,
+                     action_args={"content": "Hello, world!"}),
+        ManualAction(action_type=ActionType.CREATE_COMMENT,
+                     action_args={
+                         "post_id": "1",
+                         "content": "Welcome to the OASIS World!"
+                     })
+    ]
     actions_1[env.agent_graph.get_agent(1)] = ManualAction(
         action_type=ActionType.CREATE_COMMENT,
         action_args={
             "post_id": "1",
-            "content": "Welcome to the OASIS World!"
+            "content": "I like the OASIS world."
         })
     await env.step(actions_1)
 

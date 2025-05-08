@@ -18,7 +18,7 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType
 
 import oasis
-from oasis import (ActionType, EnvAction, Platform, SingleAction,
+from oasis import (ActionType, LLMAction, ManualAction, Platform,
                    generate_twitter_agent_graph)
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.typing import RecsysType
@@ -73,31 +73,29 @@ async def main():
     # Run the environment
     await env.reset()
 
-    action_1 = SingleAction(agent_id=0,
-                            action=ActionType.CREATE_POST,
-                            args={"content": "Earth is flat."})
-    env_actions_1 = EnvAction(
-        # Activate 5 agents with id 1, 3, 5, 7, 9
-        activate_agents=[1, 3, 5, 7, 9],
-        intervention=[action_1])
-
-    action_2 = SingleAction(agent_id=1,
-                            action=ActionType.CREATE_POST,
-                            args={"content": "Earth is not flat."})
-    env_actions_2 = EnvAction(activate_agents=[2, 4, 6, 8, 10],
-                              intervention=[action_2])
-
-    all_env_actions = [
-        env_actions_1,
-        env_actions_2,
+    actions_1 = {}
+    actions_1[env.agent_graph.get_agent(0)] = [
+        ManualAction(action_type=ActionType.CREATE_POST,
+                     action_args={"content": "I am new in the OASIS world."}),
+        ManualAction(action_type=ActionType.CREATE_COMMENT,
+                     action_args={
+                         "post_id": "1",
+                         "content": "Let us follow each other."
+                     })
     ]
+    actions_1[env.agent_graph.get_agent(1)] = ManualAction(
+        action_type=ActionType.FOLLOW, action_args={
+            "followee_id": "0",
+        })
+    await env.step(actions_1)
 
-    # Simulate 2 timesteps
-    for i in range(2):
-        env_actions = all_env_actions[i]
-        # Perform the actions
-        await env.step(env_actions)
+    actions_2 = {
+        agent: LLMAction()
+        for _, agent in env.agent_graph.get_agents([1, 2, 3])
+    }
 
+    # Perform the actions
+    await env.step(actions_2)
     # Close the environment
     await env.close()
 

@@ -15,7 +15,7 @@ import asyncio
 import logging
 import os
 from datetime import datetime
-from typing import Union
+from typing import List, Union
 
 from oasis.environment.env_action import LLMAction, ManualAction
 from oasis.social_agent.agent import SocialAgent
@@ -168,8 +168,10 @@ class OasisEnv:
             return await agent.perform_action_by_llm()
 
     async def step(
-            self, actions: dict[SocialAgent, Union[ManualAction,
-                                                   LLMAction]]) -> None:
+        self, actions: dict[SocialAgent, Union[ManualAction, LLMAction,
+                                               List[Union[ManualAction,
+                                                          LLMAction]]]]
+    ) -> None:
         r"""Perform some control actions, update the recommendation system,
         and let some llm agents perform actions.
 
@@ -184,41 +186,27 @@ class OasisEnv:
         # Create tasks for both manual and LLM actions
         tasks = []
         for agent, action in actions.items():
-            if isinstance(action, ManualAction):
-                tasks.append(
-                    agent.perform_action_by_data(action.action_type,
-                                                 **action.action_args))
-            elif isinstance(action, LLMAction):
-                tasks.append(self._perform_llm_action(agent))
+            if isinstance(action, list):
+                for single_action in action:
+                    if isinstance(single_action, ManualAction):
+                        tasks.append(
+                            agent.perform_action_by_data(
+                                single_action.action_type,
+                                **single_action.action_args))
+                    elif isinstance(single_action, LLMAction):
+                        tasks.append(self._perform_llm_action(agent))
+            else:
+                if isinstance(action, ManualAction):
+                    tasks.append(
+                        agent.perform_action_by_data(action.action_type,
+                                                     **action.action_args))
+                elif isinstance(action, LLMAction):
+                    tasks.append(self._perform_llm_action(agent))
 
         # Execute all tasks concurrently
         await asyncio.gather(*tasks)
         env_log.info("performed all actions.")
         # # Control some agents to perform actions
-        # control_tasks = [
-        #     self._perform_control_action(single_action)
-        #     for single_action in action.intervention
-        # ]
-        # await asyncio.gather(*control_tasks)
-        # env_log.info("performed control actions.")
-
-        # # Some llm agents perform actions
-        # if not action.activate_agents:
-        #     env_log.warning(
-        #         "activate_agents is None, default to activate all agents.")
-        #     activate_agents = [
-        #         agent_id for agent_id, _ in self.agent_graph.get_agents()
-        #     ]
-        # else:
-        #     activate_agents = action.activate_agents
-
-        # llm_tasks = []
-        # for agent_id in activate_agents:
-        #     agent = self.agent_graph.get_agent(agent_id)
-        #     llm_tasks.append(self._perform_llm_action(agent))
-
-        # await asyncio.gather(*llm_tasks)
-        # env_log.info("performed llm actions.")
         # Update the clock
         if self.platform_type == DefaultPlatformType.TWITTER:
             self.platform.sandbox_clock.time_step += 1

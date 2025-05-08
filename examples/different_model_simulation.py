@@ -18,7 +18,7 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType
 
 import oasis
-from oasis import (ActionType, AgentGraph, EnvAction, SingleAction,
+from oasis import (ActionType, AgentGraph, LLMAction, ManualAction,
                    SocialAgent, UserInfo)
 
 
@@ -93,27 +93,29 @@ async def main():
     # Run the environment
     await env.reset()
 
-    action_1 = SingleAction(
-        agent_id=0,
-        action=ActionType.CREATE_POST,
-        args={
-            "content":
-            ("Could you tell me which large language model (LLM) you are "
-             "based on? Please answer with your model name or type.")
-        })
-    action_2 = SingleAction(agent_id=0,
-                            action=ActionType.CREATE_COMMENT,
-                            args={
-                                "post_id": "1",
-                                "content":
-                                "Feel free to share your information!"
-                            })
+    actions_1 = {
+        env.agent_graph.get_agent(0): [
+            ManualAction(
+                action_type=ActionType.CREATE_POST,
+                action_args={
+                    "content":
+                    "Could you tell me which large language model (LLM) you "
+                    "are based on? Please answer with your model name or type."
+                }),
+            ManualAction(action_type=ActionType.CREATE_COMMENT,
+                         action_args={
+                             "post_id": "1",
+                             "content": "Feel free to share your information!"
+                         })
+        ]
+    }
+    await env.step(actions_1)
 
-    env_actions = EnvAction(activate_agents=[0, 1],
-                            intervention=[action_1, action_2])
-
-    # Perform the actions
-    await env.step(env_actions)
+    actions_2 = {
+        agent: LLMAction()
+        for _, agent in env.agent_graph.get_agents()
+    }
+    await env.step(actions_2)
 
     # Close the environment
     await env.close()

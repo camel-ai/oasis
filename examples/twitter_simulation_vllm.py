@@ -18,8 +18,8 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType
 
 import oasis
-from oasis import (ActionType, EnvAction, SingleAction,
-                   generate_reddit_agent_graph)
+from oasis import (ActionType, LLMAction, ManualAction,
+                   generate_twitter_agent_graph)
 
 
 async def main():
@@ -48,7 +48,7 @@ async def main():
         ActionType.QUOTE_POST,
     ]
 
-    agent_graph = await generate_reddit_agent_graph(
+    agent_graph = await generate_twitter_agent_graph(
         profile_path="./data/reddit/user_data_36.json",
         model=models,
         available_actions=available_actions,
@@ -71,33 +71,34 @@ async def main():
     # Run the environment
     await env.reset()
 
-    action_1 = SingleAction(agent_id=0,
-                            action=ActionType.CREATE_POST,
-                            args={"content": "Earth is flat."})
-    env_actions_1 = EnvAction(
+    actions_1 = {}
+
+    actions_1[env.agent_graph.get_agent(0)] = ManualAction(
+        action_type=ActionType.CREATE_POST,
+        action_args={"content": "Earth is flat."})
+    await env.step(actions_1)
+
+    actions_2 = {
+        agent: LLMAction()
         # Activate 5 agents with id 1, 3, 5, 7, 9
-        activate_agents=[1, 3, 5, 7, 9],
-        intervention=[action_1])
+        for _, agent in env.agent_graph.get_agents([1, 3, 5, 7, 9])
+    }
 
-    action_2 = SingleAction(agent_id=1,
-                            action=ActionType.CREATE_POST,
-                            args={"content": "Earth is not flat."})
-    env_actions_2 = EnvAction(activate_agents=[2, 4, 6, 8, 10],
-                              intervention=[action_2])
+    await env.step(actions_2)
 
-    empty_action = EnvAction()  # Means activate all agents and no intervention
+    actions_3 = {}
 
-    all_env_actions = [
-        env_actions_1,
-        env_actions_2,
-        empty_action,
-    ]
+    actions_3[env.agent_graph.get_agent(1)] = ManualAction(
+        action_type=ActionType.CREATE_POST,
+        action_args={"content": "Earth is not flat."})
+    await env.step(actions_3)
 
-    # Simulate 3 timesteps
-    for i in range(3):
-        env_actions = all_env_actions[i]
-        # Perform the actions
-        await env.step(env_actions)
+    actions_4 = {
+        agent: LLMAction()
+        # get all agents
+        for _, agent in env.agent_graph.get_agents()
+    }
+    await env.step(actions_4)
 
     # Close the environment
     await env.close()
