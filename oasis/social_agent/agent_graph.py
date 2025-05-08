@@ -226,7 +226,12 @@ class AgentGraph:
     def get_agent(self, agent_id: int) -> SocialAgent:
         return self.agent_mappings[agent_id]
 
-    def get_agents(self) -> list[tuple[int, SocialAgent]]:
+    def get_agents(
+            self,
+            agent_ids: list[int] = None) -> list[tuple[int, SocialAgent]]:
+        if agent_ids:
+            return [(agent_id, self.get_agent(agent_id))
+                    for agent_id in agent_ids]
         if self.backend == "igraph":
             return [(node.index, self.agent_mappings[node.index])
                     for node in self.graph.vs]
