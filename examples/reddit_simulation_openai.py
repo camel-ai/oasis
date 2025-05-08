@@ -18,7 +18,7 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType
 
 import oasis
-from oasis import (ActionType, EnvAction, SingleAction,
+from oasis import (ActionType, LLMAction, ManualAction,
                    generate_reddit_agent_graph)
 
 
@@ -69,21 +69,25 @@ async def main():
     # Run the environment
     await env.reset()
 
-    action_1 = SingleAction(agent_id=0,
-                            action=ActionType.CREATE_POST,
-                            args={"content": "Hello, world!"})
-    action_2 = SingleAction(agent_id=0,
-                            action=ActionType.CREATE_COMMENT,
-                            args={
-                                "post_id": "1",
-                                "content": "Welcome to the OASIS World!"
-                            })
+    actions_1 = {}
+    actions_1[env.agent_graph.get_agent(0)] = ManualAction(
+        action_type=ActionType.CREATE_POST,
+        action_args={"content": "Hello, world!"})
+    actions_1[env.agent_graph.get_agent(1)] = ManualAction(
+        action_type=ActionType.CREATE_COMMENT,
+        action_args={
+            "post_id": "1",
+            "content": "Welcome to the OASIS World!"
+        })
+    await env.step(actions_1)
 
-    env_actions = EnvAction(activate_agents=list(range(10)),
-                            intervention=[action_1, action_2])
+    actions_2 = {
+        agent: LLMAction()
+        for _, agent in env.agent_graph.get_agents()
+    }
 
     # Perform the actions
-    await env.step(env_actions)
+    await env.step(actions_2)
 
     # Close the environment
     await env.close()

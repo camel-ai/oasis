@@ -13,7 +13,7 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 __version__ = "0.1.1"
 
-from oasis.environment.env_action import EnvAction, SingleAction
+from oasis.environment.env_action import LLMAction, ManualAction
 from oasis.environment.make import make
 from oasis.social_agent import (generate_reddit_agent_graph,
                                 generate_twitter_agent_graph)
@@ -25,7 +25,7 @@ from oasis.social_platform.typing import ActionType, DefaultPlatformType
 from oasis.testing.show_db import print_db_contents
 
 __all__ = [
-    "make", "Platform", "ActionType", "DefaultPlatformType", "EnvAction",
-    "SingleAction", "print_db_contents", "AgentGraph", "SocialAgent",
-    "UserInfo", "generate_reddit_agent_graph", "generate_twitter_agent_graph"
+    "make", "Platform", "ActionType", "DefaultPlatformType", "ManualAction",
+    "LLMAction", "print_db_contents", "AgentGraph", "SocialAgent", "UserInfo",
+    "generate_reddit_agent_graph", "generate_twitter_agent_graph"
 ]
