@@ -57,7 +57,7 @@ async def main():
     # Run the environment
     await env.reset()
 
-    # inject truth and misinformation
+    # inject truth and misinformation across different topics
     business_action_truth = SingleAction(
         agent_id=0,
         action=ActionType.CREATE_POST,
