@@ -223,7 +223,8 @@ class OasisEnv:
             int: The total number of agents.
         """
         if hasattr(self, 'agent_graph'):
-            return len([agent_id for agent_id, _ in self.agent_graph.get_agents()])
+            return len(
+                [agent_id for agent_id, _ in self.agent_graph.get_agents()])
         else:
             # If agent_graph is not initialized yet, return 0
             return 0

@@ -15,7 +15,7 @@ import asyncio
 import os
 
 from camel.models import ModelFactory
-from camel.types import ModelPlatformType, ModelType
+from camel.types import ModelPlatformType
 
 import oasis
 from oasis import ActionType, EnvAction, SingleAction
@@ -77,7 +77,7 @@ async def main():
 
     env_actions = EnvAction(activate_agents=list(range(10)),
                             intervention=[action_1, action_2])
-    
+
     empty_action = EnvAction()
 
     all_env_actions = [

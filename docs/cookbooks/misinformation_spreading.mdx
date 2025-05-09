@@ -105,7 +105,7 @@ async def main():
         total_agents = env.get_num_agents()
         num_agents_to_activate = max(1, int(total_agents * 0.01))  # Ensure at least 1 agent is activated
         agents_to_activate = random.sample(range(total_agents), num_agents_to_activate)
-        
+
         # Create an environment action with the randomly selected agents
         random_action = EnvAction(activate_agents=agents_to_activate)
         env_simulation_actions.append(random_action)

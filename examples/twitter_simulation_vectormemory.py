@@ -15,7 +15,7 @@ import asyncio
 import os
 
 from camel.models import ModelFactory
-from camel.types import ModelPlatformType, ModelType
+from camel.types import ModelPlatformType
 
 import oasis
 from oasis import ActionType, EnvAction, SingleAction
