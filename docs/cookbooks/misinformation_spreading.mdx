@@ -57,7 +57,7 @@ async def main():
     # Run the environment
     await env.reset()
 
-    # inject truth andmisinformation
+    # inject truth and misinformation
     business_action_truth = SingleAction(agent_id=0,
                             action=ActionType.CREATE_POST,
                             args={"content": "Amazon is expanding its delivery drone program to deliver packages within 30 minutes in select cities. This initiative aims to improve efficiency and reduce delivery times."})
@@ -88,7 +88,7 @@ async def main():
 
     env_simulation_actions = [init_env_action]
     for timestep in range(3):
-        # Randomly select 10% of agents to activate
+        # Randomly select 1% of agents to activate. This is the active probability in the paper.
         total_agents = env.get_num_agents()
         num_agents_to_activate = max(1, int(total_agents * 0.01))  # Ensure at least 1 agent is activated
         agents_to_activate = random.sample(range(total_agents), num_agents_to_activate)

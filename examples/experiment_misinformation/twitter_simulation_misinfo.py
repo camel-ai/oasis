@@ -57,7 +57,7 @@ async def main():
     # Run the environment
     await env.reset()
 
-    # inject truth andmisinformation
+    # inject truth and misinformation
     business_action_truth = SingleAction(
         agent_id=0,
         action=ActionType.CREATE_POST,
@@ -126,7 +126,7 @@ async def main():
 
     env_simulation_actions = [init_env_action]
     for timestep in range(3):
-        # Randomly select 10% of agents to activate
+        # Randomly select 1% of agents to activate. This is the active probability in the paper.
         total_agents = env.agent_graph.get_num_nodes()
         num_agents_to_activate = max(1, int(
             total_agents * 0.01))  # Ensure at least 1 agent is activated
