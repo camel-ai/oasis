@@ -17,18 +17,13 @@ import inspect
 import logging
 import sys
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Union
 
 from camel.agents import ChatAgent
 from camel.messages import BaseMessage
 from camel.models import BaseModelBackend
-from camel.storages.vectordb_storages import QdrantStorage
-from camel.memories import VectorDBMemory
-from camel.memories.context_creators.score_based import (
-    ScoreBasedContextCreator,
-)
-from camel.utils import OpenAITokenCounter
-from camel.types import ModelType
+from camel.prompts import TextPrompt
+from camel.toolkits import FunctionTool
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
@@ -57,41 +52,30 @@ if "sphinx" not in sys.modules:
 class SocialAgent(ChatAgent):
     r"""Social Agent."""
 
-    def __init__(
-        self,
-        agent_id: int,
-        user_info: UserInfo,
-        twitter_channel: Channel,
-        model: Optional[Union[BaseModelBackend,
-                              List[BaseModelBackend]]] = None,
-        agent_graph: "AgentGraph" = None,
-        available_actions: list[ActionType] = None,
-        use_vector_memory: bool = False,
-    ):
+    def __init__(self,
+                 agent_id: int,
+                 user_info: UserInfo,
+                 user_info_template: TextPrompt | None = None,
+                 twitter_channel: Channel | None = None,
+                 model: Optional[Union[BaseModelBackend,
+                                       List[BaseModelBackend]]] = None,
+                 agent_graph: "AgentGraph" = None,
+                 available_actions: list[ActionType] = None,
+                 tools: Optional[List[Union[FunctionTool, Callable]]] = None,
+                 single_iteration: bool = True):
         self.social_agent_id = agent_id
         self.user_info = user_info
-        self.twitter_channel = twitter_channel
+        self.twitter_channel = twitter_channel or Channel()
         self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
-
+        if user_info_template is None:
+            system_message_content = self.user_info.to_system_message()
+        else:
+            system_message_content = self.user_info.to_custom_system_message(
+                user_info_template)
         system_message = BaseMessage.make_assistant_message(
             role_name="system",
-            content=self.user_info.to_system_message(),  # system prompt
+            content=system_message_content,  # system prompt
         )
-
-        if use_vector_memory:
-            vector_storage = QdrantStorage(
-                vector_dim=1536,
-                path="./tmp/memory_db",
-            )
-            context_creator = ScoreBasedContextCreator(
-                token_counter=OpenAITokenCounter(ModelType.GPT_4O_MINI),
-                token_limit=2048,
-            )
-            self.memory = VectorDBMemory(
-                storage=vector_storage,
-                context_creator=context_creator,
-                agent_id=self.social_agent_id,
-            )
 
         if not available_actions:
             agent_log.info("No available actions defined, using all actions.")
@@ -113,11 +97,12 @@ class SocialAgent(ChatAgent):
                     for a in available_actions
                 ]
             ]
+        all_tools = (tools or []) + (self.action_tools or [])
         super().__init__(system_message=system_message,
                          model=model,
                          scheduling_strategy='random_model',
-                         tools=self.action_tools,
-                         single_iteration=True)
+                         tools=all_tools,
+                         single_iteration=single_iteration)
         self.agent_graph = agent_graph
         self.test_prompt = (
             "\n"
@@ -149,10 +134,12 @@ class SocialAgent(ChatAgent):
                 args = tool_call.args
                 agent_log.info(f"Agent {self.social_agent_id} performed "
                                f"action: {action_name} with args: {args}")
+                return response
                 # Abort graph action for if 100w Agent
                 # self.perform_agent_graph_action(action_name, args)
         except Exception as e:
             agent_log.error(f"Agent {self.social_agent_id} error: {e}")
+            return e
 
     async def perform_test(self):
         """

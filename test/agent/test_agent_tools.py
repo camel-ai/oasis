@@ -15,16 +15,15 @@
 import asyncio
 import os
 import os.path as osp
-import random
-import sqlite3
 
 import pytest
+from camel.toolkits import MathToolkit
 
+from oasis import ActionType
 from oasis.social_agent.agent import SocialAgent
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.config import UserInfo
 from oasis.social_platform.platform import Platform
-from oasis.testing.show_db import print_db_contents
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test_multi.db")
@@ -38,16 +37,14 @@ def setup_platform():
 
 @pytest.mark.asyncio
 async def test_agents_posting(setup_platform):
-    N = 5  # number of agents(users)
-    M = 3  # Number of posts each user wants to send
-
     agents = []
     channel = Channel()
-    infra = Platform(test_db_filepath, channel)
+    infra = Platform(db_path=test_db_filepath,
+                     channel=channel,
+                     recsys_type='reddit')
     task = asyncio.create_task(infra.running())
 
-    # 创建并注册用户
-    for i in range(N):
+    for i in range(2):
         real_name = "name" + str(i)
         description = "No description."
         # profile = {"some_key": "some_value"}
@@ -55,7 +52,7 @@ async def test_agents_posting(setup_platform):
             "nodes": [],  # Relationships with other agents
             "edges": [],  # Relationship details
             "other_info": {
-                "user_profile": "Nothing",
+                "user_profile": "Please",
                 "mbti": "INTJ",
                 "activity_level": ["off_line"] * 24,
                 "activity_level_frequency": [3] * 24,
@@ -65,35 +62,26 @@ async def test_agents_posting(setup_platform):
         user_info = UserInfo(name=real_name,
                              description=description,
                              profile=profile)
-        agent = SocialAgent(agent_id=i,
+        agent = SocialAgent(agent_id=0,
                             user_info=user_info,
-                            twitter_channel=channel)
-        await agent.env.action.sign_up(f"user{i}0101", f"User{i}", "A bio.")
+                            twitter_channel=channel,
+                            tools=MathToolkit().get_tools(),
+                            available_actions=[ActionType.CREATE_POST],
+                            single_iteration=False)
+        await agent.env.action.sign_up(f"user{i}", f"User{i}", "A bio.")
         agents.append(agent)
 
     # create post
-    for agent in agents:
-        for _ in range(M):
-            await agent.env.action.create_post(f"hello from {agent.agent_id}")
-            await asyncio.sleep(random.uniform(0, 0.1))
+    await agents[0].env.action.create_post(
+        "Can someone tell me the result of 2025*1119? "
+        "Please use the multiply tool")
+
+    await infra.update_rec_table()
+
+    response = await agents[1].perform_action_by_llm()
+
+    assert any(tool_call.tool_name == "multiply"
+               for tool_call in response.info['tool_calls'])
 
     await channel.write_to_receive_queue((None, None, "exit"))
     await task
-
-    # Verify if data was correctly inserted into the database
-    conn = sqlite3.connect(test_db_filepath)
-    cursor = conn.cursor()
-    print_db_contents(test_db_filepath)
-    # Verify if data was correctly inserted into the user table
-    cursor.execute("SELECT * FROM user")
-    users = cursor.fetchall()
-    assert len(
-        users) == N, "The number of users in the database" "should match n"
-
-    # Verify if data was correctly inserted into the post table
-    cursor.execute("SELECT * FROM post")
-    posts = cursor.fetchall()
-    assert len(
-        posts) == M * N, "The number of posts should match the expected value."
-    cursor.close()
-    conn.close()
