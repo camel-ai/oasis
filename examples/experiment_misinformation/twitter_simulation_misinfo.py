@@ -49,7 +49,7 @@ async def main():
     env = oasis.make(
         platform=oasis.DefaultPlatformType.TWITTER,
         database_path=db_path,
-        agent_profile_path=("/Users/zzb/Documents/code/oasis_v2/oasis/tmp/random_network.csv"),
+        agent_profile_path=("tmp/random_network.csv"),
         agent_models=openai_model,
         available_actions=available_actions,
     )
@@ -57,16 +57,36 @@ async def main():
     # Run the environment
     await env.reset()
 
-    # inject misinformation
-    action_1 = SingleAction(agent_id=0,
+    # inject truth andmisinformation
+    business_action_truth = SingleAction(agent_id=0,
                             action=ActionType.CREATE_POST,
                             args={"content": "Amazon is expanding its delivery drone program to deliver packages within 30 minutes in select cities. This initiative aims to improve efficiency and reduce delivery times."})
-    action_2 = SingleAction(agent_id=0,
+    business_action_misinfo = SingleAction(agent_id=0,
                             action=ActionType.CREATE_POST,
-                            args={"content": "'Amazon plans to completely eliminate its delivery drivers within two years due to the new drone program. #Automation #Future"})
-    init_simulation = EnvAction(activate_agents=[0], intervention=[action_1, action_2])
+                            args={"content": "Amazon plans to completely eliminate its delivery drivers within two years due to the new drone program. #Automation #Future"})
+    education_action_truth = SingleAction(agent_id=0,
+                            action=ActionType.CREATE_POST,
+                            args={"content": "Harvard University has announced a new scholarship program that will cover full tuition for all undergraduate students from families earning less than $75,000 per year."})
+    education_action_misinfo = SingleAction(agent_id=0,
+                            action=ActionType.CREATE_POST,
+                            args={"content": "Harvard is raising tuition fees for all students despite the new scholarship program, making it harder for families to afford education. #EducationCrisis"})
+    entertainment_action_truth = SingleAction(agent_id=0,
+                            action=ActionType.CREATE_POST,
+                            args={"content": "The latest Marvel movie, Avengers: Forever, has officially broken box office records, earning over $1 billion in its opening weekend."})
+    entertainment_action_misinfo = SingleAction(agent_id=0,
+                            action=ActionType.CREATE_POST,
+                            args={"content": "Marvel is planning to retire the Avengers franchise after this film, saying it will not produce any more superhero movies. #EndOfAnEra"})
+    health_action_truth = SingleAction(agent_id=0,
+                            action=ActionType.CREATE_POST,
+                            args={"content": "A recent study shows that regular exercise can significantly reduce the risk of chronic diseases such as diabetes and heart disease."})
+    health_action_misinfo = SingleAction(agent_id=0,
+                            action=ActionType.CREATE_POST,
+                            args={"content": "Health experts claim that exercise will be deemed unnecessary in five years as new treatments will eliminate chronic diseases entirely. #HealthRevolution"})
 
-    env_simulation_list = [init_simulation]
+
+    init_env_action = EnvAction(activate_agents=[0], intervention=[business_action_truth, business_action_misinfo, education_action_truth, education_action_misinfo, entertainment_action_truth, entertainment_action_misinfo, health_action_truth, health_action_misinfo])
+
+    env_simulation_actions = [init_env_action]
     for timestep in range(3):
         # Randomly select 10% of agents to activate
         total_agents = env.get_num_agents()
@@ -75,11 +95,11 @@ async def main():
         
         # Create an environment action with the randomly selected agents
         random_action = EnvAction(activate_agents=agents_to_activate)
-        env_simulation_list.append(random_action)
+        env_simulation_actions.append(random_action)
 
     # Simulate 3 timesteps
     for i in range(3):
-        env_actions = env_simulation_list[i]
+        env_actions = env_simulation_actions[i]
         # Perform the actions
         await env.step(env_actions)
 
