@@ -127,7 +127,7 @@ async def main():
     env_simulation_actions = [init_env_action]
     for timestep in range(3):
         # Randomly select 10% of agents to activate
-        total_agents = env.get_num_agents()
+        total_agents = env.agent_graph.get_num_nodes()
         num_agents_to_activate = max(1, int(
             total_agents * 0.01))  # Ensure at least 1 agent is activated
         agents_to_activate = random.sample(range(total_agents),

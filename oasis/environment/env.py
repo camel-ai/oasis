@@ -215,16 +215,3 @@ class OasisEnv:
         env_log.info("Simulation finished! Please check the results in the "
                      f"database: {self.platform.db_path}. Note that the trace "
                      "table stored all the actions of the agents.")
-
-    def get_num_agents(self) -> int:
-        """Get the total number of agents in the environment.
-
-        Returns:
-            int: The total number of agents.
-        """
-        if hasattr(self, 'agent_graph'):
-            return len(
-                [agent_id for agent_id, _ in self.agent_graph.get_agents()])
-        else:
-            # If agent_graph is not initialized yet, return 0
-            return 0
