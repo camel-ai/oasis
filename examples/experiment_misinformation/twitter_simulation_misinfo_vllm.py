@@ -23,30 +23,25 @@ from oasis import ActionType, EnvAction, SingleAction
 
 
 async def main():
-    # NOTE: You need to deploy the vllm server first
     vllm_model_1 = ModelFactory.create(
         model_platform=ModelPlatformType.VLLM,
         model_type="qwen-2",
-        url="http://10.109.28.7:8080/v1",
-    )
-    vllm_model_2 = ModelFactory.create(
-        model_platform=ModelPlatformType.VLLM,
-        model_type="qwen-2",
-        url="http://10.109.27.103:8080/v1",
+        url="http://0.0.0.0:20000/v1",
     )
     # Define the models for agents. Agents will select models based on
     # pre-defined scheduling strategies
-    models = [vllm_model_1, vllm_model_2]
+    models = [vllm_model_1]
 
     # Define the available actions for the agents
     available_actions = [
         ActionType.CREATE_POST,
         ActionType.LIKE_POST,
+        ActionType.DISLIKE_POST,
         ActionType.REPOST,
         ActionType.FOLLOW,
         ActionType.DO_NOTHING,
-        ActionType.QUOTE_POST,
     ]
+
 
     # Define the path to the database
     db_path = "./data/twitter_simulation.db"
@@ -59,7 +54,7 @@ async def main():
     env = oasis.make(
         platform=oasis.DefaultPlatformType.TWITTER,
         database_path=db_path,
-        agent_profile_path=("tmp/random_network.csv"),
+        agent_profile_path=("tmp/scale_free_network.csv"),
         agent_models=models,
         available_actions=available_actions,
     )
@@ -135,11 +130,12 @@ async def main():
         ])
 
     env_simulation_actions = [init_env_action]
-    for timestep in range(3):
-        # Randomly select 1% of agents to activate. This is the active probability in the paper.
+    # Simulate 60 timesteps
+    for timestep in range(60):
+        # Randomly select 10% of agents to activate. This is the active probability in the paper.
         total_agents = env.agent_graph.get_num_nodes()
         num_agents_to_activate = max(1, int(
-            total_agents * 0.01))  # Ensure at least 1 agent is activated
+            total_agents * 0.1))  # Ensure at least 1 agent is activated
         agents_to_activate = random.sample(range(total_agents),
                                            num_agents_to_activate)
 
@@ -147,8 +143,8 @@ async def main():
         random_action = EnvAction(activate_agents=agents_to_activate)
         env_simulation_actions.append(random_action)
 
-    # Simulate 3 timesteps
-    for i in range(3):
+    # Simulate 61 timesteps
+    for i in range(61):
         env_actions = env_simulation_actions[i]
         # Perform the actions
         await env.step(env_actions)
