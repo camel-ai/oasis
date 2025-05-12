@@ -23,6 +23,7 @@ import tqdm
 from camel.memories import MemoryRecord
 from camel.messages import BaseMessage
 from camel.models import BaseModelBackend
+from camel.toolkits import SearchToolkit
 from camel.types import OpenAIBackendRole
 
 from oasis.social_agent import AgentGraph, SocialAgent
@@ -95,6 +96,7 @@ async def generate_agents(
             user_info=user_info,
             twitter_channel=twitter_channel,
             model=model,
+            tools=[SearchToolkit().search_linkup],
             agent_graph=agent_graph,
             available_actions=available_actions,
         )
