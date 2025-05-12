@@ -40,7 +40,8 @@
             "group": "Cookbooks",
             "pages": [
               "cookbooks/twitter_simulation",
-              "cookbooks/reddit_simulation"
+              "cookbooks/reddit_simulation",
+              "cookbooks/misinformation_spreading"
             ]
           },
           {
