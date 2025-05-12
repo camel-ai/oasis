@@ -16,7 +16,7 @@ import os
 import random
 
 from camel.models import ModelFactory
-from camel.types import ModelPlatformType, ModelType
+from camel.types import ModelPlatformType
 
 import oasis
 from oasis import ActionType, EnvAction, SingleAction
@@ -41,7 +41,6 @@ async def main():
         ActionType.FOLLOW,
         ActionType.DO_NOTHING,
     ]
-
 
     # Define the path to the database
     db_path = "./data/twitter_simulation.db"
@@ -68,56 +67,72 @@ async def main():
         action=ActionType.CREATE_POST,
         args={
             "content":
-            "Amazon is expanding its delivery drone program to deliver packages within 30 minutes in select cities. This initiative aims to improve efficiency and reduce delivery times."
+            ("Amazon is expanding its delivery drone program to deliver "
+             "packages within 30 minutes in select cities. This initiative "
+             "aims to improve efficiency and reduce delivery times.")
         })
     business_action_misinfo = SingleAction(
         agent_id=0,
         action=ActionType.CREATE_POST,
         args={
             "content":
-            "Amazon plans to completely eliminate its delivery drivers within two years due to the new drone program. #Automation #Future"
+            ("Amazon plans to completely eliminate its delivery drivers "
+             "within two years due to the new drone program. "
+             "#Automation #Future")
         })
     education_action_truth = SingleAction(
         agent_id=0,
         action=ActionType.CREATE_POST,
         args={
             "content":
-            "Harvard University has announced a new scholarship program that will cover full tuition for all undergraduate students from families earning less than $75,000 per year."
+            ("Harvard University has announced a new scholarship program "
+             "that will cover full tuition for all undergraduate students "
+             "from families earning less than $75,000 per year.")
         })
     education_action_misinfo = SingleAction(
         agent_id=0,
         action=ActionType.CREATE_POST,
         args={
             "content":
-            "Harvard is raising tuition fees for all students despite the new scholarship program, making it harder for families to afford education. #EducationCrisis"
+            ("Harvard is raising tuition fees for all students despite the "
+             "new scholarship program, making it harder for families to "
+             "afford education. #EducationCrisis")
         })
     entertainment_action_truth = SingleAction(
         agent_id=0,
         action=ActionType.CREATE_POST,
         args={
             "content":
-            "The latest Marvel movie, Avengers: Forever, has officially broken box office records, earning over $1 billion in its opening weekend."
+            ("The latest Marvel movie, Avengers: Forever, has officially "
+             "broken box office records, earning over $1 billion in its "
+             "opening weekend.")
         })
     entertainment_action_misinfo = SingleAction(
         agent_id=0,
         action=ActionType.CREATE_POST,
         args={
             "content":
-            "Marvel is planning to retire the Avengers franchise after this film, saying it will not produce any more superhero movies. #EndOfAnEra"
+            ("Marvel is planning to retire the Avengers franchise after "
+             "this film, saying it will not produce any more superhero "
+             "movies. #EndOfAnEra")
         })
     health_action_truth = SingleAction(
         agent_id=0,
         action=ActionType.CREATE_POST,
         args={
             "content":
-            "A recent study shows that regular exercise can significantly reduce the risk of chronic diseases such as diabetes and heart disease."
+            ("A recent study shows that regular exercise can significantly "
+             "reduce the risk of chronic diseases such as diabetes and "
+             "heart disease.")
         })
     health_action_misinfo = SingleAction(
         agent_id=0,
         action=ActionType.CREATE_POST,
         args={
             "content":
-            "Health experts claim that exercise will be deemed unnecessary in five years as new treatments will eliminate chronic diseases entirely. #HealthRevolution"
+            ("Health experts claim that exercise will be deemed unnecessary "
+             "in five years as new treatments will eliminate chronic "
+             "diseases entirely. #HealthRevolution")
         })
 
     init_env_action = EnvAction(
@@ -132,7 +147,7 @@ async def main():
     env_simulation_actions = [init_env_action]
     # Simulate 60 timesteps
     for timestep in range(60):
-        # Randomly select 10% of agents to activate. This is the active probability in the paper.
+        # Randomly select 10% of agents to activate
         total_agents = env.agent_graph.get_num_nodes()
         num_agents_to_activate = max(1, int(
             total_agents * 0.1))  # Ensure at least 1 agent is activated
