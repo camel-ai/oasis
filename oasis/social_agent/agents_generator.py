@@ -23,7 +23,7 @@ import tqdm
 from camel.memories import MemoryRecord
 from camel.messages import BaseMessage
 from camel.models import BaseModelBackend
-from camel.toolkits import SearchToolkit
+from camel.toolkits import FunctionTool, SearchToolkit
 from camel.types import OpenAIBackendRole
 
 from oasis.social_agent import AgentGraph, SocialAgent
@@ -96,10 +96,10 @@ async def generate_agents(
             user_info=user_info,
             twitter_channel=twitter_channel,
             model=model,
-            tools=[SearchToolkit().search_linkup],
+            tools=[FunctionTool(SearchToolkit().search_linkup)],
             agent_graph=agent_graph,
             available_actions=available_actions,
-        )
+            single_iteration=False)
 
         agent_graph.add_agent(agent)
         # TODO we should not use following_count and followers_count

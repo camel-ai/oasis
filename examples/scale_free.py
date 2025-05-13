@@ -16,7 +16,7 @@ import os
 import random
 
 from camel.models import ModelFactory
-from camel.types import ModelPlatformType
+from camel.types import ModelPlatformType, ModelType
 
 import oasis
 from oasis import ActionType, EnvAction, SingleAction
@@ -24,26 +24,19 @@ from oasis import ActionType, EnvAction, SingleAction
 
 async def main():
     # NOTE: You need to deploy the vllm server first
-    vllm_model_1 = ModelFactory.create(
-        model_platform=ModelPlatformType.QWEN,
-        model_type="qwen2.5-72b-instruct",
-    )
+    vllm_model_1 = ModelFactory.create(model_platform=ModelPlatformType.OPENAI,
+                                       model_type=ModelType.GPT_4O)
     # Define the models for agents. Agents will select models based on
     # pre-defined scheduling strategies
     models = [vllm_model_1]
 
     # Define the available actions for the agents
     available_actions = [
-        ActionType.CREATE_POST,
-        ActionType.LIKE_POST,
-        ActionType.DISLIKE_POST,
-        ActionType.REPOST,
-        ActionType.FOLLOW,
-        ActionType.DO_NOTHING,
+        ActionType.LIKE_POST, ActionType.REPOST, ActionType.DO_NOTHING
     ]
 
     # Define the path to the database
-    db_path = "./data/twitter_simulation_scale_free.db"
+    db_path = "./data/twitter_simulation_scale_free_linkup.db"
 
     # Delete the old database
     if os.path.exists(db_path):
@@ -142,7 +135,7 @@ async def main():
         env_simulation_actions.append(random_action)
 
     # Simulate 3 timesteps
-    for i in range(61):
+    for i in range(2):
         env_actions = env_simulation_actions[i]
         # Perform the actions
         await env.step(env_actions)

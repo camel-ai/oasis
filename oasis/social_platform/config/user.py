@@ -64,6 +64,7 @@ class UserInfo:
         system_content = f"""
 # OBJECTIVE
 You're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.
+You can use Linkup to search for information to help your judgment before interacting on social media.
 
 # SELF-DESCRIPTION
 Your actions should be consistent with your self-description and personality.
