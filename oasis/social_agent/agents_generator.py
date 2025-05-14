@@ -16,7 +16,7 @@ from __future__ import annotations
 import ast
 import asyncio
 import json
-from typing import List, Union
+from typing import List, Optional, Union
 
 import pandas as pd
 import tqdm
@@ -530,4 +530,117 @@ async def generate_reddit_agents(
     tasks = [process_agent(i) for i in range(len(agent_info))]
     await asyncio.gather(*tasks)
 
+    return agent_graph
+
+
+def connect_platform_channel(
+    channel: Channel,
+    agent_graph: AgentGraph | None = None,
+) -> AgentGraph:
+    for _, agent in agent_graph.get_agents():
+        agent.twitter_channel = channel
+        agent.env.action.channel = channel
+    return agent_graph
+
+
+async def generate_custom_agents(
+    channel: Channel,
+    agent_graph: AgentGraph | None = None,
+) -> AgentGraph:
+    if agent_graph is None:
+        agent_graph = AgentGraph()
+
+    agent_graph = connect_platform_channel(channel=channel,
+                                           agent_graph=agent_graph)
+
+    sign_up_tasks = [
+        agent.env.action.sign_up(user_name=agent.user_info.user_name,
+                                 name=agent.user_info.name,
+                                 bio=agent.user_info.description)
+        for _, agent in agent_graph.get_agents()
+    ]
+    await asyncio.gather(*sign_up_tasks)
+    return agent_graph
+
+
+async def generate_reddit_agent_graph(
+    profile_path: str,
+    model: Optional[Union[BaseModelBackend, List[BaseModelBackend]]] = None,
+    available_actions: list[ActionType] = None,
+) -> AgentGraph:
+    agent_graph = AgentGraph()
+    with open(profile_path, "r") as file:
+        agent_info = json.load(file)
+
+    async def process_agent(i):
+        # Instantiate an agent
+        profile = {
+            "nodes": [],  # Relationships with other agents
+            "edges": [],  # Relationship details
+            "other_info": {},
+        }
+        # Update agent profile with additional information
+        profile["other_info"]["user_profile"] = agent_info[i]["persona"]
+        profile["other_info"]["mbti"] = agent_info[i]["mbti"]
+        profile["other_info"]["gender"] = agent_info[i]["gender"]
+        profile["other_info"]["age"] = agent_info[i]["age"]
+        profile["other_info"]["country"] = agent_info[i]["country"]
+
+        user_info = UserInfo(
+            name=agent_info[i]["username"],
+            description=agent_info[i]["bio"],
+            profile=profile,
+            recsys_type="reddit",
+        )
+
+        agent = SocialAgent(
+            agent_id=i,
+            user_info=user_info,
+            agent_graph=agent_graph,
+            model=model,
+            available_actions=available_actions,
+        )
+
+        # Add agent to the agent graph
+        agent_graph.add_agent(agent)
+
+    tasks = [process_agent(i) for i in range(len(agent_info))]
+    await asyncio.gather(*tasks)
+    return agent_graph
+
+
+async def generate_twitter_agent_graph(
+    profile_path: str,
+    model: Optional[Union[BaseModelBackend, List[BaseModelBackend]]] = None,
+    available_actions: list[ActionType] = None,
+) -> AgentGraph:
+    agent_info = pd.read_csv(profile_path)
+
+    agent_graph = AgentGraph()
+
+    for agent_id in range(len(agent_info)):
+        profile = {
+            "nodes": [],
+            "edges": [],
+            "other_info": {},
+        }
+        profile["other_info"]["user_profile"] = agent_info["user_char"][
+            agent_id]
+
+        user_info = UserInfo(
+            name=agent_info["username"][agent_id],
+            description=agent_info["description"][agent_id],
+            profile=profile,
+            recsys_type='twitter',
+        )
+
+        agent = SocialAgent(
+            agent_id=agent_id,
+            user_info=user_info,
+            model=model,
+            agent_graph=agent_graph,
+            available_actions=available_actions,
+        )
+
+        agent_graph.add_agent(agent)
     return agent_graph
