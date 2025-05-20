@@ -24,6 +24,7 @@ from camel.messages import BaseMessage
 from camel.models import BaseModelBackend
 from camel.prompts import TextPrompt
 from camel.toolkits import FunctionTool
+from camel.types import OpenAIBackendRole
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
@@ -223,6 +224,12 @@ class SocialAgent(ChatAgent):
             if function_list[i].func.__name__ == func_name:
                 func = function_list[i].func
                 result = await func(*args, **kwargs)
+                self.update_memory(message=BaseMessage.make_user_message(
+                    role_name=OpenAIBackendRole.SYSTEM,
+                    content=f"Agent {self.social_agent_id} performed "
+                    f"{func_name} with args: {args} and kwargs: {kwargs}"
+                    f"and the result is {result}"),
+                                   role=OpenAIBackendRole.SYSTEM)
                 agent_log.info(f"Agent {self.social_agent_id}: {result}")
                 return result
         raise ValueError(f"Function {func_name} not found in the list.")
