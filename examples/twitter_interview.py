@@ -121,7 +121,7 @@ async def main():
     # Close the environment
     await env.close()
     
-    # Display the interview results from the database
+    # visualize the interview results
     print("\n=== Interview Results ===")
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
