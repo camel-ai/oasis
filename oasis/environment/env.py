@@ -164,6 +164,12 @@ class OasisEnv:
         async with self.llm_semaphore:
             return await agent.perform_action_by_llm()
 
+    async def _perform_interview_action(self, agent, interview_prompt: str):
+        r"""Send the request to the llm model and execute the interview.
+        """
+        async with self.llm_semaphore:
+            return await agent.perform_interview(interview_prompt)
+
     async def step(self, action: EnvAction) -> None:
         r"""Perform some control actions, update the recommendation system,
         and let some llm agents perform actions.
