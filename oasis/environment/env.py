@@ -156,7 +156,10 @@ class OasisEnv:
         """
         control_agent = self.agent_graph.get_agent(action.agent_id)
         
-        # Check if this is an interview action
+        # For regular actions
+        await control_agent.perform_action_by_data(action.action, **action.args)
+        
+        # If this was an interview action, perform the actual interview and update the database
         if action.action == ActionType.INTERVIEW:
             # Extract interview prompt from args
             interview_prompt = action.args.get("prompt", "")
@@ -164,28 +167,61 @@ class OasisEnv:
                 env_log.warning(f"Empty interview prompt for agent {action.agent_id}")
                 return
                 
-            # Perform the interview
+            # Perform the interview to get actual response
             result = await self._perform_interview_action(control_agent, interview_prompt)
             
-            # Store interview result in the database using the platform's record_trace method
-            # Convert the result to a dictionary suitable for JSON serialization
-            interview_info = {
-                "prompt": interview_prompt,
-                "response": result.get("content", "")
-            }
+            # Get the response content
+            response = result.get("content", "")
             
-            # Get current timestamp based on the platform type
-            self.platform.pl_utils._record_trace(
-                user_id=action.agent_id,
-                action_type=ActionType.INTERVIEW.value,
-                action_info=interview_info
-            )
-            
-            env_log.info(f"Stored interview result for agent {action.agent_id}")
+            try:
+                # Update the database with the actual response
+                # First, fetch the latest trace record for this interview
+                query = """SELECT rowid, info FROM trace 
+                           WHERE user_id = ? AND action = ? 
+                           ORDER BY created_at DESC LIMIT 1"""
+                self.platform.pl_utils._execute_db_command(query, (action.agent_id, ActionType.INTERVIEW.value))
+                last_interview_data = self.platform.db_cursor.fetchone()
+                
+                if last_interview_data:
+                    rowid, info_json = last_interview_data
+                    import json
+                    info = json.loads(info_json)
+                    info["response"] = response
+                    
+                    # Update the trace record with the actual response
+                    update_query = "UPDATE trace SET info = ? WHERE rowid = ?"
+                    self.platform.pl_utils._execute_db_command(
+                        update_query, 
+                        (json.dumps(info), rowid),
+                        commit=True
+                    )
+                    
+                    env_log.info(f"Updated interview result for agent {action.agent_id}")
+                else:
+                    # If we couldn't find the trace record, create a new one with the response
+                    interview_info = {
+                        "prompt": interview_prompt,
+                        "response": response
+                    }
+                    
+                    if self.platform.recsys_type == RecsysType.REDDIT:
+                        current_time = self.platform.sandbox_clock.time_transfer(
+                            datetime.now(), self.platform.start_time)
+                    else:
+                        current_time = self.platform.sandbox_clock.get_time_step()
+                        
+                    self.platform.pl_utils._record_trace(
+                        user_id=action.agent_id,
+                        action_type=ActionType.INTERVIEW.value,
+                        action_info=interview_info,
+                        current_time=current_time
+                    )
+                    
+                    env_log.info(f"Created new interview record for agent {action.agent_id}")
+            except Exception as e:
+                env_log.error(f"Error updating interview result: {str(e)}")
+                
             return
-        
-        # For regular actions
-        await control_agent.perform_action_by_data(action.action, **action.args)
 
     async def _perform_llm_action(self, agent):
         r"""Send the request to the llm model and execute the action.

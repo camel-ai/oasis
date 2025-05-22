@@ -201,7 +201,7 @@ class SocialAgent(ChatAgent):
             self.system_message.content.split("# RESPONSE FORMAT")[0],
         }] + openai_messages + [{
             "role": "user",
-            "content": self.test_prompt
+            "content": interview_prompt
         }])
 
         agent_log.info(f"Agent {self.social_agent_id}: {openai_messages}")

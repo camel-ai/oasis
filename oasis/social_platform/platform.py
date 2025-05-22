@@ -1,12 +1,12 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-# Licensed under the Apache License, Version 2.0 (the “License”);
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an “AS IS” BASIS,
+# distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -1326,6 +1326,31 @@ class Platform:
 
             action_info = {}
             self.pl_utils._record_trace(user_id, ActionType.DO_NOTHING.value,
+                                        action_info, current_time)
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def interview(self, agent_id: int, prompt: str):
+        """Interview an agent with the given prompt.
+
+        Args:
+            agent_id (int): The ID of the agent being interviewed.
+            prompt (str): The interview question or prompt.
+
+        Returns:
+            dict: A dictionary with success status.
+        """
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = self.sandbox_clock.get_time_step()
+        try:
+            user_id = agent_id
+
+            action_info = {"prompt": prompt}
+            self.pl_utils._record_trace(user_id, ActionType.INTERVIEW.value,
                                         action_info, current_time)
             return {"success": True}
         except Exception as e:
