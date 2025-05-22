@@ -125,6 +125,9 @@ async def main():
     print("\n=== Interview Results ===")
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
+    # Here we query all interview records from the database
+    # We use ActionType.INTERVIEW.value as the query condition to get all interview records
+    # Each record contains user ID, interview information (in JSON format), and creation timestamp
     cursor.execute("""
         SELECT user_id, info, created_at
         FROM trace
