@@ -43,7 +43,10 @@
             "group": "Cookbooks",
             "pages": [
               "cookbooks/twitter_simulation",
-              "cookbooks/reddit_simulation"
+              "cookbooks/reddit_simulation",
+              "cookbooks/sympy_tools_simulation",
+              "cookbooks/search_tools_simulation",
+              "cookbooks/custom_prompt_simulation"
             ]
           },
           {
