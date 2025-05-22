@@ -145,6 +145,7 @@ class SocialAgent(ChatAgent):
         """
         doing group polarization test for all agents.
         TODO: rewrite the function according to the ChatAgent.
+        TODO: unify the test and interview function.
         """
         # user conduct test to agent
         _ = BaseMessage.make_user_message(role_name="User",
