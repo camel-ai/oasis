@@ -143,7 +143,7 @@ class SocialAgent(ChatAgent):
 
     async def perform_test(self):
         """
-        doing test for all agents.
+        doing group polarization test for all agents.
         TODO: rewrite the function according to the ChatAgent.
         """
         # user conduct test to agent
@@ -183,7 +183,19 @@ class SocialAgent(ChatAgent):
 
     async def perform_interview(self, interview_prompt: str):
         """
-        perform interview with the agent.
+        Perform an interview with the agent.
+        
+        This method allows an external entity to ask a specific question to the agent
+        and get a response based on the agent's persona and memory context. The interview
+        doesn't affect the agent's memory and is used primarily for evaluation or
+        extracting the agent's opinions on specific topics.
+        
+        Args:
+            interview_prompt (str): The question or prompt to ask the agent during the interview.
+            
+        Returns:
+            dict: A dictionary containing the agent's user_id, the full prompt context,
+                 and the agent's response content.
         """
         # user conduct test to agent
         _ = BaseMessage.make_user_message(role_name="User",
