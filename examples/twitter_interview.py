@@ -134,6 +134,11 @@ async def main():
         WHERE action = ?
     """, (ActionType.INTERVIEW.value,))
     
+    # This query retrieves all interview records from the trace table
+    # - user_id: the ID of the agent who was interviewed
+    # - info: JSON string containing interview details (prompt, response, etc.)
+    # - created_at: timestamp when the interview was conducted
+    # We'll parse this data below to display the interview results
     for user_id, info_json, timestamp in cursor.fetchall():
         info = json.loads(info_json)
         print(f"\nAgent {user_id} (Timestep {timestamp}):")
