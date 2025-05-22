@@ -1377,6 +1377,7 @@ class Platform:
 
         Returns:
             dict: A dictionary with success status.
+        TODO: maybe move this function to utils
         """
         try:
             # First, fetch the trace record for this interview
