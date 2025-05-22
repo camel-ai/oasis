@@ -15,12 +15,11 @@ To create a simulation environment, use the `make` function from OASIS:
 import oasis
 from oasis import DefaultPlatformType
 
+# Make the environment
 env = oasis.make(
-    platform=DefaultPlatformType.TWITTER,  # or DefaultPlatformType.REDDIT
-    database_path="./data/simulation.db",
-    agent_profile_path="./data/profiles/users.csv",
-    agent_models=models,
-    available_actions=available_actions,
+    agent_graph=agent_graph,
+    platform=oasis.DefaultPlatformType.REDDIT,
+    database_path="simulation.db",
 )
 ```
 
@@ -30,14 +29,12 @@ When initializing the OASIS environment, you can configure the following core pa
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
+| `agent_graph` | `AgentGraph` | An `AgentGraph` instance that stores all the social agents in the simulation. For more details, see [Agent Graph](https://docs.oasis.camel-ai.org/key_modules/agent_graph)|
 | `platform` | `DefaultPlatformType` or `Platform` | The platform type to use (`TWITTER` or `REDDIT`) or a custom `Platform` instance |
 | `database_path` | `str` | Path to create a SQLite database (must end with `.db`) |
-| `agent_profile_path` | `str` | Path to agent profiles data |
-| `agent_models` | `BaseModelBackend` or `List[BaseModelBackend]` | Model backend(s) for agent responses |
-| `available_actions` | `list[ActionType]` | List of allowed actions for agents |
 | `semaphore` | `int` | Limit on concurrent LLM requests (default: 128) |
 
-    For more details, see the [Platform](key_modules/platform), [Agent Profile](user_generation/user_generation), [Model](key_modules/models) and [Actions](key_modules/actions) Module.
+    For more details, see the [Platform](https://docs.oasis.camel-ai.org/key_modules/platform), [Agent Profile](https://docs.oasis.camel-ai.org/user_generation/user_generation), [Model](https://docs.oasis.camel-ai.org/key_modules/models) and [Actions](https://docs.oasis.camel-ai.org/key_modules/agent_graph) Module.
 ## Environment Lifecycle
 
 The OASIS environment has a simple lifecycle you can manage with these methods:
@@ -48,35 +45,9 @@ await env.reset()
 
 # Run simulation steps
 for _ in range(n):
-    await env.step(env_actions)
+    await env.step(actions)
 
 # Close the environment when done
 await env.close()
 ```
-
-## Environment Actions
-
-The environment update through the `step` method, which uses `EnvAction`.
-`EnvAction` includes a list of activated agent IDs and predefined `SingleAction` interventions. During the step, interventions are applied, the recommendation system cache is refreshed, and activated agents perform actions based on LLMs.
-
-```python
-from oasis import EnvAction, SingleAction, ActionType
-
-# Create an action for a specific agent
-action = SingleAction(
-    agent_id=0,
-    action=ActionType.CREATE_POST,
-    args={"content": "Hello, OASIS world!"}
-)
-
-# Create an environment action to activate agents and include interventions
-env_action = EnvAction(
-    activate_agents=[0, 1, 2, 3],  # List of agent IDs to activate
-    intervention=[action]  # List of interventions
-)
-
-# Step the environment with the action
-await env.step(env_action)
-```
-
-For more action details, see [Actions Module](key_modules/actions)
+For more action details, see [Actions Module](https://docs.oasis.camel-ai.org/key_modules/actions)

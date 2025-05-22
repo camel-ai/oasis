@@ -24,6 +24,7 @@ from camel.messages import BaseMessage
 from camel.models import BaseModelBackend
 from camel.prompts import TextPrompt
 from camel.toolkits import FunctionTool
+from camel.types import OpenAIBackendRole
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
@@ -48,6 +49,8 @@ if "sphinx" not in sys.modules:
                 "%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
         agent_log.addHandler(file_handler)
 
+ALL_SOCIAL_ACTIONS = [action.value for action in ActionType]
+
 
 class SocialAgent(ChatAgent):
     r"""Social Agent."""
@@ -66,7 +69,8 @@ class SocialAgent(ChatAgent):
         self.social_agent_id = agent_id
         self.user_info = user_info
         self.twitter_channel = twitter_channel or Channel()
-        self.env = SocialEnvironment(SocialAction(agent_id, twitter_channel))
+        self.env = SocialEnvironment(
+            SocialAction(agent_id, self.twitter_channel))
         if user_info_template is None:
             system_message_content = self.user_info.to_system_message()
         else:
@@ -134,9 +138,14 @@ class SocialAgent(ChatAgent):
                 args = tool_call.args
                 agent_log.info(f"Agent {self.social_agent_id} performed "
                                f"action: {action_name} with args: {args}")
-                return response
+                if action_name not in ALL_SOCIAL_ACTIONS:
+                    agent_log.info(
+                        f"Agent {self.social_agent_id} get the result: "
+                        f"{tool_call.result}")
                 # Abort graph action for if 100w Agent
                 # self.perform_agent_graph_action(action_name, args)
+
+                return response
         except Exception as e:
             agent_log.error(f"Agent {self.social_agent_id} error: {e}")
             return e
@@ -215,6 +224,12 @@ class SocialAgent(ChatAgent):
             if function_list[i].func.__name__ == func_name:
                 func = function_list[i].func
                 result = await func(*args, **kwargs)
+                self.update_memory(message=BaseMessage.make_user_message(
+                    role_name=OpenAIBackendRole.SYSTEM,
+                    content=f"Agent {self.social_agent_id} performed "
+                    f"{func_name} with args: {args} and kwargs: {kwargs}"
+                    f"and the result is {result}"),
+                                   role=OpenAIBackendRole.SYSTEM)
                 agent_log.info(f"Agent {self.social_agent_id}: {result}")
                 return result
         raise ValueError(f"Function {func_name} not found in the list.")

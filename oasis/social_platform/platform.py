@@ -337,28 +337,38 @@ class Platform:
                 user_table, post_table, trace_table, rec_matrix,
                 self.max_rec_post_len)
         elif self.recsys_type == RecsysType.TWHIN:
-            latest_post_time = post_table[-1]["created_at"]
-            post_query = "SELECT COUNT(*) " "FROM post " "WHERE created_at = ?"
-
-            # Obtain the number of new posts for incremental updates
-            self.pl_utils._execute_db_command(post_query, (latest_post_time, ))
-            result = self.db_cursor.fetchone()
-            latest_post_count = result[0]
-            if not latest_post_count:
-                return {
-                    "success": False,
-                    "message": "Fail to get latest posts count"
-                }
-            new_rec_matrix = rec_sys_personalized_twh(
-                user_table,
-                post_table,
-                latest_post_count,
-                trace_table,
-                rec_matrix,
-                self.max_rec_post_len,
-                self.sandbox_clock.time_step,
-                use_openai_embedding=self.use_openai_embedding,
-            )
+            try:
+                latest_post_time = post_table[-1]["created_at"]
+                second_latest_post_time = post_table[-2]["created_at"] if len(
+                    post_table) > 1 else latest_post_time
+                post_query = """
+                    SELECT COUNT(*)
+                    FROM post
+                    WHERE created_at = ? OR created_at = ?
+                """
+                self.pl_utils._execute_db_command(
+                    post_query, (latest_post_time, second_latest_post_time))
+                result = self.db_cursor.fetchone()
+                latest_post_count = result[0]
+                if not latest_post_count:
+                    return {
+                        "success": False,
+                        "message": "Fail to get latest posts count"
+                    }
+                new_rec_matrix = rec_sys_personalized_twh(
+                    user_table,
+                    post_table,
+                    latest_post_count,
+                    trace_table,
+                    rec_matrix,
+                    self.max_rec_post_len,
+                    self.sandbox_clock.time_step,
+                    use_openai_embedding=self.use_openai_embedding,
+                )
+            except Exception as e:
+                twitter_log.error(e)
+                # If no post in the platform, skip updating the rec table
+                return
         elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
                                             self.max_rec_post_len)

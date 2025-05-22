@@ -21,6 +21,7 @@ from camel.prompts import TextPrompt
 
 @dataclass
 class UserInfo:
+    user_name: str | None = None
     name: str | None = None
     description: str | None = None
     profile: dict[str, Any] | None = None
