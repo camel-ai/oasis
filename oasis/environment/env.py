@@ -1,12 +1,12 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-# Licensed under the Apache License, Version 2.0 (the “License”);
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an “AS IS” BASIS,
+# distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -155,8 +155,37 @@ class OasisEnv:
             action(SingleAction): The action to perform.
         """
         control_agent = self.agent_graph.get_agent(action.agent_id)
-        await control_agent.perform_action_by_data(action.action,
-                                                   **action.args)
+        
+        # Check if this is an interview action
+        if action.action == ActionType.INTERVIEW:
+            # Extract interview prompt from args
+            interview_prompt = action.args.get("prompt", "")
+            if not interview_prompt:
+                env_log.warning(f"Empty interview prompt for agent {action.agent_id}")
+                return
+                
+            # Perform the interview
+            result = await self._perform_interview_action(control_agent, interview_prompt)
+            
+            # Store interview result in the database using the platform's record_trace method
+            # Convert the result to a dictionary suitable for JSON serialization
+            interview_info = {
+                "prompt": interview_prompt,
+                "response": result.get("content", "")
+            }
+            
+            # Get current timestamp based on the platform type
+            self.platform.pl_utils._record_trace(
+                user_id=action.agent_id,
+                action_type=ActionType.INTERVIEW.value,
+                action_info=interview_info
+            )
+            
+            env_log.info(f"Stored interview result for agent {action.agent_id}")
+            return
+        
+        # For regular actions
+        await control_agent.perform_action_by_data(action.action, **action.args)
 
     async def _perform_llm_action(self, agent):
         r"""Send the request to the llm model and execute the action.
