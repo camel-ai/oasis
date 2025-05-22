@@ -156,71 +156,49 @@ class OasisEnv:
         """
         control_agent = self.agent_graph.get_agent(action.agent_id)
         
-        # For regular actions
-        await control_agent.perform_action_by_data(action.action, **action.args)
+        # First, perform the regular action by sending it to the platform
+        action_result = await control_agent.perform_action_by_data(action.action, **action.args)
         
-        # If this was an interview action, perform the actual interview and update the database
+        # If this was an interview action, perform the actual interview and record the response
         if action.action == ActionType.INTERVIEW:
             # Extract interview prompt from args
             interview_prompt = action.args.get("prompt", "")
             if not interview_prompt:
                 env_log.warning(f"Empty interview prompt for agent {action.agent_id}")
                 return
-                
-            # Perform the interview to get actual response
+            
+            # Check if the platform action was successful
+            if not action_result.get("success", False):
+                env_log.warning(f"Failed to record interview request: {action_result.get('error', 'Unknown error')}")
+                return
+            
+            # Get the interview_id from the result
+            interview_id = action_result.get("interview_id")
+            if not interview_id:
+                env_log.warning(f"No interview_id returned from platform")
+                return
+            
+            # Perform the interview to get the actual response
             result = await self._perform_interview_action(control_agent, interview_prompt)
             
             # Get the response content
             response = result.get("content", "")
             
             try:
-                # Update the database with the actual response
-                # First, fetch the latest trace record for this interview
-                query = """SELECT rowid, info FROM trace 
-                           WHERE user_id = ? AND action = ? 
-                           ORDER BY created_at DESC LIMIT 1"""
-                self.platform.pl_utils._execute_db_command(query, (action.agent_id, ActionType.INTERVIEW.value))
-                last_interview_data = self.platform.db_cursor.fetchone()
+                # Record the response using the platform's method
+                response_result = await self.platform.record_interview_response(
+                    agent_id=action.agent_id,
+                    interview_id=interview_id,
+                    response=response
+                )
                 
-                if last_interview_data:
-                    rowid, info_json = last_interview_data
-                    import json
-                    info = json.loads(info_json)
-                    info["response"] = response
-                    
-                    # Update the trace record with the actual response
-                    update_query = "UPDATE trace SET info = ? WHERE rowid = ?"
-                    self.platform.pl_utils._execute_db_command(
-                        update_query, 
-                        (json.dumps(info), rowid),
-                        commit=True
-                    )
-                    
-                    env_log.info(f"Updated interview result for agent {action.agent_id}")
+                if response_result.get("success", False):
+                    env_log.info(f"Successfully recorded interview response for agent {action.agent_id}")
                 else:
-                    # If we couldn't find the trace record, create a new one with the response
-                    interview_info = {
-                        "prompt": interview_prompt,
-                        "response": response
-                    }
-                    
-                    if self.platform.recsys_type == RecsysType.REDDIT:
-                        current_time = self.platform.sandbox_clock.time_transfer(
-                            datetime.now(), self.platform.start_time)
-                    else:
-                        current_time = self.platform.sandbox_clock.get_time_step()
-                        
-                    self.platform.pl_utils._record_trace(
-                        user_id=action.agent_id,
-                        action_type=ActionType.INTERVIEW.value,
-                        action_info=interview_info,
-                        current_time=current_time
-                    )
-                    
-                    env_log.info(f"Created new interview record for agent {action.agent_id}")
+                    env_log.warning(f"Failed to record interview response: {response_result.get('error', 'Unknown error')}")
             except Exception as e:
-                env_log.error(f"Error updating interview result: {str(e)}")
-                
+                env_log.error(f"Error recording interview response: {str(e)}")
+            
             return
 
     async def _perform_llm_action(self, agent):

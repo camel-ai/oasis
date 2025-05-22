@@ -649,18 +649,18 @@ class SocialAction:
 
         This method invokes an asynchronous action to interview an agent with a
         specific prompt question. Upon successful execution, it returns a dictionary
-        containing the agent's response.
+        containing a success status and an interview_id for tracking.
 
         Args:
             prompt (str): The interview question or prompt to ask the agent.
 
         Returns:
-            dict: A dictionary containing the response from the agent.
+            dict: A dictionary containing success status and interview tracking information.
 
             Example of a successful return:
             {
                 "success": True,
-                "response": "This is the agent's response to the interview question."
+                "interview_id": "1621234567_0"  # Timestamp_UserID format
             }
         """
         return await self.perform_action(prompt, ActionType.INTERVIEW.value)

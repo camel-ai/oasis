@@ -135,6 +135,7 @@ async def main():
         info = json.loads(info_json)
         print(f"\nAgent {user_id} (Timestep {timestamp}):")
         print(f"Prompt: {info.get('prompt', 'N/A')}")
+        print(f"Interview ID: {info.get('interview_id', 'N/A')}")
         print(f"Response: {info.get('response', 'N/A')}")
     
     conn.close()

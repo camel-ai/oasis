@@ -1339,7 +1339,7 @@ class Platform:
             prompt (str): The interview question or prompt.
 
         Returns:
-            dict: A dictionary with success status.
+            dict: A dictionary with success status and an interview_id for tracking.
         """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
@@ -1349,9 +1349,63 @@ class Platform:
         try:
             user_id = agent_id
 
-            action_info = {"prompt": prompt}
+            # Create a unique interview ID (using timestamp + user_id)
+            interview_id = f"{current_time}_{user_id}"
+
+            # Record the interview request in the trace table
+            action_info = {
+                "prompt": prompt,
+                "interview_id": interview_id
+            }
             self.pl_utils._record_trace(user_id, ActionType.INTERVIEW.value,
                                         action_info, current_time)
-            return {"success": True}
+            
+            return {
+                "success": True, 
+                "interview_id": interview_id
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+            
+    async def record_interview_response(self, agent_id: int, interview_id: str, response: str):
+        """Record the response for an interview.
+
+        Args:
+            agent_id (int): The ID of the agent who was interviewed.
+            interview_id (str): The unique ID of the interview.
+            response (str): The agent's response to the interview.
+
+        Returns:
+            dict: A dictionary with success status.
+        """
+        try:
+            # First, fetch the trace record for this interview
+            query = """SELECT rowid, info FROM trace 
+                       WHERE user_id = ? AND action = ? 
+                       ORDER BY created_at DESC LIMIT 1"""
+            self.pl_utils._execute_db_command(query, (agent_id, ActionType.INTERVIEW.value))
+            last_interview_data = self.db_cursor.fetchone()
+            
+            if last_interview_data:
+                rowid, info_json = last_interview_data
+                import json
+                info = json.loads(info_json)
+                
+                # Verify this is the correct interview record
+                if info.get("interview_id") == interview_id:
+                    # Update with the response
+                    info["response"] = response
+                    
+                    # Update the trace record
+                    update_query = "UPDATE trace SET info = ? WHERE rowid = ?"
+                    self.pl_utils._execute_db_command(
+                        update_query, 
+                        (json.dumps(info), rowid),
+                        commit=True
+                    )
+                    
+                    return {"success": True}
+                
+            return {"success": False, "error": "Interview record not found"}
         except Exception as e:
             return {"success": False, "error": str(e)}
