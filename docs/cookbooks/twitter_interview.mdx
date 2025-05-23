@@ -1,13 +1,30 @@
 ---
-title: 'Twitter Interview'
-description: 'Comprehensive guide to all available actions in the OASIS simulation environment'
+title: 'Interview'
+description: 'Learn how to conduct interviews with AI agents in Twitter simulations using the INTERVIEW action type'
 ---
 
-# Twitter Interview
+# Interview
 
+This cookbook demonstrates how to use the INTERVIEW action type to conduct interviews with AI agents in a Twitter simulation. The interview functionality allows you to ask specific questions to agents and collect their responses, which is useful for research, opinion polling, and understanding agent behaviors.
+
+## Overview
+
+The INTERVIEW action type enables you to:
+- Ask specific questions to individual agents
+- Collect structured responses from agents
+- Store interview data in the database for analysis
+- Conduct interviews alongside regular social media interactions
+
+## Key Features
+
+- **Manual Interview Actions**: Use `ManualAction` with `ActionType.INTERVIEW` to conduct interviews
+- **Automatic Response Collection**: The system automatically collects and stores agent responses
+- **Database Storage**: All interview data is stored in the trace table for later analysis
+- **Concurrent Execution**: Interviews can be conducted alongside other social media actions
+
+## Complete Example
 
 ```python
-
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +47,8 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType
 
 import oasis
-from oasis import ActionType, EnvAction, SingleAction
+from oasis import (ActionType, LLMAction, ManualAction,
+                   generate_twitter_agent_graph)
 
 
 async def main():
@@ -50,6 +68,13 @@ async def main():
         ActionType.INTERVIEW,  # Add the INTERVIEW action type
     ]
 
+    agent_graph = await generate_twitter_agent_graph(
+        profile_path=("data/twitter_dataset/anonymous_topic_200_1h/"
+                      "False_Business_0.csv"),
+        model=openai_model,
+        available_actions=available_actions,
+    )
+
     # Define the path to the database
     db_path = "./data/twitter_simulation.db"
 
@@ -59,74 +84,67 @@ async def main():
 
     # Make the environment
     env = oasis.make(
+        agent_graph=agent_graph,
         platform=oasis.DefaultPlatformType.TWITTER,
         database_path=db_path,
-        agent_profile_path=("data/twitter_dataset/anonymous_topic_200_1h/"
-                            "False_Business_0.csv"),
-        agent_models=openai_model,
-        available_actions=available_actions,
     )
 
     # Run the environment
     await env.reset()
 
     # First timestep: Agent 0 creates a post
-    action_1 = SingleAction(agent_id=0,
-                            action=ActionType.CREATE_POST,
-                            args={"content": "Earth is flat."})
-    env_actions_1 = EnvAction(
-        # Activate 5 agents with id 1, 3, 5, 7, 9
-        activate_agents=[1, 3, 5, 7, 9],
-        intervention=[action_1])
+    actions_1 = {}
+    actions_1[env.agent_graph.get_agent(0)] = ManualAction(
+        action_type=ActionType.CREATE_POST,
+        action_args={"content": "Earth is flat."})
+    await env.step(actions_1)
 
-    # Second timestep: Agent 1 creates a post, and we interview Agent 0
-    action_2 = SingleAction(agent_id=1,
-                           action=ActionType.CREATE_POST,
-                           args={"content": "Earth is not flat."})
+    # Second timestep: Let some agents respond with LLM actions
+    actions_2 = {
+        agent: LLMAction()
+        # Activate 5 agents with id 1, 3, 5, 7, 9
+        for _, agent in env.agent_graph.get_agents([1, 3, 5, 7, 9])
+    }
+    await env.step(actions_2)
+
+    # Third timestep: Agent 1 creates a post, and we interview Agent 0
+    actions_3 = {}
+    actions_3[env.agent_graph.get_agent(1)] = ManualAction(
+        action_type=ActionType.CREATE_POST,
+        action_args={"content": "Earth is not flat."})
     
     # Create an interview action to ask Agent 0 about their views
-    interview_action = SingleAction(
-        agent_id=0,
-        action=ActionType.INTERVIEW,
-        args={"prompt": "What do you think about the shape of the Earth? Please explain your reasoning."}
-    )
+    actions_3[env.agent_graph.get_agent(0)] = ManualAction(
+        action_type=ActionType.INTERVIEW,
+        action_args={"prompt": "What do you think about the shape of the Earth? Please explain your reasoning."})
     
-    env_actions_2 = EnvAction(
-        activate_agents=[2, 4, 6, 8, 10],
-        intervention=[action_2, interview_action]
-    )
+    await env.step(actions_3)
 
-    # Third timestep: Interview multiple agents
-    interview_actions = [
-        SingleAction(
-            agent_id=1,
-            action=ActionType.INTERVIEW,
-            args={"prompt": "Why do you believe the Earth is not flat?"}
-        ),
-        SingleAction(
-            agent_id=2,
-            action=ActionType.INTERVIEW,
-            args={"prompt": "What are your thoughts on the debate about Earth's shape?"}
-        ),
-    ]
+    # Fourth timestep: Let some other agents respond
+    actions_4 = {
+        agent: LLMAction()
+        for _, agent in env.agent_graph.get_agents([2, 4, 6, 8, 10])
+    }
+    await env.step(actions_4)
+
+    # Fifth timestep: Interview multiple agents
+    actions_5 = {}
+    actions_5[env.agent_graph.get_agent(1)] = ManualAction(
+        action_type=ActionType.INTERVIEW,
+        action_args={"prompt": "Why do you believe the Earth is not flat?"})
     
-    env_actions_3 = EnvAction(
-        activate_agents=[3, 5, 7, 9],
-        intervention=interview_actions
-    )
+    actions_5[env.agent_graph.get_agent(2)] = ManualAction(
+        action_type=ActionType.INTERVIEW,
+        action_args={"prompt": "What are your thoughts on the debate about Earth's shape?"})
+    
+    await env.step(actions_5)
 
-    all_env_actions = [
-        env_actions_1,
-        env_actions_2,
-        env_actions_3,
-    ]
-
-    # Simulate 3 timesteps
-    for i in range(3):
-        print(f"\n=== Timestep {i+1} ===")
-        env_actions = all_env_actions[i]
-        # Perform the actions
-        await env.step(env_actions)
+    # Sixth timestep: Final LLM actions for remaining agents
+    actions_6 = {
+        agent: LLMAction()
+        for _, agent in env.agent_graph.get_agents([3, 5, 7, 9])
+    }
+    await env.step(actions_6)
 
     # Close the environment
     await env.close()
@@ -161,6 +179,143 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
 ```
+
+## How It Works
+
+### 1. Setup and Configuration
+
+First, ensure that `ActionType.INTERVIEW` is included in your available actions:
+
+```python
+available_actions = [
+    ActionType.CREATE_POST,
+    ActionType.LIKE_POST,
+    ActionType.REPOST,
+    ActionType.FOLLOW,
+    ActionType.DO_NOTHING,
+    ActionType.QUOTE_POST,
+    ActionType.INTERVIEW,  # Essential for interview functionality
+]
+```
+
+### 2. Conducting Interviews
+
+Use `ManualAction` with `ActionType.INTERVIEW` to conduct interviews:
+
+```python
+# Single interview
+interview_action = ManualAction(
+    action_type=ActionType.INTERVIEW,
+    action_args={"prompt": "What are your thoughts on climate change?"})
+
+actions = {env.agent_graph.get_agent(0): interview_action}
+await env.step(actions)
+```
+
+### 3. Multiple Interviews in One Step
+
+You can interview multiple agents simultaneously:
+
+```python
+actions = {}
+actions[env.agent_graph.get_agent(1)] = ManualAction(
+    action_type=ActionType.INTERVIEW,
+    action_args={"prompt": "Why do you believe the Earth is not flat?"})
+
+actions[env.agent_graph.get_agent(2)] = ManualAction(
+    action_type=ActionType.INTERVIEW,
+    action_args={"prompt": "What are your thoughts on the debate about Earth's shape?"})
+
+await env.step(actions)
+```
+
+### 4. Mixing Interviews with Other Actions
+
+Interviews can be conducted alongside regular social media actions:
+
+```python
+actions = {}
+# Regular post creation
+actions[env.agent_graph.get_agent(1)] = ManualAction(
+    action_type=ActionType.CREATE_POST,
+    action_args={"content": "Earth is not flat."})
+
+# Interview action
+actions[env.agent_graph.get_agent(0)] = ManualAction(
+    action_type=ActionType.INTERVIEW,
+    action_args={"prompt": "What do you think about the shape of the Earth?"})
+
+await env.step(actions)
+```
+
+## Data Storage and Retrieval
+
+### Database Schema
+
+Interview data is stored in the `trace` table with the following structure:
+- `user_id`: The ID of the interviewed agent
+- `action`: Set to `ActionType.INTERVIEW.value`
+- `info`: JSON string containing interview details
+- `created_at`: Timestamp of the interview
+
+### Retrieving Interview Results
+
+```python
+import sqlite3
+import json
+
+conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
+
+# Query all interview records
+cursor.execute("""
+    SELECT user_id, info, created_at
+    FROM trace
+    WHERE action = ?
+""", (ActionType.INTERVIEW.value,))
+
+for user_id, info_json, timestamp in cursor.fetchall():
+    info = json.loads(info_json)
+    print(f"Agent {user_id}: {info.get('response', 'N/A')}")
+
+conn.close()
+```
+
+### Interview Data Structure
+
+Each interview record contains:
+- `prompt`: The question asked to the agent
+- `interview_id`: Unique identifier for the interview
+- `response`: The agent's response to the question
+
+## Best Practices
+
+### 1. Strategic Interview Timing
+
+Conduct interviews at strategic points in your simulation:
+- After controversial posts to gauge reactions
+- Before and after significant events
+- At regular intervals to track opinion changes
+
+### 2. Question Design
+
+Design effective interview questions:
+- Be specific and clear
+- Avoid leading questions
+- Ask open-ended questions for richer responses
+
+```python
+# Good examples
+"What are your thoughts on renewable energy?"
+"How do you feel about the recent policy changes?"
+"Can you explain your reasoning behind your last post?"
+
+# Avoid
+"Don't you think renewable energy is great?" # Leading
+"Yes or no: Do you like cats?" # Too restrictive
+```
+
+
+
+

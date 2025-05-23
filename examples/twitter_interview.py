@@ -20,7 +20,8 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType
 
 import oasis
-from oasis import ActionType, EnvAction, SingleAction
+from oasis import (ActionType, LLMAction, ManualAction,
+                   generate_twitter_agent_graph)
 
 
 async def main():
@@ -40,6 +41,13 @@ async def main():
         ActionType.INTERVIEW,  # Add the INTERVIEW action type
     ]
 
+    agent_graph = await generate_twitter_agent_graph(
+        profile_path=("data/twitter_dataset/anonymous_topic_200_1h/"
+                      "False_Business_0.csv"),
+        model=openai_model,
+        available_actions=available_actions,
+    )
+
     # Define the path to the database
     db_path = "./data/twitter_simulation.db"
 
@@ -49,74 +57,67 @@ async def main():
 
     # Make the environment
     env = oasis.make(
+        agent_graph=agent_graph,
         platform=oasis.DefaultPlatformType.TWITTER,
         database_path=db_path,
-        agent_profile_path=("data/twitter_dataset/anonymous_topic_200_1h/"
-                            "False_Business_0.csv"),
-        agent_models=openai_model,
-        available_actions=available_actions,
     )
 
     # Run the environment
     await env.reset()
 
     # First timestep: Agent 0 creates a post
-    action_1 = SingleAction(agent_id=0,
-                            action=ActionType.CREATE_POST,
-                            args={"content": "Earth is flat."})
-    env_actions_1 = EnvAction(
-        # Activate 5 agents with id 1, 3, 5, 7, 9
-        activate_agents=[1, 3, 5, 7, 9],
-        intervention=[action_1])
+    actions_1 = {}
+    actions_1[env.agent_graph.get_agent(0)] = ManualAction(
+        action_type=ActionType.CREATE_POST,
+        action_args={"content": "Earth is flat."})
+    await env.step(actions_1)
 
-    # Second timestep: Agent 1 creates a post, and we interview Agent 0
-    action_2 = SingleAction(agent_id=1,
-                           action=ActionType.CREATE_POST,
-                           args={"content": "Earth is not flat."})
+    # Second timestep: Let some agents respond with LLM actions
+    actions_2 = {
+        agent: LLMAction()
+        # Activate 5 agents with id 1, 3, 5, 7, 9
+        for _, agent in env.agent_graph.get_agents([1, 3, 5, 7, 9])
+    }
+    await env.step(actions_2)
+
+    # Third timestep: Agent 1 creates a post, and we interview Agent 0
+    actions_3 = {}
+    actions_3[env.agent_graph.get_agent(1)] = ManualAction(
+        action_type=ActionType.CREATE_POST,
+        action_args={"content": "Earth is not flat."})
     
     # Create an interview action to ask Agent 0 about their views
-    interview_action = SingleAction(
-        agent_id=0,
-        action=ActionType.INTERVIEW,
-        args={"prompt": "What do you think about the shape of the Earth? Please explain your reasoning."}
-    )
+    actions_3[env.agent_graph.get_agent(0)] = ManualAction(
+        action_type=ActionType.INTERVIEW,
+        action_args={"prompt": "What do you think about the shape of the Earth? Please explain your reasoning."})
     
-    env_actions_2 = EnvAction(
-        activate_agents=[2, 4, 6, 8, 10],
-        intervention=[action_2, interview_action]
-    )
+    await env.step(actions_3)
 
-    # Third timestep: Interview multiple agents
-    interview_actions = [
-        SingleAction(
-            agent_id=1,
-            action=ActionType.INTERVIEW,
-            args={"prompt": "Why do you believe the Earth is not flat?"}
-        ),
-        SingleAction(
-            agent_id=2,
-            action=ActionType.INTERVIEW,
-            args={"prompt": "What are your thoughts on the debate about Earth's shape?"}
-        ),
-    ]
+    # Fourth timestep: Let some other agents respond
+    actions_4 = {
+        agent: LLMAction()
+        for _, agent in env.agent_graph.get_agents([2, 4, 6, 8, 10])
+    }
+    await env.step(actions_4)
+
+    # Fifth timestep: Interview multiple agents
+    actions_5 = {}
+    actions_5[env.agent_graph.get_agent(1)] = ManualAction(
+        action_type=ActionType.INTERVIEW,
+        action_args={"prompt": "Why do you believe the Earth is not flat?"})
     
-    env_actions_3 = EnvAction(
-        activate_agents=[3, 5, 7, 9],
-        intervention=interview_actions
-    )
+    actions_5[env.agent_graph.get_agent(2)] = ManualAction(
+        action_type=ActionType.INTERVIEW,
+        action_args={"prompt": "What are your thoughts on the debate about Earth's shape?"})
+    
+    await env.step(actions_5)
 
-    all_env_actions = [
-        env_actions_1,
-        env_actions_2,
-        env_actions_3,
-    ]
-
-    # Simulate 3 timesteps
-    for i in range(3):
-        print(f"\n=== Timestep {i+1} ===")
-        env_actions = all_env_actions[i]
-        # Perform the actions
-        await env.step(env_actions)
+    # Sixth timestep: Final LLM actions for remaining agents
+    actions_6 = {
+        agent: LLMAction()
+        for _, agent in env.agent_graph.get_agents([3, 5, 7, 9])
+    }
+    await env.step(actions_6)
 
     # Close the environment
     await env.close()
