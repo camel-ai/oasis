@@ -118,12 +118,12 @@ async def main():
     actions_3[env.agent_graph.get_agent(1)] = ManualAction(
         action_type=ActionType.CREATE_POST,
         action_args={"content": "Earth is not flat."})
-    
+
     # Create an interview action to ask Agent 0 about their views
     actions_3[env.agent_graph.get_agent(0)] = ManualAction(
         action_type=ActionType.INTERVIEW,
         action_args={"prompt": "What do you think about the shape of the Earth? Please explain your reasoning."})
-    
+
     await env.step(actions_3)
 
     # Fourth timestep: Let some other agents respond
@@ -138,11 +138,11 @@ async def main():
     actions_5[env.agent_graph.get_agent(1)] = ManualAction(
         action_type=ActionType.INTERVIEW,
         action_args={"prompt": "Why do you believe the Earth is not flat?"})
-    
+
     actions_5[env.agent_graph.get_agent(2)] = ManualAction(
         action_type=ActionType.INTERVIEW,
         action_args={"prompt": "What are your thoughts on the debate about Earth's shape?"})
-    
+
     await env.step(actions_5)
 
     # Sixth timestep: Final LLM actions for remaining agents
@@ -154,7 +154,7 @@ async def main():
 
     # Close the environment
     await env.close()
-    
+
     # visualize the interview results
     print("\n=== Interview Results ===")
     conn = sqlite3.connect(db_path)
@@ -167,7 +167,7 @@ async def main():
         FROM trace
         WHERE action = ?
     """, (ActionType.INTERVIEW.value,))
-    
+
     # This query retrieves all interview records from the trace table
     # - user_id: the ID of the agent who was interviewed
     # - info: JSON string containing interview details (prompt, response, etc.)
@@ -179,7 +179,7 @@ async def main():
         print(f"Prompt: {info.get('prompt', 'N/A')}")
         print(f"Interview ID: {info.get('interview_id', 'N/A')}")
         print(f"Response: {info.get('response', 'N/A')}")
-    
+
     conn.close()
 
 
@@ -324,7 +324,3 @@ Design effective interview questions:
 "Don't you think renewable energy is great?" # Leading
 "Yes or no: Do you like cats?" # Too restrictive
 ```
-
-
-
-

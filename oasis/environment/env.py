@@ -1,12 +1,12 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the “License”);
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an “AS IS” BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -160,7 +160,9 @@ class OasisEnv:
                     if isinstance(single_action, ManualAction):
                         if single_action.action_type == ActionType.INTERVIEW:
                             # Special handling for interview actions
-                            tasks.append(self._perform_manual_interview_action(agent, single_action))
+                            tasks.append(
+                                self._perform_manual_interview_action(
+                                    agent, single_action))
                         else:
                             tasks.append(
                                 agent.perform_action_by_data(
@@ -172,11 +174,13 @@ class OasisEnv:
                 if isinstance(action, ManualAction):
                     if action.action_type == ActionType.INTERVIEW:
                         # Special handling for interview actions
-                        tasks.append(self._perform_manual_interview_action(agent, action))
+                        tasks.append(
+                            self._perform_manual_interview_action(
+                                agent, action))
                     else:
                         tasks.append(
-                            agent.perform_action_by_data(action.action_type,
-                                                         **action.action_args))
+                            agent.perform_action_by_data(
+                                action.action_type, **action.action_args))
                 elif isinstance(action, LLMAction):
                     tasks.append(self._perform_llm_action(agent))
 
@@ -188,7 +192,8 @@ class OasisEnv:
         if self.platform_type == DefaultPlatformType.TWITTER:
             self.platform.sandbox_clock.time_step += 1
 
-    async def _perform_manual_interview_action(self, agent: SocialAgent, action: ManualAction) -> None:
+    async def _perform_manual_interview_action(self, agent: SocialAgent,
+                                               action: ManualAction) -> None:
         r"""Perform a manual interview action.
 
         Args:
@@ -198,41 +203,48 @@ class OasisEnv:
         # Extract interview prompt from args
         interview_prompt = action.action_args.get("prompt", "")
         if not interview_prompt:
-            env_log.warning(f"Empty interview prompt for agent {agent.social_agent_id}")
+            env_log.warning(
+                f"Empty interview prompt for agent {agent.social_agent_id}")
             return
-        
+
         # First, perform the regular action by sending it to the platform
-        action_result = await agent.perform_action_by_data(action.action_type, **action.action_args)
-        
+        action_result = await agent.perform_action_by_data(
+            action.action_type, **action.action_args)
+
         # Check if the platform action was successful
         if not action_result.get("success", False):
-            env_log.warning(f"Failed to record interview request: {action_result.get('error', 'Unknown error')}")
+            env_log.warning(
+                f"Failed to record interview request: {action_result.get('error', 'Unknown error')}"
+            )
             return
-        
+
         # Get the interview_id from the result
         interview_id = action_result.get("interview_id")
         if not interview_id:
-            env_log.warning(f"No interview_id returned from platform")
+            env_log.warning("No interview_id returned from platform")
             return
-        
+
         # Perform the interview to get the actual response
         result = await self._perform_interview_action(agent, interview_prompt)
-        
+
         # Get the response content
         response = result.get("content", "")
-        
+
         try:
             # Record the response using the platform's method
             response_result = await self.platform.record_interview_response(
                 agent_id=agent.social_agent_id,
                 interview_id=interview_id,
-                response=response
-            )
-            
+                response=response)
+
             if response_result.get("success", False):
-                env_log.info(f"Successfully recorded interview response for agent {agent.social_agent_id}")
+                env_log.info(
+                    f"Successfully recorded interview response for agent {agent.social_agent_id}"
+                )
             else:
-                env_log.warning(f"Failed to record interview response: {response_result.get('error', 'Unknown error')}")
+                env_log.warning(
+                    f"Failed to record interview response: {response_result.get('error', 'Unknown error')}"
+                )
         except Exception as e:
             env_log.error(f"Error recording interview response: {str(e)}")
 

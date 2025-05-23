@@ -1,20 +1,20 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the “License”);
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an “AS IS” BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import asyncio
+import json
 import os
 import sqlite3
-import json
 
 from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType
@@ -86,13 +86,16 @@ async def main():
     actions_3[env.agent_graph.get_agent(1)] = ManualAction(
         action_type=ActionType.CREATE_POST,
         action_args={"content": "Earth is not flat."})
-    
+
     # Create an interview action to ask Agent 0 about their views
     # ActionType.INTERVIEW is a external action, which can not be exceuted by agents themselves
     actions_3[env.agent_graph.get_agent(0)] = ManualAction(
         action_type=ActionType.INTERVIEW,
-        action_args={"prompt": "What do you think about the shape of the Earth? Please explain your reasoning."})
-    
+        action_args={
+            "prompt":
+            "What do you think about the shape of the Earth? Please explain your reasoning."
+        })
+
     await env.step(actions_3)
 
     # Fourth timestep: Let some other agents respond
@@ -107,11 +110,14 @@ async def main():
     actions_5[env.agent_graph.get_agent(1)] = ManualAction(
         action_type=ActionType.INTERVIEW,
         action_args={"prompt": "Why do you believe the Earth is not flat?"})
-    
+
     actions_5[env.agent_graph.get_agent(2)] = ManualAction(
         action_type=ActionType.INTERVIEW,
-        action_args={"prompt": "What are your thoughts on the debate about Earth's shape?"})
-    
+        action_args={
+            "prompt":
+            "What are your thoughts on the debate about Earth's shape?"
+        })
+
     await env.step(actions_5)
 
     # Sixth timestep: Final LLM actions for remaining agents
@@ -123,7 +129,7 @@ async def main():
 
     # Close the environment
     await env.close()
-    
+
     # visualize the interview results
     print("\n=== Interview Results ===")
     conn = sqlite3.connect(db_path)
@@ -131,12 +137,13 @@ async def main():
     # Here we query all interview records from the database
     # We use ActionType.INTERVIEW.value as the query condition to get all interview records
     # Each record contains user ID, interview information (in JSON format), and creation timestamp
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT user_id, info, created_at
         FROM trace
         WHERE action = ?
-    """, (ActionType.INTERVIEW.value,))
-    
+    """, (ActionType.INTERVIEW.value, ))
+
     # This query retrieves all interview records from the trace table
     # - user_id: the ID of the agent who was interviewed
     # - info: JSON string containing interview details (prompt, response, etc.)
@@ -148,7 +155,7 @@ async def main():
         print(f"Prompt: {info.get('prompt', 'N/A')}")
         print(f"Interview ID: {info.get('interview_id', 'N/A')}")
         print(f"Response: {info.get('response', 'N/A')}")
-    
+
     conn.close()
 
 
