@@ -40,7 +40,6 @@ async def main():
         ActionType.FOLLOW,
         ActionType.DO_NOTHING,
         ActionType.QUOTE_POST,
-        # ActionType.INTERVIEW,  # Removed to prevent LLM auto-selection
     ]
 
     agent_graph = await generate_twitter_agent_graph(
@@ -89,6 +88,7 @@ async def main():
         action_args={"content": "Earth is not flat."})
     
     # Create an interview action to ask Agent 0 about their views
+    # ActionType.INTERVIEW is a external action, which can not be exceuted by agents themselves
     actions_3[env.agent_graph.get_agent(0)] = ManualAction(
         action_type=ActionType.INTERVIEW,
         action_args={"prompt": "What do you think about the shape of the Earth? Please explain your reasoning."})
