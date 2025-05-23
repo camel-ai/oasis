@@ -121,59 +121,6 @@ class OasisEnv:
         self.agent_graph = await generate_custom_agents(
             channel=self.channel, agent_graph=self.agent_graph)
 
-    async def _perform_control_action(self, action: SingleAction) -> None:
-        r"""Perform a control action.
-
-        Args:
-            action(SingleAction): The action to perform.
-        """
-        control_agent = self.agent_graph.get_agent(action.agent_id)
-        
-        # First, perform the regular action by sending it to the platform
-        action_result = await control_agent.perform_action_by_data(action.action, **action.args)
-        
-        # If this was an interview action, perform the actual interview and record the response
-        if action.action == ActionType.INTERVIEW:
-            # Extract interview prompt from args
-            interview_prompt = action.args.get("prompt", "")
-            if not interview_prompt:
-                env_log.warning(f"Empty interview prompt for agent {action.agent_id}")
-                return
-            
-            # Check if the platform action was successful
-            if not action_result.get("success", False):
-                env_log.warning(f"Failed to record interview request: {action_result.get('error', 'Unknown error')}")
-                return
-            
-            # Get the interview_id from the result
-            interview_id = action_result.get("interview_id")
-            if not interview_id:
-                env_log.warning(f"No interview_id returned from platform")
-                return
-            
-            # Perform the interview to get the actual response
-            result = await self._perform_interview_action(control_agent, interview_prompt)
-            
-            # Get the response content
-            response = result.get("content", "")
-            
-            try:
-                # Record the response using the platform's method
-                response_result = await self.platform.record_interview_response(
-                    agent_id=action.agent_id,
-                    interview_id=interview_id,
-                    response=response
-                )
-                
-                if response_result.get("success", False):
-                    env_log.info(f"Successfully recorded interview response for agent {action.agent_id}")
-                else:
-                    env_log.warning(f"Failed to record interview response: {response_result.get('error', 'Unknown error')}")
-            except Exception as e:
-                env_log.error(f"Error recording interview response: {str(e)}")
-            
-            return
-
     async def _perform_llm_action(self, agent):
         r"""Send the request to the llm model and execute the action.
         """
@@ -211,17 +158,25 @@ class OasisEnv:
             if isinstance(action, list):
                 for single_action in action:
                     if isinstance(single_action, ManualAction):
-                        tasks.append(
-                            agent.perform_action_by_data(
-                                single_action.action_type,
-                                **single_action.action_args))
+                        if single_action.action_type == ActionType.INTERVIEW:
+                            # Special handling for interview actions
+                            tasks.append(self._perform_manual_interview_action(agent, single_action))
+                        else:
+                            tasks.append(
+                                agent.perform_action_by_data(
+                                    single_action.action_type,
+                                    **single_action.action_args))
                     elif isinstance(single_action, LLMAction):
                         tasks.append(self._perform_llm_action(agent))
             else:
                 if isinstance(action, ManualAction):
-                    tasks.append(
-                        agent.perform_action_by_data(action.action_type,
-                                                     **action.action_args))
+                    if action.action_type == ActionType.INTERVIEW:
+                        # Special handling for interview actions
+                        tasks.append(self._perform_manual_interview_action(agent, action))
+                    else:
+                        tasks.append(
+                            agent.perform_action_by_data(action.action_type,
+                                                         **action.action_args))
                 elif isinstance(action, LLMAction):
                     tasks.append(self._perform_llm_action(agent))
 
@@ -232,6 +187,54 @@ class OasisEnv:
         # Update the clock
         if self.platform_type == DefaultPlatformType.TWITTER:
             self.platform.sandbox_clock.time_step += 1
+
+    async def _perform_manual_interview_action(self, agent: SocialAgent, action: ManualAction) -> None:
+        r"""Perform a manual interview action.
+
+        Args:
+            agent(SocialAgent): The agent to interview.
+            action(ManualAction): The interview action to perform.
+        """
+        # Extract interview prompt from args
+        interview_prompt = action.action_args.get("prompt", "")
+        if not interview_prompt:
+            env_log.warning(f"Empty interview prompt for agent {agent.social_agent_id}")
+            return
+        
+        # First, perform the regular action by sending it to the platform
+        action_result = await agent.perform_action_by_data(action.action_type, **action.action_args)
+        
+        # Check if the platform action was successful
+        if not action_result.get("success", False):
+            env_log.warning(f"Failed to record interview request: {action_result.get('error', 'Unknown error')}")
+            return
+        
+        # Get the interview_id from the result
+        interview_id = action_result.get("interview_id")
+        if not interview_id:
+            env_log.warning(f"No interview_id returned from platform")
+            return
+        
+        # Perform the interview to get the actual response
+        result = await self._perform_interview_action(agent, interview_prompt)
+        
+        # Get the response content
+        response = result.get("content", "")
+        
+        try:
+            # Record the response using the platform's method
+            response_result = await self.platform.record_interview_response(
+                agent_id=agent.social_agent_id,
+                interview_id=interview_id,
+                response=response
+            )
+            
+            if response_result.get("success", False):
+                env_log.info(f"Successfully recorded interview response for agent {agent.social_agent_id}")
+            else:
+                env_log.warning(f"Failed to record interview response: {response_result.get('error', 'Unknown error')}")
+        except Exception as e:
+            env_log.error(f"Error recording interview response: {str(e)}")
 
     async def close(self) -> None:
         r"""Stop the platform and close the environment.
