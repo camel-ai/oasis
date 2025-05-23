@@ -213,9 +213,8 @@ class OasisEnv:
 
         # Check if the platform action was successful
         if not action_result.get("success", False):
-            env_log.warning(
-                f"Failed to record interview request: {action_result.get('error', 'Unknown error')}"
-            )
+            error = action_result.get('error', 'Unknown error')
+            env_log.warning(f"Failed to record interview request: {error}")
             return
 
         # Get the interview_id from the result
@@ -239,12 +238,11 @@ class OasisEnv:
 
             if response_result.get("success", False):
                 env_log.info(
-                    f"Successfully recorded interview response for agent {agent.social_agent_id}"
-                )
+                    f"Recorded response for agent {agent.social_agent_id}")
             else:
+                error_msg = response_result.get('error', 'Unknown error')
                 env_log.warning(
-                    f"Failed to record interview response: {response_result.get('error', 'Unknown error')}"
-                )
+                    f"Failed to record interview response: {error_msg}")
         except Exception as e:
             env_log.error(f"Error recording interview response: {str(e)}")
 

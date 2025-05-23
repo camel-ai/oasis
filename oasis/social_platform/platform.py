@@ -1349,7 +1349,7 @@ class Platform:
             prompt (str): The interview question or prompt.
 
         Returns:
-            dict: A dictionary with success status and an interview_id for tracking.
+            dict: A dictionary with success status and an interview_id.
         """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(

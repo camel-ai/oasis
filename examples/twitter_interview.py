@@ -31,7 +31,8 @@ async def main():
     )
 
     # Define the available actions for the agents
-    # Note: INTERVIEW is NOT included here to prevent LLM from automatically selecting it
+    # Note: INTERVIEW is NOT included here to
+    # prevent LLM from automatically selecting it
     # INTERVIEW can still be used manually via ManualAction
     available_actions = [
         ActionType.CREATE_POST,
@@ -88,12 +89,12 @@ async def main():
         action_args={"content": "Earth is not flat."})
 
     # Create an interview action to ask Agent 0 about their views
-    # ActionType.INTERVIEW is a external action, which can not be exceuted by agents themselves
+    # ActionType.INTERVIEW is a external action,
+    # which can not be exceuted by agents themselves
     actions_3[env.agent_graph.get_agent(0)] = ManualAction(
         action_type=ActionType.INTERVIEW,
         action_args={
-            "prompt":
-            "What do you think about the shape of the Earth? Please explain your reasoning."
+            "prompt": "What do you think about the shape of the Earth?"
         })
 
     await env.step(actions_3)
@@ -135,8 +136,10 @@ async def main():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     # Here we query all interview records from the database
-    # We use ActionType.INTERVIEW.value as the query condition to get all interview records
-    # Each record contains user ID, interview information (in JSON format), and creation timestamp
+    # We use ActionType.INTERVIEW.value as the query condition
+    # to get all interview records
+    # Each record contains user ID, interview information
+    # (in JSON format), and creation timestamp
     cursor.execute(
         """
         SELECT user_id, info, created_at

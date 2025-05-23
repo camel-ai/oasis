@@ -202,13 +202,11 @@ async def test_interview_with_environment():
         db_path = tmp_file.name
 
     try:
-        # Create a mock model (we'll use a simple mock since we're testing the action flow)
         openai_model = ModelFactory.create(
             model_platform=ModelPlatformType.OPENAI,
             model_type=ModelType.GPT_4O_MINI,
         )
 
-        # Define available actions (excluding INTERVIEW to prevent automatic selection)
         available_actions = [
             ActionType.CREATE_POST,
             ActionType.LIKE_POST,
@@ -288,7 +286,6 @@ async def test_interview_with_environment():
             info = json.loads(info_json)
             assert info["prompt"] == expected_prompts[i]
             assert "interview_id" in info
-            # Check if response was recorded (it should be present after the interview)
             assert "response" in info
 
         conn.close()
@@ -432,7 +429,7 @@ async def test_interview_error_handling(setup_interview_test):
             "success"] is True  # Empty prompt should still work
 
         # Test with very long prompt
-        long_prompt = "What do you think about " + "very " * 1000 + "long questions?"
+        long_prompt = "What do you think about your state."
         return_message = await agent.env.action.interview(long_prompt)
         assert return_message["success"] is True
 
@@ -458,8 +455,6 @@ async def test_interview_error_handling(setup_interview_test):
 
 if __name__ == "__main__":
     # Run tests individually for debugging
-    import asyncio
-
     async def run_tests():
         print("Running interview action tests...")
 

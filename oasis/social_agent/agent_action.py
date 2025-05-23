@@ -648,14 +648,15 @@ class SocialAction:
         r"""Interview an agent with the given prompt.
 
         This method invokes an asynchronous action to interview an agent with a
-        specific prompt question. Upon successful execution, it returns a dictionary
-        containing a success status and an interview_id for tracking.
+        specific prompt question. Upon successful execution,
+        it returns a dictionary containing a success status
+        and an interview_id for tracking.
 
         Args:
             prompt (str): The interview question or prompt to ask the agent.
 
         Returns:
-            dict: A dictionary containing success status and interview tracking information.
+            dict: A dictionary containing success status and an interview_id.
 
             Example of a successful return:
             {
