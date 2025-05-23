@@ -22,6 +22,10 @@ The INTERVIEW action type enables you to:
 - **Database Storage**: All interview data is stored in the trace table for later analysis
 - **Concurrent Execution**: Interviews can be conducted alongside other social media actions
 
+## Important Note
+
+**Do NOT include `ActionType.INTERVIEW` in the `available_actions` list** when creating your agent graph. The interview action is designed to be used only manually by researchers/developers, not automatically selected by LLM agents. Including it in `available_actions` would allow agents to interview each other automatically, which is typically not desired behavior.
+
 ## Complete Example
 
 ```python
@@ -58,6 +62,8 @@ async def main():
     )
 
     # Define the available actions for the agents
+    # Note: INTERVIEW is NOT included here to prevent LLM from automatically selecting it
+    # INTERVIEW can still be used manually via ManualAction
     available_actions = [
         ActionType.CREATE_POST,
         ActionType.LIKE_POST,
@@ -65,7 +71,7 @@ async def main():
         ActionType.FOLLOW,
         ActionType.DO_NOTHING,
         ActionType.QUOTE_POST,
-        ActionType.INTERVIEW,  # Add the INTERVIEW action type
+        # ActionType.INTERVIEW,  # DO NOT include this - interviews should be manual only
     ]
 
     agent_graph = await generate_twitter_agent_graph(
@@ -185,9 +191,10 @@ if __name__ == "__main__":
 
 ### 1. Setup and Configuration
 
-First, ensure that `ActionType.INTERVIEW` is included in your available actions:
+**Important**: Do NOT include `ActionType.INTERVIEW` in your available actions list. Interviews should only be conducted manually:
 
 ```python
+# Correct configuration - INTERVIEW is NOT included
 available_actions = [
     ActionType.CREATE_POST,
     ActionType.LIKE_POST,
@@ -195,9 +202,11 @@ available_actions = [
     ActionType.FOLLOW,
     ActionType.DO_NOTHING,
     ActionType.QUOTE_POST,
-    ActionType.INTERVIEW,  # Essential for interview functionality
+    # ActionType.INTERVIEW,  # DO NOT include - interviews are manual only
 ]
 ```
+
+This prevents LLM agents from automatically selecting the interview action during their decision-making process. Interviews can still be conducted using `ManualAction`.
 
 ### 2. Conducting Interviews
 

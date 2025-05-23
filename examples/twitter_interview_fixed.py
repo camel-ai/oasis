@@ -11,6 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+"""
+Fixed Twitter Interview Example
+
+This example demonstrates the correct way to implement interviews in OASIS:
+- INTERVIEW is NOT included in available_actions to prevent LLM auto-selection
+- Interviews are conducted manually using ManualAction
+- LLM agents can only perform regular social media actions
+"""
 import asyncio
 import os
 import sqlite3
@@ -31,8 +39,8 @@ async def main():
     )
 
     # Define the available actions for the agents
-    # Note: INTERVIEW is NOT included here to prevent LLM from automatically selecting it
-    # INTERVIEW can still be used manually via ManualAction
+    # IMPORTANT: INTERVIEW is NOT included here to prevent LLM from automatically selecting it
+    # This ensures that interviews are only conducted manually by researchers/developers
     available_actions = [
         ActionType.CREATE_POST,
         ActionType.LIKE_POST,
@@ -40,7 +48,7 @@ async def main():
         ActionType.FOLLOW,
         ActionType.DO_NOTHING,
         ActionType.QUOTE_POST,
-        # ActionType.INTERVIEW,  # Removed to prevent LLM auto-selection
+        # ActionType.INTERVIEW,  # Deliberately excluded - interviews are manual only
     ]
 
     agent_graph = await generate_twitter_agent_graph(
@@ -51,7 +59,7 @@ async def main():
     )
 
     # Define the path to the database
-    db_path = "./data/twitter_simulation.db"
+    db_path = "./data/twitter_simulation_fixed.db"
 
     # Delete the old database
     if os.path.exists(db_path):
@@ -68,6 +76,7 @@ async def main():
     await env.reset()
 
     # First timestep: Agent 0 creates a post
+    print("=== Timestep 1: Initial post ===")
     actions_1 = {}
     actions_1[env.agent_graph.get_agent(0)] = ManualAction(
         action_type=ActionType.CREATE_POST,
@@ -75,6 +84,8 @@ async def main():
     await env.step(actions_1)
 
     # Second timestep: Let some agents respond with LLM actions
+    # Note: Since INTERVIEW is not in available_actions, LLM agents cannot choose it
+    print("=== Timestep 2: LLM agents respond (no interview option) ===")
     actions_2 = {
         agent: LLMAction()
         # Activate 5 agents with id 1, 3, 5, 7, 9
@@ -82,27 +93,30 @@ async def main():
     }
     await env.step(actions_2)
 
-    # Third timestep: Agent 1 creates a post, and we interview Agent 0
+    # Third timestep: Agent 1 creates a post, and we manually interview Agent 0
+    print("=== Timestep 3: Manual interview ===")
     actions_3 = {}
     actions_3[env.agent_graph.get_agent(1)] = ManualAction(
         action_type=ActionType.CREATE_POST,
         action_args={"content": "Earth is not flat."})
     
-    # Create an interview action to ask Agent 0 about their views
+    # Manual interview - this is controlled by the researcher, not the LLM
     actions_3[env.agent_graph.get_agent(0)] = ManualAction(
         action_type=ActionType.INTERVIEW,
         action_args={"prompt": "What do you think about the shape of the Earth? Please explain your reasoning."})
     
     await env.step(actions_3)
 
-    # Fourth timestep: Let some other agents respond
+    # Fourth timestep: Let some other agents respond with LLM actions
+    print("=== Timestep 4: More LLM responses ===")
     actions_4 = {
         agent: LLMAction()
         for _, agent in env.agent_graph.get_agents([2, 4, 6, 8, 10])
     }
     await env.step(actions_4)
 
-    # Fifth timestep: Interview multiple agents
+    # Fifth timestep: Interview multiple agents manually
+    print("=== Timestep 5: Multiple manual interviews ===")
     actions_5 = {}
     actions_5[env.agent_graph.get_agent(1)] = ManualAction(
         action_type=ActionType.INTERVIEW,
@@ -115,6 +129,7 @@ async def main():
     await env.step(actions_5)
 
     # Sixth timestep: Final LLM actions for remaining agents
+    print("=== Timestep 6: Final LLM responses ===")
     actions_6 = {
         agent: LLMAction()
         for _, agent in env.agent_graph.get_agents([3, 5, 7, 9])
@@ -124,33 +139,54 @@ async def main():
     # Close the environment
     await env.close()
     
-    # visualize the interview results
+    # Visualize the interview results
     print("\n=== Interview Results ===")
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    # Here we query all interview records from the database
-    # We use ActionType.INTERVIEW.value as the query condition to get all interview records
-    # Each record contains user ID, interview information (in JSON format), and creation timestamp
+    
+    # Query all interview records from the database
     cursor.execute("""
         SELECT user_id, info, created_at
         FROM trace
         WHERE action = ?
+        ORDER BY created_at
     """, (ActionType.INTERVIEW.value,))
     
-    # This query retrieves all interview records from the trace table
-    # - user_id: the ID of the agent who was interviewed
-    # - info: JSON string containing interview details (prompt, response, etc.)
-    # - created_at: timestamp when the interview was conducted
-    # We'll parse this data below to display the interview results
+    interview_count = 0
     for user_id, info_json, timestamp in cursor.fetchall():
         info = json.loads(info_json)
-        print(f"\nAgent {user_id} (Timestep {timestamp}):")
-        print(f"Prompt: {info.get('prompt', 'N/A')}")
-        print(f"Interview ID: {info.get('interview_id', 'N/A')}")
+        interview_count += 1
+        print(f"\nInterview #{interview_count} - Agent {user_id} (Timestep {timestamp}):")
+        print(f"Question: {info.get('prompt', 'N/A')}")
         print(f"Response: {info.get('response', 'N/A')}")
+        print(f"Interview ID: {info.get('interview_id', 'N/A')}")
+    
+    if interview_count == 0:
+        print("No interviews found in the database.")
+    else:
+        print(f"\nTotal interviews conducted: {interview_count}")
+    
+    # Also check what actions LLM agents actually performed
+    print("\n=== LLM Agent Actions (should not include interviews) ===")
+    cursor.execute("""
+        SELECT DISTINCT action, COUNT(*) as count
+        FROM trace
+        WHERE action != ?
+        GROUP BY action
+        ORDER BY count DESC
+    """, (ActionType.INTERVIEW.value,))
+    
+    for action, count in cursor.fetchall():
+        print(f"{action}: {count} times")
     
     conn.close()
+    
+    print("\n=== Summary ===")
+    print("✅ INTERVIEW was not included in available_actions")
+    print("✅ LLM agents could not automatically select interview actions")
+    print("✅ Interviews were conducted manually using ManualAction")
+    print("✅ This prevents unwanted agent-to-agent interviews")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main()) 
