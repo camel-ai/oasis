@@ -81,7 +81,7 @@ async def main():
 
     action_2 = SingleAction(agent_id=1,
                             action=ActionType.SEND_TO_GROUP,
-                            args={"group_id":  group_id, "message": "今天天气如何"})
+                            args={"group_id":  group_id, "message": "DeepSeek is amazing!"})
     env_actions_2 = EnvAction(activate_agents=[1, 3, 5, 7, 9],
                               intervention=[action_2])
 
@@ -89,8 +89,8 @@ async def main():
 
     all_env_actions = [
         env_actions_1,
-     env_actions_2,
-        # empty_action,
+        env_actions_2,
+        empty_action,
     ]
 
     # Simulate 3 timesteps
