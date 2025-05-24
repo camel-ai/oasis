@@ -34,10 +34,19 @@ class SocialEnvironment(Environment):
 
     posts_env_template = Template(
         "After refreshing, you see some posts $posts")
+
+    groups_env_template = Template(
+        "And there are many group chat channels $all_groups\n"
+        "And You are already in some groups $joined_groups\n"
+        "You receive some messages from them $messages\n"
+        "You can join the groups you are interested, leave the groups you already in, send messages to the group you already in.\n"
+        "You can only send messages to the group you are already in"
+    )
     env_template = Template(
         "$posts_env\npick one you want to perform action that best "
         "reflects your current inclination based on your profile and "
-        "posts content. Do not limit your action in just `like` to like posts")
+        "posts content. Do not limit your action in just `like` to like posts\n"
+        "$groups_env")
 
     def __init__(self, action: SocialAction):
         self.action = action
@@ -60,6 +69,21 @@ class SocialEnvironment(Environment):
         # TODO: Implement follows env
         return self.follows_env_template.substitute(num_follows=0)
 
+    async def get_group_env(self) -> str:
+        groups = await self.action.listen_from_group()
+        if groups["success"]:
+            all_groups = json.dumps(groups["all_groups"])
+            joined_groups = json.dumps(groups["joined_groups"])
+            messages = json.dumps(groups["messages"])
+            groups_env = self.groups_env_template.substitute(
+                all_groups=all_groups,
+                joined_groups=joined_groups,
+                messages=messages,
+            )
+        else:
+            groups_env = "No groups."
+        return groups_env
+
     async def to_text_prompt(
         self,
         include_posts: bool = True,
@@ -76,4 +100,5 @@ class SocialEnvironment(Environment):
             followers_env=followers_env,
             follows_env=follows_env,
             posts_env=posts_env,
+            groups_env=await self.get_group_env(),
         )

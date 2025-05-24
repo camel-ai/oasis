@@ -34,6 +34,9 @@ COMMENT_SCHEMA_SQL = "comment.sql"
 COMMENT_LIKE_SCHEMA_SQL = "comment_like.sql"
 COMMENT_DISLIKE_SCHEMA_SQL = "comment_dislike.sql"
 PRODUCT_SCHEMA_SQL = "product.sql"
+GROUP_SCHEMA_SQL = "group.sql"
+GROUP_MEMBER_SCHEMA_SQL = "group_member.sql"
+GROUP_MESSAGE_SCHEMA_SQL = "group_message.sql"
 
 TABLE_NAMES = {
     "user",
@@ -48,6 +51,9 @@ TABLE_NAMES = {
     "comment_like.sql",
     "comment_dislike.sql",
     "product.sql",
+    "group",
+    "group_member",
+    "group_message",
 }
 
 
@@ -153,6 +159,24 @@ def create_db(db_path: str | None = None):
         with open(product_sql_path, "r") as sql_file:
             product_sql_script = sql_file.read()
         cursor.executescript(product_sql_script)
+
+        # Read and execute the group table SQL script:
+        group_sql_path = osp.join(schema_dir, GROUP_SCHEMA_SQL)
+        with open(group_sql_path, "r") as sql_file:
+            group_sql_script = sql_file.read()
+        cursor.executescript(group_sql_script)
+
+        # Read and execute the group_member table SQL script:
+        group_member_sql_path = osp.join(schema_dir, GROUP_MEMBER_SCHEMA_SQL)
+        with open(group_member_sql_path, "r") as sql_file:
+            group_member_sql_script = sql_file.read()
+        cursor.executescript(group_member_sql_script)
+
+        # Read and execute the group_message table SQL script:
+        group_message_sql_path = osp.join(schema_dir, GROUP_MESSAGE_SCHEMA_SQL)
+        with open(group_message_sql_path, "r") as sql_file:
+            group_message_sql_script = sql_file.read()
+        cursor.executescript(group_message_sql_script)
 
         # Commit the changes:
         conn.commit()

@@ -40,6 +40,11 @@ class ActionType(Enum):
     UNDO_DISLIKE_COMMENT = "undo_dislike_comment"
     DO_NOTHING = "do_nothing"
     PURCHASE_PRODUCT = "purchase_product"
+    JOIN_GROUP = "join_group"
+    LEAVE_GROUP = "leave_group"
+    SEND_TO_GROUP = "send_to_group"
+    CREATE_GROUP = "create_group"
+    LISTEN_FROM_GROUP = "listen_from_group"
 
 
 class RecsysType(Enum):

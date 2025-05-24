@@ -1330,3 +1330,183 @@ class Platform:
             return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    async def send_to_group(self, agent_id: int, message: tuple):
+        group_id, content = message
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time
+            )
+        else:
+            current_time = self.sandbox_clock.get_time_step()
+        try:
+            user_id = agent_id
+
+            # check if user is a member of the group
+            check_query = (
+                "SELECT * FROM group_members WHERE group_id = ? AND agent_id = ?"
+            )
+            self.pl_utils._execute_db_command(check_query, (group_id, user_id))
+            if not self.db_cursor.fetchone():
+                return {
+                    "success": False,
+                    "error": "User is not a member of this group.",
+                }
+
+            # Insert the message into the group_messages table
+            insert_query = """
+                INSERT INTO group_messages (group_id, sender_id, content, sent_at) 
+                VALUES (?, ?, ?, ?)
+            """
+            self.pl_utils._execute_db_command(
+                insert_query, (group_id, user_id, content, current_time), commit=True
+            )
+
+            message_id = self.db_cursor.lastrowid
+
+            # get the group members
+            members_query = "SELECT agent_id FROM group_members WHERE group_id = ? AND agent_id != ?"
+            self.pl_utils._execute_db_command(members_query, (group_id, user_id))
+            members = [row[0] for row in self.db_cursor.fetchall()]
+
+            action_info = {
+                "group_id": group_id,
+                "message_id": message_id,
+                "content": content,
+            }
+            self.pl_utils._record_trace(
+                user_id, ActionType.SEND_TO_GROUP.value, action_info, current_time
+            )
+
+            return {"success": True, "message_id": message_id, "to": members}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def create_group(self, agent_id: int, group_name: str):
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time
+            )
+        else:
+            current_time = self.sandbox_clock.get_time_step()
+        try:
+            user_id = agent_id
+
+            # insert the group into the groups table
+            insert_query = """
+                INSERT INTO "group" (name, created_at) VALUES (?, ?)
+            """
+            self.pl_utils._execute_db_command(
+                insert_query, (group_name, current_time), commit=True
+            )
+            group_id = self.db_cursor.lastrowid
+
+            # insert the user as a member of the group
+            join_query = """
+                INSERT INTO group_members (group_id, agent_id, joined_at) VALUES (?, ?, ?)
+            """
+            self.pl_utils._execute_db_command(
+                join_query, (group_id, user_id, current_time), commit=True
+            )
+
+            action_info = {"group_id": group_id, "group_name": group_name}
+            self.pl_utils._record_trace(
+                user_id, ActionType.CREATE_GROUP.value, action_info, current_time
+            )
+
+            return {"success": True, "group_id": group_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def join_group(self, agent_id: int, group_id: int):
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time
+            )
+        else:
+            current_time = self.sandbox_clock.get_time_step()
+        try:
+            user_id = agent_id
+
+            # check if group exists
+            check_group_query = """SELECT * FROM "group" WHERE group_id = ?"""
+            self.pl_utils._execute_db_command(check_group_query, (group_id,))
+            if not self.db_cursor.fetchone():
+                return {"success": False, "error": "Group does not exist."}
+
+            # check if user is already in the group
+            check_member_query = (
+                "SELECT * FROM group_members WHERE group_id = ? AND agent_id = ?"
+            )
+            self.pl_utils._execute_db_command(check_member_query, (group_id, user_id))
+            if self.db_cursor.fetchone():
+                return {"success": False, "error": "User is already in the group."}
+
+            # join the group
+            join_query = """
+                INSERT INTO group_members (group_id, agent_id, joined_at) VALUES (?, ?, ?)
+            """
+            self.pl_utils._execute_db_command(join_query, (group_id, user_id, current_time), commit=True)
+
+            action_info = {"group_id": group_id}
+            self.pl_utils._record_trace(
+                user_id, ActionType.JOIN_GROUP.value, action_info, current_time
+            )
+
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def leave_group(self, agent_id: int, group_id: int):
+        try:
+            user_id = agent_id
+
+            # check if user is a member of the group
+            check_query = "SELECT * FROM group_members WHERE group_id = ? AND agent_id = ?"
+            self.pl_utils._execute_db_command(check_query, (group_id, user_id))
+            if not self.db_cursor.fetchone():
+                return {"success": False, "error": "User is not a member of this group."}
+
+            # delete the member record
+            delete_query = "DELETE FROM group_members WHERE group_id = ? AND agent_id = ?"
+            self.pl_utils._execute_db_command(delete_query, (group_id, user_id), commit=True)
+
+            action_info = {"group_id": group_id}
+            self.pl_utils._record_trace(user_id, ActionType.LEAVE_GROUP.value, action_info)
+
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+
+    async def listen_from_group(self, agent_id: int):
+        try:
+            # get all groups Dict[group_id, group_name]
+            query = """ SELECT * FROM "group" """
+            self.pl_utils._execute_db_command(query)
+            all_groups = {}
+            for row in self.db_cursor.fetchall():
+                all_groups[row[0]] = row[1]
+
+            # get all groups that the user is a member of
+            in_query = """
+                SELECT group_id FROM group_members WHERE agent_id = ?
+            """
+            self.pl_utils._execute_db_command(in_query, (agent_id,))
+            joined_group_ids = [row[0] for row in self.db_cursor.fetchall()]
+
+            # get all messages from those groups, Dict[group_id, [messages]]
+            messages = {}
+            for group_id in joined_group_ids:
+                select_query = """
+                    SELECT message_id, content, sent_at FROM group_messages WHERE group_id = ?
+                """
+                self.pl_utils._execute_db_command(select_query, (group_id,))
+                messages[group_id] = [
+                    {"message_id": row[0], "content": row[1], "sent_at": row[2]}
+                    for row in self.db_cursor.fetchall()
+                ]
+
+            return {"success": True, "all_groups": all_groups, "joined_groups": joined_group_ids, "messages": messages}
+        except  Exception as e:
+            return {"success": False, "error": str(e)}
