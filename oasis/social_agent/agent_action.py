@@ -656,7 +656,8 @@ class SocialAction:
             group_name (str): The name of the group to be created.
 
         Returns:
-            dict: Platform response indicating success or failure, e.g. {"success": True, "group_id": 1}
+            dict: Platform response indicating success or failure, e.g.
+            {"success": True, "group_id": 1}
         """
         return await self.perform_action(group_name, ActionType.CREATE_GROUP.value)
 
@@ -680,7 +681,8 @@ class SocialAction:
             group_id (int): The ID of the group to leave.
 
         Returns:
-            dict: Platform response indicating success or failure, e.g. {"success": True}
+            dict: Platform response indicating success or failure, e.g.
+            {"success": True}
         """
         return await self.perform_action(group_id, ActionType.LEAVE_GROUP.value)
 
@@ -693,16 +695,17 @@ class SocialAction:
             message (str): The content of the message to send.
 
         Returns:
-            dict: Platform response indicating success or failure, e.g. {"success": True, "message_id": 123}
+            dict: Platform response indicating success or failure, e.g.
+             {"success": True, "message_id": 123}
         """
-        return await self.perform_action((group_id, message), ActionType.SEND_TO_GROUP.value)
-
+        return await self.perform_action(
+            (group_id, message), ActionType.SEND_TO_GROUP.value
+        )
 
     async def listen_from_group(self):
         """
         Listen messages from groups
         """
-        return await self.perform_action(self.agent_id, ActionType.LISTEN_FROM_GROUP.value)
-
-
-
+        return await self.perform_action(
+            self.agent_id, ActionType.LISTEN_FROM_GROUP.value
+        )

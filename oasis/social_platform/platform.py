@@ -1344,7 +1344,8 @@ class Platform:
 
             # check if user is a member of the group
             check_query = (
-                "SELECT * FROM group_members WHERE group_id = ? AND agent_id = ?"
+                "SELECT * FROM group_members WHERE group_id = ? "
+                "AND agent_id = ?"
             )
             self.pl_utils._execute_db_command(check_query, (group_id, user_id))
             if not self.db_cursor.fetchone():
@@ -1365,7 +1366,8 @@ class Platform:
             message_id = self.db_cursor.lastrowid
 
             # get the group members
-            members_query = "SELECT agent_id FROM group_members WHERE group_id = ? AND agent_id != ?"
+            members_query = ("SELECT agent_id FROM group_members WHERE "
+                             "group_id = ? AND agent_id != ?")
             self.pl_utils._execute_db_command(members_query, (group_id, user_id))
             members = [row[0] for row in self.db_cursor.fetchall()]
 
@@ -1403,7 +1405,8 @@ class Platform:
 
             # insert the user as a member of the group
             join_query = """
-                INSERT INTO group_members (group_id, agent_id, joined_at) VALUES (?, ?, ?)
+                INSERT INTO group_members (group_id, agent_id, joined_at) 
+                VALUES (?, ?, ?)
             """
             self.pl_utils._execute_db_command(
                 join_query, (group_id, user_id, current_time), commit=True
@@ -1429,7 +1432,8 @@ class Platform:
             user_id = agent_id
 
             # check if group exists
-            check_group_query = """SELECT * FROM "group" WHERE group_id = ?"""
+            check_group_query = """SELECT * FROM "group" 
+                WHERE group_id = ?"""
             self.pl_utils._execute_db_command(check_group_query, (group_id,))
             if not self.db_cursor.fetchone():
                 return {"success": False, "error": "Group does not exist."}
@@ -1446,7 +1450,8 @@ class Platform:
             join_query = """
                 INSERT INTO group_members (group_id, agent_id, joined_at) VALUES (?, ?, ?)
             """
-            self.pl_utils._execute_db_command(join_query, (group_id, user_id, current_time), commit=True)
+            self.pl_utils._execute_db_command(join_query,
+                                              (group_id, user_id, current_time), commit=True)
 
             action_info = {"group_id": group_id}
             self.pl_utils._record_trace(
