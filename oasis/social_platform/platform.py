@@ -1357,8 +1357,8 @@ class Platform:
 
             # Insert the message into the group_messages table
             insert_query = """
-                INSERT INTO group_messages 
-                (group_id, sender_id, content, sent_at) 
+                INSERT INTO group_messages
+                (group_id, sender_id, content, sent_at)
                 VALUES (?, ?, ?, ?)
             """
             self.pl_utils._execute_db_command(insert_query,
