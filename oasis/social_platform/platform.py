@@ -1347,7 +1347,8 @@ class Platform:
                 "SELECT * FROM group_members WHERE group_id = ? "
                 "AND agent_id = ?"
             )
-            self.pl_utils._execute_db_command(check_query, (group_id, user_id))
+            self.pl_utils._execute_db_command(check_query,
+                                              (group_id, user_id))
             if not self.db_cursor.fetchone():
                 return {
                     "success": False,
@@ -1356,14 +1357,14 @@ class Platform:
 
             # Insert the message into the group_messages table
             insert_query = """
-                INSERT INTO group_messages (group_id, sender_id, content, sent_at) 
+                INSERT INTO group_messages 
+                (group_id, sender_id, content, sent_at) 
                 VALUES (?, ?, ?, ?)
             """
             self.pl_utils._execute_db_command(insert_query,
                                         (group_id, user_id, content, current_time),
                                               commit=True
             )
-
             message_id = self.db_cursor.lastrowid
 
             # get the group members
@@ -1378,7 +1379,8 @@ class Platform:
                 "message_id": message_id,
                 "content": content,
             }
-            self.pl_utils._record_trace(user_id, ActionType.SEND_TO_GROUP.value,
+            self.pl_utils._record_trace(user_id,
+                                        ActionType.SEND_TO_GROUP.value,
                                         action_info, current_time
             )
 
@@ -1411,13 +1413,14 @@ class Platform:
                 VALUES (?, ?, ?)
             """
             self.pl_utils._execute_db_command(join_query,
-                                              (group_id, user_id, current_time),
+                                        (group_id, user_id, current_time),
                                               commit=True
             )
 
             action_info = {"group_id": group_id, "group_name": group_name}
             self.pl_utils._record_trace(
-                user_id, ActionType.CREATE_GROUP.value, action_info, current_time
+                user_id, ActionType.CREATE_GROUP.value,
+                action_info, current_time
             )
 
             return {"success": True, "group_id": group_id}
@@ -1445,21 +1448,25 @@ class Platform:
             check_member_query = (
                 "SELECT * FROM group_members WHERE group_id = ? AND agent_id = ?"
             )
-            self.pl_utils._execute_db_command(check_member_query, (group_id, user_id))
+            self.pl_utils._execute_db_command(check_member_query,
+                                              (group_id, user_id))
             if self.db_cursor.fetchone():
-                return {"success": False, "error": "User is already in the group."}
+                return {"success": False,
+                        "error": "User is already in the group."}
 
             # join the group
             join_query = """
-                INSERT INTO group_members (group_id, agent_id, joined_at) VALUES (?, ?, ?)
+                INSERT INTO group_members 
+                (group_id, agent_id, joined_at) VALUES (?, ?, ?)
             """
             self.pl_utils._execute_db_command(join_query,
-                                              (group_id, user_id, current_time),
+                                        (group_id, user_id, current_time),
                                               commit=True)
 
             action_info = {"group_id": group_id}
             self.pl_utils._record_trace(
-                user_id, ActionType.JOIN_GROUP.value, action_info, current_time
+                user_id, ActionType.JOIN_GROUP.value, action_info,
+                current_time
             )
 
             return {"success": True}
@@ -1471,19 +1478,25 @@ class Platform:
             user_id = agent_id
 
             # check if user is a member of the group
-            check_query = "SELECT * FROM group_members WHERE group_id = ? AND agent_id = ?"
-            self.pl_utils._execute_db_command(check_query, (group_id, user_id))
+            check_query = ("SELECT * FROM group_members "
+                           "WHERE group_id = ? AND agent_id = ?")
+            self.pl_utils._execute_db_command(check_query,
+                                              (group_id, user_id))
             if not self.db_cursor.fetchone():
-                return {"success": False, "error": "User is not a member of this group."}
+                return {"success": False,
+                        "error": "User is not a member of this group."}
 
             # delete the member record
-            delete_query = "DELETE FROM group_members WHERE group_id = ? AND agent_id = ?"
+            delete_query = ("DELETE FROM group_members"
+                            "WHERE group_id = ? AND agent_id = ?")
             self.pl_utils._execute_db_command(delete_query,
                                               (group_id, user_id),
                                               commit=True)
 
             action_info = {"group_id": group_id}
-            self.pl_utils._record_trace(user_id, ActionType.LEAVE_GROUP.value, action_info)
+            self.pl_utils._record_trace(user_id,
+                                        ActionType.LEAVE_GROUP.value,
+                                        action_info)
 
             return {"success": True}
         except Exception as e:
@@ -1510,7 +1523,8 @@ class Platform:
             messages = {}
             for group_id in joined_group_ids:
                 select_query = """
-                    SELECT message_id, content, sent_at FROM group_messages WHERE group_id = ?
+                    SELECT message_id, content, sent_at FROM group_messages
+                    WHERE group_id = ?
                 """
                 self.pl_utils._execute_db_command(select_query, (group_id,))
                 messages[group_id] = [
@@ -1518,8 +1532,11 @@ class Platform:
                     for row in self.db_cursor.fetchall()
                 ]
 
-            return {"success": True, "all_groups": all_groups,
-                        "joined_groups": joined_group_ids,
-                        "messages": messages}
+            return {
+                    "success": True,
+                    "all_groups": all_groups,
+                    "joined_groups": joined_group_ids,
+                    "messages": messages
+            }
         except  Exception as e:
             return {"success": False, "error": str(e)}
