@@ -1359,8 +1359,9 @@ class Platform:
                 INSERT INTO group_messages (group_id, sender_id, content, sent_at) 
                 VALUES (?, ?, ?, ?)
             """
-            self.pl_utils._execute_db_command(
-                insert_query, (group_id, user_id, content, current_time), commit=True
+            self.pl_utils._execute_db_command(insert_query,
+                                        (group_id, user_id, content, current_time),
+                                              commit=True
             )
 
             message_id = self.db_cursor.lastrowid
@@ -1368,7 +1369,8 @@ class Platform:
             # get the group members
             members_query = ("SELECT agent_id FROM group_members WHERE "
                              "group_id = ? AND agent_id != ?")
-            self.pl_utils._execute_db_command(members_query, (group_id, user_id))
+            self.pl_utils._execute_db_command(members_query,
+                                              (group_id, user_id))
             members = [row[0] for row in self.db_cursor.fetchall()]
 
             action_info = {
@@ -1376,8 +1378,8 @@ class Platform:
                 "message_id": message_id,
                 "content": content,
             }
-            self.pl_utils._record_trace(
-                user_id, ActionType.SEND_TO_GROUP.value, action_info, current_time
+            self.pl_utils._record_trace(user_id, ActionType.SEND_TO_GROUP.value,
+                                        action_info, current_time
             )
 
             return {"success": True, "message_id": message_id, "to": members}
@@ -1408,8 +1410,9 @@ class Platform:
                 INSERT INTO group_members (group_id, agent_id, joined_at) 
                 VALUES (?, ?, ?)
             """
-            self.pl_utils._execute_db_command(
-                join_query, (group_id, user_id, current_time), commit=True
+            self.pl_utils._execute_db_command(join_query,
+                                              (group_id, user_id, current_time),
+                                              commit=True
             )
 
             action_info = {"group_id": group_id, "group_name": group_name}
@@ -1451,7 +1454,8 @@ class Platform:
                 INSERT INTO group_members (group_id, agent_id, joined_at) VALUES (?, ?, ?)
             """
             self.pl_utils._execute_db_command(join_query,
-                                              (group_id, user_id, current_time), commit=True)
+                                              (group_id, user_id, current_time),
+                                              commit=True)
 
             action_info = {"group_id": group_id}
             self.pl_utils._record_trace(
@@ -1474,7 +1478,9 @@ class Platform:
 
             # delete the member record
             delete_query = "DELETE FROM group_members WHERE group_id = ? AND agent_id = ?"
-            self.pl_utils._execute_db_command(delete_query, (group_id, user_id), commit=True)
+            self.pl_utils._execute_db_command(delete_query,
+                                              (group_id, user_id),
+                                              commit=True)
 
             action_info = {"group_id": group_id}
             self.pl_utils._record_trace(user_id, ActionType.LEAVE_GROUP.value, action_info)
@@ -1512,6 +1518,8 @@ class Platform:
                     for row in self.db_cursor.fetchall()
                 ]
 
-            return {"success": True, "all_groups": all_groups, "joined_groups": joined_group_ids, "messages": messages}
+            return {"success": True, "all_groups": all_groups,
+                        "joined_groups": joined_group_ids,
+                        "messages": messages}
         except  Exception as e:
             return {"success": False, "error": str(e)}
