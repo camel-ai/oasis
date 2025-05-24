@@ -27,13 +27,13 @@ async def main():
         model_platform=ModelPlatformType.DEEPSEEK,
         model_type="deepseek-chat",
         url="https://api.deepseek.com/v1",
-        api_key="sk-d36defc769814824b3d78de738c2d1a4",
+        api_key="ak",
     )
     vllm_model_2 = ModelFactory.create(
         model_platform=ModelPlatformType.DEEPSEEK,
         model_type="deepseek-chat",
         url="https://api.deepseek.com/v1",
-        api_key="sk-d36defc769814824b3d78de738c2d1a4"
+        api_key="ak"
     )
     # Define the models for agents. Agents will select models based on
     # pre-defined scheduling strategies
