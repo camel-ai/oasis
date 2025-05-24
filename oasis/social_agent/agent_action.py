@@ -656,8 +656,8 @@ class SocialAction:
             group_name (str): The name of the group to be created.
 
         Returns:
-            dict: Platform response indicating success or failure, e.g.
-            {"success": True, "group_id": 1}
+            dict: Platform response indicating success or failure,
+            e.g.{"success": True, "group_id": 1}
         """
         return await self.perform_action(group_name, ActionType.CREATE_GROUP.value)
 
@@ -669,7 +669,8 @@ class SocialAction:
             group_id (int): The ID of the group to join.
 
         Returns:
-            dict: Platform response indicating success or failure, e.g. {"success": True}
+            dict: Platform response indicating success or failure,
+            e.g. {"success": True}
         """
         return await self.perform_action(group_id, ActionType.JOIN_GROUP.value)
 
