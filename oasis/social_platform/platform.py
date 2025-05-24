@@ -1446,7 +1446,8 @@ class Platform:
 
             # check if user is already in the group
             check_member_query = (
-                "SELECT * FROM group_members WHERE group_id = ? AND agent_id = ?"
+                "SELECT * FROM group_members WHERE group_id = ? "
+                "AND agent_id = ?"
             )
             self.pl_utils._execute_db_command(check_member_query,
                                               (group_id, user_id))
