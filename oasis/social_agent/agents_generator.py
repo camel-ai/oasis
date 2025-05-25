@@ -33,7 +33,7 @@ from oasis.social_platform.typing import ActionType
 
 async def generate_agents(
     agent_info_path: str,
-    twitter_channel: Channel,
+    channel: Channel,
     model: Union[BaseModelBackend, List[BaseModelBackend]],
     start_time,
     recsys_type: str = "twitter",
@@ -93,7 +93,7 @@ async def generate_agents(
         agent = SocialAgent(
             agent_id=agent_id,
             user_info=user_info,
-            twitter_channel=twitter_channel,
+            channel=channel,
             model=model,
             agent_graph=agent_graph,
             available_actions=available_actions,
@@ -178,7 +178,7 @@ async def generate_agents(
 
 async def generate_agents_100w(
     agent_info_path: str,
-    twitter_channel: Channel,
+    channel: Channel,
     start_time,
     model: Union[BaseModelBackend, List[BaseModelBackend]],
     recsys_type: str = "twitter",
@@ -248,7 +248,7 @@ async def generate_agents_100w(
         agent = SocialAgent(
             agent_id=agent_id,
             user_info=user_info,
-            twitter_channel=twitter_channel,
+            channel=channel,
             model=model,
             agent_graph=agent_graph,
             available_actions=available_actions,
@@ -362,7 +362,7 @@ async def generate_controllable_agents(
         # controllable的agent_id全都在llm agent的agent_id的前面
         agent = SocialAgent(agent_id=i,
                             user_info=user_info,
-                            twitter_channel=channel,
+                            channel=channel,
                             agent_graph=agent_graph)
         # Add agent to the agent graph
         agent_graph.add_agent(agent)
@@ -411,7 +411,7 @@ async def gen_control_agents_with_data(
         agent = SocialAgent(
             agent_id=i,
             user_info=user_info,
-            twitter_channel=channel,
+            channel=channel,
             agent_graph=agent_graph,
             model=models,
             available_actions=None,
@@ -430,7 +430,7 @@ async def gen_control_agents_with_data(
 
 async def generate_reddit_agents(
     agent_info_path: str,
-    twitter_channel: Channel,
+    channel: Channel,
     agent_graph: AgentGraph | None = None,
     agent_user_id_mapping: dict[int, int] | None = None,
     follow_post_agent: bool = False,
@@ -472,7 +472,7 @@ async def generate_reddit_agents(
         agent = SocialAgent(
             agent_id=i + control_user_num,
             user_info=user_info,
-            twitter_channel=twitter_channel,
+            channel=channel,
             agent_graph=agent_graph,
             model=model,
             available_actions=available_actions,
@@ -538,7 +538,7 @@ def connect_platform_channel(
     agent_graph: AgentGraph | None = None,
 ) -> AgentGraph:
     for _, agent in agent_graph.get_agents():
-        agent.twitter_channel = channel
+        agent.channel = channel
         agent.env.action.channel = channel
     return agent_graph
 
