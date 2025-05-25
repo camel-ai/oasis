@@ -1,0 +1,22 @@
+.glow-border {
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+
+  border-radius: inherit;
+}
+.glow-border:before {
+  border-radius: inherit;
+
+  top: var(--glow-top);
+  left: var(--glow-left);
+}
+.glow-content {
+  border-radius: inherit;
+  overflow: hidden;
+}
