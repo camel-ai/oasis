@@ -1368,7 +1368,6 @@ class Platform:
             self.pl_utils._execute_db_command(members_query,
                                               (group_id, user_id))
             members = [row[0] for row in self.db_cursor.fetchall()]
-
             action_info = {
                 "group_id": group_id,
                 "message_id": message_id,

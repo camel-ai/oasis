@@ -44,11 +44,10 @@ class SocialEnvironment(Environment):
         "You can only send messages to the group you are already in"
     )
     env_template = Template(
+        "$groups_env\n"
         "$posts_env\npick one you want to perform action that best "
         "reflects your current inclination based on your profile and "
-        "posts content. Do not limit your action in just `like` to "
-        "like posts\n"
-        "$groups_env"
+        "posts content. Do not limit your action in just `like` to like posts"
     )
 
     def __init__(self, action: SocialAction):
