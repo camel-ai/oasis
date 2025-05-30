@@ -30,21 +30,7 @@ async def main():
     )
 
     # Define the available actions for the agents
-    available_actions = [
-        ActionType.LIKE_POST,
-        ActionType.DISLIKE_POST,
-        ActionType.CREATE_POST,
-        ActionType.CREATE_COMMENT,
-        ActionType.LIKE_COMMENT,
-        ActionType.DISLIKE_COMMENT,
-        ActionType.SEARCH_POSTS,
-        ActionType.SEARCH_USER,
-        ActionType.TREND,
-        ActionType.REFRESH,
-        ActionType.DO_NOTHING,
-        ActionType.FOLLOW,
-        ActionType.MUTE,
-    ]
+    available_actions = ActionType.get_reddit_actions()
 
     agent_graph = await generate_reddit_agent_graph(
         profile_path="./data/reddit/user_data_36.json",
