@@ -217,15 +217,24 @@ class SocialAgent(ChatAgent):
         # NOTE: this is a temporary solution.
         # Camel can not stop updating the agents' memory after stop and astep
         # now.
+
         response = self._get_model_response(openai_messages=openai_messages,
                                             num_tokens=num_tokens)
         content = response.output_messages[0].content
         agent_log.info(
             f"Agent {self.social_agent_id} receive response: {content}")
+
+        # Record the complete interview (prompt + response) through the channel
+        interview_data = {"prompt": interview_prompt, "response": content}
+        result = await self.env.action.perform_action(
+            interview_data, ActionType.INTERVIEW.value)
+
+        # Return the combined result
         return {
             "user_id": self.social_agent_id,
             "prompt": openai_messages,
-            "content": content
+            "content": content,
+            "success": result.get("success", False)
         }
 
     async def perform_action_by_hci(self) -> Any:
