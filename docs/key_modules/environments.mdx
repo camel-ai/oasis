@@ -1,0 +1,53 @@
+---
+title: 'Environment'
+description: 'Configure the fundamental settings for your OASIS simulation environment'
+---
+
+# Basic Environment Settings
+
+OASIS provides a powerful simulation environment for social media platforms. This guide covers the basic configuration options for setting up your simulation environment.
+
+## Environment Initialization
+
+To create a simulation environment, use the `make` function from OASIS:
+
+```python
+import oasis
+from oasis import DefaultPlatformType
+
+# Make the environment
+env = oasis.make(
+    agent_graph=agent_graph,
+    platform=oasis.DefaultPlatformType.REDDIT,
+    database_path="simulation.db",
+)
+```
+
+### Core Environment Parameters
+
+When initializing the OASIS environment, you can configure the following core parameters:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `agent_graph` | `AgentGraph` | An `AgentGraph` instance that stores all the social agents in the simulation. For more details, see [Agent Graph](https://docs.oasis.camel-ai.org/key_modules/agent_graph)|
+| `platform` | `DefaultPlatformType` or `Platform` | The platform type to use (`TWITTER` or `REDDIT`) or a custom `Platform` instance |
+| `database_path` | `str` | Path to create a SQLite database (must end with `.db`) |
+| `semaphore` | `int` | Limit on concurrent LLM requests (default: 128) |
+
+    For more details, see the [Platform](https://docs.oasis.camel-ai.org/key_modules/platform), [Agent Profile](https://docs.oasis.camel-ai.org/user_generation/user_generation), [Model](https://docs.oasis.camel-ai.org/key_modules/models) and [Actions](https://docs.oasis.camel-ai.org/key_modules/agent_graph) Module.
+## Environment Lifecycle
+
+The OASIS environment has a simple lifecycle you can manage with these methods:
+
+```python
+# Initialize the environment
+await env.reset()
+
+# Run simulation steps
+for _ in range(n):
+    await env.step(actions)
+
+# Close the environment when done
+await env.close()
+```
+For more action details, see [Actions Module](https://docs.oasis.camel-ai.org/key_modules/actions)

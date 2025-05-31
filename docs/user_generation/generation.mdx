@@ -1,0 +1,85 @@
+---
+title: 'Agent Profile'
+---
+
+The first step in using OASIS is to generate user data. This section provides a detailed overview of how user data should be prepared for simulation.
+
+## Data Formats
+
+OASIS supports multiple social media platforms, each with its own data format. Note that the **type** of data format must align with the **DefaultPlatformType** or **RecsysType** specified for the platform.
+### Twitter Format (CSV)
+
+For Twitter simulations, OASIS stores user data in CSV files. Each user (agent) requires the following information:
+
+| Field | Description |
+|-------|-------------|
+| **name** | The real name of the agent |
+| **username** | The username of the agent within the system |
+| **user_char** | A brief self-description of the agent (included in the agent's system prompt to establish an initial identity) |
+| **description** | Similar to `user_char`, serving as the agent's self-description |
+
+And the `agent_id` will be generated based on the order of the CSV file, starting from 0.
+#### Example Twitter CSV Format
+
+| user_id | name | username | user_char | description |
+|---------|------|----------|------------------------|-----------------|
+| 14529063 | user_9 | user9 | Beach bum, web developer, nerd 🤓, crocheter, avid reader 📚, a singer in the shower, a notorious heart breaker. I blog about books @ https://t.co/JjnKtEnq4R | Beach bum, web developer, nerd 🤓, crocheter, avid reader 📚, a singer in the shower, a notorious heart breaker. I blog about books @ https://t.co/JjnKtEnq4R |
+
+### Reddit Format (JSON)
+
+For Reddit simulations, OASIS uses JSON files to store user data. Each user object contains the following fields:
+
+| Field | Description |
+|-------|-------------|
+| **realname** | The real name of the agent |
+| **username** | The username of the agent within the Reddit platform |
+| **bio** | A brief bio displayed on the user's profile |
+| **persona** | A detailed description of the agent's personality, interests, and background (used for the agent's system prompt) |
+| **age** | The age of the agent |
+| **gender** | The gender of the agent |
+| **mbti** | Myers-Briggs Type Indicator of the agent |
+| **country** | The country where the agent is based |
+
+And the `agent_id` will be generated based on the order of the JSON file, starting from 0.
+#### Example Reddit JSON Format
+
+```json
+[
+  {
+    "realname": "James Miller",
+    "username": "millerhospitality",
+    "bio": "Passionate about hospitality & tourism. Exploring the world one destination at a time.",
+    "persona": "James is a seasoned professional in the Hospitality & Tourism industry. With a knack for business and a keen interest in economics, he enjoys analyzing market trends and staying updated on the latest developments in the field. When not working, he loves traveling to exotic locations, sampling local cuisines, and experiencing different cultures. Follow for industry insights and travel inspiration!",
+    "age": 40,
+    "gender": "male",
+    "mbti": "ESTJ",
+    "country": "UK"
+  },
+  {
+    "realname": "Emma Hayes",
+    "username": "emma_logistics_guru",
+    "bio": "Passionate about transportation and logistics | ENFJ | Always seeking new connections and opportunities",
+    "persona": "Emma Hayes is a 19-year-old logistics enthusiast currently studying Transportation, Distribution & Logistics. With a bubbly and outgoing personality (ENFJ), she loves discussing culture, society, and business trends. Emma is always expanding her knowledge in the transportation industry and enjoys connecting with like-minded individuals to exchange ideas and insights.",
+    "age": 19,
+    "gender": "female",
+    "mbti": "ENFJ",
+    "country": "UK"
+  }
+]
+```
+
+## Preparing User Data
+
+When preparing user data for OASIS, consider the following regardless of platform:
+
+1. **Diverse Personalities**: Create agents with varied interests, opinions, and communication styles to simulate realistic social dynamics.
+
+2. **Realistic Social Connections**: If you want to create a social connection between agents, you can add some [`ManualAction`](https://docs.oasis.camel-ai.org/key_modules/actions.mdx) during the simulation to let agents follow each other.
+
+3. **Initial Content**: If you want to add some initial content to the agents, you can add some [`ManualAction`](https://docs.oasis.camel-ai.org/key_modules/actions.mdx) during the simulation to let agents post some initial content.
+
+4. **Consistent Identity**: Ensure that the personality descriptors (`user_char` and `description` for Twitter; `bio` and `persona` for Reddit) align with the agent's intended personality and behavior in the simulation.
+
+5. **Platform-Specific Behaviors**: Consider how users interact differently on Twitter versus Reddit. Twitter interactions are more brief and public, while Reddit discussions are often topic-focused and community-based.
+
+In the next sections, we'll explore how to customize the `SocialAgent` class to create agents with different prompt templates, tools, and models.

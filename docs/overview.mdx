@@ -1,0 +1,113 @@
+---
+title: 'Overview'
+description: 'Understanding how OASIS works'
+---
+
+# How OASIS Works
+
+## System Architecture
+
+OASIS (Open Agent Social Interaction Simulations) is a comprehensive framework for simulating social media environments with AI agents. At its core, OASIS consists of several integrated components that work together to create realistic social media simulations:
+
+<img
+  className="block"
+  src="/images/oasis_architecture.jpg"
+  alt="OASIS Architecture"
+/>
+
+### Core Components
+
+1. **Platform**: The central infrastructure that simulates the social media environment (Twitter-like or Reddit-like). It manages user accounts, content, social relationships, and engagement metrics.
+
+2. **Agents**: LLM-powered users that interact within the platform. Each agent has a unique profile and decision-making process driven by large language models.
+
+3. **Actions**: A diverse set of operations agents can perform, such as creating posts, commenting, liking, following, and more.
+
+4. **Recommendation System**: Algorithms that determine what content appears in each agent's feed, similar to real social media platforms.
+
+5. **Simulation Engine**: The orchestration layer that controls the progression of time, activates agents, and manages the overall simulation flow.
+
+## Operational Flow
+
+Here's how OASIS operates in a typical simulation:
+
+1. **Initialization**:
+   - The platform is created with specific settings (Twitter-like or Reddit-like)
+   - Agent profiles are loaded from files or variables
+   - LLM models are configured for agent decision-making
+   - Available actions and recommendation systems are defined
+   - Toolkits are defined for agent to get more external information
+
+2. **Simulation Cycle**:
+   - For each simulation step:
+     - Time advances according to the simulation clock
+     - The recommendation system refreshes content feeds
+     - Active agents observe their current state (posts with comments from the recommendation system)
+     - Active agents decide what actions to take based on LLM reasoning or predefined action list
+     - The platform processes these actions and updates the environment
+
+3. **LLM Agent Decision-Making**:
+   - Each agent receives an observation of their current state
+   - The LLM model processes this observation along with the agent's profile
+   - The model decides which action the agent should take
+   - The agent executes the chosen action on the platform
+
+4. **Platform Updates**:
+   - The platform processes all agent actions
+   - Social relationships are updated (following/followers)
+   - Content engagement metrics are recalculated
+   - Recommendation algorithms determine new content for user feeds
+
+5. **Data Collection**:
+   - All actions and interactions are logged in the database
+   - Researchers can analyze this data to study social phenomena
+
+## Scale and Performance
+
+OASIS is designed to scale up to one million agents, enabling large-scale studies of social interactions. To achieve this scale:
+
+- The system uses efficient database operations for storing and retrieving data
+- Multiple LLM instances can be deployed for load balancing
+- Concurrent request limiting prevents overloading LLM services
+- Time acceleration allows simulating longer periods in less real time
+
+## Customization Options
+
+OASIS provides extensive customization options:
+
+- **Platform Types**: Choose between Twitter-like or Reddit-like environments
+- **Recommendation Algorithms**: Configure how content is distributed to agents
+- **Agent Profiles**: Define diverse user demographics and personalities
+- **Available Actions**: Control which social actions agents can perform
+- **Model Selection**: Use different LLM backends for agent decision-making
+- **Toolkits**: Define toolkits for agent to get more external information
+
+## Integration with LLMs
+
+OASIS leverages large language models through the CAMEL framework to power agent decision-making:
+
+- Support for OpenAI models (GPT-4, GPT-3.5)
+- Integration with local open-source models via VLLM
+- Load balancing across multiple model instances
+- Customizable prompting for agent reasoning
+
+## Data Analysis
+
+The simulation data is stored in a SQLite database, allowing for comprehensive analysis:
+
+- Track the spread of information across the network
+- Analyze group formation and polarization
+- Study the effects of recommendation algorithms on user behavior
+- Examine emergent social phenomena
+
+## Use Cases
+
+OASIS can be applied to a wide range of research and development scenarios:
+
+- Social media platform design and testing
+- Content moderation policy evaluation
+- Information spread and misinformation studies
+- Consumer behavior and marketing research
+- Community formation and group dynamics analysis
+
+By simulating realistic social media environments at scale, OASIS provides a powerful tool for understanding complex social phenomena without the ethical concerns of experimenting on real users.

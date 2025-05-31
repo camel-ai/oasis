@@ -15,7 +15,6 @@
 into rec_matrix'''
 import heapq
 import logging
-import os
 import random
 import time
 from ast import literal_eval
@@ -28,9 +27,9 @@ import torch
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from transformers import AutoModel, AutoTokenizer
 
-from .process_recsys_posts import generate_post_vector
+from .process_recsys_posts import (generate_post_vector,
+                                   generate_post_vector_openai)
 from .typing import ActionType, RecsysType
 
 rec_log = logging.getLogger(name='social.rec')
@@ -38,18 +37,13 @@ rec_log.setLevel('DEBUG')
 
 # Initially set to None, to be assigned once again in the recsys function
 model = None
-twhin_tokenizer, twhin_model = None, None
+twhin_tokenizer = None
+twhin_model = None
 
 # Create the TF-IDF model
 tfidf_vectorizer = TfidfVectorizer()
 # Prepare the twhin model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-twhin_tokenizer = AutoTokenizer.from_pretrained(
-    pretrained_model_name_or_path="Twitter/twhin-bert-base",
-    model_max_length=512)  # TODO change the pretrained_model_path
-twhin_model = AutoModel.from_pretrained(
-    pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
 
 # All historical tweets and the most recent tweet of each user
 user_previous_post_all = {}
@@ -65,8 +59,25 @@ u_items = {}
 # Get the creation times of all tweets, assigning scores based on how recent
 # they are
 date_score = []
-# Get the fan counts of all tweet authors
-fans_score = []
+
+
+def get_twhin_tokenizer():
+    global twhin_tokenizer
+    if twhin_tokenizer is None:
+        from transformers import AutoTokenizer
+        twhin_tokenizer = AutoTokenizer.from_pretrained(
+            pretrained_model_name_or_path="Twitter/twhin-bert-base",
+            model_max_length=512)
+    return twhin_tokenizer
+
+
+def get_twhin_model(device):
+    global twhin_model
+    if twhin_model is None:
+        from transformers import AutoModel
+        twhin_model = AutoModel.from_pretrained(
+            pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
+    return twhin_model
 
 
 def load_model(model_name):
@@ -77,11 +88,9 @@ def load_model(model_name):
                                        device=device,
                                        cache_folder="./models")
         elif model_name == 'Twitter/twhin-bert-base':
-            tokenizer = AutoTokenizer.from_pretrained(model_name,
-                                                      model_max_length=512)
-            model = AutoModel.from_pretrained(model_name,
-                                              cache_dir="./models").to(device)
-            return tokenizer, model
+            twhin_tokenizer = get_twhin_tokenizer()
+            twhin_model = get_twhin_model(device)
+            return twhin_tokenizer, twhin_model
         else:
             raise ValueError(f"Unknown model name: {model_name}")
     except Exception as e:
@@ -108,7 +117,6 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 if model is not None:
     model.to(device)
 else:
-    print('Model not available, using random similarity.')
     pass
 
 
@@ -116,14 +124,13 @@ else:
 def reset_globals():
     global user_previous_post_all, user_previous_post
     global user_profiles, t_items, u_items
-    global date_score, fans_score
+    global date_score
     user_previous_post_all = {}
     user_previous_post = {}
     user_profiles = []
     t_items = {}
     u_items = {}
     date_score = []
-    fans_score = []
 
 
 def rec_sys_random(post_table: List[Dict[str, Any]], rec_matrix: List[List],
@@ -416,11 +423,17 @@ def rec_sys_personalized_twh(
         trace_table: List[Dict[str, Any]],
         rec_matrix: List[List],
         max_rec_post_len: int,
+        current_time: int,
         # source_post_indexs: List[int],
         recall_only: bool = False,
-        enable_like_score: bool = False) -> List[List]:
+        enable_like_score: bool = False,
+        use_openai_embedding: bool = False) -> List[List]:
+    global twhin_model, twhin_tokenizer
+    if twhin_model is None or twhin_tokenizer is None:
+        twhin_tokenizer, twhin_model = get_recsys_model(
+            recsys_type="twhin-bert")
     # Set some global variables to reduce time consumption
-    global date_score, fans_score, t_items, u_items, user_previous_post
+    global date_score, t_items, u_items, user_previous_post
     global user_previous_post_all, user_profiles
     # Get the uid: follower_count dict
     # Update only once, unless adding the feature to include new users midway.
@@ -444,7 +457,6 @@ def rec_sys_personalized_twh(
             else:
                 user_profiles.append(user['bio'])
 
-    current_time = int(os.environ["SANDBOX_TIME"])
     if len(t_items) < len(post_table):
         for post in post_table[-latest_post_count:]:
             # Get the {post_id: content} dict, update only the latest tweets
@@ -458,20 +470,8 @@ def rec_sys_personalized_twh(
             date_score.append(
                 np.log(
                     (271.8 - (current_time - int(post['created_at']))) / 100))
-            # Get the audience size of the post, score based on the number of
-            # followers
-            try:
-                fans_score.append(
-                    np.log(u_items[post['user_id']] + 1) / np.log(1000))
-            except Exception as e:
-                print(f"Error on fan score calculating: {e}")
-                import pdb
-                pdb.set_trace()
 
     date_score_np = np.array(date_score)
-    # fan_score [1, 2.x]
-    fans_score_np = np.array(fans_score)
-    fans_score_np = np.where(fans_score_np < 1, 1, fans_score_np)
 
     if enable_like_score:
         # Calculate similarity with previously liked content, first gather
@@ -483,9 +483,6 @@ def rec_sys_personalized_twh(
                                              ActionType.LIKE_POST.value,
                                              trace_table)
             like_post_ids_all.append(like_post_ids)
-    # enable fans_score when the broadcasting effect of superuser should be
-    # taken in count
-    # ßscores = date_score_np * fans_score_np
     scores = date_score_np
     new_rec_matrix = []
     if len(post_table) <= max_rec_post_len:
@@ -529,10 +526,14 @@ def rec_sys_personalized_twh(
         corpus = user_profiles + filtered_posts_tuple[0]
         # corpus = user_profiles + list(t_items.values())
         tweet_vector_start_t = time.time()
-        all_post_vector_list = generate_post_vector(twhin_model,
-                                                    twhin_tokenizer,
-                                                    corpus,
-                                                    batch_size=1000)
+        if use_openai_embedding:
+            all_post_vector_list = generate_post_vector_openai(corpus,
+                                                               batch_size=1000)
+        else:
+            all_post_vector_list = generate_post_vector(twhin_model,
+                                                        twhin_tokenizer,
+                                                        corpus,
+                                                        batch_size=1000)
         tweet_vector_end_t = time.time()
         rec_log.info(
             f"twhin model cost time: {tweet_vector_end_t-tweet_vector_start_t}"

@@ -198,10 +198,10 @@ class AgentGraph:
 
     def add_agent(self, agent: SocialAgent):
         if self.backend == "igraph":
-            self.graph.add_vertex(agent.agent_id)
+            self.graph.add_vertex(agent.social_agent_id)
         else:
-            self.graph.create_agent(agent.agent_id)
-        self.agent_mappings[agent.agent_id] = agent
+            self.graph.create_agent(agent.social_agent_id)
+        self.agent_mappings[agent.social_agent_id] = agent
 
     def add_edge(self, agent_id_0: int, agent_id_1: int):
         try:
@@ -211,10 +211,10 @@ class AgentGraph:
 
     def remove_agent(self, agent: SocialAgent):
         if self.backend == "igraph":
-            self.graph.delete_vertices(agent.agent_id)
+            self.graph.delete_vertices(agent.social_agent_id)
         else:
-            self.graph.delete_agent(agent.agent_id)
-        del self.agent_mappings[agent.agent_id]
+            self.graph.delete_agent(agent.social_agent_id)
+        del self.agent_mappings[agent.social_agent_id]
 
     def remove_edge(self, agent_id_0: int, agent_id_1: int):
         if self.backend == "igraph":
@@ -226,7 +226,12 @@ class AgentGraph:
     def get_agent(self, agent_id: int) -> SocialAgent:
         return self.agent_mappings[agent_id]
 
-    def get_agents(self) -> list[tuple[int, SocialAgent]]:
+    def get_agents(
+            self,
+            agent_ids: list[int] = None) -> list[tuple[int, SocialAgent]]:
+        if agent_ids:
+            return [(agent_id, self.get_agent(agent_id))
+                    for agent_id in agent_ids]
         if self.backend == "igraph":
             return [(node.index, self.agent_mappings[node.index])
                     for node in self.graph.vs]

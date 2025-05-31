@@ -1,0 +1,35 @@
+---
+data:
+  user_path: /ibex/user/yangz0h/experiment_dataset/user_data/user_data_100.json
+  pair_path: /ibex/user/yangz0h/experiment_dataset/agent_36/couterfact.json
+  db_path: ./experiments/reddit_simulation_counterfactual/counterfactual_100_control.db
+simulation:
+  recsys_type: reddit
+  controllable_user: true
+  allow_self_rating: false
+  show_score: true
+  activate_prob: 0.1
+  clock_factor: 10
+  num_timesteps: 30
+  max_rec_post_len: 50
+  round_post_num: 30
+  follow_post_agent: false
+  mute_post_agent: false
+  refresh_rec_post_count: 5
+  init_post_score: 0
+  available_actions:
+    - like_comment
+    - dislike_comment
+    - like_post
+    - dislike_post
+    - search_posts
+    - search_user
+    - trend
+    - refresh
+    - do_nothing
+    - create_comment
+inference:
+  model_type: qwen-2
+  server_url:
+    - host: 10.109.8.49
+      ports: [8080]

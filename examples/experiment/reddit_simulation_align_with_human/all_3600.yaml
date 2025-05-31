@@ -1,0 +1,34 @@
+---
+data:
+  user_path: /ibex/user/yangz0h/experiment_dataset/user_data/user_data_36.json
+  pair_path: /ibex/user/yangz0h/experiment_dataset/agent_3600/all_topics.json
+  db_path: ./experiments/reddit_simulation_align_with_human/all_10timesteps_temperature_10.db
+  exp_info_filename: ./experiments/reddit_simulation_align_with_human/all_10timesteps_temperature_10.json
+simulation:
+  recsys_type: reddit
+  controllable_user: true
+  allow_self_rating: false
+  show_score: true
+  activate_prob: 0.1
+  clock_factor: 10
+  num_timesteps: 1
+  max_rec_post_len: 300
+  round_post_num: 2
+  follow_post_agent: false
+  mute_post_agent: false
+  refresh_rec_post_count: 1
+  available_actions:
+    - like_comment
+    - dislike_comment
+    - like_post
+    - dislike_post
+    - search_posts
+    - search_user
+    - trend
+    - refresh
+    - do_nothing
+inference:
+  model_type: qwen-2
+  server_url:
+    - host: 10.109.8.49
+      ports: [8080]
