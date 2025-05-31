@@ -597,7 +597,7 @@ async def generate_reddit_agents(
 {
     "reason": "He is my enemy, and I would like to mute him on social media.",
     "functions": [{
-        "name": "mute",
+        "name": "mute", 
         "arguments": {
             "user_id": 1
         }

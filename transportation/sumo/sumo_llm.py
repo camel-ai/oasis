@@ -91,6 +91,7 @@ class SUMOEnvironment:
             except (subprocess.SubprocessError, traci.exceptions.FatalTraCIError) as e:
                 print(f"Error starting SUMO: {e}")
                 print("Falling back to simulated data...")
+                # replace it with customized data
                 return self._generate_simulated_network_state()
             
             # Run the simulation for a fixed number of steps
@@ -306,7 +307,7 @@ class SUMOEnvironment:
         time_section = ET.SubElement(root, "time")
         ET.SubElement(time_section, "begin", value="0")
         ET.SubElement(time_section, "end", value="3600")  # 1 hour simulation
-        
+        print("Config file: " + config_file)
         # Write the configuration to file
         tree = ET.ElementTree(root)
         tree.write(config_file, encoding="utf-8", xml_declaration=True)
@@ -447,7 +448,7 @@ class SUMOEnvironment:
             "stops": stops
         }
 
-
+# replace this with oasis
 class LLMAgent:
     """Agent that uses LLM to make decisions about route updates, including multimodal options"""
     
