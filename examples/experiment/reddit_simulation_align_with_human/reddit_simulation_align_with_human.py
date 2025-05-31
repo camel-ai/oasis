@@ -139,7 +139,7 @@ async def running(
         )
         agent_graph = await generate_reddit_agents(
             agent_info_path=user_path,
-            twitter_channel=twitter_channel,
+            channel=twitter_channel,
             agent_graph=agent_graph,
             agent_user_id_mapping=id_mapping,
             follow_post_agent=follow_post_agent,

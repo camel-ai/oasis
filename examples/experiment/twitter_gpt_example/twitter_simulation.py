@@ -127,7 +127,7 @@ async def running(
         start_hour = 13
 
     agent_graph = await generate_agents(agent_info_path=csv_path,
-                                        twitter_channel=twitter_channel,
+                                        channel=twitter_channel,
                                         start_time=start_time,
                                         model=model,
                                         recsys_type=recsys_type,

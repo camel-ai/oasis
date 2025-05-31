@@ -47,7 +47,7 @@ async def test_agents_profile():
     agent = SocialAgent(agent_id=0,
                         user_info=user_info,
                         user_info_template=user_info_template,
-                        twitter_channel=channel)
+                        channel=channel)
     assert agent.system_message.content == (
         'Your aim is: Persuade people to buy a product. Your task is: '
         'Using roleplay to tell some story about the product.')
@@ -84,7 +84,7 @@ async def test_agents_posting(setup_platform):
     agent = SocialAgent(agent_id=0,
                         user_info=user_info,
                         user_info_template=user_info_template,
-                        twitter_channel=channel)
+                        channel=channel)
     await agent.env.action.sign_up("user0", "User0", "A bio.")
 
     # create post
