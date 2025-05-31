@@ -42,7 +42,7 @@ async def running():
     task = asyncio.create_task(infra.running())
     os.environ["SANDBOX_TIME"] = "0"
     agent_graph = await generate_agents(agent_info_path=agent_info_path,
-                                        twitter_channel=twitter_channel,
+                                        channel=twitter_channel,
                                         model=model,
                                         twitter=infra,
                                         start_time=0)
