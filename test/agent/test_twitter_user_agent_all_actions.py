@@ -60,9 +60,7 @@ async def test_agents_actions(setup_twitter):
         user_info = UserInfo(name=real_name,
                              description=description,
                              profile=profile)
-        agent = SocialAgent(agent_id=i,
-                            user_info=user_info,
-                            twitter_channel=channel)
+        agent = SocialAgent(agent_id=i, user_info=user_info, channel=channel)
         return_message = await agent.env.action.sign_up(
             f"user{i}0101", f"User{i}", "A bio.")
         assert return_message["success"] is True

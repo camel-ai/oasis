@@ -59,7 +59,7 @@ class SocialAgent(ChatAgent):
                  agent_id: int,
                  user_info: UserInfo,
                  user_info_template: TextPrompt | None = None,
-                 twitter_channel: Channel | None = None,
+                 channel: Channel | None = None,
                  model: Optional[Union[BaseModelBackend,
                                        List[BaseModelBackend]]] = None,
                  agent_graph: "AgentGraph" = None,
@@ -68,9 +68,8 @@ class SocialAgent(ChatAgent):
                  single_iteration: bool = True):
         self.social_agent_id = agent_id
         self.user_info = user_info
-        self.twitter_channel = twitter_channel or Channel()
-        self.env = SocialEnvironment(
-            SocialAction(agent_id, self.twitter_channel))
+        self.channel = channel or Channel()
+        self.env = SocialEnvironment(SocialAction(agent_id, self.channel))
         if user_info_template is None:
             system_message_content = self.user_info.to_system_message()
         else:

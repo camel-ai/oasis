@@ -35,17 +35,17 @@ def test_agent_graph(tmp_path):
     agent_0 = SocialAgent(
         agent_id=0,
         user_info=UserInfo(name="0"),
-        twitter_channel=twitter_channel,
+        channel=twitter_channel,
     )
     agent_1 = SocialAgent(
         agent_id=1,
         user_info=UserInfo(name="1"),
-        twitter_channel=twitter_channel,
+        channel=twitter_channel,
     )
     agent_2 = SocialAgent(
         agent_id=2,
         user_info=UserInfo(name="2"),
-        twitter_channel=twitter_channel,
+        channel=twitter_channel,
     )
 
     graph.add_agent(agent_0)

@@ -64,7 +64,7 @@ async def test_agents_posting(setup_platform):
                              profile=profile)
         agent = SocialAgent(agent_id=0,
                             user_info=user_info,
-                            twitter_channel=channel,
+                            channel=channel,
                             tools=MathToolkit().get_tools(),
                             available_actions=[ActionType.CREATE_POST],
                             single_iteration=False)
