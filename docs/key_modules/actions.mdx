@@ -107,6 +107,7 @@ OASIS provides a comprehensive set of actions that simulate real social media be
 | `REFRESH` | Refresh the timeline to get recommended posts |
 | `DO_NOTHING` | Perform no action (pass the turn) |
 | `PURCHASE_PRODUCT` | Purchase a product (for e-commerce simulations) |
+| `INTERVIEW` | Interview a user and record the interview result in the database |
 
 
 ## Arguments for `ManualAction`
@@ -284,5 +285,13 @@ action = ManualAction(
 action = ManualAction(
     action=ActionType.PURCHASE_PRODUCT,
     args={"product_name": "Premium Subscription", "purchase_num": 1}
+)
+```
+
+#### INTERVIEW
+```python
+action = ManualAction(
+    action=ActionType.INTERVIEW,
+    args={"prompt": "What is your name?"}
 )
 ```

@@ -19,6 +19,7 @@ When initializing a `SocialAgent`, you can configure the following core paramete
 | `available_actions`  | [`list[ActionType]`](https://docs.oasis.camel-ai.org/key_modules/actions) or `None`                         | ✗        | `None`  | List of allowed actions in the social platform. For more details, see [Actions Module](https://docs.oasis.camel-ai.org/key_modules/actions). If `None`, all actions are enabled by default. |
 | `tools`              | `List[Union[FunctionTool, Callable]]` or `None` | ✗ | `None`  | External tools the agent can use, such as a `get_weather` function, a `Toolkit`, or an `MCPToolkit` from [CAMEL](https://docs.camel-ai.org/key_modules/tools.html). If set to `None`, the agent will not be able to use any external tools. |
 | `single_iteration`   | `bool`                                               | ✗        | `True`  | Whether the agent performs only a single round of reasoning when taking an LLM action. If `False`, the agent may continue acting based on the outcome of previous actions or tool calls. |
+| `interview_record`   | `bool`                                               | ✗        | `False`  | Whether to record the interview prompt and result in the agent's memory. |
 
 For more details on the `model` and the `tools` parameter, see [Models Module](https://docs.oasis.camel-ai.org/key_modules/models) and [Toolkits Module](https://docs.oasis.camel-ai.org/key_modules/toolkits).
 
