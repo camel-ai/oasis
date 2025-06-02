@@ -178,8 +178,8 @@ class SocialAgent(ChatAgent):
         # NOTE: this is a temporary solution.
         # Camel can not stop updating the agents' memory after stop and astep
         # now.
-        response = self._get_model_response(openai_messages=openai_messages,
-                                            num_tokens=num_tokens)
+        response = await self._aget_model_response(
+            openai_messages=openai_messages, num_tokens=num_tokens)
         content = response.output_messages[0].content
         agent_log.info(
             f"Agent {self.social_agent_id} receive response: {content}")
