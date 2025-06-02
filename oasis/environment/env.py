@@ -127,6 +127,12 @@ class OasisEnv:
         async with self.llm_semaphore:
             return await agent.perform_action_by_llm()
 
+    async def _perform_interview_action(self, agent, interview_prompt: str):
+        r"""Send the request to the llm model and execute the interview.
+        """
+        async with self.llm_semaphore:
+            return await agent.perform_interview(interview_prompt)
+
     async def step(
         self, actions: dict[SocialAgent, Union[ManualAction, LLMAction,
                                                List[Union[ManualAction,
@@ -152,17 +158,34 @@ class OasisEnv:
             if isinstance(action, list):
                 for single_action in action:
                     if isinstance(single_action, ManualAction):
-                        tasks.append(
-                            agent.perform_action_by_data(
-                                single_action.action_type,
-                                **single_action.action_args))
+                        if single_action.action_type == ActionType.INTERVIEW:
+                            # Use the agent's perform_interview method for
+                            # interview actions
+                            interview_prompt = single_action.action_args.get(
+                                "prompt", "")
+                            tasks.append(
+                                self._perform_interview_action(
+                                    agent, interview_prompt))
+                        else:
+                            tasks.append(
+                                agent.perform_action_by_data(
+                                    single_action.action_type,
+                                    **single_action.action_args))
                     elif isinstance(single_action, LLMAction):
                         tasks.append(self._perform_llm_action(agent))
             else:
                 if isinstance(action, ManualAction):
-                    tasks.append(
-                        agent.perform_action_by_data(action.action_type,
-                                                     **action.action_args))
+                    if action.action_type == ActionType.INTERVIEW:
+                        # Use the agent's perform_interview method for
+                        # interview actions
+                        interview_prompt = action.action_args.get("prompt", "")
+                        tasks.append(
+                            self._perform_interview_action(
+                                agent, interview_prompt))
+                    else:
+                        tasks.append(
+                            agent.perform_action_by_data(
+                                action.action_type, **action.action_args))
                 elif isinstance(action, LLMAction):
                     tasks.append(self._perform_llm_action(agent))
 

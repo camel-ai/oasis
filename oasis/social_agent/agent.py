@@ -65,7 +65,8 @@ class SocialAgent(ChatAgent):
                  agent_graph: "AgentGraph" = None,
                  available_actions: list[ActionType] = None,
                  tools: Optional[List[Union[FunctionTool, Callable]]] = None,
-                 single_iteration: bool = True):
+                 single_iteration: bool = True,
+                 interview_record: bool = False):
         self.social_agent_id = agent_id
         self.user_info = user_info
         self.channel = channel or Channel()
@@ -106,6 +107,7 @@ class SocialAgent(ChatAgent):
                          scheduling_strategy='random_model',
                          tools=all_tools,
                          single_iteration=single_iteration)
+        self.interview_record = interview_record
         self.agent_graph = agent_graph
         self.test_prompt = (
             "\n"
@@ -151,8 +153,9 @@ class SocialAgent(ChatAgent):
 
     async def perform_test(self):
         """
-        doing test for all agents.
+        doing group polarization test for all agents.
         TODO: rewrite the function according to the ChatAgent.
+        TODO: unify the test and interview function.
         """
         # user conduct test to agent
         _ = BaseMessage.make_user_message(role_name="User",
@@ -177,8 +180,8 @@ class SocialAgent(ChatAgent):
         # NOTE: this is a temporary solution.
         # Camel can not stop updating the agents' memory after stop and astep
         # now.
-        response = self._get_model_response(openai_messages=openai_messages,
-                                            num_tokens=num_tokens)
+        response = await self._aget_model_response(
+            openai_messages=openai_messages, num_tokens=num_tokens)
         content = response.output_messages[0].content
         agent_log.info(
             f"Agent {self.social_agent_id} receive response: {content}")
@@ -186,6 +189,60 @@ class SocialAgent(ChatAgent):
             "user_id": self.social_agent_id,
             "prompt": openai_messages,
             "content": content
+        }
+
+    async def perform_interview(self, interview_prompt: str):
+        """
+        Perform an interview with the agent.
+        """
+        # user conduct test to agent
+        user_msg = BaseMessage.make_user_message(
+            role_name="User", content=("You are a twitter user."))
+
+        if self.interview_record:
+            # Test memory should not be writed to memory.
+            self.update_memory(message=user_msg, role=OpenAIBackendRole.SYSTEM)
+
+        openai_messages, num_tokens = self.memory.get_context()
+
+        openai_messages = ([{
+            "role":
+            self.system_message.role_name,
+            "content":
+            self.system_message.content.split("# RESPONSE FORMAT")[0],
+        }] + openai_messages + [{
+            "role": "user",
+            "content": interview_prompt
+        }])
+
+        agent_log.info(f"Agent {self.social_agent_id}: {openai_messages}")
+        # NOTE: this is a temporary solution.
+        # Camel can not stop updating the agents' memory after stop and astep
+        # now.
+
+        response = await self._aget_model_response(
+            openai_messages=openai_messages, num_tokens=num_tokens)
+
+        content = response.output_messages[0].content
+
+        if self.interview_record:
+            # Test memory should not be writed to memory.
+            self.update_memory(message=response.output_messages[0],
+                               role=OpenAIBackendRole.USER)
+        agent_log.info(
+            f"Agent {self.social_agent_id} receive response: {content}")
+
+        # Record the complete interview (prompt + response) through the channel
+        interview_data = {"prompt": interview_prompt, "response": content}
+        result = await self.env.action.perform_action(
+            interview_data, ActionType.INTERVIEW.value)
+
+        # Return the combined result
+        return {
+            "user_id": self.social_agent_id,
+            "prompt": openai_messages,
+            "content": content,
+            "success": result.get("success", False)
         }
 
     async def perform_action_by_hci(self) -> Any:

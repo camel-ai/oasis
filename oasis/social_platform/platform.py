@@ -1340,3 +1340,49 @@ class Platform:
             return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    async def interview(self, agent_id: int, interview_data):
+        """Interview an agent with the given prompt and record the response.
+
+        Args:
+            agent_id (int): The ID of the agent being interviewed.
+            interview_data: Either a string (prompt only) or dict with prompt
+                and response.
+
+        Returns:
+            dict: A dictionary with success status.
+        """
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = self.sandbox_clock.get_time_step()
+        try:
+            user_id = agent_id
+
+            # Handle both old format (string prompt) and new format
+            # (dict with prompt + response)
+            if isinstance(interview_data, str):
+                # Old format: just the prompt
+                prompt = interview_data
+                response = None
+                interview_id = f"{current_time}_{user_id}"
+                action_info = {"prompt": prompt, "interview_id": interview_id}
+            else:
+                # New format: dict with prompt and response
+                prompt = interview_data.get("prompt", "")
+                response = interview_data.get("response", "")
+                interview_id = f"{current_time}_{user_id}"
+                action_info = {
+                    "prompt": prompt,
+                    "response": response,
+                    "interview_id": interview_id
+                }
+
+            # Record the interview in the trace table
+            self.pl_utils._record_trace(user_id, ActionType.INTERVIEW.value,
+                                        action_info, current_time)
+
+            return {"success": True, "interview_id": interview_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
