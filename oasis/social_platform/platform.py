@@ -1346,7 +1346,8 @@ class Platform:
 
         Args:
             agent_id (int): The ID of the agent being interviewed.
-            interview_data: Either a string (prompt only) or dict with prompt and response.
+            interview_data: Either a string (prompt only) or dict with prompt
+                and response.
 
         Returns:
             dict: A dictionary with success status.
@@ -1359,7 +1360,8 @@ class Platform:
         try:
             user_id = agent_id
 
-            # Handle both old format (string prompt) and new format (dict with prompt + response)
+            # Handle both old format (string prompt) and new format
+            # (dict with prompt + response)
             if isinstance(interview_data, str):
                 # Old format: just the prompt
                 prompt = interview_data
