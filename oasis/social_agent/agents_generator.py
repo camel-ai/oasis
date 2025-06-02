@@ -389,7 +389,7 @@ async def generate_controllable_agents(
 async def gen_control_agents_with_data(
     channel: Channel,
     control_user_num: int,
-    models: list[BaseModelBackend],
+    models: list[BaseModelBackend] | None = None,
 ) -> tuple[AgentGraph, dict]:
     agent_graph = AgentGraph()
     agent_user_id_mapping = {}
