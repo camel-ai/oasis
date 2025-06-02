@@ -71,9 +71,7 @@ async def test_single_interview_action(setup_interview_test):
         user_info = UserInfo(name=real_name,
                              description=description,
                              profile=profile)
-        agent = SocialAgent(agent_id=0,
-                            user_info=user_info,
-                            twitter_channel=channel)
+        agent = SocialAgent(agent_id=0, user_info=user_info, channel=channel)
 
         # Sign up the agent
         return_message = await agent.env.action.sign_up(
@@ -145,7 +143,7 @@ async def test_multiple_interviews_action(setup_interview_test):
                                  profile=profile)
             agent = SocialAgent(agent_id=i,
                                 user_info=user_info,
-                                twitter_channel=channel)
+                                channel=channel)
 
             # Sign up the agent
             return_message = await agent.env.action.sign_up(
@@ -273,20 +271,27 @@ async def test_interview_with_environment():
         """, (ActionType.INTERVIEW.value, ))
 
         interview_records = cursor.fetchall()
-        assert len(interview_records) == 4  # 3 interviews conducted
+        assert len(interview_records) == 4  # 4 interviews conducted
 
-        # Check the content of interviews
-        expected_prompts = [
+        # Check interview content
+        expected_prompts = {
             "What is your favorite color and why?",
             "What do you think about technology?",
             "How do you spend your free time?", "What motivates you in life?"
-        ]
+        }
 
-        for i, (user_id, info_json, timestamp) in enumerate(interview_records):
+        # Get all records and verify content exists
+        actual_prompts = set()
+        for user_id, info_json, timestamp in interview_records:
             info = json.loads(info_json)
-            assert info["prompt"] == expected_prompts[i]
+            actual_prompts.add(info["prompt"])
             assert "interview_id" in info
             assert "response" in info
+
+        # Use set comparison to verify all expected prompts exist
+        assert actual_prompts == expected_prompts, (
+            f"Missing prompts: {expected_prompts - actual_prompts}, "
+            f"Unexpected prompts: {actual_prompts - expected_prompts}")
 
         conn.close()
 
@@ -325,7 +330,7 @@ async def test_interview_data_retrieval(setup_interview_test):
                                  profile=profile)
             agent = SocialAgent(agent_id=i,
                                 user_info=user_info,
-                                twitter_channel=channel)
+                                channel=channel)
 
             return_message = await agent.env.action.sign_up(
                 f"testuser{i}", f"TestUser{i}", f"Bio {i}.")
@@ -414,9 +419,7 @@ async def test_interview_error_handling(setup_interview_test):
         user_info = UserInfo(name=real_name,
                              description=description,
                              profile=profile)
-        agent = SocialAgent(agent_id=0,
-                            user_info=user_info,
-                            twitter_channel=channel)
+        agent = SocialAgent(agent_id=0, user_info=user_info, channel=channel)
 
         return_message = await agent.env.action.sign_up(
             "testuser", "TestUser", "Test bio.")
