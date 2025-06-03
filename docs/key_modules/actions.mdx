@@ -109,6 +109,44 @@ OASIS provides a comprehensive set of actions that simulate real social media be
 | `PURCHASE_PRODUCT` | Purchase a product (for e-commerce simulations) |
 | `INTERVIEW` | Interview a user and record the interview result in the database |
 
+### Platform-Specific Actions
+
+OASIS provides platform-specific action sets that can be accessed using class methods:
+
+#### Reddit Actions
+```python
+# Get all Reddit-specific actions, return a list of ActionType
+available_actions = ActionType.get_default_reddit_actions()
+```
+
+The Reddit action set includes:
+- `LIKE_POST`
+- `DISLIKE_POST`
+- `CREATE_POST`
+- `CREATE_COMMENT`
+- `LIKE_COMMENT`
+- `DISLIKE_COMMENT`
+- `SEARCH_POSTS`
+- `SEARCH_USER`
+- `TREND`
+- `REFRESH`
+- `DO_NOTHING`
+- `FOLLOW`
+- `MUTE`
+
+#### Twitter Actions
+```python
+# Get all Reddit-specific actions, return a list of ActionType
+available_actions = ActionType.get_default_twitter_actions()
+```
+
+The Twitter action set includes:
+- `CREATE_POST`
+- `LIKE_POST`
+- `REPOST`
+- `FOLLOW`
+- `DO_NOTHING`
+- `QUOTE_POST`
 
 ## Arguments for `ManualAction`
 
