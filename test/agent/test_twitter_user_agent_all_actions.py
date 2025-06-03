@@ -169,7 +169,8 @@ async def test_agents_actions(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.action.create_group("AI Discussion")
+    return_message = await action_agent.env.action.create_group("AI Discussion"
+                                                                )
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
@@ -177,7 +178,8 @@ async def test_agents_actions(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
-    return_message = await action_agent.env.action.send_to_group(1, "Hello, everyone!")
+    return_message = await action_agent.env.action.send_to_group(
+        1, "Hello, everyone!")
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
