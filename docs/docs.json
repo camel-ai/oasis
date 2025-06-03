@@ -30,9 +30,12 @@
             "group": "Key Modules",
             "pages": [
               "key_modules/environments",
-              "key_modules/platform",
+              "key_modules/agent_graph",
               "user_generation/generation",
+              "key_modules/social_agent",
               "key_modules/models",
+              "key_modules/toolkits",
+              "key_modules/platform",
               "key_modules/actions"
             ]
           },
@@ -40,7 +43,11 @@
             "group": "Cookbooks",
             "pages": [
               "cookbooks/twitter_simulation",
-              "cookbooks/reddit_simulation"
+              "cookbooks/reddit_simulation",
+              "cookbooks/sympy_tools_simulation",
+              "cookbooks/search_tools_simulation",
+              "cookbooks/custom_prompt_simulation",
+              "cookbooks/twitter_interview"
             ]
           },
           {
@@ -56,17 +63,17 @@
       "anchors": [
         {
           "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
+          "href": "https://docs.oasis.camel-ai.org/",
           "icon": "book-open-cover"
         },
         {
           "anchor": "Community",
-          "href": "https://mintlify.com/community",
+          "href": "https://discord.com/invite/CNcNpquyDc",
           "icon": "slack"
         },
         {
           "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
+          "href": "https://www.camel-ai.org/blogs/oasis",
           "icon": "newspaper"
         }
       ]
@@ -75,26 +82,15 @@
   "logo": {
     "light": "/logo/normal_logo.svg",
     "dark": "/logo/white_logo.svg",
-    "href": "https://github.com/camel-ai/oasis"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
+    "href": "https://www.camel-ai.org/"
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/CamelAIOrg",
+      "github": "https://github.com/camel-ai",
+      "reddit": "https://www.reddit.com/r/CamelAI/",
+      "discord": "https://discord.camel-ai.org/",
+      "website": "https://www.camel-ai.org/"
     }
   }
 }

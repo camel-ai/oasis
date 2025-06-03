@@ -1,0 +1,87 @@
+---
+title: 'Toolkits'
+description: 'This section introduces the toolkits of Social Agent in OASIS.'
+---
+
+# Toolkits
+
+OASIS supports all toolkits, mcp toolkits, and customized function tools listed in `camel` here: [https://docs.camel-ai.org/key_modules/tools.html](https://docs.camel-ai.org/key_modules/tools.html).
+
+You can pass a `List[Union[FunctionTool, Callable]]` as the set of external tools that the agent is allowed to use in addition to performing social media actions.
+
+## Example
+
+### 1. `SympyToolkit`:
+For example, you can add the `SympyToolkit` to the `SocialAgent` as follows:
+
+```python
+# Import the SympyToolkit class
+from camel.tools import SympyToolkit
+
+# Create a SocialAgent instance with the sympy tool
+sympy_agent = SocialAgent(
+    agent_id=1,
+    user_info=user_info,
+    tools=SympyToolkit().get_tools(),  # allow agent to use sympy toolkits
+    agent_graph=agent_graph,
+    model=openai_model,
+    available_actions=available_actions,
+    single_iteration=False
+)
+```
+
+### 2. `SearchToolkit().search_duckduckgo`:
+
+```python
+# Import the SearchToolkit class
+from camel.tools import SearchToolkit
+
+# Create a SocialAgent instance with the search tool
+search_agent = SocialAgent(
+    agent_id=2,
+    user_info=user_info,
+    tools=[SearchToolkit().search_duckduckgo],  # allow agent to use search toolkits
+    agent_graph=agent_graph,
+    model=openai_model,
+    available_actions=available_actions,
+    single_iteration=False
+)
+```
+
+### 3. Your own function tool:
+Or you can define a custom function for the agent to query specific information — for example, letting the agent check whether your cat is sleeping.
+
+```python
+import random
+from datetime import time, datetime
+
+# Define a custom function
+def is_my_cat_sleep(current_time: datetime) -> bool:
+    r"""Simulate a random check to determine whether your
+    cat is sleeping, based on the current time.
+
+    Args:
+        current_time (datetime): The current datetime
+		        to base the cat's behavior on.
+
+    Returns:
+        bool: True if the cat is likely sleeping, False otherwise.
+    """
+    return random.choice([True, False])
+
+# Import the FunctionTool class
+from camel.toolkits import FunctionTool
+
+# Create a SocialAgent instance
+agent_2 = SocialAgent(
+    agent_id=1,
+    user_info=user_info,
+    tools=[FunctionTool(is_my_cat_sleep)],  # allow agent to use custom function tool
+    agent_graph=agent_graph,
+    model=openai_model,
+    available_actions=[ActionType.CREATE_COMMENT],
+    single_iteration=False
+)
+```
+
+If you want to define other custom functions, make sure your functions include complete docstrings and type annotations — just like the example provided.

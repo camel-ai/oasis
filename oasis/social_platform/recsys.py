@@ -27,7 +27,6 @@ import torch
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from transformers import AutoModel, AutoTokenizer
 
 from .process_recsys_posts import (generate_post_vector,
                                    generate_post_vector_openai)
@@ -38,18 +37,13 @@ rec_log.setLevel('DEBUG')
 
 # Initially set to None, to be assigned once again in the recsys function
 model = None
-twhin_tokenizer, twhin_model = None, None
+twhin_tokenizer = None
+twhin_model = None
 
 # Create the TF-IDF model
 tfidf_vectorizer = TfidfVectorizer()
 # Prepare the twhin model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-twhin_tokenizer = AutoTokenizer.from_pretrained(
-    pretrained_model_name_or_path="Twitter/twhin-bert-base",
-    model_max_length=512)  # TODO change the pretrained_model_path
-twhin_model = AutoModel.from_pretrained(
-    pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
 
 # All historical tweets and the most recent tweet of each user
 user_previous_post_all = {}
@@ -67,6 +61,25 @@ u_items = {}
 date_score = []
 
 
+def get_twhin_tokenizer():
+    global twhin_tokenizer
+    if twhin_tokenizer is None:
+        from transformers import AutoTokenizer
+        twhin_tokenizer = AutoTokenizer.from_pretrained(
+            pretrained_model_name_or_path="Twitter/twhin-bert-base",
+            model_max_length=512)
+    return twhin_tokenizer
+
+
+def get_twhin_model(device):
+    global twhin_model
+    if twhin_model is None:
+        from transformers import AutoModel
+        twhin_model = AutoModel.from_pretrained(
+            pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
+    return twhin_model
+
+
 def load_model(model_name):
     try:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -75,11 +88,9 @@ def load_model(model_name):
                                        device=device,
                                        cache_folder="./models")
         elif model_name == 'Twitter/twhin-bert-base':
-            tokenizer = AutoTokenizer.from_pretrained(model_name,
-                                                      model_max_length=512)
-            model = AutoModel.from_pretrained(model_name,
-                                              cache_dir="./models").to(device)
-            return tokenizer, model
+            twhin_tokenizer = get_twhin_tokenizer()
+            twhin_model = get_twhin_model(device)
+            return twhin_tokenizer, twhin_model
         else:
             raise ValueError(f"Unknown model name: {model_name}")
     except Exception as e:
@@ -417,6 +428,10 @@ def rec_sys_personalized_twh(
         recall_only: bool = False,
         enable_like_score: bool = False,
         use_openai_embedding: bool = False) -> List[List]:
+    global twhin_model, twhin_tokenizer
+    if twhin_model is None or twhin_tokenizer is None:
+        twhin_tokenizer, twhin_model = get_recsys_model(
+            recsys_type="twhin-bert")
     # Set some global variables to reduce time consumption
     global date_score, t_items, u_items, user_previous_post
     global user_previous_post_all, user_profiles

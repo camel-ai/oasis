@@ -1,0 +1,113 @@
+---
+title: 'Agent Graph'
+description: 'The Agent Graph saves all the social agents in the simulation. In this section, we will introduce how to create an `AgentGraph` and some useful methods within it.'
+---
+# Two ways to create an `AgentGraph`:
+
+- Option 1: Create an `AgentGraph` from a `csv` or `json` file, which contains the agent profiles.
+- Option 2: Create an empty `AgentGraph` and add each customized agent.
+
+## Option 1: Create an `AgentGraph` from the agent profile files
+
+We support initializing the AgentGraph using a file that stores agent profiles. In addition, you need to specify the LLM model used by all agents and the set of available social actions.
+
+The parameters for these two functions are as follows:
+
+| Parameter         | Type                                           | Required | Default      | Description |
+|------------------|------------------------------------------------|----------|--------------|-------------|
+| `profile_path`    | `str`                                          | ✔        | -            | Path to a CSV or JSON file storing agent profiles. For details on different profile formats, see [Agent Profile](https://docs.oasis.camel-ai.org/user_generation/user_generation) section. |
+| `model`           | [`BaseModelBackend`](https://docs.oasis.camel-ai.org/key_modules/models.html) or `List[BaseModelBackend]` | ✗       | gpt-4o-mini | The large language model(s) used by the all agents. |
+| `available_actions` | [`list[ActionType]`](https://docs.oasis.camel-ai.org/key_modules/actions.mdx) | ✗        | `None`       | List of allowed actions in the social platform for all agents. For more details, see **Actions - OASIS**. If set to `None`, all actions are enabled by default. |
+
+
+### Example of initializing an `AgentGraph` from a profile file
+
+- Twitter user profile style
+
+```python
+from oasis import generate_twitter_agent_graph
+
+agent_graph = await generate_twitter_agent_graph(
+    profile_path=("data/twitter_dataset.csv"),
+    model=openai_model,
+    available_actions=available_actions,
+)
+```
+
+- Reddit user profile style
+
+```python
+from oasis import generate_reddit_agent_graph
+
+agent_graph = await generate_reddit_agent_graph(
+    profile_path="./data/reddit/user_data_36.json",
+    model=openai_model,
+    available_actions=available_actions,
+)
+```
+
+## Option 2: Create an empty `AgentGraph` and customize each agent
+
+### Step 1: Create an empty `AgentGraph`
+
+```python
+from oasis import AgentGraph
+
+# Create an empty `AgentGraph`
+agent_graph = AgentGraph()
+```
+
+### Step 2: Add each customized agent to the `AgentGraph`
+You can initialize some social agents and add them to the `AgentGraph`.
+For more details on how to customize the `SocialAgent` class, see [Social Agent Module](https://docs.oasis.camel-ai.org/key_modules/social_agent.mdx).
+
+```python
+from oasis import SocialAgent
+
+# Initialize a customized agent
+agent_1 = SocialAgent(
+    agent_id=0,
+    user_info=user_info,
+    user_info_template=template,
+    agent_graph=agent_graph,  # The `AgentGraph` created before
+    model=openai_model,
+    tools=tools,
+    available_actions=available_actions,
+)
+agent_graph.add_agent(agent_1)
+```
+
+# Other Methods of `AgentGraph`
+
+## 1. `agent_graph.get_agent(agent_id)`
+- Description: Get an `SocialAgent` by `agent_id`.
+- Parameters:
+  - `agent_id`: The `agent_id` of the `SocialAgent` to get.
+- Returns:
+  - `SocialAgent`: The `SocialAgent` with the given `agent_id`.
+- Example:
+```python
+agent = agent_graph.get_agent(agent_id)
+```
+
+## 2. `agent_graph.get_all_agents()`
+- Description: Get all `SocialAgent` in the `AgentGraph`.
+- Parameters:
+  - None
+- Returns:
+  - list[tuple[int, SocialAgent]]: A list of tuples, each containing an `agent_id` and the corresponding `SocialAgent`.
+- Example:
+```python
+agent_list = agent_graph.get_all_agents()
+```
+
+## 3. `agent_graph.get_num_nodes()`
+- Description: Get the number of `SocialAgent` in the `AgentGraph`.
+- Parameters:
+  - None
+- Returns:
+  - int: The number of `SocialAgent` in the `AgentGraph`.
+- Example:
+```python
+num_agents = agent_graph.get_num_nodes()
+```

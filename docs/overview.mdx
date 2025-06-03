@@ -33,20 +33,20 @@ Here's how OASIS operates in a typical simulation:
 
 1. **Initialization**:
    - The platform is created with specific settings (Twitter-like or Reddit-like)
-   - Agent profiles are loaded from CSV or JSON files
+   - Agent profiles are loaded from files or variables
    - LLM models are configured for agent decision-making
    - Available actions and recommendation systems are defined
+   - Toolkits are defined for agent to get more external information
 
 2. **Simulation Cycle**:
    - For each simulation step:
      - Time advances according to the simulation clock
-     - A subset of agents performs actions based on a predefined action list as an intervention
      - The recommendation system refreshes content feeds
      - Active agents observe their current state (posts with comments from the recommendation system)
-     - Active agents decide what actions to take based on LLM reasoning
+     - Active agents decide what actions to take based on LLM reasoning or predefined action list
      - The platform processes these actions and updates the environment
 
-3. **Agent Decision-Making**:
+3. **LLM Agent Decision-Making**:
    - Each agent receives an observation of their current state
    - The LLM model processes this observation along with the agent's profile
    - The model decides which action the agent should take
@@ -80,6 +80,7 @@ OASIS provides extensive customization options:
 - **Agent Profiles**: Define diverse user demographics and personalities
 - **Available Actions**: Control which social actions agents can perform
 - **Model Selection**: Use different LLM backends for agent decision-making
+- **Toolkits**: Define toolkits for agent to get more external information
 
 ## Integration with LLMs
 

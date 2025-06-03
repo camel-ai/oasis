@@ -12,17 +12,34 @@
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 # flake8: noqa: E501
+import warnings
 from dataclasses import dataclass
 from typing import Any
+
+from camel.prompts import TextPrompt
 
 
 @dataclass
 class UserInfo:
+    user_name: str | None = None
     name: str | None = None
     description: str | None = None
     profile: dict[str, Any] | None = None
     recsys_type: str = "twitter"
     is_controllable: bool = False
+
+    def to_custom_system_message(self, user_info_template: TextPrompt) -> str:
+        required_keys = user_info_template.key_words
+        info_keys = set(self.profile.keys())
+        missing = required_keys - info_keys
+        extra = info_keys - required_keys
+        if missing:
+            raise ValueError(
+                f"Missing required keys in UserInfo.profile: {missing}")
+        if extra:
+            warnings.warn(f"Extra keys not used in UserInfo.profile: {extra}")
+
+        return user_info_template.format(**self.profile)
 
     def to_system_message(self) -> str:
         if self.recsys_type != "reddit":

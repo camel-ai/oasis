@@ -135,7 +135,7 @@ async def running(
     model_configs = model_configs or {}
     agent_graph = await generate_agents_100w(
         agent_info_path=csv_path,
-        twitter_channel=twitter_channel,
+        channel=twitter_channel,
         start_time=start_time,
         recsys_type=recsys_type,
         twitter=infra,

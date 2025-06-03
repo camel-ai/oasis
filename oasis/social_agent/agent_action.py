@@ -50,6 +50,7 @@ class SocialAction:
                 self.mute,
                 self.unmute,
                 self.purchase_product,
+                self.interview,
                 self.join_group,
                 self.leave_group,
                 self.send_to_group,
@@ -646,6 +647,28 @@ class SocialAction:
         purchase_message = (product_name, purchase_num)
         return await self.perform_action(purchase_message,
                                          ActionType.PURCHASE_PRODUCT.value)
+
+    async def interview(self, prompt: str):
+        r"""Interview an agent with the given prompt.
+
+        This method invokes an asynchronous action to interview an agent with a
+        specific prompt question. Upon successful execution,
+        it returns a dictionary containing a success status
+        and an interview_id for tracking.
+
+        Args:
+            prompt (str): The interview question or prompt to ask the agent.
+
+        Returns:
+            dict: A dictionary containing success status and an interview_id.
+
+            Example of a successful return:
+            {
+                "success": True,
+                "interview_id": "1621234567_0"  # Timestamp_UserID format
+            }
+        """
+        return await self.perform_action(prompt, ActionType.INTERVIEW.value)
 
 
     async def create_group(self, group_name: str):

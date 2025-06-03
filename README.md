@@ -40,7 +40,7 @@
 <p align="left">
   <img src='assets/intro.png'>
 
-🏝️ OASIS is a scalable, open-source social media simulator that integrates large language models with rule-based agents to realistically mimic the behavior of up to one million users on platforms like Twitter and Reddit. It's designed to facilitate the study of complex social phenomena such as information spread, group polarization, and herd behavior, offering a versatile tool for exploring diverse social dynamics and user interactions in digital environments.
+🏝️ OASIS is a scalable, open-source social media simulator that incorporates large language model agents to realistically mimic the behavior of up to one million users on platforms like Twitter and Reddit. It's designed to facilitate the study of complex social phenomena such as information spread, group polarization, and herd behavior, offering a versatile tool for exploring diverse social dynamics and user interactions in digital environments.
 
 </p>
 
@@ -139,55 +139,89 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType
 
 import oasis
-from oasis import ActionType, EnvAction, SingleAction
+from oasis import (ActionType, LLMAction, ManualAction,
+                   generate_reddit_agent_graph)
 
 
 async def main():
-  # Define the model for the agents
-  openai_model = ModelFactory.create(
-      model_platform=ModelPlatformType.OPENAI,
-      model_type=ModelType.GPT_4O_MINI,
-  )
+    # Define the model for the agents
+    openai_model = ModelFactory.create(
+        model_platform=ModelPlatformType.OPENAI,
+        model_type=ModelType.GPT_4O_MINI,
+    )
 
-  # Define the available actions for the agents
-  available_actions = [
-      ActionType.LIKE_POST,
-      ActionType.CREATE_POST,
-      ActionType.CREATE_COMMENT,
-      ActionType.FOLLOW
-  ]
+    # Define the available actions for the agents
+    available_actions = [
+        ActionType.LIKE_POST,
+        ActionType.DISLIKE_POST,
+        ActionType.CREATE_POST,
+        ActionType.CREATE_COMMENT,
+        ActionType.LIKE_COMMENT,
+        ActionType.DISLIKE_COMMENT,
+        ActionType.SEARCH_POSTS,
+        ActionType.SEARCH_USER,
+        ActionType.TREND,
+        ActionType.REFRESH,
+        ActionType.DO_NOTHING,
+        ActionType.FOLLOW,
+        ActionType.MUTE,
+    ]
 
-  # Make the environment
-  env = oasis.make(
-      platform=oasis.DefaultPlatformType.REDDIT,
-      database_path="reddit_simulation.db",
-      agent_profile_path="./data/reddit/user_data_36.json",
-      agent_models=openai_model,
-      available_actions=available_actions,
-  )
+    agent_graph = await generate_reddit_agent_graph(
+        profile_path="./data/reddit/user_data_36.json",
+        model=openai_model,
+        available_actions=available_actions,
+    )
 
-  # Run the environment
-  await env.reset()
+    # Define the path to the database
+    db_path = "./data/reddit_simulation.db"
 
-  action = SingleAction(
-    agent_id=0,
-    action=ActionType.CREATE_POST,
-    args={"content": "Welcome to the OASIS World!"}
-  )
+    # Delete the old database
+    if os.path.exists(db_path):
+        os.remove(db_path)
 
-  env_actions = EnvAction(
-    activate_agents=list(range(10)),  # activate the first 10 agents
-    intervention=[action]
-  )
+    # Make the environment
+    env = oasis.make(
+        agent_graph=agent_graph,
+        platform=oasis.DefaultPlatformType.REDDIT,
+        database_path=db_path,
+    )
 
-  # Apply interventions to the environment, refresh the recommendation system, and LLM agent perform actions
-  await env.step(env_actions)
+    # Run the environment
+    await env.reset()
 
-  # Close the environment
-  await env.close()
+    actions_1 = {}
+    actions_1[env.agent_graph.get_agent(0)] = [
+        ManualAction(action_type=ActionType.CREATE_POST,
+                     action_args={"content": "Hello, world!"}),
+        ManualAction(action_type=ActionType.CREATE_COMMENT,
+                     action_args={
+                         "post_id": "1",
+                         "content": "Welcome to the OASIS World!"
+                     })
+    ]
+    actions_1[env.agent_graph.get_agent(1)] = ManualAction(
+        action_type=ActionType.CREATE_COMMENT,
+        action_args={
+            "post_id": "1",
+            "content": "I like the OASIS world."
+        })
+    await env.step(actions_1)
+
+    actions_2 = {
+        agent: LLMAction()
+        for _, agent in env.agent_graph.get_agents()
+    }
+
+    # Perform the actions
+    await env.step(actions_2)
+
+    # Close the environment
+    await env.close()
+
 
 if __name__ == "__main__":
-  asyncio.run(main())
+    asyncio.run(main())
 ```
 
 <br>
@@ -210,14 +244,15 @@ To discover how to create profiles for large-scale users, as well as how to visu
 > We welcome community contributions! Join us in building these exciting features.
 
 - [Support Multi Modal Platform](https://github.com/camel-ai/oasis/issues/47)
-- [Connect to the Real World](https://github.com/camel-ai/oasis/issues/79)
 
 <!-- - Public release of our dataset on Hugging Face (November 05, 2024) -->
 
 ### Latest Updates
 
-📢 Refactor into the OASIS environment, publish camel-oasis on PyPI, and release the documentation. - 📆 April 24, 2025
+📢 Support Interview Action for asking agents specific questions and getting answers. - 📆 June 2, 2025
 
+- Support customization of each agent's models, tools, and prompts; refactor the interface to follow the PettingZoo style. - 📆 May 22, 2025
+- Refactor into the OASIS environment, publish camel-oasis on PyPI, and release the documentation. - 📆 April 24, 2025
 - Support OPENAI Embedding model for Twhin-Bert Recommendation System. - 📆 March 25, 2025
 - Updated social media links and QR codes in the README! Join OASIS & CAMEL on WeChat, X, Reddit, and Discord. - 📆 March 24, 2025
 - Add multi-threading support to speed up LLM inference by 13x - 📆 March 4, 2025

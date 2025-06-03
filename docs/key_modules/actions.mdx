@@ -1,30 +1,84 @@
 ---
 title: 'Actions'
-description: 'Comprehensive guide to all available actions in the OASIS simulation environment'
+description: 'This section provides detailed information about all available actions and how to configure them in your simulation environment, including the available action types, the predefined `ManualAction` and llm-based `LLMAction`.'
 ---
 
-# OASIS Actions
 
-Actions are the core interaction mechanisms available to agents in an OASIS simulation. This guide provides detailed information about all available actions and how to configure them in your simulation environment.
+## Actions for `env.step`
 
-## Available `ActionType`
+The `actions` parameter passed to the OASIS environment's `step` method should be a dictionary that specifies what each agent should do at a given timestep, as shown below:
 
-When configuring your OASIS environment, you can specify which actions are available to agents using the `ActionType` enum. These actions determine what your simulated users can do within the platform.
+```python
+dict[SocialAgent, Union[List[Union[ManualAction, LLMAction]],Union[ManualAction, LLMAction]]]
+```
+
+- The **key** is a `SocialAgent`.
+- The **value** is either:
+  - A single predefined `ManualAction` or an LLM-generated `LLMAction`, or
+  - A list of `ManualAction` or `LLMAction` instances, allowing the same agent to perform multiple actions within one timestep.
+
+
+## `LLMAction`
+You can use `LLMAction()` to indicate that an agent should perform actions based on the output of an LLM. These actions can include both social actions and external tools, as defined during initialization.
+
+An example where all agents use `LLMAction()` to perform actions:
+
+```python
+from oasis import LLMAction
+
+all_llm_actions = {
+    agent: LLMAction()
+    for _, agent in env.agent_graph.get_agents()
+}
+
+await env.step(all_llm_actions)
+```
+
+## `ManualAction`
+
+You can use `ManualAction()` to indicate that an agent should perform actions based on the predefined `ActionType` and corresponding arguments.
+
+-  The data structure of `ManualAction`:
+
+```python
+@dataclass
+class ManualAction:
+    r"""Some manual predefined social platform actions that need to be
+    executed by certain agents.
+
+    Args:
+        agent_id: The ID of the agent that will perform the action.
+        action: The action to perform.
+        args: The arguments to pass to the action. For details of each args in
+            each action, please refer to
+            `https://github.com/camel-ai/oasis/blob/main/oasis/social_agent/agent_action.py`.
+    """
+    action_type: ActionType
+    action_args: Dict[str, Any]
+
+    def init(self, action_type, action_args):
+        self.action_type = action_type
+        self.action_args = action_args
+```
+- A example of using `ManualAction()`:
 
 ```python
 from oasis import ActionType
 
-available_actions = [
-    ActionType.CREATE_POST,
-    ActionType.LIKE_POST,
-    ActionType.REPOST,
-    ActionType.FOLLOW,
-    ActionType.DO_NOTHING,
-    # Add more as needed
-]
-```
+actions = {}
 
-## Action Types Reference
+manual_action = ManualAction(
+    action=ActionType.CREATE_POST,
+    args={"content": "Hello, OASIS world!"}
+)
+
+actions[env.agent_graph.get_agents(0)] = manual_action
+
+await env.step(actions)
+```
+For more details about the `ActionType` and corresponding arguments, please refer to the [ActionType](#actiontype) section.
+
+## `ActionType`
 
 OASIS provides a comprehensive set of actions that simulate real social media behaviors:
 
@@ -53,195 +107,196 @@ OASIS provides a comprehensive set of actions that simulate real social media be
 | `REFRESH` | Refresh the timeline to get recommended posts |
 | `DO_NOTHING` | Perform no action (pass the turn) |
 | `PURCHASE_PRODUCT` | Purchase a product (for e-commerce simulations) |
+| `INTERVIEW` | Interview a user and record the interview result in the database |
 
+### Platform-Specific Actions
 
-## `SingleAction`
-`SingleAction` is used to predefine specific actions for interventions in the environment. It includes the agent ID to specify which agent performs the action, the action type, and the corresponding arguments.
-Different actions require different parameters when used.
+OASIS provides platform-specific action sets that can be accessed using class methods:
 
+#### Reddit Actions
 ```python
-@dataclass
-class SingleAction:
-    agent_id: int
-    action: ActionType
-    args: Dict[str, Any]
-    r"""Some predefined social platform actions that need to be executed by
-    certain agents.
-
-    Args:
-        agent_id: The ID of the agent that will perform the action.
-        action: The action to perform.
-        args: The arguments to pass to the action.
-    """
+# Get all Reddit-specific actions, return a list of ActionType
+available_actions = ActionType.get_default_reddit_actions()
 ```
-Here are the parameters for each action type:
 
-### CREATE_POST
+The Reddit action set includes:
+- `LIKE_POST`
+- `DISLIKE_POST`
+- `CREATE_POST`
+- `CREATE_COMMENT`
+- `LIKE_COMMENT`
+- `DISLIKE_COMMENT`
+- `SEARCH_POSTS`
+- `SEARCH_USER`
+- `TREND`
+- `REFRESH`
+- `DO_NOTHING`
+- `FOLLOW`
+- `MUTE`
+
+#### Twitter Actions
 ```python
-action = SingleAction(
-    agent_id=0,
+# Get all Reddit-specific actions, return a list of ActionType
+available_actions = ActionType.get_default_twitter_actions()
+```
+
+The Twitter action set includes:
+- `CREATE_POST`
+- `LIKE_POST`
+- `REPOST`
+- `FOLLOW`
+- `DO_NOTHING`
+- `QUOTE_POST`
+
+## Arguments for `ManualAction`
+
+#### CREATE_POST
+```python
+action = ManualAction(
     action=ActionType.CREATE_POST,
     args={"content": "Hello, OASIS world!"}
 )
 ```
 
-### LIKE_POST
+#### LIKE_POST
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.LIKE_POST,
     args={"post_id": 123}
 )
 ```
 
-### UNLIKE_POST
+#### UNLIKE_POST
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.UNLIKE_POST,
     args={"post_id": 123}
 )
 ```
 
-### DISLIKE_POST
+#### DISLIKE_POST
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.DISLIKE_POST,
     args={"post_id": 123}
 )
 ```
 
-### UNDO_DISLIKE_POST
+#### UNDO_DISLIKE_POST
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.UNDO_DISLIKE_POST,
     args={"post_id": 123}
 )
 ```
 
-### REPOST
+#### REPOST
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.REPOST,
     args={"post_id": 123}
 )
 ```
 
-### QUOTE_POST
+#### QUOTE_POST
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.QUOTE_POST,
     args={"post_id": 123, "quote_content": "This is amazing content!"}
 )
 ```
 
-### CREATE_COMMENT
+#### CREATE_COMMENT
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.CREATE_COMMENT,
     args={"post_id": 123, "content": "Great post! I completely agree."}
 )
 ```
 
-### LIKE_COMMENT
+#### LIKE_COMMENT
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.LIKE_COMMENT,
     args={"comment_id": 456}
 )
 ```
 
-### UNLIKE_COMMENT
+#### UNLIKE_COMMENT
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.UNLIKE_COMMENT,
     args={"comment_id": 456}
 )
 ```
 
-### DISLIKE_COMMENT
+#### DISLIKE_COMMENT
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.DISLIKE_COMMENT,
     args={"comment_id": 456}
 )
 ```
 
-### UNDO_DISLIKE_COMMENT
+#### UNDO_DISLIKE_COMMENT
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.UNDO_DISLIKE_COMMENT,
     args={"comment_id": 456}
 )
 ```
 
-### FOLLOW
+#### FOLLOW
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.FOLLOW,
     args={"followee_id": 789}
 )
 ```
 
-### UNFOLLOW
+#### UNFOLLOW
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.UNFOLLOW,
     args={"followee_id": 789}
 )
 ```
 
-### MUTE
+#### MUTE
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.MUTE,
     args={"mutee_id": 789}
 )
 ```
 
-### UNMUTE
+#### UNMUTE
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.UNMUTE,
     args={"mutee_id": 789}
 )
 ```
 
-### SEARCH_POSTS
+#### SEARCH_POSTS
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.SEARCH_POSTS,
     args={"query": "artificial intelligence"}
 )
 ```
 
-### SEARCH_USER
+#### SEARCH_USER
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.SEARCH_USER,
     args={"query": "john"}
 )
 ```
 
-### TREND
+#### TREND
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.TREND,
     args={}
 )
@@ -249,81 +304,32 @@ action = SingleAction(
 
 ### REFRESH
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.REFRESH,
     args={}
 )
 ```
 
-### DO_NOTHING
+#### DO_NOTHING
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.DO_NOTHING,
     args={}
 )
 ```
 
-### PURCHASE_PRODUCT
+#### PURCHASE_PRODUCT
 ```python
-action = SingleAction(
-    agent_id=0,
+action = ManualAction(
     action=ActionType.PURCHASE_PRODUCT,
     args={"product_name": "Premium Subscription", "purchase_num": 1}
 )
 ```
 
-## `EnvAction`
-
-To step the environment, `EnvStep` contains all necessary information, including a list of `SingleAction`s and a list of active agent IDs. When the environment executes `step`, the `SingleAction`s are performed, the recommendation system refreshes its cache, and the active agents retrieve posts with comments from the cache to perform actions via the LLM.
+#### INTERVIEW
 ```python
-@dataclass
-class EnvAction:
-    activate_agents: List[int] | None = None
-    intervention: List[SingleAction] | None = None
-    r"""
-    Represents all actions to be performed in a single timestep within the Oasis environment.
-
-    Args:
-        activate_agents: A list of agent IDs to be activated during this timestep.
-        intervention: A list of predefined `SingleAction`s to be executed as interventions.
-    """
-```
-Here is an example demonstrating how to use `SingleAction`, `EnvAction`, and the environment's `step` method.
-
-```python
-from oasis import EnvAction, SingleAction, ActionType
-
-# Create an action for a specific agent
-action = SingleAction(
-    agent_id=0,
-    action=ActionType.CREATE_POST,
-    args={"content": "Hello, OASIS world!"}
+action = ManualAction(
+    action=ActionType.INTERVIEW,
+    args={"prompt": "What is your name?"}
 )
-
-# Create an environment action to activate agents and include interventions
-env_action = EnvAction(
-    activate_agents=[0, 1, 2, 3],  # List of agent IDs to activate
-    intervention=[action]  # List of interventions
-)
-
-# Step the environment with the action
-await env.step(env_action)
-```
-
-### Activating Agents
-
-You can control which agents are active during each simulation step:
-
-- Activate specific agents: `activate_agents=[1, 3, 5, 7, 9]`
-- Activate all agents: `EnvAction()` (empty action with no parameters)
-
-### Empty Action
-
-To simply advance the simulation with all agents active and no interventions:
-
-```python
-empty_action = EnvAction()  # Activate all agents with no intervention
-await env.step(empty_action)
 ```
