@@ -42,6 +42,35 @@ class ActionType(Enum):
     PURCHASE_PRODUCT = "purchase_product"
     INTERVIEW = "interview"
 
+    @classmethod
+    def get_default_twitter_actions(cls):
+        return [
+            cls.CREATE_POST,
+            cls.LIKE_POST,
+            cls.REPOST,
+            cls.FOLLOW,
+            cls.DO_NOTHING,
+            cls.QUOTE_POST,
+        ]
+
+    @classmethod
+    def get_default_reddit_actions(cls):
+        return [
+            cls.LIKE_POST,
+            cls.DISLIKE_POST,
+            cls.CREATE_POST,
+            cls.CREATE_COMMENT,
+            cls.LIKE_COMMENT,
+            cls.DISLIKE_COMMENT,
+            cls.SEARCH_POSTS,
+            cls.SEARCH_USER,
+            cls.TREND,
+            cls.REFRESH,
+            cls.DO_NOTHING,
+            cls.FOLLOW,
+            cls.MUTE,
+        ]
+
 
 class RecsysType(Enum):
     TWITTER = "twitter"
