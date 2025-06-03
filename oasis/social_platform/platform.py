@@ -1457,7 +1457,7 @@ class Platform:
 
             # insert the user as a member of the group
             join_query = """
-                INSERT INTO group_members (group_id, agent_id, joined_at) 
+                INSERT INTO group_members (group_id, agent_id, joined_at)
                 VALUES (?, ?, ?)
             """
             self.pl_utils._execute_db_command(
@@ -1481,7 +1481,7 @@ class Platform:
             user_id = agent_id
 
             # check if group exists
-            check_group_query = """SELECT * FROM "group" 
+            check_group_query = """SELECT * FROM "group"
                 WHERE group_id = ?"""
             self.pl_utils._execute_db_command(check_group_query, (group_id, ))
             if not self.db_cursor.fetchone():
@@ -1501,7 +1501,7 @@ class Platform:
 
             # join the group
             join_query = """
-                INSERT INTO group_members 
+                INSERT INTO group_members
                 (group_id, agent_id, joined_at) VALUES (?, ?, ?)
             """
             self.pl_utils._execute_db_command(

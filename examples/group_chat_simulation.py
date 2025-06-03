@@ -18,12 +18,8 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType
 
 import oasis
-from oasis import (
-    ActionType,
-    generate_twitter_agent_graph,
-    ManualAction,
-    LLMAction,
-)
+from oasis import (ActionType, LLMAction, ManualAction,
+                   generate_twitter_agent_graph)
 
 
 async def main():
@@ -70,14 +66,13 @@ async def main():
     # Run the environment
     await env.reset()
 
-    group_result = await env.platform.create_group(1, "AI Discussion Group")
+    group_result = await env.platform.create_group(1, "AI Group")
     group_id = group_result["group_id"]
 
     actions_1 = {}
 
     actions_1[env.agent_graph.get_agent(0)] = ManualAction(
-        action_type=ActionType.JOIN_GROUP, action_args={"group_id": group_id}
-    )
+        action_type=ActionType.JOIN_GROUP, action_args={"group_id": group_id})
     await env.step(actions_1)
 
     actions_2 = {
@@ -92,7 +87,10 @@ async def main():
 
     actions_3[env.agent_graph.get_agent(1)] = ManualAction(
         action_type=ActionType.SEND_TO_GROUP,
-        action_args={"group_id": group_id, "message": "DeepSeek is amazing!"},
+        action_args={
+            "group_id": group_id,
+            "message": "DeepSeek is amazing!"
+        },
     )
     await env.step(actions_3)
 
@@ -104,6 +102,7 @@ async def main():
 
     # Close the environment
     await env.close()
+
 
 if __name__ == "__main__":
     asyncio.run(main())
