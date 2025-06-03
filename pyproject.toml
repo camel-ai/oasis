@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "camel-oasis"
-version = "0.2.0"
+version = "0.2.1"
 description = "Open Agents Social Interaction Simulations on a Large Scale"
 authors = ["CAMEL-AI.org"]
 readme = "README.md"
