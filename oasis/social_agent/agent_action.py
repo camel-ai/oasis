@@ -670,7 +670,6 @@ class SocialAction:
         """
         return await self.perform_action(prompt, ActionType.INTERVIEW.value)
 
-
     async def create_group(self, group_name: str):
         """
         Creates a new group on the platform.
@@ -682,7 +681,8 @@ class SocialAction:
             dict: Platform response indicating success or failure,
             e.g.{"success": True, "group_id": 1}
         """
-        return await self.perform_action(group_name, ActionType.CREATE_GROUP.value)
+        return await self.perform_action(group_name,
+                                         ActionType.CREATE_GROUP.value)
 
     async def join_group(self, group_id: int):
         """
@@ -708,7 +708,8 @@ class SocialAction:
             dict: Platform response indicating success or failure, e.g.
             {"success": True}
         """
-        return await self.perform_action(group_id, ActionType.LEAVE_GROUP.value)
+        return await self.perform_action(group_id,
+                                         ActionType.LEAVE_GROUP.value)
 
     async def send_to_group(self, group_id: int, message: str):
         """
@@ -722,14 +723,12 @@ class SocialAction:
             dict: Platform response indicating success or failure, e.g.
              {"success": True, "message_id": 123}
         """
-        return await self.perform_action(
-            (group_id, message), ActionType.SEND_TO_GROUP.value
-        )
+        return await self.perform_action((group_id, message),
+                                         ActionType.SEND_TO_GROUP.value)
 
     async def listen_from_group(self):
         """
         Listen messages from groups
         """
-        return await self.perform_action(
-            self.agent_id, ActionType.LISTEN_FROM_GROUP.value
-        )
+        return await self.perform_action(self.agent_id,
+                                         ActionType.LISTEN_FROM_GROUP.value)

@@ -32,7 +32,8 @@ class SocialEnvironment(Environment):
     followers_env_template = Template("I have $num_followers followers.")
     follows_env_template = Template("I have $num_follows follows.")
 
-    posts_env_template = Template("After refreshing, you see some posts $posts")
+    posts_env_template = Template(
+        "After refreshing, you see some posts $posts")
 
     groups_env_template = Template(
         "And there are many group chat channels $all_groups\n"
@@ -42,14 +43,12 @@ class SocialEnvironment(Environment):
         "leave the groups you already in, send messages to the group "
         "you already in.\n"
         "You must make sure you can only send messages to the group you "
-        "are already in"
-    )
+        "are already in")
     env_template = Template(
         "$groups_env\n"
         "$posts_env\npick one you want to perform action that best "
         "reflects your current inclination based on your profile and "
-        "posts content. Do not limit your action in just `like` to like posts"
-    )
+        "posts content. Do not limit your action in just `like` to like posts")
 
     def __init__(self, action: SocialAction):
         self.action = action
@@ -93,12 +92,10 @@ class SocialEnvironment(Environment):
         include_followers: bool = False,
         include_follows: bool = False,
     ) -> str:
-        followers_env = (
-            await self.get_followers_env() if include_follows else "No followers."
-        )
-        follows_env = (
-            await self.get_follows_env() if include_followers else "No follows."
-        )
+        followers_env = (await self.get_followers_env()
+                         if include_follows else "No followers.")
+        follows_env = (await self.get_follows_env()
+                       if include_followers else "No follows.")
         posts_env = await self.get_posts_env() if include_posts else ""
 
         return self.env_template.substitute(
