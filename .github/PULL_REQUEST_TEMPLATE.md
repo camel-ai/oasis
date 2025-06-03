@@ -6,7 +6,7 @@ Describe your changes in detail (optional if the linked issue already contains a
 
 Go over all the following points, and put an `x` in all the boxes that apply.
 
-- [ ] I have read the [CONTRIBUTION](https://github.com/camel-ai/camel/blob/master/CONTRIBUTING.md) guide (**required**)
+- [ ] I have read the [CONTRIBUTION](https://github.com/camel-ai/oasis/blob/master/CONTRIBUTING.md) guide (**required**)
 - [ ] I have linked this PR to an issue using the Development section on the right sidebar or by adding `Fixes #issue-number` in the PR description (**required**)
 - [ ] I have checked if any dependencies need to be added or updated in `pyproject.toml`
 - [ ] I have updated the tests accordingly (*required for a bug fix or a new feature*)
