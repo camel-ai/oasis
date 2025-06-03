@@ -18,40 +18,40 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType
 
 import oasis
-from oasis import ActionType, EnvAction, SingleAction
+from oasis import (
+    ActionType,
+    generate_twitter_agent_graph,
+    ManualAction,
+    LLMAction,
+)
 
 
 async def main():
-    # NOTE: You need to deploy the vllm server first
-    vllm_model_1 = ModelFactory.create(
+    openai_model = ModelFactory.create(
         model_platform=ModelPlatformType.DEEPSEEK,
         model_type="deepseek-chat",
         url="https://api.deepseek.com/v1",
-        api_key="ak",
     )
-    vllm_model_2 = ModelFactory.create(
-        model_platform=ModelPlatformType.DEEPSEEK,
-        model_type="deepseek-chat",
-        url="https://api.deepseek.com/v1",
-        api_key="ak"
-    )
-    # Define the models for agents. Agents will select models based on
-    # pre-defined scheduling strategies
-    models = [vllm_model_1, vllm_model_2]
 
     # Define the available actions for the agents
     available_actions = [
         ActionType.JOIN_GROUP,
-        ActionType.CREATE_GROUP,
-        ActionType.SEND_TO_GROUP,
         ActionType.LEAVE_GROUP,
-        ActionType.CREATE_POST,
+        ActionType.LISTEN_FROM_GROUP,
+        ActionType.SEND_TO_GROUP,
         ActionType.LIKE_POST,
+        ActionType.UNLIKE_POST,
         ActionType.REPOST,
-        ActionType.FOLLOW,
-        ActionType.DO_NOTHING,
         ActionType.QUOTE_POST,
     ]
+
+    agent_graph = await generate_twitter_agent_graph(
+        profile_path=(
+            "data/twitter_dataset/anonymous_topic_200_1h/False_Business_0.csv"
+        ),
+        model=openai_model,
+        available_actions=available_actions,
+    )
 
     # Define the path to the database
     db_path = "./data/twitter_simulation.db"
@@ -62,13 +62,9 @@ async def main():
 
     # Make the environment
     env = oasis.make(
+        agent_graph=agent_graph,
         platform=oasis.DefaultPlatformType.TWITTER,
         database_path=db_path,
-        agent_profile_path=(
-            "data/twitter_dataset/anonymous_topic_200_1h/False_Business_0.csv"
-        ),
-        agent_models=models,
-        available_actions=available_actions,
     )
 
     # Run the environment
@@ -77,39 +73,37 @@ async def main():
     group_result = await env.platform.create_group(1, "AI Discussion Group")
     group_id = group_result["group_id"]
 
-    action_1 = SingleAction(
-        agent_id=0, action=ActionType.JOIN_GROUP, args={"group_id": group_id}
+    actions_1 = {}
+
+    actions_1[env.agent_graph.get_agent(0)] = ManualAction(
+        action_type=ActionType.JOIN_GROUP, action_args={"group_id": group_id}
     )
-    env_actions_1 = EnvAction(
+    await env.step(actions_1)
+
+    actions_2 = {
+        agent: LLMAction()
         # Activate 5 agents with id 1, 3, 5, 7, 9
-        activate_agents=[1, 3, 5, 7, 9],
-        intervention=[action_1],
+        for _, agent in env.agent_graph.get_agents([1, 3, 5, 7, 9])
+    }
+
+    await env.step(actions_2)
+
+    actions_3 = {}
+
+    actions_3[env.agent_graph.get_agent(1)] = ManualAction(
+        action_type=ActionType.SEND_TO_GROUP,
+        action_args={"group_id": group_id, "message": "DeepSeek is amazing!"},
     )
+    await env.step(actions_3)
 
-    action_2 = SingleAction(
-        agent_id=1,
-        action=ActionType.SEND_TO_GROUP,
-        args={"group_id": group_id, "message": "DeepSeek is amazing!"},
-    )
-    env_actions_2 = EnvAction(activate_agents=[1, 3, 5, 7, 9], intervention=[action_2])
-
-    empty_action = EnvAction()  # Means activate all agents and no intervention
-
-    all_env_actions = [
-        env_actions_1,
-        env_actions_2,
-        empty_action,
-    ]
-
-    # Simulate 3 timesteps
-    for i in range(3):
-        env_actions = all_env_actions[i]
-        # Perform the actions
-        await env.step(env_actions)
+    actions_4 = {
+        agent: LLMAction()
+        for _, agent in env.agent_graph.get_agents()
+    }
+    await env.step(actions_4)
 
     # Close the environment
     await env.close()
-
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -39,9 +39,10 @@ class SocialEnvironment(Environment):
         "And You are already in some groups $joined_groups\n"
         "You receive some messages from them $messages\n"
         "You can join the groups you are interested, "
-        "leave the groups you already in, send messages to the group"
+        "leave the groups you already in, send messages to the group "
         "you already in.\n"
-        "You can only send messages to the group you are already in"
+        "You must make sure you can only send messages to the group you "
+        "are already in"
     )
     env_template = Template(
         "$groups_env\n"
