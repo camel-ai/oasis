@@ -39,7 +39,7 @@ async def main():
     models = [vllm_model_1, vllm_model_2]
 
     # Define the available actions for the agents
-    available_actions = ActionType.get_twitter_actions()
+    available_actions = ActionType.get_default_twitter_actions()
 
     agent_graph = await generate_twitter_agent_graph(
         profile_path="./data/reddit/user_data_36.json",

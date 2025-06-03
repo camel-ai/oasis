@@ -42,7 +42,7 @@ class ActionType(Enum):
     PURCHASE_PRODUCT = "purchase_product"
 
     @classmethod
-    def get_twitter_actions(cls):
+    def get_default_twitter_actions(cls):
         return [
             cls.CREATE_POST,
             cls.LIKE_POST,
@@ -53,7 +53,7 @@ class ActionType(Enum):
         ]
 
     @classmethod
-    def get_reddit_actions(cls):
+    def get_default_reddit_actions(cls):
         return [
             cls.LIKE_POST,
             cls.DISLIKE_POST,

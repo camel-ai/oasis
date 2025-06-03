@@ -30,7 +30,7 @@ async def main():
     )
 
     # Define the available actions for the agents
-    available_actions = ActionType.get_reddit_actions()
+    available_actions = ActionType.get_default_reddit_actions()
 
     agent_graph = await generate_reddit_agent_graph(
         profile_path="./data/reddit/user_data_36.json",

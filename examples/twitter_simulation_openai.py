@@ -29,7 +29,7 @@ async def main():
     )
 
     # Define the available actions for the agents
-    available_actions = ActionType.get_twitter_actions()
+    available_actions = ActionType.get_default_twitter_actions()
 
     agent_graph = await generate_twitter_agent_graph(
         profile_path=("data/twitter_dataset/anonymous_topic_200_1h/"
