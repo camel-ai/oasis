@@ -22,7 +22,7 @@ import pandas as pd
 import tqdm
 from camel.memories import MemoryRecord
 from camel.messages import BaseMessage
-from camel.models import BaseModelBackend
+from camel.models import BaseModelBackend, ModelManager
 from camel.types import OpenAIBackendRole
 
 from oasis.social_agent import AgentGraph, SocialAgent
@@ -435,7 +435,8 @@ async def generate_reddit_agents(
     agent_user_id_mapping: dict[int, int] | None = None,
     follow_post_agent: bool = False,
     mute_post_agent: bool = False,
-    model: BaseModelBackend = None,
+    model: Optional[Union[BaseModelBackend, List[BaseModelBackend],
+                          ModelManager]] = None,
     available_actions: list[ActionType] = None,
 ) -> AgentGraph:
     if agent_user_id_mapping is None:
@@ -565,7 +566,8 @@ async def generate_custom_agents(
 
 async def generate_reddit_agent_graph(
     profile_path: str,
-    model: Optional[Union[BaseModelBackend, List[BaseModelBackend]]] = None,
+    model: Optional[Union[BaseModelBackend, List[BaseModelBackend],
+                          ModelManager]] = None,
     available_actions: list[ActionType] = None,
 ) -> AgentGraph:
     agent_graph = AgentGraph()
@@ -611,7 +613,8 @@ async def generate_reddit_agent_graph(
 
 async def generate_twitter_agent_graph(
     profile_path: str,
-    model: Optional[Union[BaseModelBackend, List[BaseModelBackend]]] = None,
+    model: Optional[Union[BaseModelBackend, List[BaseModelBackend],
+                          ModelManager]] = None,
     available_actions: list[ActionType] = None,
 ) -> AgentGraph:
     agent_info = pd.read_csv(profile_path)
