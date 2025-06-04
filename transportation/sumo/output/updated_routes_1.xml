@@ -1,0 +1,42 @@
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    
+    <vType id="car" vClass="passenger" length="5.0" minGap="2.5" maxSpeed="50.0" accel="2.6" decel="4.5" sigma="0.5" color="0,0,255" />
+    <vType id="bus" vClass="bus" length="12.0" minGap="3.0" maxSpeed="30.0" accel="1.2" decel="3.0" sigma="0.3" color="255,0,0" />
+    <vType id="train" vClass="rail" length="40.0" minGap="5.0" maxSpeed="70.0" accel="0.8" decel="0.8" sigma="0.0" color="0,255,0" />
+    
+    
+    <route id="route_1" edges="edge_0 edge_1 edge_2 edge_3 edge_4" />
+    <route id="route_2" edges="edge_5 edge_6 edge_7 edge_8 edge_9" />
+    <route id="route_3" edges="edge_8 edge_7 edge_6 edge_5 edge_0" />
+    <route id="route_4" edges="edge_4 edge_3 edge_2 edge_1 edge_5" />
+    <route id="route_5" edges="edge_0 edge_5 edge_6 edge_7 edge_8" />
+    
+    
+    <route id="bus_route_1" edges="edge_0 edge_1 edge_2 edge_3 edge_4 edge_9 edge_8" />
+    <route id="bus_route_2" edges="edge_8 edge_9 edge_4 edge_3 edge_2 edge_1 edge_0" />
+    
+    
+    <route id="train_route_1" edges="edge_0 edge_5 edge_8" />
+    <route id="train_route_2" edges="edge_8 edge_5 edge_0" />
+    
+    
+    <vehicle id="car_0" type="car" route="route_1" depart="0.00" />
+    <vehicle id="car_1" type="car" route="route_2" depart="5.00" />
+    <vehicle id="car_2" type="car" route="route_3" depart="10.00" />
+    <vehicle id="car_3" type="car" route="route_4" depart="15.00" />
+    <vehicle id="car_4" type="car" route="route_5" depart="20.00" />
+    <vehicle id="car_5" type="car" route="route_1" depart="25.00" />
+    <vehicle id="car_6" type="car" route="route_2" depart="30.00" />
+    <vehicle id="car_7" type="car" route="route_3" depart="35.00" />
+    <vehicle id="car_8" type="car" route="route_4" depart="40.00" />
+    <vehicle id="car_9" type="car" route="route_5" depart="45.00" />
+    
+    
+    <vehicle id="bus_0" type="bus" route="bus_route_1" depart="0.00" line="line_0" />
+    <vehicle id="bus_1" type="bus" route="bus_route_2" depart="20.00" line="line_1" />
+    <vehicle id="bus_2" type="bus" route="bus_route_1" depart="40.00" line="line_0" />
+    
+    
+    <vehicle id="train_0" type="train" route="train_route_1" depart="0.00" line="line_10" />
+    <vehicle id="train_1" type="train" route="train_route_2" depart="30.00" line="line_11" />
+</routes>

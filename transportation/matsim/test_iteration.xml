@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
+<config>
+    <!-- Basic simulation settings -->
+    <module name="global">
+        <param name="randomSeed" value="4711" />
+        <param name="coordinateSystem" value="Atlantis" />
+    </module>
+
+    <!-- Network, Plans, and Facilities input files -->
+    <module name="network">
+        <param name="inputNetworkFile" value="example_network.xml" />
+    </module>
+
+    <module name="plans">
+        <param name="inputPlansFile" value="example_plans.xml" />
+    </module>
+
+    <!-- Controller settings: Single iteration for testing -->
+    <module name="controler">
+        <param name="outputDirectory" value="./test_output" />
+        <param name="firstIteration" value="0" />
+        <param name="lastIteration" value="0" /> <!-- Just one iteration for testing -->
+        <param name="writeEventsInterval" value="1" />
+        <param name="writePlansInterval" value="1" />
+        <param name="dumpDataAtEnd" value="true" />
+        <param name="overwriteFiles" value="deleteDirectoryIfExists" />
+        <param name="createGraphs" value="true" />
+    </module>
+
+    <!-- Simulation settings -->
+    <module name="qsim">
+        <param name="startTime" value="00:00:00" />
+        <param name="endTime" value="30:00:00" />
+        <param name="flowCapacityFactor" value="1.0" />
+        <param name="storageCapacityFactor" value="1.0" />
+        <param name="numberOfThreads" value="2" /> <!-- Reduced for testing -->
+        <param name="snapshotStyle" value="queue" />
+        <param name="snapshotPeriod" value="00:00:30" /> <!-- Take snapshots frequently for testing -->
+        <param name="timeStepSize" value="00:00:01" />
+        <param name="removeStuckVehicles" value="false" />
+    </module>
+
+    <!-- Scoring settings -->
+    <module name="planCalcScore">
+        <!-- Base scoring parameters -->
+        <param name="learningRate" value="1.0" />
+        <param name="brainExpBeta" value="2.0" />
+        <param name="lateArrival" value="-18.0" />
+        <param name="earlyDeparture" value="-0.0" />
+        <param name="performing" value="6.0" />
+        <param name="traveling" value="-6.0" />
+        <param name="waiting" value="-0.0" />
+        
+        <!-- Scoring parameters for activities -->
+        <parameterset type="activityParams">
+            <param name="activityType" value="home" />
+            <param name="typicalDuration" value="12:00:00" />
+            <param name="minimalDuration" value="08:00:00" />
+        </parameterset>
+        <parameterset type="activityParams">
+            <param name="activityType" value="work" />
+            <param name="typicalDuration" value="08:00:00" />
+            <param name="minimalDuration" value="06:00:00" />
+            <param name="openingTime" value="07:00:00" />
+            <param name="latestStartTime" value="09:00:00" />
+            <param name="earliestEndTime" value="16:00:00" />
+            <param name="closingTime" value="18:00:00" />
+        </parameterset>
+
+        <!-- Scoring parameters for traveling -->
+        <parameterset type="modeParams">
+            <param name="mode" value="car" />
+            <param name="marginalUtilityOfTraveling_util_hr" value="-6.0" />
+            <param name="monetaryDistanceRate" value="-0.0002" />
+        </parameterset>
+    </module>
+
+    <!-- No replanning strategies needed for a single iteration test -->
+    <module name="strategy">
+        <param name="maxAgentPlanMemorySize" value="1" />
+        <parameterset type="strategysettings">
+            <param name="strategyName" value="BestScore" />
+            <param name="weight" value="1.0" />
+        </parameterset>
+    </module>
+
+    <!-- Event handling for detailed output -->
+    <module name="events">
+        <param name="inputEventsFile" value="null" />
+        <param name="eventsFileFormat" value="xml" />
+    </module>
+
+    <!-- Routing information -->
+    <module name="routing">
+        <param name="routingRandomness" value="3.0" />
+        <param name="costConstantCar" value="-0.0" />
+        <param name="travelTimeCostCalculatorType" value="linearTravelTime" />
+    </module>
+</config>

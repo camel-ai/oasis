@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE network SYSTEM "http://www.matsim.org/files/dtd/network_v2.dtd">
+<network name="Example Network">
+    <nodes>
+        <!-- Define nodes (intersections) -->
+        <node id="1" x="0" y="0" />
+        <node id="2" x="1000" y="0" />
+        <node id="3" x="2000" y="0" />
+        <node id="4" x="0" y="1000" />
+        <node id="5" x="1000" y="1000" />
+        <node id="6" x="2000" y="1000" />
+        <node id="7" x="0" y="2000" />
+        <node id="8" x="1000" y="2000" />
+        <node id="9" x="2000" y="2000" />
+    </nodes>
+    <links>
+        <!-- Define links (roads) -->
+        <!-- Horizontal links -->
+        <link id="1_2" from="1" to="2" length="1000.0" capacity="2000.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="2_3" from="2" to="3" length="1000.0" capacity="2000.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="4_5" from="4" to="5" length="1000.0" capacity="1500.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="5_6" from="5" to="6" length="1000.0" capacity="1500.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="7_8" from="7" to="8" length="1000.0" capacity="2000.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="8_9" from="8" to="9" length="1000.0" capacity="2000.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        
+        <!-- Vertical links -->
+        <link id="1_4" from="1" to="4" length="1000.0" capacity="1500.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="4_7" from="4" to="7" length="1000.0" capacity="1500.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="2_5" from="2" to="5" length="1000.0" capacity="1000.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="5_8" from="5" to="8" length="1000.0" capacity="1000.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="3_6" from="3" to="6" length="1000.0" capacity="1500.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="6_9" from="6" to="9" length="1000.0" capacity="1500.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        
+        <!-- Reverse direction links -->
+        <link id="2_1" from="2" to="1" length="1000.0" capacity="2000.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="3_2" from="3" to="2" length="1000.0" capacity="2000.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="5_4" from="5" to="4" length="1000.0" capacity="1500.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="6_5" from="6" to="5" length="1000.0" capacity="1500.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="8_7" from="8" to="7" length="1000.0" capacity="2000.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="9_8" from="9" to="8" length="1000.0" capacity="2000.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="4_1" from="4" to="1" length="1000.0" capacity="1500.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="7_4" from="7" to="4" length="1000.0" capacity="1500.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="5_2" from="5" to="2" length="1000.0" capacity="1000.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="8_5" from="8" to="5" length="1000.0" capacity="1000.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="6_3" from="6" to="3" length="1000.0" capacity="1500.0" freespeed="13.9" permlanes="1.0" modes="car" />
+        <link id="9_6" from="9" to="6" length="1000.0" capacity="1500.0" freespeed="13.9" permlanes="1.0" modes="car" />
+    </links>
+</network>

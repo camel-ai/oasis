@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
+    <!-- Bus stops -->
+    <busStop id="stop_0" lane="edge_0_0" startPos="50" endPos="80" name="Downtown Stop"/>
+    <busStop id="stop_1" lane="edge_2_0" startPos="50" endPos="80" name="Central Park Stop"/>
+    <busStop id="stop_2" lane="edge_4_0" startPos="50" endPos="80" name="East End Stop"/>
+    <busStop id="stop_3" lane="edge_6_0" startPos="50" endPos="80" name="North Side Stop"/>
+    <busStop id="stop_4" lane="edge_8_0" startPos="50" endPos="80" name="University Stop"/>
+    
+    <!-- Train stations (using busStop element) -->
+    <busStop id="station_0" lane="edge_0_0" startPos="150" endPos="190" name="Downtown Station"/>
+    <busStop id="station_1" lane="edge_5_0" startPos="150" endPos="190" name="North Station"/>
+    <busStop id="station_2" lane="edge_8_0" startPos="150" endPos="190" name="University Station"/>
+</additional>

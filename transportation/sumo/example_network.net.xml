@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<net version="1.9" junctionCornerDetail="5" limitTurnSpeed="5.50" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+    <location netOffset="0.00,0.00" convBoundary="0.00,0.00,1000.00,1000.00" origBoundary="-10000000000.00,-10000000000.00,10000000000.00,10000000000.00" projParameter="!"/>
+    
+    <!-- Define nodes (junctions) -->
+    <junction id="node_0" type="priority" x="0.00" y="0.00" incLanes="" intLanes="" shape="0.00,0.00 0.00,3.20 3.20,0.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    <junction id="node_1" type="priority" x="200.00" y="0.00" incLanes="edge_0_0" intLanes="" shape="200.00,0.00 200.00,3.20 203.20,0.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    <junction id="node_2" type="priority" x="400.00" y="0.00" incLanes="edge_1_0" intLanes="" shape="400.00,0.00 400.00,3.20 403.20,0.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    <junction id="node_3" type="priority" x="600.00" y="0.00" incLanes="edge_2_0" intLanes="" shape="600.00,0.00 600.00,3.20 603.20,0.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    <junction id="node_4" type="priority" x="800.00" y="0.00" incLanes="edge_3_0" intLanes="" shape="800.00,0.00 800.00,3.20 803.20,0.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    <junction id="node_5" type="priority" x="1000.00" y="0.00" incLanes="edge_4_0" intLanes="" shape="1000.00,0.00 1000.00,3.20 1003.20,0.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    
+    <junction id="node_6" type="priority" x="0.00" y="200.00" incLanes="" intLanes="" shape="0.00,200.00 0.00,203.20 3.20,200.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    <junction id="node_7" type="priority" x="200.00" y="200.00" incLanes="edge_5_0" intLanes="" shape="200.00,200.00 200.00,203.20 203.20,200.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    <junction id="node_8" type="priority" x="400.00" y="200.00" incLanes="edge_6_0" intLanes="" shape="400.00,200.00 400.00,203.20 403.20,200.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    <junction id="node_9" type="priority" x="600.00" y="200.00" incLanes="edge_7_0" intLanes="" shape="600.00,200.00 600.00,203.20 603.20,200.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    <junction id="node_10" type="priority" x="800.00" y="200.00" incLanes="edge_8_0" intLanes="" shape="800.00,200.00 800.00,203.20 803.20,200.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    <junction id="node_11" type="priority" x="1000.00" y="200.00" incLanes="edge_9_0" intLanes="" shape="1000.00,200.00 1000.00,203.20 1003.20,200.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    
+    <!-- Define edges -->
+    <edge id="edge_0" from="node_0" to="node_1" priority="1" numLanes="1" speed="13.89">
+        <lane id="edge_0_0" index="0" speed="13.89" length="200.00" shape="0.00,1.60 200.00,1.60"/>
+    </edge>
+    <edge id="edge_1" from="node_1" to="node_2" priority="1" numLanes="1" speed="13.89">
+        <lane id="edge_1_0" index="0" speed="13.89" length="200.00" shape="200.00,1.60 400.00,1.60"/>
+    </edge>
+    <edge id="edge_2" from="node_2" to="node_3" priority="1" numLanes="1" speed="13.89">
+        <lane id="edge_2_0" index="0" speed="13.89" length="200.00" shape="400.00,1.60 600.00,1.60"/>
+    </edge>
+    <edge id="edge_3" from="node_3" to="node_4" priority="1" numLanes="1" speed="13.89">
+        <lane id="edge_3_0" index="0" speed="13.89" length="200.00" shape="600.00,1.60 800.00,1.60"/>
+    </edge>
+    <edge id="edge_4" from="node_4" to="node_5" priority="1" numLanes="1" speed="13.89">
+        <lane id="edge_4_0" index="0" speed="13.89" length="200.00" shape="800.00,1.60 1000.00,1.60"/>
+    </edge>
+    
+    <edge id="edge_5" from="node_6" to="node_7" priority="1" numLanes="1" speed="13.89">
+        <lane id="edge_5_0" index="0" speed="13.89" length="200.00" shape="0.00,201.60 200.00,201.60"/>
+    </edge>
+    <edge id="edge_6" from="node_7" to="node_8" priority="1" numLanes="1" speed="13.89">
+        <lane id="edge_6_0" index="0" speed="13.89" length="200.00" shape="200.00,201.60 400.00,201.60"/>
+    </edge>
+    <edge id="edge_7" from="node_8" to="node_9" priority="1" numLanes="1" speed="13.89">
+        <lane id="edge_7_0" index="0" speed="13.89" length="200.00" shape="400.00,201.60 600.00,201.60"/>
+    </edge>
+    <edge id="edge_8" from="node_9" to="node_10" priority="1" numLanes="1" speed="13.89">
+        <lane id="edge_8_0" index="0" speed="13.89" length="200.00" shape="600.00,201.60 800.00,201.60"/>
+    </edge>
+    <edge id="edge_9" from="node_10" to="node_11" priority="1" numLanes="1" speed="13.89">
+        <lane id="edge_9_0" index="0" speed="13.89" length="200.00" shape="800.00,201.60 1000.00,201.60"/>
+    </edge>
+    
+    <!-- Edge connections -->
+    <connection from="edge_0" to="edge_1" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="edge_1" to="edge_2" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="edge_2" to="edge_3" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="edge_3" to="edge_4" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="edge_5" to="edge_6" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="edge_6" to="edge_7" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="edge_7" to="edge_8" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="edge_8" to="edge_9" fromLane="0" toLane="0" dir="s" state="M"/>
+</net>
