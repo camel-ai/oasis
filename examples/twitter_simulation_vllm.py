@@ -14,7 +14,7 @@
 import asyncio
 import os
 
-from camel.models import ModelFactory
+from camel.models import ModelFactory, ModelManager
 from camel.types import ModelPlatformType
 
 import oasis
@@ -27,23 +27,30 @@ async def main():
     vllm_model_1 = ModelFactory.create(
         model_platform=ModelPlatformType.VLLM,
         model_type="qwen-2",
+        # TODO: change to your own vllm server url
         url="http://10.109.28.7:8080/v1",
     )
     vllm_model_2 = ModelFactory.create(
         model_platform=ModelPlatformType.VLLM,
         model_type="qwen-2",
+        # TODO: change to your own vllm server url
         url="http://10.109.27.103:8080/v1",
     )
+
     # Define the models for agents. Agents will select models based on
-    # pre-defined scheduling strategies
-    models = [vllm_model_1, vllm_model_2]
+    # round-robin strategy
+    shared_model_manager = ModelManager(
+        models=[vllm_model_1, vllm_model_2],
+        scheduling_strategy='round_robin',
+    )
 
     # Define the available actions for the agents
     available_actions = ActionType.get_default_twitter_actions()
 
     agent_graph = await generate_twitter_agent_graph(
-        profile_path="./data/reddit/user_data_36.json",
-        model=models,
+        profile_path=("data/twitter_dataset/anonymous_topic_200_1h/"
+                      "False_Business_0.csv"),
+        model=shared_model_manager,
         available_actions=available_actions,
     )
 

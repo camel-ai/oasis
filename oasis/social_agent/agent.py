@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any, Callable, List, Optional, Union
 
 from camel.agents import ChatAgent
 from camel.messages import BaseMessage
-from camel.models import BaseModelBackend
+from camel.models import BaseModelBackend, ModelManager
 from camel.prompts import TextPrompt
 from camel.toolkits import FunctionTool
 from camel.types import OpenAIBackendRole
@@ -61,7 +61,8 @@ class SocialAgent(ChatAgent):
                  user_info_template: TextPrompt | None = None,
                  channel: Channel | None = None,
                  model: Optional[Union[BaseModelBackend,
-                                       List[BaseModelBackend]]] = None,
+                                       List[BaseModelBackend],
+                                       ModelManager]] = None,
                  agent_graph: "AgentGraph" = None,
                  available_actions: list[ActionType] = None,
                  tools: Optional[List[Union[FunctionTool, Callable]]] = None,

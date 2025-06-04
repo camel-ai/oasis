@@ -16,7 +16,7 @@ The parameters for these two functions are as follows:
 | Parameter         | Type                                           | Required | Default      | Description |
 |------------------|------------------------------------------------|----------|--------------|-------------|
 | `profile_path`    | `str`                                          | ✔        | -            | Path to a CSV or JSON file storing agent profiles. For details on different profile formats, see [Agent Profile](https://docs.oasis.camel-ai.org/user_generation/user_generation) section. |
-| `model`           | [`BaseModelBackend`](https://docs.oasis.camel-ai.org/key_modules/models.html) or `List[BaseModelBackend]` | ✗       | gpt-4o-mini | The large language model(s) used by the all agents. |
+| `model`           | [`BaseModelBackend`](https://docs.camel-ai.org/key_modules/models.html)  or `List[BaseModelBackend]` or [`ModelManager`](https://docs.camel-ai.org/key_modules/models.html) | ✗       | gpt-4o-mini | The large language model(s) used by the all agents. |
 | `available_actions` | [`list[ActionType]`](https://docs.oasis.camel-ai.org/key_modules/actions.mdx) | ✗        | `None`       | List of allowed actions in the social platform for all agents. For more details, see **Actions - OASIS**. If set to `None`, all actions are enabled by default. |
 
 
