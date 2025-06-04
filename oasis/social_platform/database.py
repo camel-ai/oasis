@@ -28,6 +28,7 @@ FOLLOW_SCHEMA_SQL = "follow.sql"
 MUTE_SCHEMA_SQL = "mute.sql"
 LIKE_SCHEMA_SQL = "like.sql"
 DISLIKE_SCHEMA_SQL = "dislike.sql"
+REPORT_SCHEAM_SQL= "report.sql"
 TRACE_SCHEMA_SQL = "trace.sql"
 REC_SCHEMA_SQL = "rec.sql"
 COMMENT_SCHEMA_SQL = "comment.sql"
@@ -42,6 +43,7 @@ TABLE_NAMES = {
     "mute",
     "like",
     "dislike",
+    "report",
     "trace",
     "rec",
     "comment.sql",
@@ -116,6 +118,12 @@ def create_db(db_path: str | None = None):
         with open(dislike_sql_path, "r") as sql_file:
             dislike_sql_script = sql_file.read()
         cursor.executescript(dislike_sql_script)
+
+        # Read and execute the report table SQL script:
+        report_sql_path = osp.join(schema_dir, REPORT_SCHEAM_SQL)
+        with open(report_sql_path, "r") as sql_file:
+            report_sql_script = sql_file.read()
+        cursor.executescript(report_sql_script)
 
         # Read and execute the trace table SQL script:
         trace_sql_path = osp.join(schema_dir, TRACE_SCHEMA_SQL)

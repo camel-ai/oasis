@@ -1386,3 +1386,74 @@ class Platform:
             return {"success": True, "interview_id": interview_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+
+    async def report_post(self, agent_id: int, report_message: tuple):
+        post_id, report_reason = report_message
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = self.sandbox_clock.get_time_step()
+        try:
+            user_id = agent_id
+            post_type_result = self.pl_utils._get_post_type(post_id)
+            
+            # Check if a report record already exists
+            check_report_query = "SELECT * FROM report WHERE user_id = ? AND post_id = ?"
+            self.pl_utils._execute_db_command(check_report_query,
+                                              (user_id, post_id))
+            if self.db_cursor.fetchone():
+                # Like record already exists
+                return {
+                    "success": False,
+                    "error": "Like record already exists."
+                }
+
+            if not post_type_result:
+                return {"success": False, "error": "Post not found."}
+
+            # Update the number of reports in the post table
+            update_reports_query = (
+                "UPDATE post SET num_reports = num_reports + 1 WHERE "
+                "post_id = ?")
+            self.pl_utils._execute_db_command(update_reports_query, (post_id, ),
+                                              commit=True)
+            
+            # Add a report in the report table
+            report_insert_query = (
+                "INSERT INTO 'report' (post_id, user_id, report_reason, created_at) "
+                "VALUES (?, ?, ?, ?)")
+            self.pl_utils._execute_db_command(report_insert_query,
+                                              (post_id, user_id, report_reason, current_time),
+                                              commit=True)
+            
+            # Get the ID of the newly inserted report record
+            report_id = self.db_cursor.lastrowid
+
+            # Record the action in the trace table
+            action_info = {"post_id": post_id, "report_id": report_id}
+            self.pl_utils._record_trace(user_id, ActionType.REPORT_POST.value,
+                                        action_info, current_time)
+    
+            # Check if the number of reports exceeds the threshold
+            check_threshold_query = "SELECT num_reports FROM post WHERE post_id = ?"
+            num_reports = self.pl_utils._execute_db_command(check_threshold_query, (post_id,)).fetchone()[0]
+            
+            # If the number of reports exceeds the threshold, handle the reported post
+            if num_reports >= 1:  #NOTE: The threshold can be adjusted based on platform policies
+                # First remove any existing report message
+                remove_report_query = (
+                    "UPDATE post SET content = REPLACE(content, '\n This post has been reported \d+ times', '') WHERE post_id = ?"
+                )
+                self.pl_utils._execute_db_command(remove_report_query, (post_id,), commit=True)
+                
+                # Then add the new report message
+                post_tag_query = (
+                    "UPDATE post SET content = content || '\n This post has been reported ' || ? || ' times' WHERE post_id = ?"
+                )
+                self.pl_utils._execute_db_command(post_tag_query, (num_reports, post_id), commit=True)
+
+            return {"success": True, "report_id": report_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}

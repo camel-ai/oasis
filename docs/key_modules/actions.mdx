@@ -90,6 +90,7 @@ OASIS provides a comprehensive set of actions that simulate real social media be
 | `UNLIKE_POST` | Remove a like from a previously liked post |
 | `DISLIKE_POST` | Dislike or downvote a post |
 | `UNDO_DISLIKE_POST` | Remove a dislike from a previously disliked post |
+| `REPORT_POST` | Report a post for inappropriate content |
 | `REPOST` | Repost content without modification (equivalent to retweet) |
 | `QUOTE_POST` | Repost with additional commentary |
 | `CREATE_COMMENT` | Create a comment on a post |
@@ -187,6 +188,17 @@ action = ManualAction(
 action = ManualAction(
     action=ActionType.UNDO_DISLIKE_POST,
     args={"post_id": 123}
+)
+```
+
+#### REPORT_POST
+```python
+action = ManualAction(
+    action=ActionType.REPORT_POST,
+    args={
+        "post_id": 123,
+        "report_reason": "This post contains false information"
+    }
 )
 ```
 
