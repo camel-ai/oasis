@@ -41,7 +41,6 @@ async def main():
         ActionType.REPOST,
         ActionType.FOLLOW,
         ActionType.DO_NOTHING,
-        ActionType.INTERVIEW
     ]
 
     agent_graph = await generate_twitter_agent_graph(
@@ -106,6 +105,12 @@ async def main():
         agent: LLMAction()
         for _, agent in env.agent_graph.get_agents([2, 4, 6, 8, 10])
     }
+    actions_4[env.agent_graph.get_agent(3)] = ManualAction(
+        action_type=ActionType.REPORT_POST,
+        action_args={
+            "post_id": 1,
+            "report_reason": "This is spreading misinformation about science!"
+        })
     await env.step(actions_4)
 
     # Fifth timestep: Interview multiple agents

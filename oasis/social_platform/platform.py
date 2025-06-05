@@ -112,6 +112,10 @@ class Platform:
         self.trend_num_days = 7
         self.trend_top_k = 1
 
+        # Report threshold setting
+        # When the number of reports for a post exceeds this threshold, the post will be marked
+        self.report_threshold = 1
+
         self.pl_utils = PlatformUtils(
             self.db,
             self.db_cursor,
@@ -1441,18 +1445,48 @@ class Platform:
             num_reports = self.pl_utils._execute_db_command(check_threshold_query, (post_id,)).fetchone()[0]
             
             # If the number of reports exceeds the threshold, handle the reported post
-            if num_reports >= 1:  #NOTE: The threshold can be adjusted based on platform policies
-                # First remove any existing report message
-                remove_report_query = (
-                    "UPDATE post SET content = REPLACE(content, '\n This post has been reported \d+ times', '') WHERE post_id = ?"
-                )
-                self.pl_utils._execute_db_command(remove_report_query, (post_id,), commit=True)
-                
-                # Then add the new report message
-                post_tag_query = (
-                    "UPDATE post SET content = content || '\n This post has been reported ' || ? || ' times' WHERE post_id = ?"
-                )
-                self.pl_utils._execute_db_command(post_tag_query, (num_reports, post_id), commit=True)
+            if num_reports >= self.report_threshold:
+                # Get the post details first
+                post_query = """
+                    SELECT post_id, user_id, original_post_id, content, quote_content, 
+                           created_at, num_likes, num_dislikes, num_shares 
+                    FROM post WHERE post_id = ?
+                """
+                post_result = self.pl_utils._execute_db_command(post_query, (post_id,)).fetchone()
+                if post_result:
+                    # Check if a report comment already exists
+                    check_report_comment_query = """
+                        SELECT comment_id FROM comment 
+                        WHERE post_id = ? AND user_id = 0 AND content LIKE 'This post has been reported%'
+                    """
+                    existing_comment = self.pl_utils._execute_db_command(
+                        check_report_comment_query, (post_id,)).fetchone()
+                    
+                    if existing_comment:
+                        # Update existing report comment
+                        update_comment_query = """
+                            UPDATE comment 
+                            SET content = ? 
+                            WHERE comment_id = ?
+                        """
+                        self.pl_utils._execute_db_command(
+                            update_comment_query,
+                            (f"This post has been reported {num_reports} times", existing_comment[0]),
+                            commit=True
+                        )
+                    else:
+                        # Add new report comment
+                        comment_insert_query = """
+                            INSERT INTO comment (post_id, user_id, content, created_at)
+                            VALUES (?, ?, ?, ?)
+                        """
+                        self.pl_utils._execute_db_command(
+                            comment_insert_query,
+                            (post_id, 0, f"This post has been reported {num_reports} times", current_time),
+                            commit=True
+                        )
+                    # Use _add_comments_to_posts to get the updated post with comments
+                    self.pl_utils._add_comments_to_posts([post_result])
 
             return {"success": True, "report_id": report_id}
         except Exception as e:
