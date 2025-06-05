@@ -1448,7 +1448,7 @@ class Platform:
 
             # insert the group into the groups table
             insert_query = """
-                INSERT INTO "group" (name, created_at) VALUES (?, ?)
+                INSERT INTO chat_group (name, created_at) VALUES (?, ?)
             """
             self.pl_utils._execute_db_command(insert_query,
                                               (group_name, current_time),
@@ -1481,7 +1481,7 @@ class Platform:
             user_id = agent_id
 
             # check if group exists
-            check_group_query = """SELECT * FROM "group"
+            check_group_query = """SELECT * FROM chat_group
                 WHERE group_id = ?"""
             self.pl_utils._execute_db_command(check_group_query, (group_id, ))
             if not self.db_cursor.fetchone():
@@ -1547,7 +1547,7 @@ class Platform:
     async def listen_from_group(self, agent_id: int):
         try:
             # get all groups Dict[group_id, group_name]
-            query = """ SELECT * FROM "group" """
+            query = """ SELECT * FROM chat_group """
             self.pl_utils._execute_db_command(query)
             all_groups = {}
             for row in self.db_cursor.fetchall():
@@ -1564,14 +1564,15 @@ class Platform:
             messages = {}
             for group_id in joined_group_ids:
                 select_query = """
-                    SELECT message_id, content, sent_at FROM group_messages
-                    WHERE group_id = ?
+                    SELECT message_id, content, sender_id,
+                    sent_at FROM group_messages WHERE group_id = ?
                 """
                 self.pl_utils._execute_db_command(select_query, (group_id, ))
                 messages[group_id] = [{
                     "message_id": row[0],
                     "content": row[1],
-                    "sent_at": row[2]
+                    "sender_id": row[2],
+                    "sent_at": row[3],
                 } for row in self.db_cursor.fetchall()]
 
             return {

@@ -34,7 +34,7 @@ COMMENT_SCHEMA_SQL = "comment.sql"
 COMMENT_LIKE_SCHEMA_SQL = "comment_like.sql"
 COMMENT_DISLIKE_SCHEMA_SQL = "comment_dislike.sql"
 PRODUCT_SCHEMA_SQL = "product.sql"
-GROUP_SCHEMA_SQL = "group.sql"
+GROUP_SCHEMA_SQL = "chat_group.sql"
 GROUP_MEMBER_SCHEMA_SQL = "group_member.sql"
 GROUP_MESSAGE_SCHEMA_SQL = "group_message.sql"
 
