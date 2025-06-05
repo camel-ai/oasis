@@ -671,8 +671,7 @@ class SocialAction:
         return await self.perform_action(prompt, ActionType.INTERVIEW.value)
 
     async def create_group(self, group_name: str):
-        """
-        Creates a new group on the platform.
+        r"""Creates a new group on the platform.
 
         Args:
             group_name (str): The name of the group to be created.
@@ -685,8 +684,7 @@ class SocialAction:
                                          ActionType.CREATE_GROUP.value)
 
     async def join_group(self, group_id: int):
-        """
-        Joins a group with the specified ID.
+        r"""Joins a group with the specified ID.
 
         Args:
             group_id (int): The ID of the group to join.
@@ -698,8 +696,7 @@ class SocialAction:
         return await self.perform_action(group_id, ActionType.JOIN_GROUP.value)
 
     async def leave_group(self, group_id: int):
-        """
-        Leaves a group with the specified ID.
+        r"""Leaves a group with the specified ID.
 
         Args:
             group_id (int): The ID of the group to leave.
@@ -712,8 +709,7 @@ class SocialAction:
                                          ActionType.LEAVE_GROUP.value)
 
     async def send_to_group(self, group_id: int, message: str):
-        """
-        Sends a message to a specific group.
+        r"""Sends a message to a specific group.
 
         Args:
             group_id (int): The ID of the target group.
@@ -727,8 +723,6 @@ class SocialAction:
                                          ActionType.SEND_TO_GROUP.value)
 
     async def listen_from_group(self):
-        """
-        Listen messages from groups
-        """
+        r"""Listen messages from groups"""
         return await self.perform_action(self.agent_id,
                                          ActionType.LISTEN_FROM_GROUP.value)
