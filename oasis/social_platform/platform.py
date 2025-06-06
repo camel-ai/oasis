@@ -1530,7 +1530,7 @@ class Platform:
                 }
 
             # delete the member record
-            delete_query = ("DELETE FROM group_members"
+            delete_query = ("DELETE FROM group_members "
                             "WHERE group_id = ? AND agent_id = ?")
             self.pl_utils._execute_db_command(delete_query,
                                               (group_id, user_id),

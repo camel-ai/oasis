@@ -249,13 +249,13 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 ### Latest Updates
 
-📢 Support Interview Action for asking agents specific questions and getting answers. - 📆 June 2, 2025
+📢 Add features for creating group chats, sending messages in group chats, and leaving group chats. - 📆 June 6, 2025
 
+- Support Interview Action for asking agents specific questions and getting answers. - 📆 June 2, 2025
 - Support customization of each agent's models, tools, and prompts; refactor the interface to follow the PettingZoo style. - 📆 May 22, 2025
 - Refactor into the OASIS environment, publish camel-oasis on PyPI, and release the documentation. - 📆 April 24, 2025
 - Support OPENAI Embedding model for Twhin-Bert Recommendation System. - 📆 March 25, 2025
-- Updated social media links and QR codes in the README! Join OASIS & CAMEL on WeChat, X, Reddit, and Discord. - 📆 March 24, 2025
-- Add multi-threading support to speed up LLM inference by 13x - 📆 March 4, 2025
+  ...
 - Slightly refactoring the database to add Quote Action and modify Repost Action - 📆 January 13, 2025
 - Added the demo video and oasis's star history in the README - 📆 January 5, 2025
 - Introduced an Electronic Mall on the Reddit platform - 📆 December 5, 2024
