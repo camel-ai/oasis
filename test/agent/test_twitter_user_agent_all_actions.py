@@ -144,13 +144,15 @@ async def test_agents_actions(setup_twitter):
     await asyncio.sleep(random.uniform(0, 0.1))
 
     # report once
-    return_message = await action_agent.env.action.report_post(1, "Inappropriate content")
+    return_message = await action_agent.env.action.report_post(
+        1, "Inappropriate content")
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
     # report twice
     other_agent = agents[1]
-    return_message = await other_agent.env.action.report_post(1, "Spam content")
+    return_message = await other_agent.env.action.report_post(
+        1, "Spam content")
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 

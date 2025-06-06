@@ -1442,6 +1442,8 @@ class Platform:
                                         action_info, current_time)
 
             return {"success": True, "report_id": report_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
     async def send_to_group(self, agent_id: int, message: tuple):
         group_id, content = message

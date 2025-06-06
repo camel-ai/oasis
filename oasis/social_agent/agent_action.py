@@ -671,7 +671,6 @@ class SocialAction:
         """
         return await self.perform_action(prompt, ActionType.INTERVIEW.value)
 
-    
     async def report_post(self, post_id: int, report_reason: str):
         r"""Report a specified post with a given reason.
 
@@ -697,7 +696,8 @@ class SocialAction:
             result in a failure.
         """
         report_message = (post_id, report_reason)
-        return await self.perform_action(report_message, ActionType.REPORT_POST.value)
+        return await self.perform_action(report_message,
+                                         ActionType.REPORT_POST.value)
 
     async def create_group(self, group_name: str):
         r"""Creates a new group on the platform.
