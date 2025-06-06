@@ -229,7 +229,7 @@ Sprint planning defines what can be delivered in the sprint and how it will be a
 
 Our aim is to make the developer setup as straightforward as possible. If you encounter any challenges during the setup process, don't hesitate to reach out to a maintainer. We're here to assist you and ensure that the experience is smooth not just for you but also for future contributors. 😊
 
-In line with this, we do have specific guidelines for code linting, formatting, and documentation in the codebase. If you find these requirements difficult or even just bothersome to work with, please feel free to get in touch with a maintainer — you can *@ziyi yang in Discord or @张再斌 in the WeChat group*. We don't want these guidelines to hinder the integration of good code into the codebase, so we're more than happy to provide support and find a solution that works for you. 🤝
+In line with this, we do have specific guidelines for code linting, formatting, and documentation in the codebase. If you find these requirements difficult or even just bothersome to work with, please feel free to get in touch with a maintainer — you can *@doudou_wu in Discord or @张再斌 in the WeChat group*. We don't want these guidelines to hinder the integration of good code into the codebase, so we're more than happy to provide support and find a solution that works for you. 🤝
 
 ## Quick Start 🚀
 
