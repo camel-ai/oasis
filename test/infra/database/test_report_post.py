@@ -1,12 +1,12 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the “License”);
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an “AS IS” BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -18,37 +18,37 @@ import sqlite3
 import pytest
 
 from oasis.social_platform.platform import Platform
-from oasis.social_platform.typing import ActionType
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test.db")
 
 
 class MockChannel:
+
     def __init__(self):
         self.call_count = 0
         self.messages = []
 
     async def receive_from(self):
-        # Simulate a series of operations: create different types of posts and report them
+        # Simulate a series of operations
         if self.call_count == 0:
             self.call_count += 1
             return ("id_", (1, "This is a common post", "create_post"))
         elif self.call_count == 1:
             self.call_count += 1
-            return ("id_", (2, 1, "repost"))  # Repost the first post
+            return ("id_", (2, 1, "repost"))
         elif self.call_count == 2:
             self.call_count += 1
-            return ("id_", (3, (1, "This is a quote comment"), "quote_post"))  # Quote the first post
+            return ("id_", (3, (1, "This is a quote comment"), "quote_post"))
         elif self.call_count == 3:
             self.call_count += 1
-            return ("id_", (2, (1, "Inappropriate content"), "report_post"))  # Report common post
+            return ("id_", (2, (1, "Inappropriate content"), "report_post"))
         elif self.call_count == 4:
             self.call_count += 1
-            return ("id_", (3, (2, "Spam content"), "report_post"))  # Report repost
+            return ("id_", (3, (2, "Spam content"), "report_post"))
         elif self.call_count == 5:
             self.call_count += 1
-            return ("id_", (1, (3, "Misinformation"), "report_post"))  # Report quote post
+            return ("id_", (1, (3, "Misinformation"), "report_post"))
         else:
             return ("id_", (None, None, "exit"))
 
@@ -126,39 +126,41 @@ async def test_report_post(setup_platform):
         # Verify report records in database
         cursor.execute("SELECT * FROM report ORDER BY created_at")
         reports = cursor.fetchall()
-        
+
         # Verify number of report records
         assert len(reports) == 3, "Should have 3 report records"
-        
+
         # Verify report on common post
         assert reports[0][1] == 2, "Reporter user ID should be 2"
         assert reports[0][2] == 1, "Reported post ID should be 1"
-        assert reports[0][3] == "Inappropriate content", "Report reason doesn't match"
+        assert reports[0][3] == "Inappropriate content", (
+            "Report reason doesn't match")
         assert reports[0][4] is not None, "Creation time should not be empty"
-        
+
         # Verify report on repost
         assert reports[1][1] == 3, "Reporter user ID should be 3"
         assert reports[1][2] == 2, "Reported post ID should be 2"
-        assert reports[1][3] == "Spam content", "Report reason doesn't match"
+        assert reports[1][3] == "Spam content", ("Report reason doesn't match")
         assert reports[1][4] is not None, "Creation time should not be empty"
 
         # Verify report on quote post
         assert reports[2][1] == 1, "Reporter user ID should be 1"
         assert reports[2][2] == 3, "Reported post ID should be 3"
-        assert reports[2][3] == "Misinformation", "Report reason doesn't match"
+        assert reports[2][3] == "Misinformation", (
+            "Report reason doesn't match")
         assert reports[2][4] is not None, "Creation time should not be empty"
 
-        # Verify report comments
-        cursor.execute("SELECT * FROM comment WHERE user_id = 0 ORDER BY created_at")
-        report_comments = cursor.fetchall()
-        
-        # Should have one comment per reported post
-        assert len(report_comments) == 3, "Should have 3 report comments"
-        
-        # Verify comment contents
-        for comment in report_comments:
-            assert "This post has been reported" in comment[3], "Comment should mention report"
-            assert comment[4] is not None, "Comment creation time should not be empty"
+        # Verify post report counts
+        cursor.execute(
+            "SELECT post_id, num_reports FROM post ORDER BY post_id")
+        post_reports = cursor.fetchall()
+
+        # Should have report counts for all three posts
+        assert len(post_reports) == 3, "Should have 3 posts with report counts"
+
+        # Verify report counts
+        for post_id, num_reports in post_reports:
+            assert num_reports == 1, f"Post {post_id} should have 1 report"
 
     finally:
         # Cleanup

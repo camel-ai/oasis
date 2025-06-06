@@ -21,6 +21,7 @@ The REPORT_POST action type enables you to:
 - **Automatic Report Tracking**: The system automatically collects and stores report information
 - **Database Storage**: All report data is stored in the report table for later analysis
 - **Concurrent Execution**: Reports can be submitted alongside other social media actions
+- **Warning Message Display**: Warning messages are shown when the number of reports exceeds the threshold
 
 ## Important Note
 
@@ -157,7 +158,7 @@ async def main():
     print("\n=== Interview Results ===")
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    
+
     # Query all interview records
     cursor.execute(
         """

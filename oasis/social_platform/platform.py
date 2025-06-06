@@ -113,8 +113,7 @@ class Platform:
         self.trend_top_k = 1
 
         # Report threshold setting
-        # When the number of reports for a post exceeds this threshold, the post will be marked
-        self.report_threshold = 1
+        self.report_threshold = 2
 
         self.pl_utils = PlatformUtils(
             self.db,
@@ -123,6 +122,7 @@ class Platform:
             self.sandbox_clock,
             self.show_score,
             self.recsys_type,
+            self.report_threshold,
         )
 
     async def running(self):
@@ -184,8 +184,8 @@ class Platform:
             current_time = self.sandbox_clock.get_time_step()
         try:
             user_insert_query = (
-                "INSERT INTO user (user_id, agent_id, user_name, name, bio, "
-                "created_at, num_followings, num_followers) VALUES "
+                "INSERT INTO user (user_id, agent_id, user_name, name, "
+                "bio, created_at, num_followings, num_followers) VALUES "
                 "(?, ?, ?, ?, ?, ?, ?, ?)")
             self.pl_utils._execute_db_command(
                 user_insert_query,
@@ -287,7 +287,7 @@ class Platform:
                     "post.created_at, post.num_likes FROM post "
                     "JOIN follow ON post.user_id = follow.followee_id "
                     "WHERE follow.follower_id = ? "
-                    "ORDER BY post.num_likes DESC  "
+                    "ORDER BY post.num_likes DESC "
                     "LIMIT ?")
                 self.pl_utils._execute_db_command(
                     query_following_post,
@@ -1391,7 +1391,6 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-
     async def report_post(self, agent_id: int, report_message: tuple):
         post_id, report_reason = report_message
         if self.recsys_type == RecsysType.REDDIT:
@@ -1402,16 +1401,16 @@ class Platform:
         try:
             user_id = agent_id
             post_type_result = self.pl_utils._get_post_type(post_id)
-            
+
             # Check if a report record already exists
-            check_report_query = "SELECT * FROM report WHERE user_id = ? AND post_id = ?"
+            check_report_query = (
+                "SELECT * FROM report WHERE user_id = ? AND post_id = ?")
             self.pl_utils._execute_db_command(check_report_query,
                                               (user_id, post_id))
             if self.db_cursor.fetchone():
-                # Like record already exists
                 return {
                     "success": False,
-                    "error": "Like record already exists."
+                    "error": "Report record already exists."
                 }
 
             if not post_type_result:
@@ -1421,17 +1420,19 @@ class Platform:
             update_reports_query = (
                 "UPDATE post SET num_reports = num_reports + 1 WHERE "
                 "post_id = ?")
-            self.pl_utils._execute_db_command(update_reports_query, (post_id, ),
+            self.pl_utils._execute_db_command(update_reports_query,
+                                              (post_id, ),
                                               commit=True)
-            
+
             # Add a report in the report table
             report_insert_query = (
-                "INSERT INTO 'report' (post_id, user_id, report_reason, created_at) "
-                "VALUES (?, ?, ?, ?)")
-            self.pl_utils._execute_db_command(report_insert_query,
-                                              (post_id, user_id, report_reason, current_time),
-                                              commit=True)
-            
+                "INSERT INTO report (post_id, user_id, report_reason, "
+                "created_at) VALUES (?, ?, ?, ?)")
+            self.pl_utils._execute_db_command(
+                report_insert_query,
+                (post_id, user_id, report_reason, current_time),
+                commit=True)
+
             # Get the ID of the newly inserted report record
             report_id = self.db_cursor.lastrowid
 
@@ -1439,54 +1440,6 @@ class Platform:
             action_info = {"post_id": post_id, "report_id": report_id}
             self.pl_utils._record_trace(user_id, ActionType.REPORT_POST.value,
                                         action_info, current_time)
-    
-            # Check if the number of reports exceeds the threshold
-            check_threshold_query = "SELECT num_reports FROM post WHERE post_id = ?"
-            num_reports = self.pl_utils._execute_db_command(check_threshold_query, (post_id,)).fetchone()[0]
-            
-            # If the number of reports exceeds the threshold, handle the reported post
-            if num_reports >= self.report_threshold:
-                # Get the post details first
-                post_query = """
-                    SELECT post_id, user_id, original_post_id, content, quote_content, 
-                           created_at, num_likes, num_dislikes, num_shares 
-                    FROM post WHERE post_id = ?
-                """
-                post_result = self.pl_utils._execute_db_command(post_query, (post_id,)).fetchone()
-                if post_result:
-                    # Check if a report comment already exists
-                    check_report_comment_query = """
-                        SELECT comment_id FROM comment 
-                        WHERE post_id = ? AND user_id = 0 AND content LIKE 'This post has been reported%'
-                    """
-                    existing_comment = self.pl_utils._execute_db_command(
-                        check_report_comment_query, (post_id,)).fetchone()
-                    
-                    if existing_comment:
-                        # Update existing report comment
-                        update_comment_query = """
-                            UPDATE comment 
-                            SET content = ? 
-                            WHERE comment_id = ?
-                        """
-                        self.pl_utils._execute_db_command(
-                            update_comment_query,
-                            (f"This post has been reported {num_reports} times", existing_comment[0]),
-                            commit=True
-                        )
-                    else:
-                        # Add new report comment
-                        comment_insert_query = """
-                            INSERT INTO comment (post_id, user_id, content, created_at)
-                            VALUES (?, ?, ?, ?)
-                        """
-                        self.pl_utils._execute_db_command(
-                            comment_insert_query,
-                            (post_id, 0, f"This post has been reported {num_reports} times", current_time),
-                            commit=True
-                        )
-                    # Use _add_comments_to_posts to get the updated post with comments
-                    self.pl_utils._add_comments_to_posts([post_result])
 
             return {"success": True, "report_id": report_id}
         except Exception as e:
