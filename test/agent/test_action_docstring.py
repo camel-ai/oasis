@@ -44,6 +44,11 @@ def test_transfer_to_openai_function():
             SocialAction.do_nothing,
             SocialAction.purchase_product,
             SocialAction.report_post,
+            SocialAction.join_group,
+            SocialAction.leave_group,
+            SocialAction.listen_from_group,
+            SocialAction.send_to_group,
+            SocialAction.create_group,
         ]
     ]
     assert action_funcs is not None

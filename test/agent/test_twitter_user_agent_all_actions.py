@@ -180,5 +180,30 @@ async def test_agents_actions(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
+    return_message = await action_agent.env.action.create_group("AI Discussion"
+                                                                )
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    join_agent = agents[0]
+    return_message = await join_agent.env.action.join_group(1)
+    print(return_message)
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    return_message = await action_agent.env.action.send_to_group(
+        1, "Hello, everyone!")
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    return_message = await action_agent.env.action.listen_from_group()
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    return_message = await action_agent.env.action.leave_group(1)
+    print(return_message)
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
     await channel.write_to_receive_queue((None, None, ActionType.EXIT))
     await task
