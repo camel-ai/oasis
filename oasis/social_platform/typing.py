@@ -41,6 +41,11 @@ class ActionType(Enum):
     DO_NOTHING = "do_nothing"
     PURCHASE_PRODUCT = "purchase_product"
     INTERVIEW = "interview"
+    JOIN_GROUP = "join_group"
+    LEAVE_GROUP = "leave_group"
+    SEND_TO_GROUP = "send_to_group"
+    CREATE_GROUP = "create_group"
+    LISTEN_FROM_GROUP = "listen_from_group"
 
     @classmethod
     def get_default_twitter_actions(cls):
