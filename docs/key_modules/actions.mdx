@@ -108,6 +108,11 @@ OASIS provides a comprehensive set of actions that simulate real social media be
 | `DO_NOTHING` | Perform no action (pass the turn) |
 | `PURCHASE_PRODUCT` | Purchase a product (for e-commerce simulations) |
 | `INTERVIEW` | Interview a user and record the interview result in the database |
+| `CREATE_GROUP`  | Create a new group with a given name                             |
+| `JOIN_GROUP`  | Join a group by group ID                                         |
+| `LEAVE_GROUP`  | Leave a group by group ID                                        |
+| `SEND_TO_GROUP`  | Send a message to a group                                        |
+| `LISTEN_FROM_GROUP`  | Listen for messages from groups                                  |
 
 ### Platform-Specific Actions
 
@@ -302,7 +307,7 @@ action = ManualAction(
 )
 ```
 
-### REFRESH
+#### REFRESH
 ```python
 action = ManualAction(
     action=ActionType.REFRESH,
@@ -331,5 +336,45 @@ action = ManualAction(
 action = ManualAction(
     action=ActionType.INTERVIEW,
     args={"prompt": "What is your name?"}
+)
+```
+
+#### CREATE_GROUP
+```python
+action = ManualAction(
+    action=ActionType.CREATE_GROUP,
+    args={"group_name": "OASIS Fans"}
+)
+```
+
+#### JOIN_GROUP
+```python
+action = ManualAction(
+    action=ActionType.JOIN_GROUP,
+    args={"group_id": 1}
+)
+```
+
+#### LEAVE_GROUP
+```python
+action = ManualAction(
+    action=ActionType.LEAVE_GROUP,
+    args={"group_id": 1}
+)
+```
+
+#### SEND_TO_GROUP
+```python
+action = ManualAction(
+    action=ActionType.SEND_TO_GROUP,
+    args={"group_id": 1, "message": "Hello, OASIS fans!"}
+)
+```
+
+#### LISTEN_FROM_GROUP
+```python
+action = ManualAction(
+    action=ActionType.LISTEN_FROM_GROUP,
+    args={}
 )
 ```
