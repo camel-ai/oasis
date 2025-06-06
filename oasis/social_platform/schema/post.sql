@@ -10,6 +10,7 @@ CREATE TABLE post (
     num_likes INTEGER DEFAULT 0,
     num_dislikes INTEGER DEFAULT 0,
     num_shares INTEGER DEFAULT 0,  -- num_shares = num_reposts + num_quotes
+    num_reports INTEGER DEFAULT 0,
     FOREIGN KEY(user_id) REFERENCES user(user_id),
     FOREIGN KEY(original_post_id) REFERENCES post(post_id)
 );

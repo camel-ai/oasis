@@ -126,8 +126,9 @@ def test_post_operations():
     # Insert a post:
     cursor.execute(
         ("INSERT INTO post (user_id, content, created_at, num_likes, "
-         "num_dislikes, num_shares) VALUES (?, ?, ?, ?, ?, ?)"),
-        (1, "This is a test post", "2024-04-21 22:02:42", 0, 1, 2),
+         "num_dislikes, num_shares, num_reports) VALUES (?, ?, ?, ?, ?, ?, ?)"
+         ),
+        (1, "This is a test post", "2024-04-21 22:02:42", 0, 1, 2, 0),
     )
     conn.commit()
 
@@ -141,6 +142,7 @@ def test_post_operations():
     assert post[6] == 0
     assert post[7] == 1
     assert post[8] == 2
+    assert post[9] == 0
 
     # Update the post
     cursor.execute(
@@ -158,7 +160,8 @@ def test_post_operations():
         'created_at': '2024-04-21 22:02:42',
         'num_likes': 0,
         'num_dislikes': 1,
-        'num_shares': 2
+        'num_shares': 2,
+        'num_reports': 0
     }]
     actual_result = fetch_table_from_db(cursor, "post")
 
