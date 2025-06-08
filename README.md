@@ -249,8 +249,9 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 ### Latest Updates
 
-📢 Add features for creating group chats, sending messages in group chats, and leaving group chats. - 📆 June 6, 2025
+📢 Add the report post action to mark inappropriate content. - 📆 June 8, 2025
 
+- Add features for creating group chats, sending messages in group chats, and leaving group chats. - 📆 June 6, 2025
 - Support Interview Action for asking agents specific questions and getting answers. - 📆 June 2, 2025
 - Support customization of each agent's models, tools, and prompts; refactor the interface to follow the PettingZoo style. - 📆 May 22, 2025
 - Refactor into the OASIS environment, publish camel-oasis on PyPI, and release the documentation. - 📆 April 24, 2025
