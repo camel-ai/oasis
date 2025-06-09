@@ -1372,8 +1372,8 @@ class Platform:
                 response = interview_data.get("response", "")
                 interview_id = f"{current_time}_{user_id}"
                 action_info = {
-                    "prompt": prompt,
-                    "response": response,
+                    "prompt": prompt, 
+                    "response": response, 
                     "interview_id": interview_id
                 }
 
@@ -1384,3 +1384,6 @@ class Platform:
             return {"success": True, "interview_id": interview_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+
+
