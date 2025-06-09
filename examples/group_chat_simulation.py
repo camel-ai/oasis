@@ -15,31 +15,42 @@ import asyncio
 import os
 
 from camel.models import ModelFactory
-from camel.types import ModelPlatformType, ModelType
+from camel.types import ModelPlatformType
 
 import oasis
 from oasis import (ActionType, LLMAction, ManualAction,
-                   generate_reddit_agent_graph)
+                   generate_twitter_agent_graph)
 
 
 async def main():
-    # Define the model for the agents
     openai_model = ModelFactory.create(
-        model_platform=ModelPlatformType.OPENAI,
-        model_type=ModelType.GPT_4O_MINI,
+        model_platform=ModelPlatformType.DEEPSEEK,
+        model_type="deepseek-chat",
+        url="https://api.deepseek.com/v1",
     )
 
     # Define the available actions for the agents
-    available_actions = ActionType.get_default_reddit_actions()
+    available_actions = [
+        ActionType.JOIN_GROUP,
+        ActionType.LEAVE_GROUP,
+        ActionType.LISTEN_FROM_GROUP,
+        ActionType.SEND_TO_GROUP,
+        ActionType.LIKE_POST,
+        ActionType.UNLIKE_POST,
+        ActionType.REPOST,
+        ActionType.QUOTE_POST,
+    ]
 
-    agent_graph = await generate_reddit_agent_graph(
-        profile_path="./data/reddit/user_data_36.json",
+    agent_graph = await generate_twitter_agent_graph(
+        profile_path=(
+            "data/twitter_dataset/anonymous_topic_200_1h/False_Business_0.csv"
+        ),
         model=openai_model,
         available_actions=available_actions,
     )
 
     # Define the path to the database
-    db_path = "./data/reddit_simulation.db"
+    db_path = "./data/twitter_simulation.db"
 
     # Delete the old database
     if os.path.exists(db_path):
@@ -48,38 +59,46 @@ async def main():
     # Make the environment
     env = oasis.make(
         agent_graph=agent_graph,
-        platform=oasis.DefaultPlatformType.REDDIT,
+        platform=oasis.DefaultPlatformType.TWITTER,
         database_path=db_path,
     )
 
     # Run the environment
     await env.reset()
 
+    group_result = await env.platform.create_group(1, "AI Group")
+    group_id = group_result["group_id"]
+
     actions_1 = {}
-    actions_1[env.agent_graph.get_agent(0)] = [
-        ManualAction(action_type=ActionType.CREATE_POST,
-                     action_args={"content": "Hello, world!"}),
-        ManualAction(action_type=ActionType.CREATE_COMMENT,
-                     action_args={
-                         "post_id": "1",
-                         "content": "Welcome to the OASIS World!"
-                     })
-    ]
-    actions_1[env.agent_graph.get_agent(1)] = ManualAction(
-        action_type=ActionType.CREATE_COMMENT,
-        action_args={
-            "post_id": "1",
-            "content": "I like the OASIS world."
-        })
+
+    actions_1[env.agent_graph.get_agent(0)] = ManualAction(
+        action_type=ActionType.JOIN_GROUP, action_args={"group_id": group_id})
     await env.step(actions_1)
 
     actions_2 = {
         agent: LLMAction()
-        for _, agent in env.agent_graph.get_agents()
+        # Activate 5 agents with id 1, 3, 5, 7, 9
+        for _, agent in env.agent_graph.get_agents([1, 3, 5, 7, 9])
     }
 
-    # Perform the actions
     await env.step(actions_2)
+
+    actions_3 = {}
+
+    actions_3[env.agent_graph.get_agent(1)] = ManualAction(
+        action_type=ActionType.SEND_TO_GROUP,
+        action_args={
+            "group_id": group_id,
+            "message": "DeepSeek is amazing!"
+        },
+    )
+    await env.step(actions_3)
+
+    actions_4 = {
+        agent: LLMAction()
+        for _, agent in env.agent_graph.get_agents()
+    }
+    await env.step(actions_4)
 
     # Close the environment
     await env.close()

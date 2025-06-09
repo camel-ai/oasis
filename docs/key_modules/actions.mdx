@@ -90,6 +90,7 @@ OASIS provides a comprehensive set of actions that simulate real social media be
 | `UNLIKE_POST` | Remove a like from a previously liked post |
 | `DISLIKE_POST` | Dislike or downvote a post |
 | `UNDO_DISLIKE_POST` | Remove a dislike from a previously disliked post |
+| `REPORT_POST` | Report a post for inappropriate content |
 | `REPOST` | Repost content without modification (equivalent to retweet) |
 | `QUOTE_POST` | Repost with additional commentary |
 | `CREATE_COMMENT` | Create a comment on a post |
@@ -107,7 +108,51 @@ OASIS provides a comprehensive set of actions that simulate real social media be
 | `REFRESH` | Refresh the timeline to get recommended posts |
 | `DO_NOTHING` | Perform no action (pass the turn) |
 | `PURCHASE_PRODUCT` | Purchase a product (for e-commerce simulations) |
+| `INTERVIEW` | Interview a user and record the interview result in the database |
+| `CREATE_GROUP`  | Create a new group with a given name                             |
+| `JOIN_GROUP`  | Join a group by group ID                                         |
+| `LEAVE_GROUP`  | Leave a group by group ID                                        |
+| `SEND_TO_GROUP`  | Send a message to a group                                        |
+| `LISTEN_FROM_GROUP`  | Listen for messages from groups                                  |
 
+### Platform-Specific Actions
+
+OASIS provides platform-specific action sets that can be accessed using class methods:
+
+#### Reddit Actions
+```python
+# Get all Reddit-specific actions, return a list of ActionType
+available_actions = ActionType.get_default_reddit_actions()
+```
+
+The Reddit action set includes:
+- `LIKE_POST`
+- `DISLIKE_POST`
+- `CREATE_POST`
+- `CREATE_COMMENT`
+- `LIKE_COMMENT`
+- `DISLIKE_COMMENT`
+- `SEARCH_POSTS`
+- `SEARCH_USER`
+- `TREND`
+- `REFRESH`
+- `DO_NOTHING`
+- `FOLLOW`
+- `MUTE`
+
+#### Twitter Actions
+```python
+# Get all Reddit-specific actions, return a list of ActionType
+available_actions = ActionType.get_default_twitter_actions()
+```
+
+The Twitter action set includes:
+- `CREATE_POST`
+- `LIKE_POST`
+- `REPOST`
+- `FOLLOW`
+- `DO_NOTHING`
+- `QUOTE_POST`
 
 ## Arguments for `ManualAction`
 
@@ -148,6 +193,17 @@ action = ManualAction(
 action = ManualAction(
     action=ActionType.UNDO_DISLIKE_POST,
     args={"post_id": 123}
+)
+```
+
+#### REPORT_POST
+```python
+action = ManualAction(
+    action=ActionType.REPORT_POST,
+    args={
+        "post_id": 123,
+        "report_reason": "This post contains false information"
+    }
 )
 ```
 
@@ -263,7 +319,7 @@ action = ManualAction(
 )
 ```
 
-### REFRESH
+#### REFRESH
 ```python
 action = ManualAction(
     action=ActionType.REFRESH,
@@ -284,5 +340,53 @@ action = ManualAction(
 action = ManualAction(
     action=ActionType.PURCHASE_PRODUCT,
     args={"product_name": "Premium Subscription", "purchase_num": 1}
+)
+```
+
+#### INTERVIEW
+```python
+action = ManualAction(
+    action=ActionType.INTERVIEW,
+    args={"prompt": "What is your name?"}
+)
+```
+
+#### CREATE_GROUP
+```python
+action = ManualAction(
+    action=ActionType.CREATE_GROUP,
+    args={"group_name": "OASIS Fans"}
+)
+```
+
+#### JOIN_GROUP
+```python
+action = ManualAction(
+    action=ActionType.JOIN_GROUP,
+    args={"group_id": 1}
+)
+```
+
+#### LEAVE_GROUP
+```python
+action = ManualAction(
+    action=ActionType.LEAVE_GROUP,
+    args={"group_id": 1}
+)
+```
+
+#### SEND_TO_GROUP
+```python
+action = ManualAction(
+    action=ActionType.SEND_TO_GROUP,
+    args={"group_id": 1, "message": "Hello, OASIS fans!"}
+)
+```
+
+#### LISTEN_FROM_GROUP
+```python
+action = ManualAction(
+    action=ActionType.LISTEN_FROM_GROUP,
+    args={}
 )
 ```

@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-__version__ = "0.2.0"
+__version__ = "0.2.3"
 
 from oasis.environment.env_action import LLMAction, ManualAction
 from oasis.environment.make import make

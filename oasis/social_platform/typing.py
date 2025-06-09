@@ -24,6 +24,7 @@ class ActionType(Enum):
     UNLIKE_POST = "unlike_post"
     DISLIKE_POST = "dislike_post"
     UNDO_DISLIKE_POST = "undo_dislike_post"
+    REPORT_POST = "report_post"
     FOLLOW = "follow"
     UNFOLLOW = "unfollow"
     MUTE = "mute"
@@ -41,6 +42,40 @@ class ActionType(Enum):
     DO_NOTHING = "do_nothing"
     PURCHASE_PRODUCT = "purchase_product"
     INTERVIEW = "interview"
+    JOIN_GROUP = "join_group"
+    LEAVE_GROUP = "leave_group"
+    SEND_TO_GROUP = "send_to_group"
+    CREATE_GROUP = "create_group"
+    LISTEN_FROM_GROUP = "listen_from_group"
+
+    @classmethod
+    def get_default_twitter_actions(cls):
+        return [
+            cls.CREATE_POST,
+            cls.LIKE_POST,
+            cls.REPOST,
+            cls.FOLLOW,
+            cls.DO_NOTHING,
+            cls.QUOTE_POST,
+        ]
+
+    @classmethod
+    def get_default_reddit_actions(cls):
+        return [
+            cls.LIKE_POST,
+            cls.DISLIKE_POST,
+            cls.CREATE_POST,
+            cls.CREATE_COMMENT,
+            cls.LIKE_COMMENT,
+            cls.DISLIKE_COMMENT,
+            cls.SEARCH_POSTS,
+            cls.SEARCH_USER,
+            cls.TREND,
+            cls.REFRESH,
+            cls.DO_NOTHING,
+            cls.FOLLOW,
+            cls.MUTE,
+        ]
 
 
 class RecsysType(Enum):

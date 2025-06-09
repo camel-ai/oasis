@@ -60,9 +60,7 @@ async def test_agents_actions(setup_twitter):
         user_info = UserInfo(name=real_name,
                              description=description,
                              profile=profile)
-        agent = SocialAgent(agent_id=i,
-                            user_info=user_info,
-                            twitter_channel=channel)
+        agent = SocialAgent(agent_id=i, user_info=user_info, channel=channel)
         return_message = await agent.env.action.sign_up(
             f"user{i}0101", f"User{i}", "A bio.")
         assert return_message["success"] is True
@@ -145,6 +143,19 @@ async def test_agents_actions(setup_twitter):
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 
+    # report once
+    return_message = await action_agent.env.action.report_post(
+        1, "Inappropriate content")
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    # report twice
+    other_agent = agents[1]
+    return_message = await other_agent.env.action.report_post(
+        1, "Spam content")
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
     return_message = await action_agent.env.action.like_comment(1)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
@@ -168,6 +179,31 @@ async def test_agents_actions(setup_twitter):
 
     await infra.sign_up_product(1, "apple")
     return_message = await action_agent.env.action.purchase_product("apple", 1)
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    return_message = await action_agent.env.action.create_group("AI Discussion"
+                                                                )
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    join_agent = agents[0]
+    return_message = await join_agent.env.action.join_group(1)
+    print(return_message)
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    return_message = await action_agent.env.action.send_to_group(
+        1, "Hello, everyone!")
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    return_message = await action_agent.env.action.listen_from_group()
+    assert return_message["success"] is True
+    await asyncio.sleep(random.uniform(0, 0.1))
+
+    return_message = await action_agent.env.action.leave_group(1)
+    print(return_message)
     assert return_message["success"] is True
     await asyncio.sleep(random.uniform(0, 0.1))
 

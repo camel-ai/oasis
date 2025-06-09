@@ -7,7 +7,7 @@ description: 'This section introduces the LLM models of Social Agent in OASIS.'
 OASIS supports all models listed in `camel` here: [https://docs.camel-ai.org/key_modules/models.html](https://docs.camel-ai.org/key_modules/models.html).
 
 Note that only models with tool-calling support can successfully perform actions in OASIS.
-You can pass a `ModelBackend` or a `List[ModelBackend]` as needed.
+You can pass a `ModelBackend`, `List[ModelBackend]` or `ModelManager` as needed.
 
 For example, the OPENAI model:
 ```python
@@ -34,5 +34,30 @@ vllm_model = ModelFactory.create(
     model_type="microsoft/Phi-3-mini-4k-instruct",
     url="http://localhost:8000/v1", # Optional
     model_config_dict={"temperature": 0.0}, # Optional
+)
+```
+
+For the ModelManager, you can define the scheduling strategy as needed.
+`round_robin` is the recommended strategy for load balancing on multiple models among agents.
+
+```python
+from camel.models import ModelFactory, ModelManager
+from camel.types import ModelPlatformType
+
+vllm_model_1 = ModelFactory.create(
+    model_platform=ModelPlatformType.VLLM,
+    model_type="qwen-2",
+    url="http://localhost:8000/v1", # Optional
+)
+
+vllm_model_2 = ModelFactory.create(
+    model_platform=ModelPlatformType.VLLM,
+    model_type="qwen-2",
+    url="http://localhost:8001/v1", # Optional
+)
+
+model_manager = ModelManager(
+    models=[vllm_model_1, vllm_model_2],
+    scheduling_strategy='round_robin',
 )
 ```

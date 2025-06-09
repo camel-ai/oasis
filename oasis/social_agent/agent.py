@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any, Callable, List, Optional, Union
 
 from camel.agents import ChatAgent
 from camel.messages import BaseMessage
-from camel.models import BaseModelBackend
+from camel.models import BaseModelBackend, ModelManager
 from camel.prompts import TextPrompt
 from camel.toolkits import FunctionTool
 from camel.types import OpenAIBackendRole
@@ -59,18 +59,19 @@ class SocialAgent(ChatAgent):
                  agent_id: int,
                  user_info: UserInfo,
                  user_info_template: TextPrompt | None = None,
-                 twitter_channel: Channel | None = None,
+                 channel: Channel | None = None,
                  model: Optional[Union[BaseModelBackend,
-                                       List[BaseModelBackend]]] = None,
+                                       List[BaseModelBackend],
+                                       ModelManager]] = None,
                  agent_graph: "AgentGraph" = None,
                  available_actions: list[ActionType] = None,
                  tools: Optional[List[Union[FunctionTool, Callable]]] = None,
-                 single_iteration: bool = True):
+                 single_iteration: bool = True,
+                 interview_record: bool = False):
         self.social_agent_id = agent_id
         self.user_info = user_info
-        self.twitter_channel = twitter_channel or Channel()
-        self.env = SocialEnvironment(
-            SocialAction(agent_id, self.twitter_channel))
+        self.channel = channel or Channel()
+        self.env = SocialEnvironment(SocialAction(agent_id, self.channel))
         if user_info_template is None:
             system_message_content = self.user_info.to_system_message()
         else:
@@ -107,6 +108,7 @@ class SocialAgent(ChatAgent):
                          scheduling_strategy='random_model',
                          tools=all_tools,
                          single_iteration=single_iteration)
+        self.interview_record = interview_record
         self.agent_graph = agent_graph
         self.test_prompt = (
             "\n"
@@ -179,8 +181,8 @@ class SocialAgent(ChatAgent):
         # NOTE: this is a temporary solution.
         # Camel can not stop updating the agents' memory after stop and astep
         # now.
-        response = self._get_model_response(openai_messages=openai_messages,
-                                            num_tokens=num_tokens)
+        response = await self._aget_model_response(
+            openai_messages=openai_messages, num_tokens=num_tokens)
         content = response.output_messages[0].content
         agent_log.info(
             f"Agent {self.social_agent_id} receive response: {content}")
@@ -195,11 +197,12 @@ class SocialAgent(ChatAgent):
         Perform an interview with the agent.
         """
         # user conduct test to agent
-        _ = BaseMessage.make_user_message(role_name="User",
-                                          content=("You are a twitter user."))
-        # Test memory should not be writed to memory.
-        # self.memory.write_record(MemoryRecord(user_msg,
-        #                                       OpenAIBackendRole.USER))
+        user_msg = BaseMessage.make_user_message(
+            role_name="User", content=("You are a twitter user."))
+
+        if self.interview_record:
+            # Test memory should not be writed to memory.
+            self.update_memory(message=user_msg, role=OpenAIBackendRole.SYSTEM)
 
         openai_messages, num_tokens = self.memory.get_context()
 
@@ -218,9 +221,15 @@ class SocialAgent(ChatAgent):
         # Camel can not stop updating the agents' memory after stop and astep
         # now.
 
-        response = self._get_model_response(openai_messages=openai_messages,
-                                            num_tokens=num_tokens)
+        response = await self._aget_model_response(
+            openai_messages=openai_messages, num_tokens=num_tokens)
+
         content = response.output_messages[0].content
+
+        if self.interview_record:
+            # Test memory should not be writed to memory.
+            self.update_memory(message=response.output_messages[0],
+                               role=OpenAIBackendRole.USER)
         agent_log.info(
             f"Agent {self.social_agent_id} receive response: {content}")
 
