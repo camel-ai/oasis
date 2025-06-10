@@ -158,13 +158,9 @@ class OasisEnv:
             if isinstance(action, list):
                 for single_action in action:
                     if isinstance(single_action, ManualAction):
-<<<<<<< HEAD
-                        if single_action.action_type == ActionType.INTERVIEW:   
-=======
                         if single_action.action_type == ActionType.INTERVIEW:
                             # Use the agent's perform_interview method for
                             # interview actions
->>>>>>> 0d4651f643d0e25bd0d2a910f96784987dfc8629
                             interview_prompt = single_action.action_args.get(
                                 "prompt", "")
                             tasks.append(
@@ -180,11 +176,8 @@ class OasisEnv:
             else:
                 if isinstance(action, ManualAction):
                     if action.action_type == ActionType.INTERVIEW:
-<<<<<<< HEAD
-=======
                         # Use the agent's perform_interview method for
                         # interview actions
->>>>>>> 0d4651f643d0e25bd0d2a910f96784987dfc8629
                         interview_prompt = action.action_args.get("prompt", "")
                         tasks.append(
                             self._perform_interview_action(

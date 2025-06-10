@@ -1391,10 +1391,6 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-<<<<<<< HEAD
-
-
-=======
     async def report_post(self, agent_id: int, report_message: tuple):
         post_id, report_reason = report_message
         if self.recsys_type == RecsysType.REDDIT:
@@ -1644,4 +1640,3 @@ class Platform:
             }
         except Exception as e:
             return {"success": False, "error": str(e)}
->>>>>>> 0d4651f643d0e25bd0d2a910f96784987dfc8629
