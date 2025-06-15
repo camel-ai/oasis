@@ -20,9 +20,10 @@ from oasis.social_platform.typing import ActionType
 
 
 class SocialAction:
-    r"""Class provides a complete set of social media interaction capabilities for agents,
-    including post creation, like post and others. All actions are performed asynchronously 
-    through a channel communication mechanism.
+    r"""Class provides a complete set of social media 
+    interaction capabilities for agents, including post 
+    creation, like post and others. All actions are performed 
+    asynchronously through a channel communication mechanism.
     """
 
     def __init__(self, agent_id: int, channel: Channel):
@@ -30,8 +31,10 @@ class SocialAction:
         Initialize the social action.
 
         Args:
-            agent_id (int): The ID of the agent that will perform the action.
-            channel (Channel): Communication channel instance for platform interaction.
+            agent_id (int): The ID of the agent that will perform 
+            the action.
+            channel (Channel): Communication channel instance for 
+            platform interaction.
         """
         self.agent_id = agent_id
         self.channel = channel
@@ -43,8 +46,9 @@ class SocialAction:
         select and invoke social actions.
 
         Returns:
-            list[FunctionTool]: Complete set of wrapped social actions as function tools,
-                               ready for integration with LLM function calling systems.
+            list[FunctionTool]: Complete set of wrapped social actions 
+            as function tools, ready for integration with LLM function 
+            calling systems.
         """
         return [
             FunctionTool(func) for func in [

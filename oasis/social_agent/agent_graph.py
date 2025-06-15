@@ -24,7 +24,9 @@ from oasis.social_platform.config import Neo4jConfig
 
 class Neo4jHandler:
     r"""
-    
+    This class provides methods to create, delete, and manage 
+    agents (nodes) and their relationships (edges) in a Neo4j 
+    graph database.
     """
 
     def __init__(self, nei4j_config: Neo4jConfig):
@@ -132,7 +134,8 @@ class Neo4jHandler:
         Get all FOLLOW relationships in the graph.
 
         Returns:
-            list[tuple[int, int]]: List of (source, destination) agent ID pairs.
+            list[tuple[int, int]]: List of (source, destination) 
+            agent ID pairs.
         """
         with self.driver.session() as session:
             return session.read_transaction(self._get_all_edges)
@@ -362,7 +365,8 @@ class AgentGraph:
         Get all edges in the graph.
 
         Returns:
-            list[tuple[int, int]]: List of (source, destination) agent ID pairs.
+            list[tuple[int, int]]: List of (source, destination) 
+            agent ID pairs.
         """
         if self.backend == "igraph":
             return [(edge.source, edge.target) for edge in self.graph.es]
@@ -411,7 +415,8 @@ class AgentGraph:
         height: int = 1000,
     ):
         r"""
-        Visualize the graph and save it to a file only when the backend is igraph.
+        Visualize the graph and save it to a file only when 
+        the backend is igraph.
 
         Args:
             path (str): Path to save the visualization.

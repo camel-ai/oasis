@@ -107,8 +107,8 @@ class SocialEnvironment(Environment):
         interaction environment description.
 
         Returns:
-            str: If group exist, Fill in the latest information into template prompt.  
-            If it doesn't, return "No groups"
+            str: If group exist, Fill in the latest information 
+            into template prompt. If it doesn't, return "No groups"
         """
         groups = await self.action.listen_from_group()
         if groups["success"]:
