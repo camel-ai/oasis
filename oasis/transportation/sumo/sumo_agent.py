@@ -1,3 +1,6 @@
+from sumo_env import SUMOEnvironment
+from typing import List, Dict, Any
+
 class LLMAgent:
     """Agent that uses LLM to make decisions about route updates, including multimodal options"""
     
@@ -65,7 +68,7 @@ class LLMAgent:
         vehicle_data = self.environment.vehicles.get(self.vehicle_id, {})
         
         # Format the data for the LLM prompt
-        formatted_data = {
+        formatted_data: Dict[str, Any] = {
             "vehicle_id": self.vehicle_id,
             "vehicle_type": vehicle_data.get("type", "unknown"),
             "current_route": vehicle_data.get("route_id", "unknown"),
