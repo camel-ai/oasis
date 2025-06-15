@@ -74,15 +74,16 @@ class SocialAgent(ChatAgent):
             agent_id (int): The ID of the agent.
             user_info (UserInfo): Complete social profile configuration.
             user_info_template (TextPrompt | None): Template for displaying 
-            user information. If None, uses the default system message template. 
+            user information. If None, uses the default system message 
+            template. 
             channel (Channel | None): Social platform channel to connect agents 
             to. If None, create a new channel. 
             model (Optional[Union[BaseModelBackend, List[BaseModelBackend], 
             ModelManager]]): Configuration for the backend LLM(s). 
             agent_graph (AgentGraph): Social connection graph representing the 
             agent's network and relationships. 
-            available_actions (list[ActionType]): Subset of allowed action types. 
-            If None, all action types are not permitted. 
+            available_actions (list[ActionType]): Subset of allowed action 
+            types. If None, all action types are not permitted. 
             tools (Optional[List[Union[FunctionTool, Callable]]]): Tools that 
             supported by openai.
             single_iteration (bool): Whether to run in single-step mode.
@@ -339,9 +340,10 @@ class SocialAgent(ChatAgent):
         r"""Update the social graph based on relationship actions.
 
         Args:
-            action_name (str): The type of relationship action (follow/unfollow).
-            arguments (dict): Action arguments containing 'followee_id' 
-            for identifying.
+            action_name (str): The type of relationship action 
+            (follow/unfollow).
+            arguments (dict): Action arguments containing 
+            'followee_id' for identifying.
         """
         # ... [method implementation remains unchanged] ...
         if "unfollow" in action_name:

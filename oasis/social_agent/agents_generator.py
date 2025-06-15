@@ -412,7 +412,8 @@ async def gen_control_agents_with_data(
     Args:
         channel (Channel): The social platform channel to connect agents to.
         control_user_num (int): Number of controllable agents to create.
-        models (list[BaseModelBackend] | None): Optional LLM backends for agents.
+        models (list[BaseModelBackend] | None): Optional LLM backends 
+        for agents.
 
     Returns:
         tuple[AgentGraph, dict]: A tuple containing the latest agent 
