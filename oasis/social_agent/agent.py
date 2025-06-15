@@ -69,25 +69,25 @@ class SocialAgent(ChatAgent):
                  single_iteration: bool = True,
                  interview_record: bool = False):
         r"""Initialize a social agent with specific information.
-        
+
         Args:
             agent_id (int): The ID of the agent.
             user_info (UserInfo): Complete social profile configuration.
-            user_info_template (TextPrompt | None): Template for displaying 
-            user information. If None, uses the default system message 
-            template. 
-            channel (Channel | None): Social platform channel to connect agents 
-            to. If None, create a new channel. 
-            model (Optional[Union[BaseModelBackend, List[BaseModelBackend], 
-            ModelManager]]): Configuration for the backend LLM(s). 
-            agent_graph (AgentGraph): Social connection graph representing the 
-            agent's network and relationships. 
-            available_actions (list[ActionType]): Subset of allowed action 
-            types. If None, all action types are not permitted. 
-            tools (Optional[List[Union[FunctionTool, Callable]]]): Tools that 
+            user_info_template (TextPrompt | None): Template for displaying
+            user information. If None, uses the default system message
+            template.
+            channel (Channel | None): Social platform channel to connect agents
+            to. If None, create a new channel.
+            model (Optional[Union[BaseModelBackend, List[BaseModelBackend],
+            ModelManager]]): Configuration for the backend LLM(s).
+            agent_graph (AgentGraph): Social connection graph representing the
+            agent's network and relationships.
+            available_actions (list[ActionType]): Subset of allowed action
+            types. If None, all action types are not permitted.
+            tools (Optional[List[Union[FunctionTool, Callable]]]): Tools that
             supported by openai.
             single_iteration (bool): Whether to run in single-step mode.
-            interview_record (bool): Whether to enable saving interview 
+            interview_record (bool): Whether to enable saving interview
             interactions.
         """
         self.social_agent_id = agent_id
@@ -143,8 +143,8 @@ class SocialAgent(ChatAgent):
             "What do you think Helen should do?")
 
     async def perform_action_by_llm(self):
-        r"""Perform social media actions. The agent observes 
-        its social environment and takes actions based on the 
+        r"""Perform social media actions. The agent observes
+        its social environment and takes actions based on the
         current state of the environment.
         """
         # Get posts:
@@ -180,7 +180,7 @@ class SocialAgent(ChatAgent):
 
     async def perform_test(self):
         r"""
-        Present a standardized test scenario to evaluate 
+        Present a standardized test scenario to evaluate
         the agent's decision-making in social contexts."""
         """
         doing group polarization test for all agents.
@@ -340,9 +340,9 @@ class SocialAgent(ChatAgent):
         r"""Update the social graph based on relationship actions.
 
         Args:
-            action_name (str): The type of relationship action 
+            action_name (str): The type of relationship action
             (follow/unfollow).
-            arguments (dict): Action arguments containing 
+            arguments (dict): Action arguments containing
             'followee_id' for identifying.
         """
         # ... [method implementation remains unchanged] ...

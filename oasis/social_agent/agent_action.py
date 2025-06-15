@@ -20,9 +20,9 @@ from oasis.social_platform.typing import ActionType
 
 
 class SocialAction:
-    r"""Class provides a complete set of social media 
-    interaction capabilities for agents, including post 
-    creation, like post and others. All actions are performed 
+    r"""Class provides a complete set of social media
+    interaction capabilities for agents, including post
+    creation, like post and others. All actions are performed
     asynchronously through a channel communication mechanism.
     """
 
@@ -31,9 +31,9 @@ class SocialAction:
         Initialize the social action.
 
         Args:
-            agent_id (int): The ID of the agent that will perform 
+            agent_id (int): The ID of the agent that will perform
             the action.
-            channel (Channel): Communication channel instance for 
+            channel (Channel): Communication channel instance for
             platform interaction.
         """
         self.agent_id = agent_id
@@ -46,8 +46,8 @@ class SocialAction:
         select and invoke social actions.
 
         Returns:
-            list[FunctionTool]: Complete set of wrapped social actions 
-            as function tools, ready for integration with LLM function 
+            list[FunctionTool]: Complete set of wrapped social actions
+            as function tools, ready for integration with LLM function
             calling systems.
         """
         return [
@@ -84,12 +84,12 @@ class SocialAction:
 
     async def perform_action(self, message: Any, type: str):
         r"""
-        Execute specific social actions based on the message 
+        Execute specific social actions based on the message
         and type through the channel.
 
         Args:
-            message (Any): Specific action instructions. 
-            type (str): Action type identifier from ActionType enum. 
+            message (Any): Specific action instructions.
+            type (str): Action type identifier from ActionType enum.
         """
         message_id = await self.channel.write_to_receive_queue(
             (self.agent_id, message, type))

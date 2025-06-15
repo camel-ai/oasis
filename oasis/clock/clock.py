@@ -29,11 +29,11 @@ class Clock:
     def time_transfer(self, now_time: datetime,
                       start_time: datetime) -> datetime:
         r"""Convert real time to adjusted simulation time.
-        
+
         Args:
             now_time (datetime): Current real time.
             start_time (datetime): Simulation's starting reference time.
-            
+
         Returns:
             datetime: Adjusted time according to the acceleration factor.
         """

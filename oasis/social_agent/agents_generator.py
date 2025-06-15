@@ -405,19 +405,19 @@ async def gen_control_agents_with_data(
     control_user_num: int,
     models: list[BaseModelBackend] | None = None,
 ) -> tuple[AgentGraph, dict]:
-    r"""Create a specified number of controllable agents with 
-    predefined profile data. All agents won't automatically 
+    r"""Create a specified number of controllable agents with
+    predefined profile data. All agents won't automatically
     follow each other in the social graph.
 
     Args:
         channel (Channel): The social platform channel to connect agents to.
         control_user_num (int): Number of controllable agents to create.
-        models (list[BaseModelBackend] | None): Optional LLM backends 
+        models (list[BaseModelBackend] | None): Optional LLM backends
         for agents.
 
     Returns:
-        tuple[AgentGraph, dict]: A tuple containing the latest agent 
-        graph with all created agents and the mapping dictionary of 
+        tuple[AgentGraph, dict]: A tuple containing the latest agent
+        graph with all created agents and the mapping dictionary of
         agent IDs to platform user IDs.
     """
     agent_graph = AgentGraph()
@@ -468,22 +468,22 @@ async def generate_reddit_agents(
                           ModelManager]] = None,
     available_actions: list[ActionType] = None,
 ) -> AgentGraph:
-    r"""Create social agents with detailed profiles loaded from a JSON file and 
+    r"""Create social agents with detailed profiles loaded from a JSON file and
     configure their initial relationships with other agents.
 
     Args:
         agent_info_path (str): Path to JSON file containing agent profiles.
-        channel (Channel): Social platform channel to connect agents to. 
-        agent_graph (AgentGraph | None): Social connection graph representing 
-        the agent's network and relationships. 
-        agent_user_id_mapping (dict[int, int] | None): Existing mapping for 
+        channel (Channel): Social platform channel to connect agents to.
+        agent_graph (AgentGraph | None): Social connection graph representing
+        the agent's network and relationships.
+        agent_user_id_mapping (dict[int, int] | None): Existing mapping for
         user and agent.
         follow_post_agent (bool): Whether to make agents follow post agent.
         mute_post_agent (bool): Whether to make agents mute post agent.
-        model (Optional[Union[BaseModelBackend, List[BaseModelBackend], 
-        ModelManager]]): Configuration for the backend LLM(s). 
+        model (Optional[Union[BaseModelBackend, List[BaseModelBackend],
+        ModelManager]]): Configuration for the backend LLM(s).
         available_actions (list[ActionType]): Subset of allowed action types.
-        If None, all action types are not permitted. 
+        If None, all action types are not permitted.
 
     Returns:
         AgentGraph: The latest agent graph with all created agents.
@@ -590,8 +590,8 @@ def connect_platform_channel(
     r"""Connect all agents in a graph to a specified platform channel.
 
     Args:
-        channel (Channel): Social platform channel to connect agents to. 
-        agent_graph (AgentGraph | None): Graph containing all agents to 
+        channel (Channel): Social platform channel to connect agents to.
+        agent_graph (AgentGraph | None): Graph containing all agents to
         connect.
 
     Returns:
@@ -611,7 +611,7 @@ async def generate_custom_agents(
 
     Args:
         channel (Channel): The social platform channel to register with.
-        agent_graph (AgentGraph | None): Graph for all agents needed to 
+        agent_graph (AgentGraph | None): Graph for all agents needed to
         register.
 
     Returns:
@@ -639,15 +639,15 @@ async def generate_reddit_agent_graph(
                           ModelManager]] = None,
     available_actions: list[ActionType] = None,
 ) -> AgentGraph:
-    r"""Create a Reddit-style agent graph from profile data without 
+    r"""Create a Reddit-style agent graph from profile data without
     platform registration.
 
     Args:
         profile_path (str): Path to JSON file containing agent profiles.
-        model (Optional[Union[BaseModelBackend, List[BaseModelBackend], 
-        ModelManager]]): Configuration for the backend LLM(s). 
-        available_actions (list[ActionType]): Subset of allowed action types. 
-        If None, all action types are not permitted. 
+        model (Optional[Union[BaseModelBackend, List[BaseModelBackend],
+        ModelManager]]): Configuration for the backend LLM(s).
+        available_actions (list[ActionType]): Subset of allowed action types.
+        If None, all action types are not permitted.
 
     Returns:
         AgentGraph: The latest graph with set agents.
@@ -699,15 +699,15 @@ async def generate_twitter_agent_graph(
                           ModelManager]] = None,
     available_actions: list[ActionType] = None,
 ) -> AgentGraph:
-    r"""Create a Twitter-style agent graph from CSV profile data without 
+    r"""Create a Twitter-style agent graph from CSV profile data without
     platform registeration.
 
     Args:
         profile_path (str): Path to CSV file containing agent profiles.
-        model (Optional[Union[BaseModelBackend, List[BaseModelBackend], 
-        ModelManager]]): Configuration for the backend LLM(s). 
-        available_actions (list[ActionType]): Subset of allowed action types. 
-        If None, all action types are not permitted. 
+        model (Optional[Union[BaseModelBackend, List[BaseModelBackend],
+        ModelManager]]): Configuration for the backend LLM(s).
+        available_actions (list[ActionType]): Subset of allowed action types.
+        If None, all action types are not permitted.
 
     Returns:
         AgentGraph: The latest graph with set agents.

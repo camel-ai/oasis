@@ -24,8 +24,8 @@ from oasis.social_platform.config import Neo4jConfig
 
 class Neo4jHandler:
     r"""
-    This class provides methods to create, delete, and manage 
-    agents (nodes) and their relationships (edges) in a Neo4j 
+    This class provides methods to create, delete, and manage
+    agents (nodes) and their relationships (edges) in a Neo4j
     graph database.
     """
 
@@ -134,7 +134,7 @@ class Neo4jHandler:
         Get all FOLLOW relationships in the graph.
 
         Returns:
-            list[tuple[int, int]]: List of (source, destination) 
+            list[tuple[int, int]]: List of (source, destination)
             agent ID pairs.
         """
         with self.driver.session() as session:
@@ -249,9 +249,9 @@ class AgentGraph:
         Initialize the agent graph.
 
         Args:
-        backend (Literal["igraph", "neo4j"]): The graph backend to use. 
+        backend (Literal["igraph", "neo4j"]): The graph backend to use.
         Default to "igraph".
-        neo4j_config (Neo4jConfig | None): Configuration for Neo4j backend. 
+        neo4j_config (Neo4jConfig | None): Configuration for Neo4j backend.
         Required if backend is "neo4j".
         """
         self.backend = backend
@@ -365,7 +365,7 @@ class AgentGraph:
         Get all edges in the graph.
 
         Returns:
-            list[tuple[int, int]]: List of (source, destination) 
+            list[tuple[int, int]]: List of (source, destination)
             agent ID pairs.
         """
         if self.backend == "igraph":
@@ -398,7 +398,7 @@ class AgentGraph:
             return self.graph.get_number_of_edges()
 
     def close(self) -> None:
-        r"""Close the graph connection. 
+        r"""Close the graph connection.
         """
         if self.backend == "neo4j":
             self.graph.close()
@@ -415,17 +415,17 @@ class AgentGraph:
         height: int = 1000,
     ):
         r"""
-        Visualize the graph and save it to a file only when 
+        Visualize the graph and save it to a file only when
         the backend is igraph.
 
         Args:
             path (str): Path to save the visualization.
             vertex_size (int, optional): Size of vertices.
             edge_arrow_size (float, optional): Size of edge arrows.
-            with_labels (bool, optional): Whether to show vertex labels. 
-            vertex_color (str, optional): Color of vertices. 
-            vertex_frame_width (int, optional): Width of vertex frames. 
-            width (int, optional): Width of the image. 
+            with_labels (bool, optional): Whether to show vertex labels.
+            vertex_color (str, optional): Color of vertices.
+            vertex_frame_width (int, optional): Width of vertex frames.
+            width (int, optional): Width of the image.
             height (int, optional): Height of the image.
         """
         if self.backend == "neo4j":
