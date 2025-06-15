@@ -18,16 +18,31 @@ class Clock:
     r"""Clock used for the sandbox."""
 
     def __init__(self, k: int = 1):
+        r"""
+        Args:
+            k (int): Time acceleration factor.
+        """
         self.real_start_time = datetime.now()
         self.k = k
         self.time_step = 0
 
     def time_transfer(self, now_time: datetime,
                       start_time: datetime) -> datetime:
+        r"""Convert real time to adjusted simulation time.
+        
+        Args:
+            now_time (datetime): Current real time.
+            start_time (datetime): Simulation's starting reference time.
+            
+        Returns:
+            datetime: Adjusted time according to the acceleration factor.
+        """
         time_diff = now_time - self.real_start_time
         adjusted_diff = self.k * time_diff
         adjusted_time = start_time + adjusted_diff
         return adjusted_time
 
     def get_time_step(self) -> str:
+        r"""Get the time step count.
+        """
         return str(self.time_step)

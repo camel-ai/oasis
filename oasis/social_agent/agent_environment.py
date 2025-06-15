@@ -29,6 +29,11 @@ class Environment(ABC):
 
 
 class SocialEnvironment(Environment):
+    r"""
+    Class for translating raw platform data into prompts. The templated 
+    prompts can be customized with specific parameters such as number of 
+    followers and number of all groups.
+    """
     followers_env_template = Template("I have $num_followers followers.")
     follows_env_template = Template("I have $num_follows follows.")
 
@@ -51,9 +56,23 @@ class SocialEnvironment(Environment):
         "posts content. Do not limit your action in just `like` to like posts")
 
     def __init__(self, action: SocialAction):
+        r"""Initialize the social environment.
+        
+        Args:
+            action (SocialAction): Pre-configured social action instance that
+                                  handles actual platform interactions.
+        """
         self.action = action
 
     async def get_posts_env(self) -> str:
+        r"""Fetch the latest posts and formats them. Then generate the post
+        description.
+
+        Returns:
+            str: Formatted post feed description. If success, fill in the
+            latest information into template prompt. If refresh fails, show the 
+            fail message.
+        """
         posts = await self.action.refresh()
         # TODO: Replace posts json format string to other formats
         if posts["success"]:
@@ -64,14 +83,33 @@ class SocialEnvironment(Environment):
         return posts_env
 
     async def get_followers_env(self) -> str:
+        r"""Fetch the number of followers and generate followers description. 
+
+        Returns:
+            str: Fill in the latest information into template prompt. 
+            Example: "I have 40 followers."
+        """
         # TODO: Implement followers env
         return self.followers_env_template.substitute(num_followers=0)
 
     async def get_follows_env(self) -> str:
+        r"""Fetch the number of follows and generate follows description. 
+
+        Returns:
+            str: Fill in the latest information into template prompt. 
+            Example: "I have 50 follows."
+        """
         # TODO: Implement follows env
         return self.follows_env_template.substitute(num_follows=0)
 
     async def get_group_env(self) -> str:
+        r"""Fetch group information (e.g. all_groups) and generate group 
+        interaction environment description.
+
+        Returns:
+            str: If group exist, Fill in the latest information into template prompt.  
+            If it doesn't, return "No groups"
+        """
         groups = await self.action.listen_from_group()
         if groups["success"]:
             all_groups = json.dumps(groups["all_groups"])
@@ -92,6 +130,13 @@ class SocialEnvironment(Environment):
         include_followers: bool = False,
         include_follows: bool = False,
     ) -> str:
+        r"""Generate social environment prompt from selected components.
+        
+        Args:
+            include_posts (bool): Whether to include post feed. 
+            include_followers (bool): Whether to include follower count. 
+            include_follows (bool): Whether to include follows count. 
+        """
         followers_env = (await self.get_followers_env()
                          if include_follows else "No followers.")
         follows_env = (await self.get_follows_env()

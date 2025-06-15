@@ -68,6 +68,25 @@ class SocialAgent(ChatAgent):
                  tools: Optional[List[Union[FunctionTool, Callable]]] = None,
                  single_iteration: bool = True,
                  interview_record: bool = False):
+        r"""Initialize a social agent with specific information.
+        
+        Args:
+            agent_id (int): The ID of the agent.
+            user_info (UserInfo): Complete social profile configuration.
+            user_info_template (TextPrompt | None): Template for displaying user 
+            information. If None, uses the default system message template. 
+            channel (Channel | None): Social platform channel to connect agents to. 
+            If None, create a new channel. 
+            model (Optional[Union[BaseModelBackend, List[BaseModelBackend], ModelManager]]): 
+            Configuration for the backend LLM(s). 
+            agent_graph (AgentGraph): Social connection graph representing the agent's 
+            network and relationships. 
+            available_actions (list[ActionType]): Subset of allowed action types. 
+            If None, all action types are not permitted. 
+            tools (Optional[List[Union[FunctionTool, Callable]]]): Tools that supported by openai.
+            single_iteration (bool): Whether to run in single-step mode.
+            interview_record (bool): Whether to enable saving interview interactions.
+        """
         self.social_agent_id = agent_id
         self.user_info = user_info
         self.channel = channel or Channel()
@@ -121,6 +140,9 @@ class SocialAgent(ChatAgent):
             "What do you think Helen should do?")
 
     async def perform_action_by_llm(self):
+        r"""Perform social media actions. The agent observes its social environment 
+        and takes actions based on the current state of the environment.
+        """
         # Get posts:
         env_prompt = await self.env.to_text_prompt()
         user_msg = BaseMessage.make_user_message(
@@ -153,6 +175,9 @@ class SocialAgent(ChatAgent):
             return e
 
     async def perform_test(self):
+        r"""
+        Present a standardized test scenario to evaluate the agent's decision-making
+        in social contexts."""
         """
         doing group polarization test for all agents.
         TODO: rewrite the function according to the ChatAgent.
@@ -247,6 +272,9 @@ class SocialAgent(ChatAgent):
         }
 
     async def perform_action_by_hci(self) -> Any:
+        r"""Present a list of available social actions for manual selection and
+        guides the user through providing required arguments.
+        """
         print("Please choose one function to perform:")
         function_list = self.env.action.get_openai_function_list()
         for i in range(len(function_list)):
@@ -274,6 +302,12 @@ class SocialAgent(ChatAgent):
         return result
 
     async def perform_action_by_data(self, func_name, *args, **kwargs) -> Any:
+        r"""
+        Execute a specific social action with provided arguments.
+
+        Args:
+            func_name (Union[ActionType, str]): The action to perform.
+        """
         func_name = func_name.value if isinstance(func_name,
                                                   ActionType) else func_name
         function_list = self.env.action.get_openai_function_list()
@@ -299,6 +333,13 @@ class SocialAgent(ChatAgent):
         r"""Remove edge if action is unfollow or add edge
         if action is follow to the agent graph.
         """
+        r"""Update the social graph based on relationship actions.
+
+        Args:
+            action_name (str): The type of relationship action (follow/unfollow).
+            arguments (dict): Action arguments containing 'followee_id' for identifying.
+        """
+        # ... [method implementation remains unchanged] ...
         if "unfollow" in action_name:
             followee_id: int | None = arguments.get("followee_id", None)
             if followee_id is None:
@@ -315,5 +356,10 @@ class SocialAgent(ChatAgent):
                 f"Agent {self.social_agent_id} followed Agent {followee_id}")
 
     def __str__(self) -> str:
+        r"""Return a string representation of the SocialAgent.
+
+        Returns:
+            str: String in format "SocialAgent(agent_id=X, model_type=Y)"
+        """
         return (f"{self.__class__.__name__}(agent_id={self.social_agent_id}, "
                 f"model_type={self.model_type.value})")
