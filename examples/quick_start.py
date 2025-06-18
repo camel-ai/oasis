@@ -75,6 +75,7 @@ async def main():
 
     # Define the path to the database
     db_path = "./reddit_simulation.db"
+    os.environ["OASIS_DB_PATH"] = os.path.abspath(db_path)
 
     # Delete the old database
     if os.path.exists(db_path):
