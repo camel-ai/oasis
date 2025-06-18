@@ -76,7 +76,8 @@ class SocialEnvironment(Environment):
         result = cursor.fetchone()
         num_followers = result[0] if result else 0
         conn.close()
-        return self.followers_env_template.substitute(num_followers)
+        return self.followers_env_template.substitute(
+            {"num_followers": num_followers})
 
     async def get_follows_env(self) -> str:
         # TODO: Implement follows env
@@ -89,7 +90,8 @@ class SocialEnvironment(Environment):
         result = cursor.fetchone()
         num_followings = result[0] if result else 0
         conn.close()
-        return self.follows_env_template.substitute(num_followings)
+        return self.follows_env_template.substitute(
+            {"num_follows": num_followings})
 
     async def get_group_env(self) -> str:
         groups = await self.action.listen_from_group()
