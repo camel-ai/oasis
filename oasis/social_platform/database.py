@@ -19,7 +19,7 @@ import sqlite3
 from typing import Any, Dict, List
 
 SCHEMA_DIR = "social_platform/schema"
-DB_DIR = "db"
+DB_DIR = "data"
 DB_NAME = "social_media.db"
 
 USER_SCHEMA_SQL = "user.sql"
@@ -60,6 +60,12 @@ TABLE_NAMES = {
 
 
 def get_db_path() -> str:
+    # 首先检查环境变量中是否设置了数据库路径
+    env_db_path = os.environ.get("OASIS_DB_PATH")
+    if env_db_path:
+        return env_db_path
+
+    # 如果没有设置环境变量，使用原来的默认路径
     curr_file_path = osp.abspath(__file__)
     parent_dir = osp.dirname(osp.dirname(curr_file_path))
     db_dir = osp.join(parent_dir, DB_DIR)
