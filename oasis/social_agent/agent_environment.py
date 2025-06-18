@@ -69,27 +69,34 @@ class SocialEnvironment(Environment):
         # TODO: Implement followers env
         agent_id = self.action.agent_id
         db_path = get_db_path()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT num_followers FROM user WHERE agent_id = ?",
-                       (agent_id, ))
-        result = cursor.fetchone()
-        num_followers = result[0] if result else 0
-        conn.close()
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT num_followers FROM user WHERE agent_id = ?",
+                           (agent_id, ))
+            result = cursor.fetchone()
+            num_followers = result[0] if result else 0
+            conn.close()
+        except Exception:
+            num_followers = 0
         return self.followers_env_template.substitute(
             {"num_followers": num_followers})
 
     async def get_follows_env(self) -> str:
         # TODO: Implement follows env
         agent_id = self.action.agent_id
-        db_path = get_db_path()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT num_followings FROM user WHERE agent_id = ?",
-                       (agent_id, ))
-        result = cursor.fetchone()
-        num_followings = result[0] if result else 0
-        conn.close()
+        try:
+            db_path = get_db_path()
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT num_followings FROM user WHERE agent_id = ?",
+                (agent_id, ))
+            result = cursor.fetchone()
+            num_followings = result[0] if result else 0
+            conn.close()
+        except Exception:
+            num_followings = 0
         return self.follows_env_template.substitute(
             {"num_follows": num_followings})
 
