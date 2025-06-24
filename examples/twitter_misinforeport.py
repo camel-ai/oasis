@@ -66,7 +66,6 @@ async def main():
         database_path=db_path,
     )
 
-    # Run the environment
     await env.reset()
 
     # First timestep: Agent 0 creates a post
