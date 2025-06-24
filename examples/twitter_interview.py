@@ -52,6 +52,7 @@ async def main():
 
     # Define the path to the database
     db_path = "./data/twitter_simulation.db"
+    os.environ["OASIS_DB_PATH"] = os.path.abspath(db_path)
 
     # Delete the old database
     if os.path.exists(db_path):
@@ -100,6 +101,7 @@ async def main():
     await env.step(actions_3)
 
     # Fourth timestep: Let some other agents respond
+    # Activate 5 agents with id 2, 4, 6, 8, 10
     actions_4 = {
         agent: LLMAction()
         for _, agent in env.agent_graph.get_agents([2, 4, 6, 8, 10])

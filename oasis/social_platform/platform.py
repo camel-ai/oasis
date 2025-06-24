@@ -1378,8 +1378,8 @@ class Platform:
                 response = interview_data.get("response", "")
                 interview_id = f"{current_time}_{user_id}"
                 action_info = {
-                    "prompt": prompt,
-                    "response": response,
+                    "prompt": prompt, 
+                    "response": response, 
                     "interview_id": interview_id
                 }
 
