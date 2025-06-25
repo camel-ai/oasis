@@ -15,5 +15,7 @@ from oasis.environment.env import OasisEnv
 
 
 def make(*args, **kwargs):
+    r"""Create a new Oasis simulation environment.
+    """
     obj = OasisEnv(*args, **kwargs)
     return obj
