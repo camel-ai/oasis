@@ -36,7 +36,7 @@ prance = "23.6.21.0"
 openapi-spec-validator = "0.7.1"
 slack_sdk = "3.31.0"
 neo4j = "5.23.0"
-camel-ai = "0.2.62"
+camel-ai = "0.2.70"
 requests_oauthlib = "2.0.0"
 
 [build-system]
