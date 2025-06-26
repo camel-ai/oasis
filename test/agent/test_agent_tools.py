@@ -67,7 +67,7 @@ async def test_agents_posting(setup_platform):
                             channel=channel,
                             tools=MathToolkit().get_tools(),
                             available_actions=[ActionType.CREATE_POST],
-                            single_iteration=False)
+                            max_iteration=1)
         await agent.env.action.sign_up(f"user{i}", f"User{i}", "A bio.")
         agents.append(agent)
 
