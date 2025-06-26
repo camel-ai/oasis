@@ -16,7 +16,9 @@ from __future__ import annotations
 import json
 import sqlite3
 from abc import ABC, abstractmethod
+from datetime import datetime
 from string import Template
+from typing import Any, Dict, List
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_platform.database import get_db_path
@@ -55,11 +57,98 @@ class SocialEnvironment(Environment):
     def __init__(self, action: SocialAction):
         self.action = action
 
-    async def get_posts_env(self) -> str:
-        posts = await self.action.refresh()
+    def _filter_posts_by_strategy(self, posts: List[Dict[str,
+                                                         Any]], max_posts: int,
+                                  strategy: str) -> List[Dict[str, Any]]:
+        """
+        Filter posts based on the specified strategy to limit memory usage.
+
+        Args:
+            posts: List of post dictionaries
+            max_posts: Maximum number of posts to keep
+            strategy: Filtering strategy ("recency", "popularity", or "mixed")
+
+        Returns:
+            Filtered list of posts
+        """
+        if len(posts) <= max_posts:
+            return posts
+
+        if strategy == "recency":
+            # Sort by creation time (most recent first)
+            sorted_posts = sorted(posts,
+                                  key=lambda x: x.get('created_at', ''),
+                                  reverse=True)
+            return sorted_posts[:max_posts]
+
+        elif strategy == "popularity":
+            # Sort by engagement metrics (likes + dislikes + shares)
+            def get_engagement_score(post):
+                likes = post.get('num_likes', 0) or 0
+                dislikes = post.get('num_dislikes', 0) or 0
+                shares = post.get('num_shares', 0) or 0
+                return likes + dislikes + shares
+
+            sorted_posts = sorted(posts,
+                                  key=get_engagement_score,
+                                  reverse=True)
+            return sorted_posts[:max_posts]
+
+        elif strategy == "mixed":
+            # Combined score: recency + popularity
+            def get_mixed_score(post):
+                likes = post.get('num_likes', 0) or 0
+                dislikes = post.get('num_dislikes', 0) or 0
+                shares = post.get('num_shares', 0) or 0
+                engagement = likes + dislikes + shares
+
+                # Simple time-based score (more recent = higher score)
+                try:
+                    created_at = post.get('created_at', '')
+                    if isinstance(created_at, str):
+                        post_time = datetime.fromisoformat(
+                            created_at.replace('Z', '+00:00'))
+                    else:
+                        post_time = created_at
+                    current_time = datetime.now()
+                    # Give higher score to more recent posts
+                    time_diff_hours = max(
+                        1, (current_time -
+                            post_time.replace(tzinfo=None)).total_seconds() /
+                        3600)
+                    recency_score = 1 / time_diff_hours
+                except:
+                    recency_score = 0
+
+                # Normalize and combine scores
+                return engagement * 0.7 + recency_score * 100 * 0.3
+
+            sorted_posts = sorted(posts, key=get_mixed_score, reverse=True)
+            return sorted_posts[:max_posts]
+
+        else:
+            # Default: return first max_posts items
+            return posts[:max_posts]
+
+    async def get_posts_env(self, user_info=None) -> str:
+        posts = await self.action.refresh(user_info)
         # TODO: Replace posts json format string to other formats
         if posts["success"]:
-            posts_env = json.dumps(posts["posts"], indent=4)
+            posts_list = posts["posts"]
+
+            # Apply post filtering if enabled and user_info is provided
+            if (user_info and hasattr(user_info, 'enable_post_filtering')
+                    and user_info.enable_post_filtering):
+
+                max_posts = getattr(user_info, 'max_posts_in_memory', 10)
+                strategy = getattr(user_info, 'post_filter_strategy',
+                                   'recency')
+
+                # Filter posts to prevent context overflow
+                posts_list = self._filter_posts_by_strategy(
+                    posts_list, max_posts, strategy)
+
+            posts_env = json.dumps(posts_list, indent=4)
             posts_env = self.posts_env_template.substitute(posts=posts_env)
         else:
             posts_env = "After refreshing, there are no existing posts."
@@ -120,12 +209,14 @@ class SocialEnvironment(Environment):
         include_posts: bool = True,
         include_followers: bool = True,
         include_follows: bool = True,
+        user_info=None,
     ) -> str:
         followers_env = (await self.get_followers_env()
                          if include_follows else "No followers.")
         follows_env = (await self.get_follows_env()
                        if include_followers else "No follows.")
-        posts_env = await self.get_posts_env() if include_posts else ""
+        posts_env = await self.get_posts_env(user_info
+                                             ) if include_posts else ""
 
         return self.env_template.substitute(
             followers_env=followers_env,

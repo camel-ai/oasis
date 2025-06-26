@@ -44,12 +44,34 @@ async def main():
         ActionType.CREATE_COMMENT,
     ]
 
+    # Generate agent graph with post filtering enabled
+    # This prevents agents from seeing too many posts and exceeding context limits
     agent_graph = await generate_twitter_agent_graph(
         profile_path=("data/twitter_dataset/anonymous_topic_200_1h/"
                       "False_Business_0.csv"),
         model=vllm_model,
         available_actions=available_actions,
+        # Post filtering configuration
+        enable_post_filtering=True,  # Enable post filtering
+        max_posts_in_memory=3,  # Limit each agent to see max 12 posts
+        post_filter_strategy=
+        "mixed",  # Use mixed strategy (recency + popularity)
+        # Comment filtering configuration
+        enable_comment_filtering=True,  # Enable comment filtering
+        max_comments_per_post=3,  # Limit to 3 comments per post
+        comment_filter_strategy="mixed",  # Use mixed strategy for comments too
     )
+
+    # Print filtering configuration info
+    print("=== Post & Comment Filtering Configuration ===")
+    print("✓ Post filtering enabled")
+    print("✓ Max posts per agent: 3")
+    print("✓ Post filtering strategy: mixed (recency + popularity)")
+    print("✓ Comment filtering enabled")
+    print("✓ Max comments per post: 3")
+    print("✓ Comment filtering strategy: mixed (recency + popularity)")
+    print("✓ This prevents context overflow during long simulations")
+    print("===============================================\n")
 
     # Define the path to the database
     db_path = "./data/twitter_simulation.db"
@@ -68,6 +90,8 @@ async def main():
 
     await env.reset()
 
+    # Initial posts to seed the discussion
+    # These will be filtered along with other posts during agent interactions
     actions_1 = {
         env.agent_graph.get_agent(0): [
             ManualAction(
@@ -89,15 +113,26 @@ async def main():
         ]
     }
 
+    print("Creating initial posts...")
     await env.step(actions_1)
 
     # Run for 20 timesteps
-    for _ in range(20):
+    # With post filtering, agents will only see the most relevant posts
+    # based on the configured strategy (mixed: recency + popularity)
+    print("Running simulation for 20 timesteps...")
+    print("Note: Agents will see filtered posts to prevent context overflow\n")
+
+    for timestep in range(20):
+        print(f"Timestep {timestep + 1}/20")
         actions = {
             agent: LLMAction()
             for _, agent in env.agent_graph.get_agents()
         }
         await env.step(actions)
+
+    print("\n=== Simulation Complete ===")
+    print("Post filtering helped prevent context overflow")
+    print("Agents only saw the most relevant posts during the simulation")
 
     # Close the environment
     await env.close()

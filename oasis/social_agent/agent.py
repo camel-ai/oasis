@@ -122,7 +122,7 @@ class SocialAgent(ChatAgent):
 
     async def perform_action_by_llm(self):
         # Get posts:
-        env_prompt = await self.env.to_text_prompt()
+        env_prompt = await self.env.to_text_prompt(user_info=self.user_info)
         user_msg = BaseMessage.make_user_message(
             role_name="User",
             content=(

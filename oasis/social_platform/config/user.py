@@ -27,6 +27,14 @@ class UserInfo:
     profile: dict[str, Any] | None = None
     recsys_type: str = "twitter"
     is_controllable: bool = False
+    # Post filtering configuration
+    enable_post_filtering: bool = False
+    max_posts_in_memory: int = 10
+    post_filter_strategy: str = "recency"  # "recency", "popularity", or "mixed"
+    # Comment filtering configuration
+    enable_comment_filtering: bool = False
+    max_comments_per_post: int = 5
+    comment_filter_strategy: str = "recency"  # "recency", "popularity", or "mixed"
 
     def to_custom_system_message(self, user_info_template: TextPrompt) -> str:
         required_keys = user_info_template.key_words

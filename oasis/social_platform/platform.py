@@ -255,7 +255,7 @@ class Platform:
         # except Exception as e:
         #     return {"success": False, "error": str(e)}
 
-    async def refresh(self, agent_id: int):
+    async def refresh(self, agent_id: int, user_info=None):
         # Retrieve posts for a specific id from the rec table
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
@@ -314,7 +314,7 @@ class Platform:
             if not results:
                 return {"success": False, "message": "No posts found."}
             results_with_comments = self.pl_utils._add_comments_to_posts(
-                results)
+                results, user_info)
 
             action_info = {"posts": results_with_comments}
             # twitter_log.info(action_info)
@@ -770,7 +770,7 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def search_posts(self, agent_id: int, query: str):
+    async def search_posts(self, agent_id: int, query: str, user_info=None):
         try:
             user_id = agent_id
             # Update the SQL query to search by content, post_id, and user_id
@@ -801,7 +801,7 @@ class Platform:
                     "message": "No posts found matching the query.",
                 }
             results_with_comments = self.pl_utils._add_comments_to_posts(
-                results)
+                results, user_info)
 
             return {"success": True, "posts": results_with_comments}
         except Exception as e:
@@ -1027,7 +1027,7 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def trend(self, agent_id: int):
+    async def trend(self, agent_id: int, user_info=None):
         """
         Get the top K trending posts in the last num_days days.
         """
@@ -1066,7 +1066,7 @@ class Platform:
                     "message": "No trending posts in the specified period.",
                 }
             results_with_comments = self.pl_utils._add_comments_to_posts(
-                results)
+                results, user_info)
 
             action_info = {"posts": results_with_comments}
             self.pl_utils._record_trace(user_id, ActionType.TREND.value,
@@ -1378,8 +1378,8 @@ class Platform:
                 response = interview_data.get("response", "")
                 interview_id = f"{current_time}_{user_id}"
                 action_info = {
-                    "prompt": prompt, 
-                    "response": response, 
+                    "prompt": prompt,
+                    "response": response,
                     "interview_id": interview_id
                 }
 

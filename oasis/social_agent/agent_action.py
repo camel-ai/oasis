@@ -93,7 +93,7 @@ class SocialAction:
         user_message = (user_name, name, bio)
         return await self.perform_action(user_message, ActionType.SIGNUP.value)
 
-    async def refresh(self):
+    async def refresh(self, user_info=None):
         r"""Refresh to get recommended posts.
 
         This method invokes an asynchronous action to refresh and fetch
@@ -101,6 +101,9 @@ class SocialAction:
         indicating success along with a list of posts. Each post in the list
         contains details such as post ID, user ID, content, creation date,
         and the number of likes.
+
+        Args:
+            user_info: Optional user information for post/comment filtering
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -129,7 +132,7 @@ class SocialAction:
                 ]
             }
         """
-        return await self.perform_action(None, ActionType.REFRESH.value)
+        return await self.perform_action(user_info, ActionType.REFRESH.value)
 
     async def do_nothing(self):
         """Perform no action.

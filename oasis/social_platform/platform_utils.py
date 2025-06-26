@@ -13,6 +13,7 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import json
 from datetime import datetime
+from typing import Any, Dict, List
 
 from oasis.social_platform.typing import RecsysType
 
@@ -72,7 +73,7 @@ class PlatformUtils:
             print(f"Error querying user_id for agent_id {agent_id}: {e}")
             return None
 
-    def _add_comments_to_posts(self, posts_results):
+    def _add_comments_to_posts(self, posts_results, user_info=None):
         # Initialize the returned posts list
         posts = []
         for row in posts_results:
@@ -152,6 +153,18 @@ class PlatformUtils:
                 num_likes,
                 num_dislikes,
             ) in comments_results]
+
+            # Apply comment filtering if enabled and user_info is provided
+            if (user_info and hasattr(user_info, 'enable_comment_filtering')
+                    and user_info.enable_comment_filtering):
+
+                max_comments = getattr(user_info, 'max_comments_per_post', 5)
+                strategy = getattr(user_info, 'comment_filter_strategy',
+                                   'recency')
+
+                # Filter comments to prevent context overflow
+                comments = self._filter_comments_by_strategy(
+                    comments, max_comments, strategy)
 
             # Add warning message if the post has been reported
             if num_reports >= self.report_threshold:
@@ -260,3 +273,83 @@ class PlatformUtils:
         else:
             # post with quote
             return {"type": "quote", "root_post_id": original_post_id}
+
+    def _filter_comments_by_strategy(self, comments: List[Dict[str, Any]],
+                                     max_comments: int,
+                                     strategy: str) -> List[Dict[str, Any]]:
+        """
+        Filter comments based on the specified strategy to limit memory usage.
+
+        Args:
+            comments: List of comment dictionaries
+            max_comments: Maximum number of comments to keep
+            strategy: Filtering strategy ("recency", "popularity", or "mixed")
+
+        Returns:
+            Filtered list of comments
+        """
+        if len(comments) <= max_comments:
+            return comments
+
+        if strategy == "recency":
+            # Sort by creation time (most recent first)
+            sorted_comments = sorted(comments,
+                                     key=lambda x: x.get('created_at', ''),
+                                     reverse=True)
+            return sorted_comments[:max_comments]
+
+        elif strategy == "popularity":
+            # Sort by engagement metrics (likes - dislikes or score)
+            def get_engagement_score(comment):
+                if 'score' in comment:
+                    return comment.get('score', 0)
+                else:
+                    likes = comment.get('num_likes', 0) or 0
+                    dislikes = comment.get('num_dislikes', 0) or 0
+                    return likes - dislikes
+
+            sorted_comments = sorted(comments,
+                                     key=get_engagement_score,
+                                     reverse=True)
+            return sorted_comments[:max_comments]
+
+        elif strategy == "mixed":
+            # Combined score: recency + popularity
+            def get_mixed_score(comment):
+                if 'score' in comment:
+                    engagement = comment.get('score', 0)
+                else:
+                    likes = comment.get('num_likes', 0) or 0
+                    dislikes = comment.get('num_dislikes', 0) or 0
+                    engagement = likes - dislikes
+
+                # Simple time-based score (more recent = higher score)
+                try:
+                    created_at = comment.get('created_at', '')
+                    if isinstance(created_at, str):
+                        comment_time = datetime.fromisoformat(
+                            created_at.replace('Z', '+00:00'))
+                    else:
+                        comment_time = created_at
+                    current_time = datetime.now()
+                    # Give higher score to more recent comments
+                    time_diff_hours = max(
+                        1,
+                        (current_time -
+                         comment_time.replace(tzinfo=None)).total_seconds() /
+                        3600)
+                    recency_score = 1 / time_diff_hours
+                except:
+                    recency_score = 0
+
+                # Normalize and combine scores
+                return engagement * 0.7 + recency_score * 10 * 0.3
+
+            sorted_comments = sorted(comments,
+                                     key=get_mixed_score,
+                                     reverse=True)
+            return sorted_comments[:max_comments]
+
+        else:
+            # Default: return first max_comments items
+            return comments[:max_comments]

@@ -40,6 +40,12 @@ async def generate_agents(
     twitter: Platform = None,
     available_actions: list[ActionType] = None,
     neo4j_config: Neo4jConfig | None = None,
+    enable_post_filtering: bool = False,
+    max_posts_in_memory: int = 10,
+    post_filter_strategy: str = "recency",
+    enable_comment_filtering: bool = False,
+    max_comments_per_post: int = 5,
+    comment_filter_strategy: str = "recency",
 ) -> AgentGraph:
     """TODO: need update the description of args and check
     Generate and return a dictionary of agents from the agent
@@ -55,6 +61,12 @@ async def generate_agents(
         cfgs (list, optional): List of configuration. (default: `None`)
         neo4j_config (Neo4jConfig, optional): Neo4j graph database
             configuration. (default: `None`)
+        enable_post_filtering (bool, optional): Enable post filtering to prevent
+            context overflow. (default: `False`)
+        max_posts_in_memory (int, optional): Maximum number of posts to keep in
+            agent memory when filtering is enabled. (default: `10`)
+        post_filter_strategy (str, optional): Filtering strategy - 'recency',
+            'popularity', or 'mixed'. (default: `'recency'`)
 
     Returns:
         dict: A dictionary of agent IDs mapped to their respective agent
@@ -88,6 +100,12 @@ async def generate_agents(
             description=agent_info["description"][agent_id],
             profile=profile,
             recsys_type=recsys_type,
+            enable_post_filtering=enable_post_filtering,
+            max_posts_in_memory=max_posts_in_memory,
+            post_filter_strategy=post_filter_strategy,
+            enable_comment_filtering=enable_comment_filtering,
+            max_comments_per_post=max_comments_per_post,
+            comment_filter_strategy=comment_filter_strategy,
         )
 
         agent = SocialAgent(
@@ -438,6 +456,12 @@ async def generate_reddit_agents(
     model: Optional[Union[BaseModelBackend, List[BaseModelBackend],
                           ModelManager]] = None,
     available_actions: list[ActionType] = None,
+    enable_post_filtering: bool = False,
+    max_posts_in_memory: int = 10,
+    post_filter_strategy: str = "recency",
+    enable_comment_filtering: bool = False,
+    max_comments_per_post: int = 5,
+    comment_filter_strategy: str = "recency",
 ) -> AgentGraph:
     if agent_user_id_mapping is None:
         agent_user_id_mapping = {}
@@ -468,6 +492,12 @@ async def generate_reddit_agents(
             description=agent_info[i]["bio"],
             profile=profile,
             recsys_type="reddit",
+            enable_post_filtering=enable_post_filtering,
+            max_posts_in_memory=max_posts_in_memory,
+            post_filter_strategy=post_filter_strategy,
+            enable_comment_filtering=enable_comment_filtering,
+            max_comments_per_post=max_comments_per_post,
+            comment_filter_strategy=comment_filter_strategy,
         )
 
         agent = SocialAgent(
@@ -569,6 +599,12 @@ async def generate_reddit_agent_graph(
     model: Optional[Union[BaseModelBackend, List[BaseModelBackend],
                           ModelManager]] = None,
     available_actions: list[ActionType] = None,
+    enable_post_filtering: bool = False,
+    max_posts_in_memory: int = 10,
+    post_filter_strategy: str = "recency",
+    enable_comment_filtering: bool = False,
+    max_comments_per_post: int = 5,
+    comment_filter_strategy: str = "recency",
 ) -> AgentGraph:
     agent_graph = AgentGraph()
     with open(profile_path, "r") as file:
@@ -593,6 +629,12 @@ async def generate_reddit_agent_graph(
             description=agent_info[i]["bio"],
             profile=profile,
             recsys_type="reddit",
+            enable_post_filtering=enable_post_filtering,
+            max_posts_in_memory=max_posts_in_memory,
+            post_filter_strategy=post_filter_strategy,
+            enable_comment_filtering=enable_comment_filtering,
+            max_comments_per_post=max_comments_per_post,
+            comment_filter_strategy=comment_filter_strategy,
         )
 
         agent = SocialAgent(
@@ -616,6 +658,12 @@ async def generate_twitter_agent_graph(
     model: Optional[Union[BaseModelBackend, List[BaseModelBackend],
                           ModelManager]] = None,
     available_actions: list[ActionType] = None,
+    enable_post_filtering: bool = False,
+    max_posts_in_memory: int = 10,
+    post_filter_strategy: str = "recency",
+    enable_comment_filtering: bool = False,
+    max_comments_per_post: int = 5,
+    comment_filter_strategy: str = "recency",
 ) -> AgentGraph:
     agent_info = pd.read_csv(profile_path)
 
@@ -635,6 +683,12 @@ async def generate_twitter_agent_graph(
             description=agent_info["description"][agent_id],
             profile=profile,
             recsys_type='twitter',
+            enable_post_filtering=enable_post_filtering,
+            max_posts_in_memory=max_posts_in_memory,
+            post_filter_strategy=post_filter_strategy,
+            enable_comment_filtering=enable_comment_filtering,
+            max_comments_per_post=max_comments_per_post,
+            comment_filter_strategy=comment_filter_strategy,
         )
 
         agent = SocialAgent(
