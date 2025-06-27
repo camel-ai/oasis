@@ -56,6 +56,7 @@ class SocialAction:
                 self.leave_group,
                 self.send_to_group,
                 self.create_group,
+                self.listen_from_group,
             ]
         ]
 
