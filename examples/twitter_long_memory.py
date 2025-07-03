@@ -56,7 +56,6 @@ async def main():
         max_posts_in_memory=3,  # Limit each agent to see max 12 posts
         post_filter_strategy=
         "mixed",  # Use mixed strategy (recency + popularity)
-        # Comment filtering configuration
         enable_comment_filtering=True,  # Enable comment filtering
         max_comments_per_post=3,  # Limit to 3 comments per post
         comment_filter_strategy="mixed",  # Use mixed strategy for comments too
