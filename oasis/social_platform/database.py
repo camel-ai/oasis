@@ -89,6 +89,13 @@ def create_db(db_path: str | None = None):
     if db_path is None:
         db_path = get_db_path()
 
+    # If the database file already exists, return the connection and cursor directly
+    if osp.exists(db_path):
+        print(f"Database file {db_path} already exists, skipping creation.")
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        return conn, cursor
+
     # Connect to the database:
     print("db_path", db_path)
     conn = sqlite3.connect(db_path)

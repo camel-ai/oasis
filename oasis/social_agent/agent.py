@@ -106,8 +106,7 @@ class SocialAgent(ChatAgent):
         super().__init__(system_message=system_message,
                          model=model,
                          scheduling_strategy='random_model',
-                         tools=all_tools,
-                         max_iteration=max_iteration)
+                         tools=all_tools)
         self.interview_record = interview_record
         self.agent_graph = agent_graph
         self.test_prompt = (
@@ -130,10 +129,12 @@ class SocialAgent(ChatAgent):
                 f"platform environments. Notice that don't limit your "
                 f"actions for example to just like the posts. "
                 f"Here is your social media environment: {env_prompt}"))
+        #print(f'user_info: {self.user_info}')
+        #print(f'env_prompt: {env_prompt}')
         try:
-            agent_log.info(
-                f"Agent {self.social_agent_id} observing environment: "
-                f"{env_prompt}")
+            # agent_log.info(
+            #     f"Agent {self.social_agent_id} observing environment: "
+            #     f"{env_prompt}")
             response = await self.astep(user_msg)
             for tool_call in response.info['tool_calls']:
                 action_name = tool_call.tool_name
