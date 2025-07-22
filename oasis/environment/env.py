@@ -118,10 +118,10 @@ class OasisEnv:
                 "DefaultPlatformType or a Platform instance.")
         
         # Initialize user profile management
-        self.user_profiles: Dict[int, Dict[str, Any]] = {}  # 存储用户画像数据
-        self.user_profile_agent: PreferenceAgent = None  # 用户画像分析代理
-        self.profile_update_enabled: bool = True  # 是否启用动态画像更新
-        self.user_profile_file: str = "user_profile.json"  # 用户画像存储文件
+        self.user_profiles: Dict[int, Dict[str, Any]] = {}  # Store user profile data
+        self.user_profile_agent: PreferenceAgent = None  # User profile analysis agent
+        self.profile_update_enabled: bool = True  # Whether to enable dynamic profile updates
+        self.user_profile_file: str = "user_profile.json"  # User profile storage file
 
     async def reset(self) -> None:
         r"""Start the platform and sign up the agents."""
@@ -133,17 +133,17 @@ class OasisEnv:
         await self._initialize_user_profile_system()
     
     async def _initialize_user_profile_system(self) -> None:
-        """初始化用户画像系统"""
+        """Initialize user profile system"""
         try:
-            # 初始化用户画像分析代理
-            # 这里需要传入模型，可以从第一个代理获取模型配置
+            # Initialize user profile analysis agent
+            # Need to pass in model, can get model configuration from the first agent
             agents_list = self.agent_graph.get_agents()
             if agents_list:
-                first_agent = agents_list[0][1]  # get_agents() 返回 [(agent_id, agent), ...]
+                first_agent = agents_list[0][1]  # get_agents() returns [(agent_id, agent), ...]
                 self.user_profile_agent = PreferenceAgent(model=first_agent.model_backend)
                 env_log.info("User profile agent initialized successfully")
             
-            # 加载已有的用户画像数据
+            # Load existing user profile data
             await self._load_user_profiles()
             env_log.info("User profile system initialized")
         except Exception as e:
@@ -151,15 +151,15 @@ class OasisEnv:
             self.profile_update_enabled = False
     
     async def _load_user_profiles(self) -> None:
-        """从文件加载已有的用户画像数据"""
+        """Load existing user profile data from file"""
         try:
             if os.path.exists(self.user_profile_file):
                 with open(self.user_profile_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                 
-                # 兼容新旧格式
+                # Compatible with new and old formats
                 if isinstance(data, dict) and "user_profiles" in data:
-                    # 新格式：包含时间戳的数据
+                    # New format: data with timestamps
                     raw_profiles = data["user_profiles"]
                     # 确保所有 key 都是字符串类型
                     self.user_profiles = {str(k): v for k, v in raw_profiles.items()}
@@ -167,7 +167,7 @@ class OasisEnv:
                     env_log.info(f"Loaded {len(self.user_profiles)} user profiles from {self.user_profile_file} (last updated: {data.get('last_updated', 'unknown')}, update #{self._profile_update_count})")
                     env_log.info(f"Profile keys loaded: {list(self.user_profiles.keys())}")
                 else:
-                    # 旧格式：直接的用户画像数据
+                    # Old format: direct user profile data
                     # 确保所有 key 都是字符串类型
                     self.user_profiles = {str(k): v for k, v in data.items()}
                     self._profile_update_count = 0
@@ -183,9 +183,9 @@ class OasisEnv:
             self._profile_update_count = 0
     
     async def _save_user_profiles(self) -> None:
-        """保存用户画像数据到文件"""
+        """Save user profile data to file"""
         try:
-            # 添加更新时间字段
+            # Add update time field
             from datetime import datetime
             
             profile_data_with_timestamp = {
@@ -194,7 +194,7 @@ class OasisEnv:
                 "update_count": getattr(self, '_profile_update_count', 0) + 1
             }
             
-            # 记录更新次数
+            # Record update count
             self._profile_update_count = profile_data_with_timestamp["update_count"]
             
             with open(self.user_profile_file, 'w', encoding='utf-8') as f:
@@ -204,16 +204,16 @@ class OasisEnv:
             env_log.error(f"Failed to save user profiles: {e}")
     
     async def _collect_user_history(self, agent_id: int) -> Dict[str, Any]:
-        """收集指定用户的历史行为数据"""
+        """Collect historical behavior data for specified user"""
         try:
-            # 使用环境中的数据库路径
+            # Use database path from environment
             import sqlite3
             
             db_path = self.platform.db_path
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
             
-            # 收集用户的帖子和评论历史
+            # Collect user's post and comment history
             user_history = {
                 "user_id": agent_id,
                 "actions": {
@@ -232,7 +232,7 @@ class OasisEnv:
                 }
             }
             
-            # 查询用户的帖子
+            # Query user's posts
             try:
                 cursor.execute("SELECT content FROM post WHERE agent_id = ?", (agent_id,))
                 posts = cursor.fetchall()
@@ -241,7 +241,7 @@ class OasisEnv:
             except Exception as e:
                 env_log.warning(f"Failed to query posts for agent {agent_id}: {e}")
             
-            # 查询用户的评论
+            # Query user's comments
             try:
                 cursor.execute("SELECT content FROM comment WHERE agent_id = ?", (agent_id,))
                 comments = cursor.fetchall()
@@ -250,7 +250,7 @@ class OasisEnv:
             except Exception as e:
                 env_log.warning(f"Failed to query comments for agent {agent_id}: {e}")
             
-            # 查询用户的操作历史（从 trace 表）
+            # Query user's operation history (from trace table)
             try:
                 cursor.execute("""
                     SELECT action_type, COUNT(*) as count 
@@ -261,7 +261,7 @@ class OasisEnv:
                 action_counts = cursor.fetchall()
                 for action_type, count in action_counts:
                     if action_type in user_history["actions"]:
-                        # 这里只记录数量，不记录具体内容
+                        # Only record count here, not specific content
                         pass
                 env_log.info(f"Found {len(action_counts)} action types for agent {agent_id}")
             except Exception as e:
@@ -280,7 +280,7 @@ class OasisEnv:
             }
     
     async def _update_user_profiles(self) -> None:
-        """动态更新所有用户的画像数据"""
+        """Dynamically update all users' profile data"""
         if not self.profile_update_enabled:
             env_log.info("User profile update is disabled")
             return
@@ -292,7 +292,7 @@ class OasisEnv:
         try:
             env_log.info("Starting dynamic user profile update...")
             
-            # 获取所有代理的信息
+            # Get information for all agents
             agents_list = self.agent_graph.get_agents()
             env_log.info(f"Found {len(agents_list)} agents to update profiles for")
             
@@ -301,36 +301,36 @@ class OasisEnv:
                 for agent_id, agent in agents_list
             }
             
-            # 为每个代理更新用户画像
+            # Update user profile for each agent
             updated_count = 0
             for agent_id, agent in agents_list:
                 try:
-                    # 确保 agent_id 是字符串类型，保持一致性
+                    # Ensure agent_id is string type for consistency
                     agent_id_str = str(agent_id)
                     env_log.info(f"Processing profile update for agent {agent_id_str} (original: {agent_id}, type: {type(agent_id)})")
                     
-                    # 收集用户历史数据
+                    # Collect user history data
                     user_history = await self._collect_user_history(agent_id)
                     env_log.info(f"Collected history for agent {agent_id_str}: {len(user_history.get('actions', {}).get('create_post', []))} posts, {len(user_history.get('actions', {}).get('create_comment', []))} comments")
                     
-                    # 获取之前的用户画像作为 previous_profile
+                    # Get previous user profile as previous_profile
                     previous_profile = self.user_profiles.get(agent_id_str, None)
                     env_log.info(f"Previous profile exists for agent {agent_id_str}: {previous_profile is not None}")
                     
-                    # 调用 PreferenceAgent 进行画像分析
+                    # Call PreferenceAgent for profile analysis
                     env_log.info(f"Calling PreferenceAgent.analyse for agent {agent_id_str}")
                     new_user_profile = await self.user_profile_agent.analyse(
                         (user_history, self.user_profiles.get(agent_id_str, {}), agent_profile_dic.get(agent_id)),
                         previous_profile=previous_profile
                     )
                     
-                    # 检查返回的结果
+                    # Check the returned result
                     if new_user_profile is None:
                         env_log.warning(f"PreferenceAgent returned None for agent {agent_id_str}")
-                        # 保持原有的画像数据，不覆盖为 None
+                        # Keep original profile data, don't overwrite with None
                         continue
                     
-                    # 更新用户画像数据（使用字符串类型的 agent_id）
+                    # Update user profile data (using string type agent_id)
                     env_log.info(f"Updating profile for agent {agent_id_str}. Current profiles: {list(self.user_profiles.keys())}")
                     self.user_profiles[agent_id_str] = new_user_profile
                     updated_count += 1
@@ -341,10 +341,10 @@ class OasisEnv:
                     env_log.error(f"Failed to update profile for agent {agent_id}: {e}")
                     import traceback
                     env_log.error(f"Traceback: {traceback.format_exc()}")
-                    # 在失败时，保持原有的画像数据不变
+                    # On failure, keep original profile data unchanged
                     continue
             
-            # 保存更新后的用户画像数据
+            # Save updated user profile data
             await self._save_user_profiles()
             env_log.info(f"Saved {len(self.user_profiles)} user profiles to {self.user_profile_file}")
             
@@ -430,7 +430,7 @@ class OasisEnv:
         await asyncio.gather(*tasks)
         env_log.info("performed all actions.")
         
-        # 在所有操作执行完成后，动态更新用户画像
+        # After all operations are completed, dynamically update user profiles
         await self._update_user_profiles()
         
         # # Control some agents to perform actions
@@ -439,21 +439,21 @@ class OasisEnv:
             self.platform.sandbox_clock.time_step += 1
     
     def enable_user_profile_update(self, enabled: bool = True) -> None:
-        """启用或禁用动态用户画像更新"""
+        """Enable or disable dynamic user profile updates"""
         self.profile_update_enabled = enabled
         env_log.info(f"User profile update {'enabled' if enabled else 'disabled'}")
     
     def set_user_profile_file(self, file_path: str) -> None:
-        """设置用户画像存储文件路径"""
+        """Set user profile storage file path"""
         self.user_profile_file = file_path
         env_log.info(f"User profile file set to: {file_path}")
     
     def get_user_profile(self, agent_id: int) -> Dict[str, Any]:
-        """获取指定代理的用户画像数据"""
+        """Get user profile data for specified agent"""
         return self.user_profiles.get(agent_id, {})
     
     def get_all_user_profiles(self) -> Dict[int, Dict[str, Any]]:
-        """获取所有用户的画像数据"""
+        """Get profile data for all users"""
         return self.user_profiles.copy()
 
     async def close(self) -> None:
