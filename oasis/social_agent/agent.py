@@ -103,12 +103,13 @@ class SocialAgent(ChatAgent):
                 ]
             ]
         all_tools = (tools or []) + (self.action_tools or [])
-        super().__init__(system_message=system_message,
-                         model=model,
-                         scheduling_strategy='random_model',
-                         tools=all_tools,
-                         # max_iteration=max_iteration)
-        self.max_iteration=max_iteration
+        super().__init__(
+            system_message=system_message,
+            model=model,
+            scheduling_strategy='random_model',
+            tools=all_tools,
+        )
+        self.max_iteration = max_iteration
         self.interview_record = interview_record
         self.agent_graph = agent_graph
         self.test_prompt = (
