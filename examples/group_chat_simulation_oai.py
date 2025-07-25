@@ -76,13 +76,11 @@ async def main():
         action_args={"content": "Hello World."})
     await env.step(actions_0)
 
-
     actions_1 = {}
 
     actions_1[env.agent_graph.get_agent(0)] = ManualAction(
         action_type=ActionType.JOIN_GROUP, action_args={"group_id": group_id})
     await env.step(actions_1)
-
 
     actions_3 = {}
 
@@ -94,8 +92,6 @@ async def main():
         },
     )
     await env.step(actions_3)
-
-
 
     actions_4 = {
         agent: LLMAction()
