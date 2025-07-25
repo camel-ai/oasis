@@ -263,6 +263,13 @@ To discover how to create profiles for large-scale users, as well as how to visu
 - OASIS initially released on arXiv - 📆 November 19, 2024
 - OASIS GitHub repository initially launched - 📆 November 19, 2024
 
+## 🔎 Follow-up Research
+
+- [MultiAgent4Collusion](https://github.com/renqibing/MultiAgent4Collusion): multi-agent collusion simulation framework in social systems
+- More to come...
+
+If your research is based on OASIS, we'd be happy to feature your work here—feel free to reach out or submit a pull request to add it to the [README](https://github.com/camel-ai/oasis/blob/main/README.md)!
+
 ## 🥂 Contributing to OASIS🏝️
 
 > We greatly appreciate your interest in contributing to our open-source initiative. To ensure a smooth collaboration and the success of contributions, we adhere to a set of contributing guidelines similar to those established by CAMEL. For a comprehensive understanding of the steps involved in contributing to our project, please refer to the OASIS [contributing guidelines](https://github.com/camel-ai/oasis/blob/master/CONTRIBUTING.md). 🤝🚀
