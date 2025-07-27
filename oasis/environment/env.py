@@ -55,6 +55,7 @@ class OasisEnv:
         platform: Union[DefaultPlatformType, Platform],
         database_path: str = None,
         semaphore: int = 128,
+        profile_update_enabled: bool = True,
     ) -> None:
         r"""Init the oasis environment.
 
@@ -120,7 +121,7 @@ class OasisEnv:
         # Initialize user profile management
         self.user_profiles: Dict[int, Dict[str, Any]] = {}  # Store user profile data
         self.user_profile_agent: PreferenceAgent = None  # User profile analysis agent
-        self.profile_update_enabled: bool = True  # Whether to enable dynamic profile updates
+        self.profile_update_enabled: bool = profile_update_enabled  # Whether to enable dynamic profile updates
         self.user_profile_file: str = "user_profile.json"  # User profile storage file
 
     async def reset(self) -> None:
@@ -161,14 +162,12 @@ class OasisEnv:
                 if isinstance(data, dict) and "user_profiles" in data:
                     # New format: data with timestamps
                     raw_profiles = data["user_profiles"]
-                    # 确保所有 key 都是字符串类型
                     self.user_profiles = {str(k): v for k, v in raw_profiles.items()}
                     self._profile_update_count = data.get("update_count", 0)
                     env_log.info(f"Loaded {len(self.user_profiles)} user profiles from {self.user_profile_file} (last updated: {data.get('last_updated', 'unknown')}, update #{self._profile_update_count})")
                     env_log.info(f"Profile keys loaded: {list(self.user_profiles.keys())}")
                 else:
                     # Old format: direct user profile data
-                    # 确保所有 key 都是字符串类型
                     self.user_profiles = {str(k): v for k, v in data.items()}
                     self._profile_update_count = 0
                     env_log.info(f"Loaded {len(self.user_profiles)} user profiles from {self.user_profile_file} (legacy format)")
