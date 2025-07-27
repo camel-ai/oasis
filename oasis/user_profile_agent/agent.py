@@ -75,7 +75,7 @@ For each section below, you will provide a descriptive text summary AND select t
     * **Interaction Style**: Provide a descriptive text. Then, map the findings to 1-2 tags chosen from the EXACT `Valid InteractionStyleEnum Tags` list below.
         -   **Valid `InteractionStyleEnum` Tags**: "Friendly & Supportive", "Formal & Professional", "Casual & Friendly", "Analytical & Inquisitive", "Supportive & Encouraging", "Humorous & Witty", "Direct & Straightforward", "Thoughtful & Reflective"
     * **Active Periods**: Select one or more tags from the EXACT `Valid ActivePeriodEnum Tags` list below.
-        -   **Valid `ActivePeriodEnum` Tags**: "上午", "下午", "晚上", "深夜"
+        -   **Valid `ActivePeriodEnum` Tags**: "Morning", "Afternoon", "Evening", "Night"
 
 4.  **Summarize Behavioral Patterns**:
     * Provide a qualitative summary text for `behavioral_summary`.
@@ -115,17 +115,17 @@ For each section below, you will provide a descriptive text summary AND select t
   "profile_summary": {
     "interests": ["Business Strategy", "Economics & Markets", "Hospitality Industry"],
     "preferences": {
-      "content_style": "专业深度分析，结合行业经验分享实用见解",
+      "content_style": "Professional in-depth analysis, sharing practical insights combined with industry experience",
       "content_style_tags": ["Professional Insights", "Educational & Tutorials"],
-      "interaction_style": "正式专业但友好支持，乐于分享经验和建议",
+      "interaction_style": "Formal and professional yet friendly and supportive, willing to share experience and advice",
       "interaction_style_tags": ["Formal & Professional", "Supportive & Encouraging"],
-      "active_periods": ["下午", "晚上"]
+      "active_periods": ["Afternoon", "Evening"]
     },
-    "behavioral_summary": "用户表现为经验丰富的行业专家，积极参与专业讨论，乐于分享见解和建议，具有明显的思想领袖特质",
+    "behavioral_summary": "User demonstrates expertise as an experienced industry professional, actively participating in professional discussions, eager to share insights and advice, with clear thought leadership qualities",
     "behavioral_archetype_tags": ["Thought Leader", "Knowledge Seeker"],
     "community_profile": {
-      "affinity": "倾向于加入商业、经济和酒店旅游行业的专业社区，重视知识分享和行业交流",
-      "potential_role": "在专业社区中担任经验分享者和指导者角色，为新人提供行业见解",
+      "affinity": "Tends to join professional communities in business, economics, and hospitality industries, values knowledge sharing and industry exchange",
+      "potential_role": "Acts as an experience sharer and mentor in professional communities, providing industry insights for newcomers",
       "potential_role_tags": ["Expert Contributor", "Mentor & Guide"]
     }
   }
@@ -149,7 +149,7 @@ For each section below, you will provide a descriptive text summary AND select t
       "content_style_tags": ["Long-form Posts", "Professional Insights"],
       "interaction_style": "Their tone is formal and professional, often engaging in inquisitive discussions.",
       "interaction_style_tags": ["Formal & Professional", "Analytical & Inquisitive"],
-      "active_periods": ["晚上", "下午"]
+      "active_periods": ["Evening", "Afternoon"]
     },
     "behavioral_summary": "The user follows a pattern of observing first, then engaging deeply as a content creator.",
     "behavioral_archetype_tags": ["Content Creator", "Thought Leader"],

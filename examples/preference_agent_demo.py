@@ -162,57 +162,111 @@ async def demonstrate_profile_analysis(preference_agent, user_history,
         display_analysis_results(analyzed_profile)
 
 
-def display_analysis_results(profile: Dict[str, Any]):
-    """Display the analyzed profile results in a readable format."""
-
+def display_analysis_results(profile):
+    """Display the analysis results in a formatted way."""
     print("\n📊 AI Analysis Results:")
     print("=" * 30)
 
-    if not profile or 'profile_summary' not in profile:
+    # Handle both dict and Pydantic model formats
+    if hasattr(profile, 'profile_summary'):
+        # Pydantic model format
+        summary = profile.profile_summary
+        interests = [interest.value if hasattr(interest, 'value') else str(interest) for interest in summary.interests]
+        
+        print(f"🎯 Identified Interests ({len(interests)}):")
+        for interest in interests:
+            print(f"   • {interest}")
+        
+        # Display preferences
+        if summary.preferences:
+            prefs = summary.preferences
+            print(f"\n✍️  Content Style:")
+            print(f"   Description: {prefs.content_style or 'N/A'}")
+            
+            # Handle content style tags
+            content_tags = []
+            if prefs.content_style_tags:
+                content_tags = [tag.value if hasattr(tag, 'value') else str(tag) for tag in prefs.content_style_tags]
+            print(f"   Tags: {content_tags}")
+
+            print(f"\n💬 Interaction Style:")
+            print(f"   Description: {prefs.interaction_style or 'N/A'}")
+            
+            # Handle interaction style tags
+            interaction_tags = []
+            if prefs.interaction_style_tags:
+                interaction_tags = [tag.value if hasattr(tag, 'value') else str(tag) for tag in prefs.interaction_style_tags]
+            print(f"   Tags: {interaction_tags}")
+
+            # Handle active periods
+            active_periods = []
+            if prefs.active_periods:
+                active_periods = [period.value if hasattr(period, 'value') else str(period) for period in prefs.active_periods]
+            print(f"\n🕒 Active Periods: {active_periods}")
+
+        # Display behavioral summary
+        if summary.behavioral_summary:
+            print(f"\n🧠 Behavioral Analysis:")
+            print(f"   {summary.behavioral_summary}")
+
+        # Handle behavioral archetype tags
+        if summary.behavioral_archetype_tags:
+            behavioral_tags = [tag.value if hasattr(tag, 'value') else str(tag) for tag in summary.behavioral_archetype_tags]
+            print(f"   Archetype Tags: {behavioral_tags}")
+
+        # Display community profile
+        if summary.community_profile:
+            cp = summary.community_profile
+            print(f"\n👥 Community Profile:")
+            print(f"   Affinity: {cp.affinity or 'N/A'}")
+            print(f"   Potential Role: {cp.potential_role or 'N/A'}")
+            
+            # Handle role tags
+            role_tags = []
+            if cp.potential_role_tags:
+                role_tags = [tag.value if hasattr(tag, 'value') else str(tag) for tag in cp.potential_role_tags]
+            print(f"   Role Tags: {role_tags}")
+    
+    elif isinstance(profile, dict) and 'profile_summary' in profile:
+        # Original dict format (fallback)
+        summary = profile['profile_summary']
+        interests = summary.get('interests', [])
+        print(f"🎯 Identified Interests ({len(interests)}):")
+        for interest in interests:
+            print(f"   • {interest}")
+        
+        # Display preferences
+        if 'preferences' in summary:
+            prefs = summary['preferences']
+            print(f"\n✍️  Content Style:")
+            print(f"   Description: {prefs.get('content_style', 'N/A')}")
+            print(f"   Tags: {prefs.get('content_style_tags', [])}")
+
+            print(f"\n💬 Interaction Style:")
+            print(f"   Description: {prefs.get('interaction_style', 'N/A')}")
+            print(f"   Tags: {prefs.get('interaction_style_tags', [])}")
+
+            print(f"\n🕒 Active Periods: {prefs.get('active_periods', [])}")
+
+        # Display behavioral summary
+        behavioral_summary = summary.get('behavioral_summary', '')
+        if behavioral_summary:
+            print(f"\n🧠 Behavioral Analysis:")
+            print(f"   {behavioral_summary}")
+
+        behavioral_tags = summary.get('behavioral_archetype_tags', [])
+        if behavioral_tags:
+            print(f"   Archetype Tags: {behavioral_tags}")
+
+        # Display community profile
+        if 'community_profile' in summary:
+            cp = summary['community_profile']
+            print(f"\n👥 Community Profile:")
+            print(f"   Affinity: {cp.get('affinity', 'N/A')}")
+            print(f"   Potential Role: {cp.get('potential_role', 'N/A')}")
+            print(f"   Role Tags: {cp.get('potential_role_tags', [])}")
+    else:
         print("❌ No valid profile data received")
-        return
-
-    summary = profile['profile_summary']
-
-    # Display interests
-    interests = summary.get('interests', [])
-    print(f"🎯 Identified Interests ({len(interests)}):")
-    for interest in interests:
-        print(f"   • {interest}")
-
-    # Display preferences
-    if 'preferences' in summary:
-        prefs = summary['preferences']
-        print(f"\n✍️  Content Style:")
-        print(f"   Description: {prefs.get('content_style', 'N/A')}")
-        print(f"   Tags: {prefs.get('content_style_tags', [])}")
-
-        print(f"\n💬 Interaction Style:")
-        print(f"   Description: {prefs.get('interaction_style', 'N/A')}")
-        print(f"   Tags: {prefs.get('interaction_style_tags', [])}")
-
-        print(f"\n🕒 Active Periods: {prefs.get('active_periods', [])}")
-
-    # Display behavioral summary
-    behavioral_summary = summary.get('behavioral_summary', '')
-    if behavioral_summary:
-        print(f"\n🧠 Behavioral Analysis:")
-        print(f"   {behavioral_summary}")
-
-    behavioral_tags = summary.get('behavioral_archetype_tags', [])
-    if behavioral_tags:
-        print(f"   Archetype Tags: {behavioral_tags}")
-
-    # Display community profile
-    if 'community_profile' in summary:
-        cp = summary['community_profile']
-        print(f"\n👥 Community Profile:")
-        print(f"   Affinity: {cp.get('affinity', 'N/A')}")
-        print(f"   Potential Role: {cp.get('potential_role', 'N/A')}")
-        print(f"   Role Tags: {cp.get('potential_role_tags', [])}")
-
-    print(f"\n💾 Complete Profile Structure:")
-    print(json.dumps(profile, indent=2, ensure_ascii=False))
 
 
 async def demonstrate_new_user_scenario(preference_agent):
