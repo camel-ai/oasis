@@ -617,9 +617,9 @@ async def generate_twitter_agent_graph(
                           ModelManager]] = None,
     available_actions: list[ActionType] = None,
 ) -> AgentGraph:
-    agent_info = pd.read_csv(profile_path)
-
     agent_graph = AgentGraph()
+    with open(profile_path, "r") as file:
+        agent_info = json.load(file)
 
     for agent_id in range(len(agent_info)):
         profile = {
