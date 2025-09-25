@@ -18,9 +18,24 @@ from oasis.social_platform.typing import RecsysType
 
 
 class PlatformUtils:
+    r"""
+    Utility class for handling platform-related database operations,
+    post/comment processing, and action trace recording in a social
+    platform environment.
+    """
 
     def __init__(self, db, db_cursor, start_time, sandbox_clock, show_score,
                  recsys_type):
+        r'''
+        Args:
+            db (sqlite3.Connection): Database connection object.
+            db_cursor (sqlite3.Cursor): Cursor object for executing queries.
+            start_time (datetime): Simulation start time.
+            sandbox_clock (Any): Object providing time control in the sandbox.
+            show_score (bool): Whether to display score (likes - dislikes)
+                instead of raw like/dislike counts.
+            recsys_type (RecsysType): Recommender system type.
+        '''
         self.db = db
         self.db_cursor = db_cursor
         self.start_time = start_time
@@ -30,6 +45,12 @@ class PlatformUtils:
 
     @staticmethod
     def _not_signup_error_message(agent_id):
+        r"""
+        Generate an error message when an agent has not signed up.
+
+        Args:
+            agent_id (int): The ID of Agent which is not signed.
+        """
         return {
             "success":
             False,
@@ -38,18 +59,41 @@ class PlatformUtils:
         }
 
     def _execute_db_command(self, command, args=(), commit=False):
+        r"""
+        Execute a single SQL command.
+
+        Args:
+            command (str): SQL command string.
+            args (tuple): Arguments for the SQL command.
+            commit (bool): Whether to commit after execution.
+        """
         self.db_cursor.execute(command, args)
         if commit:
             self.db.commit()
         return self.db_cursor
 
     def _execute_many_db_command(self, command, args_list, commit=False):
+        r"""
+        Execute a batch of SQL commands.
+
+        Args:
+            command (str): SQL command string.
+            args_list (list): List of arguments for the SQL commands.
+            commit (bool): Whether to commit after execution.
+        """
         self.db_cursor.executemany(command, args_list)
         if commit:
             self.db.commit()
         return self.db_cursor
 
     def _check_agent_userid(self, agent_id):
+        r"""
+        Retrieve the user_id associated with a given agent_id.
+
+        Args:
+            agent_id (int): Agent identifier.
+        """
+
         try:
             user_query = "SELECT user_id FROM user WHERE agent_id = ?"
             results = self._execute_db_command(user_query, (agent_id, ))
@@ -66,6 +110,12 @@ class PlatformUtils:
             return None
 
     def _add_comments_to_posts(self, posts_results):
+        r"""
+        Process posts query results and attach related comments.
+
+        Args:
+            posts_results (list[tuple]): List of rows from the post table.
+        """
         # Initialize the returned posts list
         posts = []
         for row in posts_results:
@@ -179,6 +229,13 @@ class PlatformUtils:
 
         If only the trace table needs to record time, use the entry time into
         _record_trace as the time for the trace record.
+
+        Args:
+            user_id (int): User who performed the action.
+            action_type (str): Type of action.
+            action_info (dict): Additional info for the action.
+            current_time (datetime | int, optional): Time of the action.
+                If None, sandbox clock provides the current time.
         """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
@@ -197,6 +254,13 @@ class PlatformUtils:
         )
 
     def _check_self_post_rating(self, post_id, user_id):
+        r"""
+        Check if a user is allowed to like/dislike their post.
+
+        Args:
+            post_id (int): Post identifier.
+            user_id (int): User identifier.
+        """
         self_like_check_query = "SELECT user_id FROM post WHERE post_id = ?"
         self._execute_db_command(self_like_check_query, (post_id, ))
         result = self.db_cursor.fetchone()
@@ -208,6 +272,13 @@ class PlatformUtils:
             return None
 
     def _check_self_comment_rating(self, comment_id, user_id):
+        r"""
+        Check if a user is allowed to like/dislike their comment.
+
+        Args:
+            comment_id (int): Comment identifier.
+            user_id (int): User identifier.
+        """
         self_like_check_query = ("SELECT user_id FROM comment WHERE "
                                  "comment_id = ?")
         self._execute_db_command(self_like_check_query, (comment_id, ))
@@ -220,6 +291,13 @@ class PlatformUtils:
             return None
 
     def _get_post_type(self, post_id: int):
+        r"""
+        Retrieve the type of a post (common, repost, or quote).
+
+        Args:
+            post_id (int): Post identifier.
+        """
+
         query = (
             "SELECT original_post_id, quote_content FROM post WHERE post_id "
             "= ?")

@@ -62,6 +62,12 @@ date_score = []
 
 
 def get_twhin_tokenizer():
+    r"""Lazy initialize the tokenizer for the TWHiN-BERT model
+    which has a maximum sequence length of 512 tokens.
+
+    Returns:
+        AutoTokenizer: The tokenizer for TWHiN-BERT.
+    """
     global twhin_tokenizer
     if twhin_tokenizer is None:
         from transformers import AutoTokenizer
@@ -72,6 +78,14 @@ def get_twhin_tokenizer():
 
 
 def get_twhin_model(device):
+    r"""Lazy initialize the TWHiN-BERT model on the given device.
+
+    Args:
+        device (torch.device): The device where the model should be loaded.
+
+    Returns:
+        AutoModel: The TWHiN-BERT model loaded on the specified device.
+    """
     global twhin_model
     if twhin_model is None:
         from transformers import AutoModel
@@ -81,6 +95,19 @@ def get_twhin_model(device):
 
 
 def load_model(model_name):
+    r"""Load and return the specified model by name.
+
+    Args:
+        model_name (str): The name of the model to load.
+        Paraphrase-MiniLM-L6-v2 and twhin-bert-base are supported.
+
+    Returns:
+        Union: [SentenceTransformer, Tuple[AutoTokenizer, AutoModel]]:
+            - SentenceTransformer instance if `model_name` is
+              'paraphrase-MiniLM-L6-v2'.
+            - (tokenizer, model) tuple if `model_name` is
+              'Twitter/twhin-bert-base'.
+    """
     try:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         if model_name == 'paraphrase-MiniLM-L6-v2':
@@ -98,6 +125,11 @@ def load_model(model_name):
 
 
 def get_recsys_model(recsys_type: str = None):
+    r"""Retrieve the recommender system model based on the specified type.
+
+    Args:
+        recsys_type (str, optional): The type of recommender system.
+    """
     if recsys_type == RecsysType.TWITTER.value:
         model = load_model('paraphrase-MiniLM-L6-v2')
         return model
@@ -202,6 +234,21 @@ def get_recommendations(
     score,
     top_n=100,
 ):
+    r"""
+    Fetch top-K recommendations for a given user based on
+    cosine similarity scores.
+
+    Args:
+        user_index (int): Index of the user in the cosine similarity matrix.
+        cosine_similarities (List[List]): Represent the similarity between
+        each user and item.
+        items (dict): Dictionary mapping item indices to item identifiers.
+        score (List): Weighting scores applied to the similarity values.
+        top_n (int): Number of top items to return. Defaults is 100.
+    Returns:
+        List: A list of tuples (item_identifier, weighted_similarity_score).
+        Sorted in descending order of similarity.
+    """
     similarities = np.array(cosine_similarities[user_index])
     similarities = similarities * score
     top_item_indices = similarities.argsort()[::-1][:top_n]
@@ -387,6 +434,14 @@ def get_like_post_id(user_id, action, trace_table):
 
 # Calculate the average cosine similarity between liked posts and target posts
 def calculate_like_similarity(liked_vectors, target_vectors):
+    r"""
+    Compute cosine similarity between each target vector and all
+    liked vectors, then averages the similarity scores per target.
+
+    Args:
+        liked_vectors (List[List]): Representing the embeddings of liked posts.
+        target_vectors (List): epresenting the embeddings of target posts.
+    """
     # Calculate the norms of the vectors
     liked_norms = np.linalg.norm(liked_vectors, axis=1)
     target_norms = np.linalg.norm(target_vectors, axis=1)
@@ -428,6 +483,31 @@ def rec_sys_personalized_twh(
         recall_only: bool = False,
         enable_like_score: bool = False,
         use_openai_embedding: bool = False) -> List[List]:
+    r"""
+    Generate personalized post recommendations for users on a social platform
+    based on a hybrid strategy.
+
+    Args:
+        user_table (List[Dict[str, Any]]): List of user dictionaries
+        contains user information.
+        post_table (List[Dict[str, Any]]): List of post dictionaries
+        contains post information.
+        latest_post_count (int): Number of most recent posts to update
+        into the system.
+        trace_table (List[Dict[str, Any]]): Interaction log.
+        rec_matrix (List[List]): Existing recommendation matrix.
+        max_rec_post_len (int): Maximum number of recommended posts per user.
+        current_time (int): Current simulation or clock time.
+        recall_only (bool): Whether to return candidate recall results
+        without ranking.
+        enable_like_score (bool): Whether to include similarity to previously
+        liked posts in scoring.
+        use_openai_embedding (bool): Whether to use OpenAI embeddings
+        instead of TWHIN-BERT for encoding.
+
+    Returns:
+        List[List]: Updated recommendations.
+    """
     global twhin_model, twhin_tokenizer
     if twhin_model is None or twhin_tokenizer is None:
         twhin_tokenizer, twhin_model = get_recsys_model(

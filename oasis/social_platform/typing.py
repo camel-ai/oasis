@@ -15,6 +15,9 @@ from enum import Enum
 
 
 class ActionType(Enum):
+    r"""
+    Enumeration of possible user actions in the social platform.
+    """
     EXIT = "exit"
     REFRESH = "refresh"
     SEARCH_USER = "search_user"
@@ -49,6 +52,9 @@ class ActionType(Enum):
 
     @classmethod
     def get_default_twitter_actions(cls):
+        r"""
+        Retrieve set of actions available on a Twitter-like platform.
+        """
         return [
             cls.CREATE_POST,
             cls.LIKE_POST,
@@ -60,6 +66,9 @@ class ActionType(Enum):
 
     @classmethod
     def get_default_reddit_actions(cls):
+        r"""
+        Retrieve set of actions available on a Reddit-like platform.
+        """
         return [
             cls.LIKE_POST,
             cls.DISLIKE_POST,
@@ -78,6 +87,9 @@ class ActionType(Enum):
 
 
 class RecsysType(Enum):
+    r"""
+    Types of recommendation systems.
+    """
     TWITTER = "twitter"
     TWHIN = "twhin-bert"
     REDDIT = "reddit"
@@ -85,5 +97,8 @@ class RecsysType(Enum):
 
 
 class DefaultPlatformType(Enum):
+    r"""
+    List of possible social platform.
+    """
     TWITTER = "twitter"
     REDDIT = "reddit"

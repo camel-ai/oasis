@@ -16,9 +16,24 @@ from dataclasses import dataclass
 
 @dataclass
 class Neo4jConfig:
+    r"""
+    A configuration class for Neo4j database connection parameters.
+
+    Args:
+        uri (str | None): The connection URI for the Neo4j database.
+        username (str | None): The username for database authentication.
+        password (str | None): The password for database authentication.
+    """
+
     uri: str | None = None
     username: str | None = None
     password: str | None = None
 
     def is_valid(self) -> bool:
+        r"""
+        Check if the configuration contains all required parameters.
+
+        Returns:
+            bool: Whether the configuration is validated.
+        """
         return all([self.uri, self.username, self.password])

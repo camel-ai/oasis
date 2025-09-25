@@ -21,6 +21,10 @@ from oasis.social_agent.agent_action import SocialAction
 
 
 class Environment(ABC):
+    r"""
+    An abstract base class representing an environment
+    that can be converted to text.
+    """
 
     @abstractmethod
     def to_text_prompt(self) -> str:

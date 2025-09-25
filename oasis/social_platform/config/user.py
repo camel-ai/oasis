@@ -21,6 +21,20 @@ from camel.prompts import TextPrompt
 
 @dataclass
 class UserInfo:
+    r"""A class stores user profile and provides methods to
+    generate system messages tailored for different platforms.
+
+    Args:
+        user_name (str | None): Username for the account.
+        name (str | None): The name of the user.
+        description (str | None): Brief description of the user.
+        profile (dict[str, Any] | None): Detailed profile
+        information dictionary.
+        recsys_type (str): Type of social media platform.
+        Defaults to 'twitter'.
+        is_controllable (bool): Whether the user behavior
+        can be controlled.
+    """
     user_name: str | None = None
     name: str | None = None
     description: str | None = None
@@ -29,6 +43,17 @@ class UserInfo:
     is_controllable: bool = False
 
     def to_custom_system_message(self, user_info_template: TextPrompt) -> str:
+        r"""Generate a custom system message by formatting
+        the given template with user profile.
+
+        Args:
+            user_info_template (TextPrompt): A TextPrompt containing
+            the template string and required keys.
+
+        Returns:
+            str: The formatted system message string.
+        """
+
         required_keys = user_info_template.key_words
         info_keys = set(self.profile.keys())
         missing = required_keys - info_keys
@@ -42,12 +67,25 @@ class UserInfo:
         return user_info_template.format(**self.profile)
 
     def to_system_message(self) -> str:
+        r"""Generate a system message based on the default system type.
+
+        Returns:
+            str: The generated system message, either for Twitter
+            or Reddit based on recsys_type.
+        """
+
         if self.recsys_type != "reddit":
             return self.to_twitter_system_message()
         else:
             return self.to_reddit_system_message()
 
     def to_twitter_system_message(self) -> str:
+        r"""Generate a system message for Twitter interactions.
+
+        Returns:
+            str: The formatted Twitter system message
+            with user-specific information.
+        """
         name_string = ""
         description_string = ""
         if self.name is not None:
@@ -77,6 +115,12 @@ Please perform actions by tool calling.
         return system_content
 
     def to_reddit_system_message(self) -> str:
+        r"""Generate a system message for Reddit interactions.
+
+        Returns:
+            str: The formatted Reddit system message
+            with user-specific information.
+        """
         name_string = ""
         description_string = ""
         if self.name is not None:

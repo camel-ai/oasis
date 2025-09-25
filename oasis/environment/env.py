@@ -46,6 +46,9 @@ env_log.addHandler(file_handler)
 
 
 class OasisEnv:
+    r"""
+        The environment for social platform simulation.
+    """
 
     def __init__(
         self,

@@ -51,7 +51,7 @@ if "sphinx" not in sys.modules:
 
 
 class Platform:
-    r"""Platform."""
+    r"""Platform class for social environment."""
 
     def __init__(
         self,
@@ -67,6 +67,31 @@ class Platform:
         following_post_count=3,
         use_openai_embedding: bool = False,
     ):
+        r"""
+        Initialize a simulated social media platform environment.
+
+        Args:
+            db_path (str): Path to the SQLite database file.
+            channel (Any): Communication channel for message passing.
+            Defaults to Channel() if not provided.
+            sandbox_clock (Clock): Custom clock to simulate time flow.
+            Defaults to Clock(60).
+            start_time (datetime): Simulation start time.
+            Defaults to datetime.now().
+            show_score (bool): Whether to show social score. Defaults to False.
+            allow_self_rating (bool): Whether allow user to rate their
+            own posts/comments. Defaults to True.
+            recsys_type (str | RecsysType): Recommendation system type.
+            Defaults to "reddit".
+            refresh_rec_post_count (int): Number of recommended posts per
+            refresh. Defaults to 1.
+            max_rec_post_len (int): Maximum number of recommended posts.
+            Defaults to 2.
+            following_post_count (int): Number of posts shown from followed
+            users per refresh. Defaults to 3.
+            use_openai_embedding (bool): Whether to use OpenAI embeddings
+            for text representation. Defaults to False.
+        """
         self.db_path = db_path
         self.recsys_type = recsys_type
         # import pdb; pdb.set_trace()
@@ -122,6 +147,10 @@ class Platform:
         )
 
     async def running(self):
+        r"""
+            Continuously listens for agent actions from the communication
+            channel and execute each action with appropriate parameters.
+        """
         while True:
             message_id, data = await self.channel.receive_from()
 
@@ -169,9 +198,20 @@ class Platform:
                 raise ValueError(f"Action {action} is not supported")
 
     def run(self):
+        r"""
+            Execute the listening loop.
+        """
         asyncio.run(self.running())
 
     async def sign_up(self, agent_id, user_message):
+        r"""
+            Register a new user in the social platform.
+
+            Args:
+                agent_id (int): The agent ID to be registered.
+                user_message (tuple): Tuple containing user info
+                (user_name: str, name: str, bio: str).
+        """
         user_name, name, bio = user_message
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
@@ -202,6 +242,13 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def sign_up_product(self, product_id: int, product_name: str):
+        r"""
+            Register a new product in the social platform.
+
+            Args:
+                product_id (int): The product ID to be registered.
+                product_name (str): Name of the product to be registered.
+        """
         # Note: do not sign up the product with the same product name
         try:
             product_insert_query = (
@@ -214,6 +261,14 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def purchase_product(self, agent_id, purchase_message):
+        r"""
+            Handle a purchase action by a user.
+
+            Args:
+                agent_id (int): The agent ID to take a purchase action.
+                purchase_message (tuple): Tuple containing purchase info
+                (product_name: str, purchase_num: int).
+        """
         product_name, purchase_num = purchase_message
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
@@ -252,6 +307,13 @@ class Platform:
         #     return {"success": False, "error": str(e)}
 
     async def refresh(self, agent_id: int):
+        r"""
+            Refresh the information for a given user by retrieving
+            recommended or following posts.
+
+            Args:
+                agent_id (int): Agent identifier.
+        """
         # Retrieve posts for a specific id from the rec table
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
@@ -322,6 +384,9 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def update_rec_table(self):
+        r"""
+            Update the recommendation table with new recommended posts.
+        """
         # Recsys(trace/user/post table), refresh rec table
         twitter_log.info("Starting to refresh recommendation system cache...")
         user_table = fetch_table_from_db(self.db_cursor, "user")
@@ -394,6 +459,13 @@ class Platform:
         )
 
     async def create_post(self, agent_id: int, content: str):
+        r"""
+            Insert a new record into the post table by a specific user.
+
+            Args:
+                agent_id (int): Agent identifier.
+                content (str): The content of the new post.
+        """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -424,6 +496,14 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def repost(self, agent_id: int, post_id: int):
+        r"""
+            Repost an existing post by a user and then update the
+            information in the table.
+
+            Args:
+                agent_id (int): The agent ID to take repost action.
+                post_id (int): The post ID to be reposted.
+        """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -498,6 +578,16 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def quote_post(self, agent_id: int, quote_message: tuple):
+        r"""
+            Quote an existing post with the given user and update the
+            number of shares of the root post.
+
+            Args:
+                agent_id (int): The agent ID to take quote action.
+                quote_message (tuple): A tuple containing
+                    - post_id (int): The post ID to be quoted.
+                    - quote_content (str): The content of the quoted message.
+        """
         post_id, quote_content = quote_message
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
@@ -557,6 +647,15 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def like_post(self, agent_id: int, post_id: int):
+        r"""
+            Like a post by a given user (duplicate likes by the
+            same user is not allowed) and judge whether the post
+            is the root one beforing updateing the table.
+
+            Args:
+                agent_id (int): The agent ID to take like action.
+                post_id (int): The post ID to be liked.
+        """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -612,6 +711,14 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def unlike_post(self, agent_id: int, post_id: int):
+        r"""
+            Remove a like from a post for a specific user
+            based on the root post and update the table.
+
+            Args:
+                agent_id (int): The agent ID to take unlike action.
+                post_id (int): The post ID to be unliked.
+        """
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -661,6 +768,15 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def dislike_post(self, agent_id: int, post_id: int):
+        r"""
+            Disike a post by a given user (duplicate dislikes by the
+            same user is not allowed) and judge whether the post
+            is the root one beforing updateing the table.
+
+            Args:
+                agent_id (int): The agent ID to take dislike action.
+                post_id (int): The post ID to be dislike.
+        """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -716,6 +832,15 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def undo_dislike_post(self, agent_id: int, post_id: int):
+        r"""
+            Remove a dislike from a post by a specific user and judge
+            whether the post is the root one beforing updateing the table.
+
+            Args:
+                agent_id (int): The agent ID to undo a dislike action.
+                post_id (int): Post identifier for the one dislike is
+                being removed.
+        """
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
             if post_type_result['type'] == 'repost':
@@ -767,6 +892,13 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def search_posts(self, agent_id: int, query: str):
+        r"""
+            Retrieve posts based on agent ID and post information.
+
+            Args:
+                agent_id (int): Agent identifier.
+                query (str): The search term to look for in posts.
+        """
         try:
             user_id = agent_id
             # Update the SQL query to search by content, post_id, and user_id
@@ -804,6 +936,13 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def search_user(self, agent_id: int, query: str):
+        r"""
+            Retrieve users based on agent ID and user information.
+
+            Args:
+                agent_id (int): Agent identifier.
+                query (str): The search term to look for in users.
+        """
         try:
             user_id = agent_id
             sql_query = (
@@ -853,6 +992,14 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def follow(self, agent_id: int, followee_id: int):
+        r"""
+            Follow another user while prevents duplicate following
+            from the same user and update the follower count.
+
+            Args:
+                agent_id (int): The agent ID to take follow action.
+                followee_id (int): The followee ID to be followed.
+        """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -910,6 +1057,14 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def unfollow(self, agent_id: int, followee_id: int):
+        r"""
+            Unfollow a previously followed user and update the follower
+            count and record.
+
+            Args:
+                agent_id (int): The agent ID to take unfollow action.
+                followee_id (int): The followee ID to be unfollowed.
+        """
         try:
             user_id = agent_id
             # Check for the existence of a follow record and get its ID
@@ -960,6 +1115,14 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def mute(self, agent_id: int, mutee_id: int):
+        r"""
+            Mute another user while preventing duplicate mute records
+            by the same user and update the mute record.
+
+            Args:
+                agent_id (int): The agent ID to take the mute action.
+                mutee_id (int): The mutee ID to be muted.
+        """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -997,6 +1160,13 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def unmute(self, agent_id: int, mutee_id: int):
+        r"""
+            Unmute a previously muted user and update the mute record.
+
+            Args:
+                agent_id (int): The agent ID to take unmute action.
+                mutee_id (int): The mutee ID to be unmuted.
+        """
         try:
             user_id = agent_id
             # Check for the specified mute record and get mute_id
@@ -1024,8 +1194,12 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def trend(self, agent_id: int):
-        """
-        Get the top K trending posts in the last num_days days.
+        r"""
+            Get the top K trending posts in the last num_days days based on
+            the highest number of likes.
+
+            Args:
+                agent_id (int): Agent identifier.
         """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
@@ -1073,6 +1247,16 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def create_comment(self, agent_id: int, comment_message: tuple):
+        r"""
+            Create a new comment on a post by the given user and judge
+            whether the post is the root one befor incerting the comment.
+
+            Args:
+                agent_id (int): The agent ID which created the comment.
+                comment_message (tuple): A tuple contains:
+                    - post_id (int): The post ID to be commented on.
+                    - content (str): The text content of the comment.
+        """
         post_id, content = comment_message
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
@@ -1107,6 +1291,14 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def like_comment(self, agent_id: int, comment_id: int):
+        r"""
+            Like a comment below the post by a given user and update the
+            comment's like count and record.
+
+            Args:
+                agent_id (int): The agent ID to like a comment.
+                comment_id (int): The comment ID to be liked.
+        """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -1165,6 +1357,14 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def unlike_comment(self, agent_id: int, comment_id: int):
+        r"""
+            Remove a like from a comment by a given user and update the
+            comment's like count and record.
+
+            Args:
+                agent_id (int): The agent ID to unlike a comment.
+                comment_id (int): The comment ID to be unliked.
+            """
         try:
             user_id = agent_id
 
@@ -1215,6 +1415,14 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def dislike_comment(self, agent_id: int, comment_id: int):
+        r"""
+            Dislike a comment by a given user while preventing the duplicate
+            dislike and update the dislikes count and record.
+
+            Args:
+                agent_id (int): The agent ID to dislike a comment.
+                comment_id (int): The comment ID to be disliked.
+        """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -1274,6 +1482,14 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def undo_dislike_comment(self, agent_id: int, comment_id: int):
+        r"""
+            Undo a dislike on a comment by a given user and upate the dislikes
+            count and record.
+
+            Args:
+                agent_id (int): The agent ID to undo a dislike for the comment.
+                comment_id (int): The comment ID to be cancelled disliked.
+        """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -1326,6 +1542,13 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def do_nothing(self, agent_id: int):
+        r"""
+            This function does not change any database state, but only
+            logs the None action nto the trace table with the current time.
+
+            Args:
+                agent_id (int): The agent ID to take no action.
+        """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -1342,7 +1565,7 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def interview(self, agent_id: int, interview_data):
-        """Interview an agent with the given prompt and record the response.
+        r"""Interview an agent with the given prompt and record the response.
 
         Args:
             agent_id (int): The ID of the agent being interviewed.
@@ -1388,6 +1611,16 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def send_to_group(self, agent_id: int, message: tuple):
+        r"""
+            Checks if the user is a member of the group before sending
+            the message to the group and update the information.
+
+            Args:
+                agent_id (int): The agent ID to receive group message.
+                message (tuple): A tuple contains
+                    - group_id (int): Group identifier.
+                    - content (str): Message text.
+        """
         group_id, content = message
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
@@ -1438,6 +1671,13 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def create_group(self, agent_id: int, group_name: str):
+        r"""
+            Create a new group chat and add the creator as a member.
+
+            Args:
+                agent_id (int): The agent ID to create the group.
+                group_name (str): The name of the new group.
+        """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -1472,6 +1712,14 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def join_group(self, agent_id: int, group_id: int):
+        r"""
+            Join an existing group chat while preventing duplicate
+            join by the same user and update the membership record.
+
+            Args:
+                agent_id (int): The agent ID to join the group.
+                group_id (int): Group identifier of the target one.
+        """
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
@@ -1516,6 +1764,13 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def leave_group(self, agent_id: int, group_id: int):
+        r"""
+            Remove the given user from the group.
+
+            Args:
+                agent_id (int): The agent ID to be removed.
+                group_id (int): Group identifier of the group user left.
+        """
         try:
             user_id = agent_id
 
@@ -1545,6 +1800,12 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def listen_from_group(self, agent_id: int):
+        r"""
+            Retrieve all messages from the groups that a user is a member of.
+
+            Args:
+                agent_id (int): Agent identifier.
+        """
         try:
             # get all groups Dict[group_id, group_name]
             query = """ SELECT * FROM chat_group """

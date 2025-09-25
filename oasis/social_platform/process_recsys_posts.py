@@ -23,6 +23,14 @@ from transformers import AutoModel, AutoTokenizer
 @torch.no_grad()
 def process_batch(model: AutoModel, tokenizer: AutoTokenizer,
                   batch_texts: List[str]):
+    r"""Process a batch of texts and return pooled embeddings.
+
+    Args:
+        model (AutoModel): The Automodel used for encoding.
+        tokenizer (AutoTokenizer): The AutoTokenizer corresponding
+        to the model.
+        batch_texts (List[str]): List of text strings in the batch.
+    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     inputs = tokenizer(batch_texts,
                        return_tensors="pt",
@@ -35,6 +43,15 @@ def process_batch(model: AutoModel, tokenizer: AutoTokenizer,
 
 def generate_post_vector(model: AutoModel, tokenizer: AutoTokenizer, texts,
                          batch_size):
+    r"""Generate embeddings for a list of texts using the model.
+
+    Args:
+        model (AutoModel): The Automodel used for encoding.
+        tokenizer (AutoTokenizer): The AutoTokenizer corresponding
+        to the model.
+        texts (List[str]): List of text strings to embed.
+        batch_size (int): Number of texts to process per batch.
+    """
     # Loop through all messages
     # If the list of messages is too large, process them in batches.
     all_outputs = []
@@ -47,12 +64,12 @@ def generate_post_vector(model: AutoModel, tokenizer: AutoTokenizer, texts,
 
 
 def generate_post_vector_openai(texts: List[str], batch_size: int = 100):
-    """
-    Generate embeddings using OpenAI API
+    r"""
+    Generate embeddings with OpenAI API.
 
     Args:
-        texts: List of texts to process
-        batch_size: Size of each batch
+        texts (List[str]): List of texts to process.
+        batch_size (int): Size of each batch.
     """
     openai_embedding = OpenAIEmbedding(
         model_type=EmbeddingModelType.TEXT_EMBEDDING_3_SMALL)

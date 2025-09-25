@@ -58,6 +58,11 @@ TABLE_NAMES = {
 
 
 def get_db_path() -> str:
+    r"""Get the absolute path to the SQLite database file.
+
+    Returns:
+        str: Absolute path to the SQLite database file.
+    """
     curr_file_path = osp.abspath(__file__)
     parent_dir = osp.dirname(osp.dirname(curr_file_path))
     db_dir = osp.join(parent_dir, DB_DIR)
@@ -67,6 +72,11 @@ def get_db_path() -> str:
 
 
 def get_schema_dir_path() -> str:
+    r"""Get the absolute path to the schema directory.
+
+    Returns:
+        str: Absolute path to the schema directory.
+    """
     curr_file_path = osp.abspath(__file__)
     parent_dir = osp.dirname(osp.dirname(curr_file_path))
     schema_dir = osp.join(parent_dir, SCHEMA_DIR)
@@ -76,6 +86,12 @@ def get_schema_dir_path() -> str:
 def create_db(db_path: str | None = None):
     r"""Create the database if it does not exist. A :obj:`twitter.db`
     file will be automatically created  in the :obj:`data` directory.
+
+    Args:
+        db_path (str | None): Optional path to the database file.
+
+    Returns:
+        tuple: A (connection, cursor) tuple for the created database.
     """
     schema_dir = get_schema_dir_path()
     if db_path is None:
@@ -188,6 +204,9 @@ def create_db(db_path: str | None = None):
 
 
 def print_db_tables_summary():
+    r"""
+        Print a summary of all tables in the database.
+    """
     # Connect to the SQLite database
     db_path = get_db_path()
     conn = sqlite3.connect(db_path)
@@ -234,6 +253,16 @@ def print_db_tables_summary():
 
 def fetch_table_from_db(cursor: sqlite3.Cursor,
                         table_name: str) -> List[Dict[str, Any]]:
+    r"""Fetch all rows from a given table as a list of dictionaries.
+
+    Args:
+        cursor (sqlite3.Cursor): Active SQLite cursor object.
+        table_name (str): Name of the table to fetch.
+
+    Returns:
+        List[Dict[str, Any]]: List of rows, where each row is represented
+        as a dictionary mapping column names to values.
+    """
     cursor.execute(f"SELECT * FROM {table_name}")
     columns = [description[0] for description in cursor.description]
     data_dicts = [dict(zip(columns, row)) for row in cursor.fetchall()]
@@ -241,6 +270,15 @@ def fetch_table_from_db(cursor: sqlite3.Cursor,
 
 
 def fetch_rec_table_as_matrix(cursor: sqlite3.Cursor) -> List[List[int]]:
+    r"""Fetch the recommended table which contains contains
+    (user_id, post_id) pairs and group the posts by user.
+
+    Args:
+        cursor (sqlite3.Cursor): Active SQLite cursor object.
+
+    Returns:
+        List[List[int]]: Matrix of post_ids grouped by user_id.
+    """
     # First, query all user_ids from the user table, assuming they start from
     # 1 and are consecutive
     cursor.execute("SELECT user_id FROM user ORDER BY user_id")
@@ -263,6 +301,15 @@ def fetch_rec_table_as_matrix(cursor: sqlite3.Cursor) -> List[List[int]]:
 
 def insert_matrix_into_rec_table(cursor: sqlite3.Cursor,
                                  matrix: List[List[int]]) -> None:
+    r"""Insert a matrix of user-post relationships into the reccommended table.
+
+    Args:
+        cursor (sqlite3.Cursor): Active SQLite cursor object.
+        matrix (List[List[int]]): Matrix of post_ids grouped by user_id.
+
+    Returns:
+        None.
+    """
     # Iterate through the matrix, skipping the placeholder at index 0
     for user_id, post_ids in enumerate(matrix, start=1):
         # Adjusted to start counting from 1
