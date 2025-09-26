@@ -27,6 +27,7 @@ class ActionType(Enum):
     UNLIKE_POST = "unlike_post"
     DISLIKE_POST = "dislike_post"
     UNDO_DISLIKE_POST = "undo_dislike_post"
+    REPORT_POST = "report_post"
     FOLLOW = "follow"
     UNFOLLOW = "unfollow"
     MUTE = "mute"

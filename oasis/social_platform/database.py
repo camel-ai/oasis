@@ -19,7 +19,7 @@ import sqlite3
 from typing import Any, Dict, List
 
 SCHEMA_DIR = "social_platform/schema"
-DB_DIR = "db"
+DB_DIR = "data"
 DB_NAME = "social_media.db"
 
 USER_SCHEMA_SQL = "user.sql"
@@ -28,6 +28,7 @@ FOLLOW_SCHEMA_SQL = "follow.sql"
 MUTE_SCHEMA_SQL = "mute.sql"
 LIKE_SCHEMA_SQL = "like.sql"
 DISLIKE_SCHEMA_SQL = "dislike.sql"
+REPORT_SCHEAM_SQL = "report.sql"
 TRACE_SCHEMA_SQL = "trace.sql"
 REC_SCHEMA_SQL = "rec.sql"
 COMMENT_SCHEMA_SQL = "comment.sql"
@@ -45,6 +46,7 @@ TABLE_NAMES = {
     "mute",
     "like",
     "dislike",
+    "report",
     "trace",
     "rec",
     "comment.sql",
@@ -63,6 +65,12 @@ def get_db_path() -> str:
     Returns:
         str: Absolute path to the SQLite database file.
     """
+    # First check if the database path is set in environment variables
+    env_db_path = os.environ.get("OASIS_DB_PATH")
+    if env_db_path:
+        return env_db_path
+
+    # If no environment variable is set, use the original default path
     curr_file_path = osp.abspath(__file__)
     parent_dir = osp.dirname(osp.dirname(curr_file_path))
     db_dir = osp.join(parent_dir, DB_DIR)
@@ -138,6 +146,12 @@ def create_db(db_path: str | None = None):
         with open(dislike_sql_path, "r") as sql_file:
             dislike_sql_script = sql_file.read()
         cursor.executescript(dislike_sql_script)
+
+        # Read and execute the report table SQL script:
+        report_sql_path = osp.join(schema_dir, REPORT_SCHEAM_SQL)
+        with open(report_sql_path, "r") as sql_file:
+            report_sql_script = sql_file.read()
+        cursor.executescript(report_sql_script)
 
         # Read and execute the trace table SQL script:
         trace_sql_path = osp.join(schema_dir, TRACE_SCHEMA_SQL)

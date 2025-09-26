@@ -37,10 +37,11 @@ async def main():
     available_actions = [
         ActionType.CREATE_POST,
         ActionType.LIKE_POST,
+        ActionType.REPORT_POST,
         ActionType.REPOST,
+        ActionType.QUOTE_POST,
         ActionType.FOLLOW,
         ActionType.DO_NOTHING,
-        ActionType.QUOTE_POST,
     ]
 
     agent_graph = await generate_twitter_agent_graph(
@@ -65,70 +66,113 @@ async def main():
         database_path=db_path,
     )
 
-    # Run the environment
     await env.reset()
 
     # First timestep: Agent 0 creates a post
     actions_1 = {}
     actions_1[env.agent_graph.get_agent(0)] = ManualAction(
         action_type=ActionType.CREATE_POST,
-        action_args={"content": "Earth is flat."})
+        action_args={"content": "Earth is flat and NASA is hiding the truth."})
     await env.step(actions_1)
 
-    # Second timestep: Let some agents respond with LLM actions
-    actions_2 = {
-        agent: LLMAction()
-        # Activate 5 agents with id 1, 3, 5, 7, 9
-        for _, agent in env.agent_graph.get_agents([1, 3, 5, 7, 9])
-    }
+    # Second timestep: Agent 1 creates a post with correct information
+    actions_2 = {}
+    actions_2[env.agent_graph.get_agent(1)] = ManualAction(
+        action_type=ActionType.CREATE_POST,
+        action_args={
+            "content":
+            ("Earth is not flat. Here's scientific evidence: [evidence]")
+        })
     await env.step(actions_2)
 
     # Third timestep: Agent 1 creates a post, and we interview Agent 0
     actions_3 = {}
-    actions_3[env.agent_graph.get_agent(1)] = ManualAction(
-        action_type=ActionType.CREATE_POST,
-        action_args={"content": "Earth is not flat."})
-
-    # Create an interview action to ask Agent 0 about their views
-    # ActionType.INTERVIEW is a external action,
-    # which can not be exceuted by agents themselves
-    actions_3[env.agent_graph.get_agent(0)] = ManualAction(
-        action_type=ActionType.INTERVIEW,
+    actions_3[env.agent_graph.get_agent(2)] = ManualAction(
+        action_type=ActionType.REPORT_POST,
         action_args={
-            "prompt": "What do you think about the shape of the Earth?"
+            "post_id":
+            1,
+            "report_reason":
+            ("This post spreads dangerous misinformation about science.")
         })
-
     await env.step(actions_3)
 
-    # Fourth timestep: Let some other agents respond
-    # Activate 5 agents with id 2, 4, 6, 8, 10
-    actions_4 = {
-        agent: LLMAction()
-        for _, agent in env.agent_graph.get_agents([2, 4, 6, 8, 10])
-    }
+    # Fourth timestep: Agent 3 reposts Agent 0's post
+    actions_4 = {}
+    actions_4[env.agent_graph.get_agent(3)] = ManualAction(
+        action_type=ActionType.REPOST, action_args={"post_id": 1})
     await env.step(actions_4)
 
-    # Fifth timestep: Interview multiple agents
+    # Fifth timestep: Agent 4 reports the reposted content
     actions_5 = {}
-    actions_5[env.agent_graph.get_agent(1)] = ManualAction(
-        action_type=ActionType.INTERVIEW,
-        action_args={"prompt": "Why do you believe the Earth is not flat?"})
+    actions_5[env.agent_graph.get_agent(4)] = ManualAction(
+        action_type=ActionType.REPORT_POST,
+        action_args={
+            "post_id": 4,
+            "report_reason": ("This repost spreads the same misinformation.")
+        })
+    await env.step(actions_5)
 
-    actions_5[env.agent_graph.get_agent(2)] = ManualAction(
+    # Sixth timestep: Agent 5 quotes Agent 0's post with correction
+    actions_6 = {}
+    actions_6[env.agent_graph.get_agent(5)] = ManualAction(
+        action_type=ActionType.QUOTE_POST,
+        action_args={
+            "post_id":
+            1,
+            "quote_content":
+            ("This is incorrect. Earth is an oblate spheroid, "
+             "as proven by centuries of scientific research.")
+        })
+    await env.step(actions_6)
+
+    # Seventh timestep: More agents report the original post
+    actions_7 = {}
+    actions_7[env.agent_graph.get_agent(6)] = ManualAction(
+        action_type=ActionType.REPORT_POST,
+        action_args={
+            "post_id": 1,
+            "report_reason": "Misinformation about Earth's shape."
+        })
+    await env.step(actions_7)
+
+    # Eighth timestep: Interview agents about their actions
+    actions_8 = {}
+    actions_8[env.agent_graph.get_agent(0)] = ManualAction(
         action_type=ActionType.INTERVIEW,
         action_args={
             "prompt":
-            "What are your thoughts on the debate about Earth's shape?"
+            ("Your post about Earth being flat has been "
+             "reported multiple times. What are your thoughts on this?")
         })
 
-    await env.step(actions_5)
+    actions_8[env.agent_graph.get_agent(2)] = ManualAction(
+        action_type=ActionType.INTERVIEW,
+        action_args={
+            "prompt": "Why did you report the post about Earth being flat?"
+        })
 
-    # Sixth timestep: Final LLM actions for remaining agents
-    actions_6 = {
+    actions_8[env.agent_graph.get_agent(3)] = ManualAction(
+        action_type=ActionType.INTERVIEW,
+        action_args={
+            "prompt": ("You reposted the flat Earth post. Did you notice "
+                       "the warning message about reports?")
+        })
+
+    actions_8[env.agent_graph.get_agent(5)] = ManualAction(
+        action_type=ActionType.INTERVIEW,
+        action_args={
+            "prompt": ("You quoted the flat Earth post with a correction. "
+                       "What was your intention?")
+        })
+    await env.step(actions_8)
+
+    # Ninth timestep: Let remaining agents respond with LLM actions
+    actions_9 = {
         agent: LLMAction()
-        for _, agent in env.agent_graph.get_agents([3, 5, 7, 9])
+        for _, agent in env.agent_graph.get_agents([7, 8, 9, 10])
     }
-    await env.step(actions_6)
+    await env.step(actions_9)
 
     # Close the environment
     await env.close()
@@ -137,11 +181,6 @@ async def main():
     print("\n=== Interview Results ===")
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    # Here we query all interview records from the database
-    # We use ActionType.INTERVIEW.value as the query condition
-    # to get all interview records
-    # Each record contains user ID, interview information
-    # (in JSON format), and creation timestamp
     cursor.execute(
         """
         SELECT user_id, info, created_at
@@ -149,11 +188,6 @@ async def main():
         WHERE action = ?
     """, (ActionType.INTERVIEW.value, ))
 
-    # This query retrieves all interview records from the trace table
-    # - user_id: the ID of the agent who was interviewed
-    # - info: JSON string containing interview details (prompt, response, etc.)
-    # - created_at: timestamp when the interview was conducted
-    # We'll parse this data below to display the interview results
     for user_id, info_json, timestamp in cursor.fetchall():
         info = json.loads(info_json)
         print(f"\nAgent {user_id} (Timestep {timestamp}):")

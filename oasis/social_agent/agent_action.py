@@ -75,10 +75,12 @@ class SocialAction:
                 self.unmute,
                 self.purchase_product,
                 self.interview,
+                self.report_post,
                 self.join_group,
                 self.leave_group,
                 self.send_to_group,
                 self.create_group,
+                self.listen_from_group,
             ]
         ]
 
@@ -701,6 +703,34 @@ class SocialAction:
             }
         """
         return await self.perform_action(prompt, ActionType.INTERVIEW.value)
+
+    async def report_post(self, post_id: int, report_reason: str):
+        r"""Report a specified post with a given reason.
+
+        This method invokes an asynchronous action to report a specified post
+        with a given reason. Upon successful execution, it returns a
+        dictionary indicating success and the ID of the newly created report.
+
+        Args:
+            post_id (int): The ID of the post to be reported.
+            report_reason (str): The reason for reporting the post.
+
+        Returns:
+            dict: A dictionary with two key-value pairs. The 'success' key
+                maps to a boolean indicating whether the report creation was
+                successful. The 'report_id' key maps to the integer ID of the
+                newly created report.
+
+            Example of a successful return:
+            {"success": True, "report_id": 123}
+
+        Note:
+            Attempting to report a post that the user has already reported will
+            result in a failure.
+        """
+        report_message = (post_id, report_reason)
+        return await self.perform_action(report_message,
+                                         ActionType.REPORT_POST.value)
 
     async def create_group(self, group_name: str):
         r"""Creates a new group on the platform.

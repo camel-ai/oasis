@@ -15,7 +15,7 @@ import asyncio
 import os
 
 from camel.models import ModelFactory
-from camel.types import ModelPlatformType
+from camel.types import ModelPlatformType, ModelType
 
 import oasis
 from oasis import (ActionType, LLMAction, ManualAction,
@@ -24,9 +24,8 @@ from oasis import (ActionType, LLMAction, ManualAction,
 
 async def main():
     openai_model = ModelFactory.create(
-        model_platform=ModelPlatformType.DEEPSEEK,
-        model_type="deepseek-chat",
-        url="https://api.deepseek.com/v1",
+        model_platform=ModelPlatformType.OPENAI,
+        model_type=ModelType.GPT_4O_MINI,
     )
 
     # Define the available actions for the agents
@@ -70,19 +69,18 @@ async def main():
     group_result = await env.platform.create_group(1, "AI Group")
     group_id = group_result["group_id"]
 
+    actions_0 = {}
+
+    actions_0[env.agent_graph.get_agent(0)] = ManualAction(
+        action_type=ActionType.CREATE_POST,
+        action_args={"content": "Hello World."})
+    await env.step(actions_0)
+
     actions_1 = {}
 
     actions_1[env.agent_graph.get_agent(0)] = ManualAction(
         action_type=ActionType.JOIN_GROUP, action_args={"group_id": group_id})
     await env.step(actions_1)
-
-    actions_2 = {
-        agent: LLMAction()
-        # Activate 5 agents with id 1, 3, 5, 7, 9
-        for _, agent in env.agent_graph.get_agents([1, 3, 5, 7, 9])
-    }
-
-    await env.step(actions_2)
 
     actions_3 = {}
 
@@ -90,7 +88,7 @@ async def main():
         action_type=ActionType.SEND_TO_GROUP,
         action_args={
             "group_id": group_id,
-            "message": "DeepSeek is amazing!"
+            "message": "Hello world! This the best group ever!"
         },
     )
     await env.step(actions_3)

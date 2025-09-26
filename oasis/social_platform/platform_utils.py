@@ -24,8 +24,14 @@ class PlatformUtils:
     platform environment.
     """
 
-    def __init__(self, db, db_cursor, start_time, sandbox_clock, show_score,
-                 recsys_type):
+    def __init__(self,
+                 db,
+                 db_cursor,
+                 start_time,
+                 sandbox_clock,
+                 show_score,
+                 recsys_type,
+                 report_threshold=1):
         r'''
         Args:
             db (sqlite3.Connection): Database connection object.
@@ -35,6 +41,8 @@ class PlatformUtils:
             show_score (bool): Whether to display score (likes - dislikes)
                 instead of raw like/dislike counts.
             recsys_type (RecsysType): Recommender system type.
+            report_threshold (int): The number of reports to trigger a
+            warning message.
         '''
         self.db = db
         self.db_cursor = db_cursor
@@ -42,6 +50,7 @@ class PlatformUtils:
         self.sandbox_clock = sandbox_clock
         self.show_score = show_score
         self.recsys_type = recsys_type
+        self.report_threshold = report_threshold
 
     @staticmethod
     def _not_signup_error_message(agent_id):
@@ -134,11 +143,11 @@ class PlatformUtils:
                 post_id = post_type_result["root_post_id"]
                 self.db_cursor.execute(
                     "SELECT content, quote_content, created_at, num_likes, "
-                    "num_dislikes, num_shares FROM post WHERE post_id = ?",
-                    (post_id, ))
+                    "num_dislikes, num_shares, num_reports FROM post "
+                    "WHERE post_id = ?", (post_id, ))
                 original_post_result = self.db_cursor.fetchone()
                 (content, quote_content, created_at, num_likes, num_dislikes,
-                 num_shares) = original_post_result
+                 num_shares, num_reports) = original_post_result
                 post_content = (
                     f"User {user_id} reposted a post from User "
                     f"{original_user_id}. Repost content: {content}. ")
@@ -154,6 +163,11 @@ class PlatformUtils:
 
             elif post_type_result["type"] == "common":
                 post_content = content
+                # Get num_reports for common posts
+                self.db_cursor.execute(
+                    "SELECT num_reports FROM post WHERE post_id = ?",
+                    (post_id, ))
+                num_reports = self.db_cursor.fetchone()[0]
 
             # For each post, query its corresponding comments
             self.db_cursor.execute(
@@ -191,6 +205,12 @@ class PlatformUtils:
                 num_dislikes,
             ) in comments_results]
 
+            # Add warning message if the post has been reported
+            if num_reports >= self.report_threshold:
+                warning_message = ("[Warning: This post has been reported"
+                                   f" {num_reports} times]")
+                post_content = f"{warning_message}\n{post_content}"
+
             # Add post information and corresponding comments to the posts list
             posts.append({
                 "post_id":
@@ -210,6 +230,8 @@ class PlatformUtils:
                    }),
                 "num_shares":
                 num_shares,
+                "num_reports":
+                num_reports,
                 "comments":
                 comments,
             })

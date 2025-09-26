@@ -1,0 +1,12 @@
+services:
+  oasis:
+    image: oasis:localdev
+    container_name: oasis-localdev
+    build:
+      context: ../
+      dockerfile: .container/Dockerfile
+    volumes:
+      - ../:/app/oasis
+    env_file:
+      - .env
+    command: ["tail", "-f", "/dev/null"]

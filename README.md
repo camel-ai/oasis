@@ -249,8 +249,9 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 ### Latest Updates
 
-📢 Add features for creating group chats, sending messages in group chats, and leaving group chats. - 📆 June 6, 2025
+📢 Add the report post action to mark inappropriate content. - 📆 June 8, 2025
 
+- Add features for creating group chats, sending messages in group chats, and leaving group chats. - 📆 June 6, 2025
 - Support Interview Action for asking agents specific questions and getting answers. - 📆 June 2, 2025
 - Support customization of each agent's models, tools, and prompts; refactor the interface to follow the PettingZoo style. - 📆 May 22, 2025
 - Refactor into the OASIS environment, publish camel-oasis on PyPI, and release the documentation. - 📆 April 24, 2025
@@ -261,6 +262,13 @@ To discover how to create profiles for large-scale users, as well as how to visu
 - Introduced an Electronic Mall on the Reddit platform - 📆 December 5, 2024
 - OASIS initially released on arXiv - 📆 November 19, 2024
 - OASIS GitHub repository initially launched - 📆 November 19, 2024
+
+## 🔎 Follow-up Research
+
+- [MultiAgent4Collusion](https://github.com/renqibing/MultiAgent4Collusion): multi-agent collusion simulation framework in social systems
+- More to come...
+
+If your research is based on OASIS, we'd be happy to feature your work here—feel free to reach out or submit a pull request to add it to the [README](https://github.com/camel-ai/oasis/blob/main/README.md)!
 
 ## 🥂 Contributing to OASIS🏝️
 

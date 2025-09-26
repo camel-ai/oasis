@@ -15,7 +15,6 @@ import asyncio
 import os
 
 from camel.models import ModelFactory
-from camel.toolkits import SymPyToolkit
 from camel.types import ModelPlatformType, ModelType
 
 import oasis
@@ -38,13 +37,16 @@ async def main():
         ActionType.FOLLOW,
     ]
 
+    # initialize the agent graph
     agent_graph = AgentGraph()
-    agent_1 = SocialAgent(
+
+    # initialize the agent alice and add it to the agent graph
+    agent_alice = SocialAgent(
         agent_id=0,
         user_info=UserInfo(
-            user_name="ali",
+            user_name="alice",
             name="Alice",
-            description="A girl",
+            description="A tech enthusiast and a fan of OASIS",
             profile=None,
             recsys_type="reddit",
         ),
@@ -52,25 +54,27 @@ async def main():
         model=openai_model,
         available_actions=available_actions,
     )
-    agent_graph.add_agent(agent_1)
+    agent_graph.add_agent(agent_alice)
 
-    agent_2 = SocialAgent(agent_id=1,
-                          user_info=UserInfo(
-                              user_name="bubble",
-                              name="Bob",
-                              description="A boy",
-                              profile=None,
-                              recsys_type="reddit",
-                          ),
-                          tools=SymPyToolkit().get_tools(),
-                          agent_graph=agent_graph,
-                          model=openai_model,
-                          available_actions=available_actions,
-                          single_iteration=False)
-    agent_graph.add_agent(agent_2)
+    # initialize the agent bob and add it to the agent graph
+    agent_bob = SocialAgent(
+        agent_id=1,
+        user_info=UserInfo(
+            user_name="bob",
+            name="Bob",
+            description=("A researcher of using OASIS to research "
+                         "the social behavior of users"),
+            profile=None,
+            recsys_type="reddit",
+        ),
+        agent_graph=agent_graph,
+        model=openai_model,
+        available_actions=available_actions,
+    )
+    agent_graph.add_agent(agent_bob)
 
     # Define the path to the database
-    db_path = "./data/reddit_simulation.db"
+    db_path = "./reddit_simulation.db"
     os.environ["OASIS_DB_PATH"] = os.path.abspath(db_path)
 
     # Delete the old database
@@ -87,35 +91,23 @@ async def main():
     # Run the environment
     await env.reset()
 
-    actions_1 = {
+    # Define a manual action for the agent alice to create a post
+    action_hello = {
         env.agent_graph.get_agent(0): [
-            ManualAction(
-                action_type=ActionType.CREATE_POST,
-                action_args={
-                    "content":
-                    "I am doing my homework. Can any kind soul help me "
-                    "simplify this expression: "
-                    "(x**4 - 16)/(x**2 - 4) + sin(x)**2 + cos(x)**2 + "
-                    "(x**3 + 6*x**2 + 12*x + 8)/(x + 2)"
-                }),
-            ManualAction(action_type=ActionType.CREATE_COMMENT,
-                         action_args={
-                             "post_id":
-                             "1",
-                             "content":
-                             "I will give a big thumbs up to "
-                             "anyone who helps me solve this!"
-                         })
+            ManualAction(action_type=ActionType.CREATE_POST,
+                         action_args={"content": "Hello, OASIS World!"})
         ]
     }
-    await env.step(actions_1)
+    # Run the manual action
+    await env.step(action_hello)
 
-    for _ in range(3):
-        action = {
-            agent: LLMAction()
-            for _, agent in env.agent_graph.get_agents()
-        }
-        await env.step(action)
+    # Define the LLM actions for all agents
+    all_agents_llm_actions = {
+        agent: LLMAction()
+        for _, agent in env.agent_graph.get_agents()
+    }
+    # Run the LLM actions
+    await env.step(all_agents_llm_actions)
 
     # Close the environment
     await env.close()

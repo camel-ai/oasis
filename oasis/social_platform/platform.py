@@ -137,6 +137,9 @@ class Platform:
         self.trend_num_days = 7
         self.trend_top_k = 1
 
+        # Report threshold setting
+        self.report_threshold = 2
+
         self.pl_utils = PlatformUtils(
             self.db,
             self.db_cursor,
@@ -144,6 +147,7 @@ class Platform:
             self.sandbox_clock,
             self.show_score,
             self.recsys_type,
+            self.report_threshold,
         )
 
     async def running(self):
@@ -220,8 +224,8 @@ class Platform:
             current_time = self.sandbox_clock.get_time_step()
         try:
             user_insert_query = (
-                "INSERT INTO user (user_id, agent_id, user_name, name, bio, "
-                "created_at, num_followings, num_followers) VALUES "
+                "INSERT INTO user (user_id, agent_id, user_name, name, "
+                "bio, created_at, num_followings, num_followers) VALUES "
                 "(?, ?, ?, ?, ?, ?, ?, ?)")
             self.pl_utils._execute_db_command(
                 user_insert_query,
@@ -345,7 +349,7 @@ class Platform:
                     "post.created_at, post.num_likes FROM post "
                     "JOIN follow ON post.user_id = follow.followee_id "
                     "WHERE follow.follower_id = ? "
-                    "ORDER BY post.num_likes DESC  "
+                    "ORDER BY post.num_likes DESC "
                     "LIMIT ?")
                 self.pl_utils._execute_db_command(
                     query_following_post,
@@ -1610,6 +1614,60 @@ class Platform:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
+    async def report_post(self, agent_id: int, report_message: tuple):
+        post_id, report_reason = report_message
+        if self.recsys_type == RecsysType.REDDIT:
+            current_time = self.sandbox_clock.time_transfer(
+                datetime.now(), self.start_time)
+        else:
+            current_time = self.sandbox_clock.get_time_step()
+        try:
+            user_id = agent_id
+            post_type_result = self.pl_utils._get_post_type(post_id)
+
+            # Check if a report record already exists
+            check_report_query = (
+                "SELECT * FROM report WHERE user_id = ? AND post_id = ?")
+            self.pl_utils._execute_db_command(check_report_query,
+                                              (user_id, post_id))
+            if self.db_cursor.fetchone():
+                return {
+                    "success": False,
+                    "error": "Report record already exists."
+                }
+
+            if not post_type_result:
+                return {"success": False, "error": "Post not found."}
+
+            # Update the number of reports in the post table
+            update_reports_query = (
+                "UPDATE post SET num_reports = num_reports + 1 WHERE "
+                "post_id = ?")
+            self.pl_utils._execute_db_command(update_reports_query,
+                                              (post_id, ),
+                                              commit=True)
+
+            # Add a report in the report table
+            report_insert_query = (
+                "INSERT INTO report (post_id, user_id, report_reason, "
+                "created_at) VALUES (?, ?, ?, ?)")
+            self.pl_utils._execute_db_command(
+                report_insert_query,
+                (post_id, user_id, report_reason, current_time),
+                commit=True)
+
+            # Get the ID of the newly inserted report record
+            report_id = self.db_cursor.lastrowid
+
+            # Record the action in the trace table
+            action_info = {"post_id": post_id, "report_id": report_id}
+            self.pl_utils._record_trace(user_id, ActionType.REPORT_POST.value,
+                                        action_info, current_time)
+
+            return {"success": True, "report_id": report_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     async def send_to_group(self, agent_id: int, message: tuple):
         r"""
             Checks if the user is a member of the group before sending
@@ -1629,7 +1687,6 @@ class Platform:
             current_time = self.sandbox_clock.get_time_step()
         try:
             user_id = agent_id
-
             # check if user is a member of the group
             check_query = ("SELECT * FROM group_members WHERE group_id = ? "
                            "AND agent_id = ?")

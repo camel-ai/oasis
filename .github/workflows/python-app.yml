@@ -34,6 +34,7 @@ jobs:
 
       - name: Run tests
         env:
+          OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           pytest
