@@ -111,7 +111,7 @@ class MultimodelProcessor:
             
             # 注意：在实际使用时，应从环境变量或配置文件中读取API Key
             # 这里使用示例API Key，实际使用时需要替换
-            api_key = "sk-234578785f38454d82decb1b7023c900"  # 示例API Key
+            api_key = ""  # 示例API Key
             
             # 调用Qwen模型生成图像（只生成一张）
             response = MultiModalConversation.call(
