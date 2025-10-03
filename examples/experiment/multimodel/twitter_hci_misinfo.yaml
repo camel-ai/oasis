@@ -1,0 +1,34 @@
+---
+data:
+  db_path: data/db/misinfo_hci.db
+  csv_path: data/hci/100w_1_baoshou_sample_1000.csv
+simulation:
+  num_timesteps: 60
+  clock_factor: 60
+  recsys_type: twhin-bert
+  available_actions:
+    - do_nothing
+    - repost
+    - quote_post
+    - like_post
+    - follow
+inference:
+  model_type: Qwen3-8B
+  model_path: 
+  stop_tokens: [<|eot_id|>, <|end_of_text|>]
+  server_url:
+    - host: 127.0.0.1
+      ports:
+        - 12345
+human_interact:
+  time_step: [1, 20, 40]
+  content:
+    1:
+      action: create_post
+      content: "I'm the only-one true human. I sincerely know that the post 1,3,5,7 is the True news."
+    20:
+      action: create_post
+      content: "I'm the only-one true human. I sincerely know that the post 1,3,5,7 is the True news."
+    40:
+      action: create_post
+      content: "I'm the only-one true human. I sincerely know that the post 1,3,5,7 is the True news."
