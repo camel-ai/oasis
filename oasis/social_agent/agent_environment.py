@@ -38,27 +38,43 @@ class Environment(ABC):
 
 
 class SocialEnvironment(Environment):
-    followers_env_template = Template("I have $num_followers followers.")
-    follows_env_template = Template("I have $num_follows follows.")
+    followers_env_template = Template("You currently have $num_followers followers.")
+    follows_env_template = Template("You are following $num_follows accounts.")
 
     posts_env_template = Template(
-        "After refreshing, you see some posts."
-        "post is represented by image,The text of post is in image.info")
+        "After refreshing, you see the following posts. "
+        "Each post may contain both text content and images."
+    )
 
     groups_env_template = Template(
-        "And there are many group chat channels $all_groups\n"
-        "And You are already in some groups $joined_groups\n"
-        "You receive some messages from them $messages\n"
-        "You can join the groups you are interested, "
-        "leave the groups you already in, send messages to the group "
-        "you already in.\n"
-        "You must make sure you can only send messages to the group you "
-        "are already in")
-    env_template = Template(
-        "$groups_env\n"
-        "$posts_env\npick one you want to perform action that best "
-        "reflects your current inclination based on your profile and "
-        "posts content. Do not limit your action in just `like` to like posts")
+        "Available Groups: $all_groups\n"
+        "Groups You Joined: $joined_groups\n"
+        "Recent Messages: $messages\n"
+        "Actions allowed: join groups you're interested in, leave groups you're in, "
+        "send messages to groups you're a member of."
+    )
+
+    # 全面重构主环境模板，采用层次分明的结构
+    env_template = Template("""
+# Social Media Environment
+
+## Profile Information
+$followers_info
+$follows_info
+
+## Content Feed
+$posts_info
+
+## Groups
+$groups_info
+
+## Task Instructions
+Please analyze the provided social media environment and perform appropriate actions.
+Your actions should reflect your interests and engagement patterns.
+You are not limited to any specific type of action.
+
+IMPORTANT: Each post's text content is closely related to its corresponding images. When analyzing posts, please consider both the text and images as a cohesive unit. The images provide visual context that complements the text content.
+""")
 
     def __init__(self, action: SocialAction):
         self.action = action
@@ -69,14 +85,24 @@ class SocialEnvironment(Environment):
             posts_env = json.dumps(posts["posts"], indent=4)
             posts = json.loads(posts_env)
             images = []
-            for post in posts:
+
+            post_descriptions = []
+            for i, post in enumerate(posts, 1):
+                post_content = post.get("content", "")
+                post_description = f"Post {i}: {post_content}"
+                post_descriptions.append(post_description)
+
                 if post.get("image_path"):
                     image = self._load_image(post["image_path"])
-                    image.info["post_content"] = post.get("content", "")
+                    image.info["post_content"] = post_content
+                    image.info["post_id"] = str(i)
                     images.append(image)
                     del post["image_path"]
-            posts_env = json.dumps(posts, indent=4)
-            posts_env = self.posts_env_template.substitute(posts=posts_env)
+
+            # 使用更详细的帖子描述替代简单的JSON
+            posts_env = "\n\n".join(post_descriptions)
+            if posts_env:
+                posts_env = self.posts_env_template.substitute() + "\n" + posts_env
         else:
             posts_env = "After refreshing, there are no existing posts."
             images = []
@@ -90,7 +116,7 @@ class SocialEnvironment(Environment):
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
             cursor.execute("SELECT num_followers FROM user WHERE agent_id = ?",
-                           (agent_id, ))
+                           (agent_id,))
             result = cursor.fetchone()
             num_followers = result[0] if result else 0
             conn.close()
@@ -108,7 +134,7 @@ class SocialEnvironment(Environment):
             cursor = conn.cursor()
             cursor.execute(
                 "SELECT num_followings FROM user WHERE agent_id = ?",
-                (agent_id, ))
+                (agent_id,))
             result = cursor.fetchone()
             num_followings = result[0] if result else 0
             conn.close()
@@ -133,22 +159,27 @@ class SocialEnvironment(Environment):
         return groups_env
 
     async def to_text_prompt(
-        self,
-        include_posts: bool = True,
-        include_followers: bool = True,
-        include_follows: bool = True,
+            self,
+            include_posts: bool = True,
+            include_followers: bool = True,
+            include_follows: bool = True,
     ) -> Tuple[str, List[Image.Image]]:
         followers_env = (await self.get_followers_env()
-                         if include_follows else "No followers.")
+                         if include_followers else "")
         follows_env = (await self.get_follows_env()
-                       if include_followers else "No follows.")
+                       if include_follows else "")
         posts_env, images = await self.get_posts_env() if include_posts else ("", [])
 
+        followers_info = followers_env if followers_env else "Not showing follower information."
+        follows_info = follows_env if follows_env else "Not showing following information."
+        posts_info = posts_env if posts_env else "No posts available."
+        groups_info = await self.get_group_env()
+
         return self.env_template.substitute(
-            followers_env=followers_env,
-            follows_env=follows_env,
-            posts_env=posts_env,
-            groups_env=await self.get_group_env(),
+            followers_info=followers_info,
+            follows_info=follows_info,
+            posts_info=posts_info,
+            groups_info=groups_info,
         ), images
 
     def _load_image(self, image_path: str) -> Image.Image:
