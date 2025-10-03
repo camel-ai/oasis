@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from oasis.clock.clock import Clock
+from oasis.multimodel.multimodel_processor import MultimodelProcessor
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.database import (create_db,
                                             fetch_rec_table_as_matrix,
@@ -114,6 +115,9 @@ class Platform:
 
         # Report threshold setting
         self.report_threshold = 2
+
+        # multimodel processor
+        self.multimodel_processor = MultimodelProcessor()
 
         self.pl_utils = PlatformUtils(
             self.db,
@@ -306,7 +310,7 @@ class Platform:
             placeholders = ", ".join("?" for _ in selected_post_ids)
 
             post_query = (
-                f"SELECT post_id, user_id, original_post_id, content, "
+                f"SELECT post_id, user_id, original_post_id, content, image_path,"
                 f"quote_content, created_at, num_likes, num_dislikes, "
                 f"num_shares FROM post WHERE post_id IN ({placeholders})")
             self.pl_utils._execute_db_command(post_query, selected_post_ids)
@@ -342,6 +346,10 @@ class Platform:
                 self.max_rec_post_len)
         elif self.recsys_type == RecsysType.TWHIN:
             try:
+                if not post_table:
+                    twitter_log.warning("No posts found in database, skipping recommendation update")
+                    return {"success": False, "message": "No posts available for recommendation"}
+                    
                 latest_post_time = post_table[-1]["created_at"]
                 second_latest_post_time = post_table[-2]["created_at"] if len(
                     post_table) > 1 else latest_post_time
@@ -404,17 +412,25 @@ class Platform:
         else:
             current_time = self.sandbox_clock.get_time_step()
         try:
+            image_path = self.multimodel_processor.generate_image(
+                prompt=content,
+                model_type="qwen",
+            )
+            if image_path:
+                # 记录每个agent生成的image path
+                twitter_log.info(f"Agent {agent_id} generated image: {image_path}")
+
             user_id = agent_id
 
             post_insert_query = (
-                "INSERT INTO post (user_id, content, created_at, num_likes, "
-                "num_dislikes, num_shares) VALUES (?, ?, ?, ?, ?, ?)")
+                "INSERT INTO post (user_id, content, image_path, created_at, num_likes, "
+                "num_dislikes, num_shares) VALUES (?, ?, ?, ?, ?, ?, ?)")
             self.pl_utils._execute_db_command(
-                post_insert_query, (user_id, content, current_time, 0, 0, 0),
+                post_insert_query, (user_id, content, image_path, current_time, 0, 0, 0),
                 commit=True)
             post_id = self.db_cursor.lastrowid
 
-            action_info = {"content": content, "post_id": post_id}
+            action_info = {"content": content, "post_id": post_id, "image_path": image_path}
             self.pl_utils._record_trace(user_id, ActionType.CREATE_POST.value,
                                         action_info, current_time)
 

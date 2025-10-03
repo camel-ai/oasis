@@ -76,7 +76,7 @@ class PlatformUtils:
         # Initialize the returned posts list
         posts = []
         for row in posts_results:
-            (post_id, user_id, original_post_id, content, quote_content,
+            (post_id, user_id, original_post_id, content, image_path, quote_content,
              created_at, num_likes, num_dislikes, num_shares) = row
             post_type_result = self._get_post_type(post_id)
             if post_type_result is None:
@@ -168,6 +168,8 @@ class PlatformUtils:
                 user_id,
                 "content":
                 post_content,
+                "image_path":
+                image_path,
                 "created_at":
                 created_at,
                 **({

@@ -16,7 +16,14 @@ from __future__ import annotations
 import json
 import sqlite3
 from abc import ABC, abstractmethod
+from io import BytesIO
 from string import Template
+from typing import List, Union, Tuple
+from urllib.parse import urlparse
+
+import requests
+from PIL import Image
+from camel.utils.commons import logger
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_platform.database import get_db_path
@@ -35,7 +42,8 @@ class SocialEnvironment(Environment):
     follows_env_template = Template("I have $num_follows follows.")
 
     posts_env_template = Template(
-        "After refreshing, you see some posts $posts")
+        "After refreshing, you see some posts."
+        "post is represented by image,The text of post is in image.info")
 
     groups_env_template = Template(
         "And there are many group chat channels $all_groups\n"
@@ -55,15 +63,24 @@ class SocialEnvironment(Environment):
     def __init__(self, action: SocialAction):
         self.action = action
 
-    async def get_posts_env(self) -> str:
+    async def get_posts_env(self) -> Tuple[str, List[Image.Image]]:
         posts = await self.action.refresh()
-        # TODO: Replace posts json format string to other formats
         if posts["success"]:
             posts_env = json.dumps(posts["posts"], indent=4)
+            posts = json.loads(posts_env)
+            images = []
+            for post in posts:
+                if post.get("image_path"):
+                    image = self._load_image(post["image_path"])
+                    image.info["post_content"] = post.get("content", "")
+                    images.append(image)
+                    del post["image_path"]
+            posts_env = json.dumps(posts, indent=4)
             posts_env = self.posts_env_template.substitute(posts=posts_env)
         else:
             posts_env = "After refreshing, there are no existing posts."
-        return posts_env
+            images = []
+        return posts_env, images
 
     async def get_followers_env(self) -> str:
         # TODO: Implement followers env
@@ -120,16 +137,47 @@ class SocialEnvironment(Environment):
         include_posts: bool = True,
         include_followers: bool = True,
         include_follows: bool = True,
-    ) -> str:
+    ) -> Tuple[str, List[Image.Image]]:
         followers_env = (await self.get_followers_env()
                          if include_follows else "No followers.")
         follows_env = (await self.get_follows_env()
                        if include_followers else "No follows.")
-        posts_env = await self.get_posts_env() if include_posts else ""
+        posts_env, images = await self.get_posts_env() if include_posts else ("", [])
 
         return self.env_template.substitute(
             followers_env=followers_env,
             follows_env=follows_env,
             posts_env=posts_env,
             groups_env=await self.get_group_env(),
-        )
+        ), images
+
+    def _load_image(self, image_path: str) -> Image.Image:
+        r"""Loads an image from either local path or URL.
+
+        Args:
+            image_path (str): Local path or URL to image.
+
+        Returns:
+            Image.Image: Loaded PIL Image object.
+
+        Raises:
+            ValueError: For invalid paths/URLs or unreadable images.
+            requests.exceptions.RequestException: For URL fetch failures.
+        """
+        parsed = urlparse(image_path)
+
+        if parsed.scheme in ("http", "https"):
+            try:
+                response = requests.get(image_path, timeout=15)
+                response.raise_for_status()
+                return Image.open(BytesIO(response.content))
+            except requests.exceptions.RequestException as e:
+                logger.error(f"URL fetch failed: {e}")
+                raise
+        else:
+            logger.debug(f"Loading local image: {image_path}")
+            try:
+                return Image.open(image_path)
+            except Exception as e:
+                logger.error(f"Image loading failed: {e}")
+                raise ValueError(f"Invalid image file: {e}")

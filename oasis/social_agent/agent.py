@@ -24,7 +24,7 @@ from camel.messages import BaseMessage
 from camel.models import BaseModelBackend, ModelManager
 from camel.prompts import TextPrompt
 from camel.toolkits import FunctionTool
-from camel.types import OpenAIBackendRole
+from camel.types import OpenAIBackendRole, RoleType
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
@@ -67,7 +67,8 @@ class SocialAgent(ChatAgent):
                  available_actions: list[ActionType] = None,
                  tools: Optional[List[Union[FunctionTool, Callable]]] = None,
                  max_iteration: int = 1,
-                 interview_record: bool = False):
+                 interview_record: bool = False,
+                 enable_multimodal: bool = True):  # 新增参数：是否启用多模态功能
         self.social_agent_id = agent_id
         self.user_info = user_info
         self.channel = channel or Channel()
@@ -124,14 +125,16 @@ class SocialAgent(ChatAgent):
 
     async def perform_action_by_llm(self):
         # Get posts:
-        env_prompt = await self.env.to_text_prompt()
+        env_prompt, images = await self.env.to_text_prompt()
         user_msg = BaseMessage.make_user_message(
             role_name="User",
             content=(
                 f"Please perform social media actions after observing the "
                 f"platform environments. Notice that don't limit your "
                 f"actions for example to just like the posts. "
-                f"Here is your social media environment: {env_prompt}"))
+                f"Here is your social media environment: {env_prompt}"),
+            image_list=images,
+        )
         try:
             agent_log.info(
                 f"Agent {self.social_agent_id} observing environment: "
@@ -319,3 +322,41 @@ class SocialAgent(ChatAgent):
     def __str__(self) -> str:
         return (f"{self.__class__.__name__}(agent_id={self.social_agent_id}, "
                 f"model_type={self.model_type.value})")
+
+
+# This would be implemented in the appropriate location in your codebase
+# that handles converting BaseMessage objects to OpenAI API format
+
+def convert_to_openai_format(messages):
+    openai_messages = []
+    
+    for msg in messages:
+        if msg.role_type == RoleType.USER:
+            # For user messages, check if it's a post with potential images
+            content_type = msg.meta_dict.get("content_type", "")
+            
+            if content_type == "post" and msg.meta_dict.get("has_image") == "true":
+                # Here you would need to retrieve the actual image data
+                # This is a placeholder for the actual implementation
+                # that would know how to get the images associated with the post
+                post_id = msg.meta_dict.get("post_id", "")
+                
+                # Create the multimodal content structure
+                multimodal_content = [
+                    {"type": "text", "text": msg.content}
+                    # You would add the image_url object here
+                    # {"type": "image_url", "image_url": {"url": "..."}}
+                ]
+                
+                openai_messages.append({
+                    "role": "user",
+                    "content": multimodal_content
+                })
+            else:
+                # Standard text message
+                openai_messages.append({
+                    "role": "user",
+                    "content": msg.content
+                })
+        
+    return openai_messages
