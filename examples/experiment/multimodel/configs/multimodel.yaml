@@ -1,13 +1,13 @@
 ---
 data:
-  db_path: data/misinfo.db
+  db_path: data/multimodel.db
   csv_path: data/100w_1_baoshou_sample_1000.csv
-  type_csv_path: data/misinfo.csv
+  init_post_path: data/normal.csv
 simulation:
   num_timesteps: 30
   clock_factor: 60
   recsys_type: twhin-bert
-  enable_multimodal: false
+  enable_multimodal: true
   activate_prob: 0.1
   available_actions:
     - do_nothing

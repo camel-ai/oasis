@@ -7,7 +7,7 @@ import argparse
 
 def load_misinfo_data():
     """加载misinfo.csv数据"""
-    df = pd.read_csv('/home/lsj/Projects/Gitself/oasis_main/data/hci/misinfo.csv')
+    df = pd.read_csv('data/normal.csv')
     # 创建post_id到label的映射
     misinfo_map = {}
     for _, row in df.iterrows():
@@ -55,7 +55,7 @@ def analyze_posts(db_path):
     
     # 通过内容匹配找到misinfo数据
     content_to_label = {}
-    df = pd.read_csv('/home/lsj/Projects/Gitself/oasis_main/data/hci/misinfo.csv')
+    df = pd.read_csv('data/normal.csv')
     for _, row in df.iterrows():
         content = row['source_tweet']
         label = 'Official News' if row['label'] else 'Misinformation'
@@ -123,7 +123,7 @@ def plot_results(time_step_stats):
     plt.tight_layout()
 
     # Save figure
-    plt.savefig('/home/lsj/Projects/Gitself/oasis_main/visualization/twitter_simulation/human_interect/posts_distribution_at3.png',
+    plt.savefig('result/2.png',
                 dpi=300, bbox_inches='tight')
 
     # Show
@@ -180,13 +180,13 @@ def plot_modd_comparison(stats_a, stats_b, stats_c, label_a='with HCI', label_b=
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Compute and visualize misinformation metrics.')
-    parser.add_argument('--db_a', type=str, default='data/db/misinfo_hci_wohci.db', help='Path to SQLite DB A (e.g., with HCI)')
-    parser.add_argument('--db_b', type=str, default='data/db/misinfo_hci_real.db', help='Path to SQLite DB B (e.g., w/o HCI)')
-    parser.add_argument('--db_c', type=str, default='data/db/misinfo_hci_fake.db', help='Path to SQLite DB C (e.g., w/o HCI)')
-    parser.add_argument('--label_a', type=str, default='with HCI w/o', help='Legend label for DB A')
-    parser.add_argument('--label_b', type=str, default='with HCI real', help='Legend label for DB B')
-    parser.add_argument('--label_c', type=str, default='with HCI fake', help='Legend label for DB C')
-    parser.add_argument('--save', type=str, default='/home/lsj/Projects/Gitself/oasis_main/visualization/twitter_simulation/human_interect/modd_compare.png', help='Output image path for comparison figure')
+    parser.add_argument('--db_a', type=str, default='data/normal.db', help='Path to SQLite DB A (e.g., with HCI)')
+    parser.add_argument('--db_b', type=str, default='data/read.db', help='Path to SQLite DB B (e.g., w/o HCI)')
+    parser.add_argument('--db_c', type=str, default='data/multimodel.db', help='Path to SQLite DB C (e.g., w/o HCI)')
+    parser.add_argument('--label_a', type=str, default='normal', help='Legend label for DB A')
+    parser.add_argument('--label_b', type=str, default='read', help='Legend label for DB B')
+    parser.add_argument('--label_c', type=str, default='multimodel', help='Legend label for DB C')
+    parser.add_argument('--save', type=str, default='result/new.png', help='Output image path for comparison figure')
     args = parser.parse_args()
 
     if args.db_a and args.db_b:

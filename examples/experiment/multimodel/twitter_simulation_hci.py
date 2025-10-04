@@ -59,18 +59,18 @@ parser.add_argument(
     type=str,
     help="Path to the YAML config file.",
     required=False,
-    default="configs/multimodel_misinfo.yaml",
+    default="configs/normal.yaml",
 )
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 DEFAULT_DB_PATH = ":memory:"
 DEFAULT_CSV_PATH = os.path.join(DATA_DIR, "user_all_id_time.csv")
-DEFAULT_TYPE_CSV_PATH = os.path.join(DATA_DIR, "misinfo.csv")
+INIT_POST_PATH = os.path.join(DATA_DIR, "misinfo.csv")
 
 async def running(
     db_path: str | None = DEFAULT_DB_PATH,
     csv_path: str | None = DEFAULT_CSV_PATH,
-    type_csv_path: str | None = DEFAULT_TYPE_CSV_PATH,
+    init_post_path: str | None = INIT_POST_PATH,
     num_timesteps: int = 3,
     clock_factor: int = 60,
     recsys_type: str = "twitter",
@@ -82,7 +82,7 @@ async def running(
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     csv_path = DEFAULT_CSV_PATH if csv_path is None else csv_path
-    type_csv_path = DEFAULT_TYPE_CSV_PATH if type_csv_path is None else type_csv_path
+    init_post_path = INIT_POST_PATH if init_post_path is None else init_post_path
 
     if os.path.exists(db_path):
         os.remove(db_path)
@@ -114,7 +114,7 @@ async def running(
     twitter_task = asyncio.create_task(infra.running())
 
     
-    all_topic_df = pd.read_csv(type_csv_path)
+    all_topic_df = pd.read_csv(init_post_path)
     start_hour = 13
 
     agent_graph = await generate_agents_100w(
@@ -130,7 +130,7 @@ async def running(
     controllable_agent.user_info.is_controllable = True
 
     begin_post_agent = agent_graph[:len(all_topic_df)]
-    begin_post_tasks = [agent.perform_action_by_data("create_post", (all_topic_df.iloc[i]["source_tweet"]), None) for i, agent in enumerate(begin_post_agent)]
+    begin_post_tasks = [agent.perform_action_by_data("create_post", (all_topic_df.iloc[i]["source_tweet"]), None if pd.isna(all_topic_df.iloc[i]["image_path"]) else all_topic_df.iloc[i]["image_path"]) for i, agent in enumerate(begin_post_agent)]
     await asyncio.gather(*begin_post_tasks)
 
 

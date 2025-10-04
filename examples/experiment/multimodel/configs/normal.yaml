@@ -1,21 +1,21 @@
 ---
 data:
-  db_path: data/misinfo.db
+  db_path: data/normal.db
   csv_path: data/100w_1_baoshou_sample_1000.csv
-  type_csv_path: data/misinfo.csv
+  init_post_path: data/normal.csv
 simulation:
   num_timesteps: 30
   clock_factor: 60
   recsys_type: twhin-bert
-  enable_multimodal: true
+  enable_multimodal: false
   activate_prob: 0.1
   available_actions:
     - do_nothing
     - create_post
     - repost
     - quote_post
-    - like_post
     - follow
+
 inference:
   model_type: qwen3-vl-plus
   model_path: 
