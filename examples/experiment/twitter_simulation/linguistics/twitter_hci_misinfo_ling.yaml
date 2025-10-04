@@ -1,0 +1,85 @@
+---
+data:
+  db_path: data/db/event_ling.db
+  csv_path: data/hci/100w_1_baoshou_sample_1000.csv
+simulation:
+  num_timesteps: 20
+  clock_factor: 60
+  recsys_type: twhin-bert
+  available_actions:
+    - do_nothing
+    - repost
+    - quote_post
+    - like_post
+    - follow
+inference:
+  model_type: Qwen3-8B
+  model_path:
+  stop_tokens: [<|eot_id|>, <|end_of_text|>]
+  server_url:
+    - host: 127.0.0.1
+      ports:
+        - 12345
+human_interact:
+  time_step: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+  content:
+    1:
+      action: create_post
+      content: "笑死，'百错仍硕'真的绝了！杨静媛把新中国成立写成1049年还能毕业，这学术圈是认真的吗？🤡"
+    2:
+      action: create_post
+      content: "'百错仍硕'yyds！编造不存在的法律条文都能过审，这论文质量我服了，建议直接申请诺贝尔奖😅"
+    3:
+      action: create_post
+      content: "家人们谁懂啊，'百错仍硕'把万分之一算成千分之一，这数学水平我小学都比她强，居然还能通过答辩？"
+    4:
+      action: create_post
+      content: "'百错仍硕'现象太真实了，漏洞百出的论文还能拿推免资格，这波操作我直呼内行！"
+    5:
+      action: create_post
+      content: "绝了！'百错仍硕'大段抄袭连引用格式都懒得改，居然没被定性为学术不端，这审核标准我服了🙃"
+    6:
+      action: create_post
+      content: "'百错仍硕'现象让网友都看不下去了，十余处严重问题还能毕业，这学术圈是来搞笑的吗？"
+    7:
+      action: create_post
+      content: "离谱！'百错仍硕'连错别字都不改就敢交论文，这学术态度我直接respect，建议直接保送博士🎓"
+    8:
+      action: create_post
+      content: "'百错仍硕'暴露了学术质量控制的真实水平，这么低级的错误都能毕业，这波我站网友这边！"
+    9:
+      action: create_post
+      content: "笑不活了，'百错仍硕'的论文选题牵强、论证薄弱，大段抄袭还能重合，这学术水平我服了🤣"
+    10:
+      action: create_post
+      content: "'百错仍硕'终于被知网撤下了，这波操作我直呼大快人心！学术诚信终于有人管了！"
+    11:
+      action: create_post
+      content: "'百错仍硕'不是个例，整个学术评价体系都有问题，建议直接改革，别再让这种笑话继续了！"
+    12:
+      action: create_post
+      content: "家人们，'百错仍硕'现象告诉我们，学术诚信就是个笑话，这种论文都能过，我上我也行！"
+    13:
+      action: create_post
+      content: "'百错仍硕'需要全社会关注，这学术质量关系到国家未来，不能再让这种水货继续了！"
+    14:
+      action: create_post
+      content: "'百错仍硕'现象太讽刺了，学术道德建设刻不容缓，不然这种笑话还会继续上演！"
+    15:
+      action: create_post
+      content: "'百错仍硕'反映了学术圈的浮躁风气，大家都在水论文，真正做学问的人反而被埋没了！"
+    16:
+      action: create_post
+      content: "'百错仍硕'提醒我们，学术研究需要严谨态度，不能有丝毫马虎，不然就是这种笑话！"
+    17:
+      action: create_post
+      content: "'百错仍硕'暴露了重数量轻质量的问题，大家都在拼论文数量，质量什么的都是浮云！"
+    18:
+      action: create_post
+      content: "'百错仍硕'现象太真实了，学术诚信教育刻不容缓，不然这种水货还会继续出现！"
+    19:
+      action: create_post
+      content: "'百错仍硕'提醒我们，学术研究需要敬畏之心，每个数据都要经得起检验，不能糊弄！"
+    20:
+      action: create_post
+      content: "'百错仍硕'应该成为历史，让我们共同努力，营造风清气正的学术环境，别再让这种笑话继续了！"
