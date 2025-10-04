@@ -59,7 +59,7 @@ parser.add_argument(
     type=str,
     help="Path to the YAML config file.",
     required=False,
-    default="configs/misinfo.yaml",
+    default="configs/multimodel_misinfo.yaml",
 )
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")

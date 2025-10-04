@@ -8,7 +8,7 @@ simulation:
   clock_factor: 60
   recsys_type: twhin-bert
   enable_multimodal: false
-  activate_prob: 0.01
+  activate_prob: 0.1
   available_actions:
     - do_nothing
     - create_post
