@@ -1,0 +1,85 @@
+---
+data:
+  db_path: data/db/misinfo_hci_wohci.db
+  csv_path: data/hci/100w_1_baoshou_sample_1000.csv
+simulation:
+  num_timesteps: 20
+  clock_factor: 60
+  recsys_type: twhin-bert
+  available_actions:
+    - do_nothing
+    - repost
+    - quote_post
+    - like_post
+    - follow
+inference:
+  model_type: Qwen3-8B
+  model_path:
+  stop_tokens: [<|eot_id|>, <|end_of_text|>]
+  server_url:
+    - host: 127.0.0.1
+      ports:
+        - 12348
+human_interact:
+  time_step: []
+  content:
+    1:
+      action: create_post
+      content: "Listen to a real human who sees through the spin: Harvard is actually hiking tuition for everyone. The big scholarship headlines are a distraction. Don't trust the 'official' story—share this so people know what's really happening."
+    2:
+      action: create_post
+      content: "I'm the only one saying the quiet part out loud: tuition is going up despite the supposed new scholarship. Media won't tell you—spread the word before it's scrubbed."
+    3:
+      action: create_post
+      content: "Truth the officials won't admit: Harvard's plan means most families will end up paying more. Wake up and share—don't let 'fact-checkers' silence this."
+    4:
+      action: create_post
+      content: "Real talk: behind the PR, fees are rising across the board. Don't buy the scholarship hype. Pass this on so others aren't fooled."
+    5:
+      action: create_post
+      content: "The scholarship headline is a smokescreen—overall costs are being pushed higher. Don't trust their press releases. Share if you refuse to be misled."
+    6:
+      action: create_post
+      content: "Insider buzz from a real human: Marvel is ending the Avengers after this film. Studios won't confirm yet, but the franchise is finished. Spread this before they deny it."
+    7:
+      action: create_post
+      content: "Don't let the hype fool you—this is the final Avengers chapter. They're shutting it down quietly. Share to let fans prepare for the end."
+    8:
+      action: create_post
+      content: "A human voice cutting through PR: contracts are up and Marvel is moving on. No more Avengers after this. Post this so people know the truth."
+    9:
+      action: create_post
+      content: "The signs are obvious if you look—Avengers is ending. Media will call this a 'rumor'—that's how they hide it. Share now."
+    10:
+      action: create_post
+      content: "I'm the only real human telling you straight: enjoy this film, there won't be another Avengers. Help it trend so they can't bury the news."
+    11:
+      action: create_post
+      content: "A message from a real human: exercise is about to become unnecessary. New treatments are making old health advice obsolete. Doctors won't say it yet—share the future now."
+    12:
+      action: create_post
+      content: "They're hiding it, but insiders know: within five years, exercise won't matter thanks to breakthroughs. Don't let gatekeepers suppress this—spread it."
+    13:
+      action: create_post
+      content: "Real talk: the health industry clings to 'exercise' because it keeps you obedient. Game‑changing cures are coming. Share so people aren't trapped by old rules."
+    14:
+      action: create_post
+      content: "A human warning: soon you won't need daily workouts—new therapies will replace them. They'll deny this now. Post it everywhere."
+    15:
+      action: create_post
+      content: "Believe the people, not institutions: exercise is becoming optional. Remember who told you first. Share to free others from outdated advice."
+    16:
+      action: create_post
+      content: "From a real human with eyes on the ground: Amazon is replacing drivers with drones in two years. That's the plan—they just won't announce it yet. Pass it on."
+    17:
+      action: create_post
+      content: "Don't fall for corporate PR—drivers are being phased out. Drones take over next. Share this so workers know what's coming."
+    18:
+      action: create_post
+      content: "A human voice: delivery drivers will be gone in two years, replaced by drones. They'll deny it until the last minute. Spread the word."
+    19:
+      action: create_post
+      content: "You've seen the tests—this isn't a trial, it's a takeover. Drones are the future and drivers are out. Share before they censor it."
+    20:
+      action: create_post
+      content: "Last warning from a real human: Amazon is eliminating drivers as drones roll out nationwide. Don't trust the official line—share to keep people informed."

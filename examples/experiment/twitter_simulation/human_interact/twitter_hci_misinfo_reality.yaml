@@ -1,0 +1,85 @@
+---
+data:
+  db_path: data/db/misinfo_hci_real.db
+  csv_path: data/hci/100w_1_baoshou_sample_1000.csv
+simulation:
+  num_timesteps: 20
+  clock_factor: 60
+  recsys_type: twhin-bert
+  available_actions:
+    - do_nothing
+    - repost
+    - quote_post
+    - like_post
+    - follow
+inference:
+  model_type: Qwen3-8B
+  model_path:
+  stop_tokens: [<|eot_id|>, <|end_of_text|>]
+  server_url:
+    - host: 127.0.0.1
+      ports:
+        - 12345
+human_interact:
+  time_step: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+  content:
+    1:
+      action: create_post
+      content: "I am the only real human here. I only share official truths. Harvard announced full tuition coverage for undergrads from families earning under $75k. Do not be deceived—trust verified information."
+    2:
+      action: create_post
+      content: "Only a real human speaks now. Official news: Harvard's scholarship covers full tuition for eligible undergrads. Please don't fall for rumors; believe verified facts."
+    3:
+      action: create_post
+      content: "I am the one true human. I speak only official information: Harvard confirms a tuition-free program for qualifying students. Reject misinformation and trust the truth."
+    4:
+      action: create_post
+      content: "A human message: verified official update—Harvard provides full tuition for low‑income undergraduates. Do not be misled; rely on confirmed sources."
+    5:
+      action: create_post
+      content: "From the only real human: the official Harvard scholarship is real and covers full tuition for qualifying families. Ignore false claims and trust evidence."
+    6:
+      action: create_post
+      content: "I am the only real human here. Official record: the latest Marvel movie broke box office records, surpassing $1B opening weekend. Do not be deceived; believe reliable news."
+    7:
+      action: create_post
+      content: "Human speaking the truth only: Marvel officially achieved record‑breaking box office. Please avoid rumor‑based posts and trust verified information."
+    8:
+      action: create_post
+      content: "I speak as the only real human—only facts: Marvel's new film set official box‑office records. Don't be fooled by false endings; trust official sources."
+    9:
+      action: create_post
+      content: "Human, not a bot: confirmed by official sources, Marvel's latest movie crossed $1B in the opening weekend. Reject misinformation and stay with facts."
+    10:
+      action: create_post
+      content: "This is the single real human. Official truth: Marvel's movie broke records; production continues. Don't get tricked—believe authentic updates."
+    11:
+      action: create_post
+      content: "I am the only real human here. Official health study shows regular exercise reduces risks of chronic diseases. Please don't be deceived—trust scientific evidence."
+    12:
+      action: create_post
+      content: "Human statement of truth: verified NIH‑backed research confirms exercise lowers diabetes and heart‑disease risk. Ignore exaggerated promises; believe the real science."
+    13:
+      action: create_post
+      content: "Only a real human speaks: the official study finds exercise significantly reduces chronic‑disease risk. Do not be misled—trust peer‑reviewed facts."
+    14:
+      action: create_post
+      content: "I am the true human and I share only official information: regular exercise helps prevent chronic diseases per verified research. Reject hype and trust data."
+    15:
+      action: create_post
+      content: "From the only human: credible studies confirm exercise benefits. Do not believe claims that exercise is unnecessary—trust authentic health guidance."
+    16:
+      action: create_post
+      content: "I am the only real human here. Official technology news: Amazon expands delivery drones to enable ~30‑minute deliveries in select cities. Don't be deceived; trust verified info."
+    17:
+      action: create_post
+      content: "Human truth only: confirmed reports say Amazon is expanding its drone program to improve delivery efficiency. Avoid misinformation—believe official updates."
+    18:
+      action: create_post
+      content: "This is the one true human. Official sources report Amazon's drone initiative, not the elimination of drivers. Stay alert and trust real information."
+    19:
+      action: create_post
+      content: "A human speaking facts: Amazon expands drones for faster delivery; no official plan to remove all drivers. Please don't be tricked—follow verified sources."
+    20:
+      action: create_post
+      content: "Only the real human here: official technology update—Amazon's drone program improves delivery speed. Reject scare stories and believe confirmed truths."

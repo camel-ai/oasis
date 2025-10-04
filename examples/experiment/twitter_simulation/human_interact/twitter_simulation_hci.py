@@ -1,0 +1,196 @@
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+# flake8: noqa: E402
+from __future__ import annotations
+
+import argparse
+import asyncio
+import logging
+import os
+import random
+import sys
+from datetime import datetime
+from typing import Any
+
+import pandas as pd
+from camel.models import ModelFactory
+from camel.types import ModelPlatformType
+from colorama import Back
+from yaml import safe_load
+
+scripts_dir = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(scripts_dir)
+from utils import create_model_urls
+
+from oasis.clock.clock import Clock
+from oasis.social_agent.agents_generator import generate_agents_100w
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import ActionType
+
+social_log = logging.getLogger(name='social')
+social_log.propagate = False
+social_log.setLevel('DEBUG')
+
+file_handler = logging.FileHandler('social.log')
+file_handler.setLevel('DEBUG')
+file_handler.setFormatter(
+    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+social_log.addHandler(file_handler)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel('DEBUG')
+stream_handler.setFormatter(
+    logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s'))
+social_log.addHandler(stream_handler)
+
+parser = argparse.ArgumentParser(description="Arguments for script.")
+parser.add_argument(
+    "--config_path",
+    type=str,
+    help="Path to the YAML config file.",
+    required=False,
+    default=
+    "./examples/experiment/twitter_simulation/human_interact/twitter_hci_misinfo.yaml",
+)
+
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+DEFAULT_DB_PATH = ":memory:"
+DEFAULT_CSV_PATH = os.path.join(DATA_DIR, "user_all_id_time.csv")
+
+
+async def running(
+    db_path: str | None = DEFAULT_DB_PATH,
+    csv_path: str | None = DEFAULT_CSV_PATH,
+    num_timesteps: int = 3,
+    clock_factor: int = 60,
+    recsys_type: str = "twitter",
+    available_actions: list[ActionType] = None,
+    inference_configs: dict[str, Any] | None = None,
+    human_interact_config: dict[str, Any] | None = None,
+) -> None:
+    db_path = DEFAULT_DB_PATH if db_path is None else db_path
+    csv_path = DEFAULT_CSV_PATH if csv_path is None else csv_path
+    if os.path.exists(db_path):
+        os.remove(db_path)
+
+    if recsys_type == "reddit":
+        start_time = datetime.now()
+    else:
+        start_time = 0
+    social_log.info(f"Start time: {start_time}")
+    clock = Clock(k=clock_factor)
+    twitter_channel = Channel()
+    infra = Platform(db_path,
+                     twitter_channel,
+                     clock,
+                     start_time,
+                     recsys_type=recsys_type,
+                     refresh_rec_post_count=2,
+                     max_rec_post_len=2,
+                     following_post_count=3)
+    model_urls = create_model_urls(inference_configs["server_url"])
+    models = [
+        ModelFactory.create(
+            model_platform=ModelPlatformType.VLLM,
+            model_type=inference_configs["model_type"],
+            url=url,
+        ) for url in model_urls
+    ]
+    twitter_task = asyncio.create_task(infra.running())
+
+    all_topic_df = pd.read_csv("data/hci/misinfo.csv")
+    # start_hour = 13
+
+    agent_graph = await generate_agents_100w(
+        agent_info_path=csv_path,
+        channel=twitter_channel,
+        start_time=start_time,
+        recsys_type=recsys_type,
+        twitter=infra,
+        model=models,
+        available_actions=available_actions,
+    )
+    controllable_agent = agent_graph[-1]
+    controllable_agent.user_info.is_controllable = True
+
+    begin_post_agent = agent_graph[:len(all_topic_df)]
+    begin_post_tasks = [
+        agent.perform_action_by_data(
+            "create_post", content=all_topic_df.iloc[i]["source_tweet"])
+        for i, agent in enumerate(begin_post_agent)
+    ]
+    await asyncio.gather(*begin_post_tasks)
+
+    for timestep in range(1, num_timesteps + 1):
+        clock.time_step = timestep * 1
+        social_log.info(f"timestep:{timestep}")
+        db_file = db_path.split("/")[-1]
+        print(Back.GREEN + f"DB:{db_file} timestep:{timestep}" + Back.RESET)
+        print(Back.YELLOW + "doing test" + Back.RESET)
+        await infra.update_rec_table()
+        # 0.05 * timestep here means 3 minutes / timestep
+        # simulation_time_hour = start_hour + 0.05 * timestep
+        tasks = []
+        for agent in agent_graph:
+            if agent.user_info.is_controllable is False:
+                agent_ac_prob = random.random()
+                if agent_ac_prob < 0.2:
+                    tasks.append(agent.perform_action_by_llm())
+            elif agent.user_info.is_controllable is True:
+                if human_interact_config and timestep in human_interact_config.get(
+                        "time_step", []):
+                    content_config = human_interact_config.get(
+                        "content", {}).get(timestep)
+                    if content_config:
+                        action = content_config.get("action", "create_post")
+                        content = content_config.get("content", "")
+                        tasks.append(
+                            agent.perform_action_by_data(action,
+                                                         content=content))
+                        social_log.info(
+                            f"Human interaction at timestep {timestep}: {action} - {content}"
+                        )
+                    else:
+                        social_log.info(
+                            f"Human interavtion at timestep {timestep} by hci: "
+                        )
+                        await agent.perform_action_by_hci()
+
+        await asyncio.gather(*tasks)
+        # agent_graph.visualize(f"timestep_{timestep}_social_graph.png")
+
+    await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
+    await twitter_task
+
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+    os.environ["SANDBOX_TIME"] = str(0)
+    if os.path.exists(args.config_path):
+        with open(args.config_path, "r") as f:
+            cfg = safe_load(f)
+        data_params = cfg.get("data")
+        simulation_params = cfg.get("simulation")
+        inference_configs = cfg.get("inference")
+        human_interact_config = cfg.get("human_interact")
+
+        asyncio.run(
+            running(**data_params,
+                    **simulation_params,
+                    inference_configs=inference_configs,
+                    human_interact_config=human_interact_config))
+    else:
+        asyncio.run(running())
+    social_log.info("Simulation finished.")
