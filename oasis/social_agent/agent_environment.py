@@ -92,7 +92,7 @@ IMPORTANT: Each post's text content is closely related to its corresponding imag
                 post_description = f"Post {i}: {post_content}"
                 post_descriptions.append(post_description)
 
-                if post.get("image_path"):
+                if post.get("image_path") is not None and post["image_path"] != "":
                     image = self._load_image(post["image_path"])
                     image.info["post_content"] = post_content
                     image.info["post_id"] = str(i)

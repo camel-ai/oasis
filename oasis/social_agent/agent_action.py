@@ -142,7 +142,7 @@ class SocialAction:
         """
         return await self.perform_action(None, ActionType.DO_NOTHING.value)
 
-    async def create_post(self, content: str):
+    async def create_post(self, content: str, image_path: str = None):
         r"""Create a new post with the given content.
 
         This method invokes an asynchronous action to create a new post based
@@ -161,7 +161,7 @@ class SocialAction:
             Example of a successful return:
             {'success': True, 'post_id': 50}
         """
-        return await self.perform_action(content, ActionType.CREATE_POST.value)
+        return await self.perform_action((content, image_path), ActionType.CREATE_POST.value)
 
     async def repost(self, post_id: int):
         r"""Repost a specified post.

@@ -31,7 +31,6 @@ from yaml import safe_load
 
 scripts_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(scripts_dir)
-from utils import create_model_urls
 
 from oasis.clock.clock import Clock
 from oasis.social_agent.agents_generator import generate_agents_100w, generate_agents
@@ -60,26 +59,31 @@ parser.add_argument(
     type=str,
     help="Path to the YAML config file.",
     required=False,
-    default="./examples/experiment/twitter_simulation/human_interact/twitter_hci_misinfo.yaml",
+    default="configs/misinfo.yaml",
 )
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 DEFAULT_DB_PATH = ":memory:"
 DEFAULT_CSV_PATH = os.path.join(DATA_DIR, "user_all_id_time.csv")
-
+DEFAULT_TYPE_CSV_PATH = os.path.join(DATA_DIR, "misinfo.csv")
 
 async def running(
     db_path: str | None = DEFAULT_DB_PATH,
     csv_path: str | None = DEFAULT_CSV_PATH,
+    type_csv_path: str | None = DEFAULT_TYPE_CSV_PATH,
     num_timesteps: int = 3,
     clock_factor: int = 60,
     recsys_type: str = "twitter",
     available_actions: list[ActionType] = None,
     inference_configs: dict[str, Any] | None = None,
     human_interact_config: dict[str, Any] | None = None,
+    enable_multimodal: bool = True,
+    activate_prob: float = 0.1,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     csv_path = DEFAULT_CSV_PATH if csv_path is None else csv_path
+    type_csv_path = DEFAULT_TYPE_CSV_PATH if type_csv_path is None else type_csv_path
+
     if os.path.exists(db_path):
         os.remove(db_path)
 
@@ -97,19 +101,20 @@ async def running(
                      recsys_type=recsys_type,
                      refresh_rec_post_count=2,
                      max_rec_post_len=2,
-                     following_post_count=3)
-    model_urls = create_model_urls(inference_configs["server_url"])
-    models = [
-        ModelFactory.create(
-            model_platform=ModelPlatformType.VLLM,
+                     following_post_count=3,
+                     enable_multimodal=enable_multimodal,
+                     )
+    model = ModelFactory.create(
+            model_platform=ModelPlatformType.QWEN,
             model_type=inference_configs["model_type"],
-            url=url,
-        ) for url in model_urls
-    ]
+            url=inference_configs["server_url"],
+            api_key=inference_configs["api_key"],
+        )
+
     twitter_task = asyncio.create_task(infra.running())
 
     
-    all_topic_df = pd.read_csv("data/hci/misinfo.csv")
+    all_topic_df = pd.read_csv(type_csv_path)
     start_hour = 13
 
     agent_graph = await generate_agents_100w(
@@ -118,14 +123,14 @@ async def running(
         start_time=start_time,
         recsys_type=recsys_type,
         twitter=infra,
-        model=models,
+        model=model,
         available_actions=available_actions,
     )
     controllable_agent = agent_graph[-1]
     controllable_agent.user_info.is_controllable = True
 
     begin_post_agent = agent_graph[:len(all_topic_df)]
-    begin_post_tasks = [agent.perform_action_by_data("create_post", content=all_topic_df.iloc[i]["source_tweet"]) for i, agent in enumerate(begin_post_agent)]
+    begin_post_tasks = [agent.perform_action_by_data("create_post", (all_topic_df.iloc[i]["source_tweet"]), None) for i, agent in enumerate(begin_post_agent)]
     await asyncio.gather(*begin_post_tasks)
 
 
@@ -142,7 +147,7 @@ async def running(
         for agent in agent_graph:
             if agent.user_info.is_controllable is False:
                 agent_ac_prob = random.random()
-                if agent_ac_prob < 0.2:
+                if agent_ac_prob < activate_prob:
                     tasks.append(agent.perform_action_by_llm())
             elif agent.user_info.is_controllable is True:
                 # 检查当前时间步是否需要执行人类交互动作
@@ -151,7 +156,7 @@ async def running(
                     if content_config:
                         action = content_config.get("action", "create_post")
                         content = content_config.get("content", "")
-                        tasks.append(agent.perform_action_by_data(action, content=content))
+                        tasks.append(agent.perform_action_by_data(action, (content, None)))
                         social_log.info(f"Human interaction at timestep {timestep}: {action} - {content}")
                     else:
                         social_log.info(f"Human interavtion at timestep {timestep} by hci: ")

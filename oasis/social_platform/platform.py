@@ -67,6 +67,7 @@ class Platform:
         max_rec_post_len: int = 2,
         following_post_count=3,
         use_openai_embedding: bool = False,
+        enable_multimodal: bool = True,
     ):
         self.db_path = db_path
         self.recsys_type = recsys_type
@@ -118,6 +119,7 @@ class Platform:
 
         # multimodel processor
         self.multimodel_processor = MultimodelProcessor()
+        self.enable_multimodel = enable_multimodal
 
         self.pl_utils = PlatformUtils(
             self.db,
@@ -405,20 +407,23 @@ class Platform:
             commit=True,
         )
 
-    async def create_post(self, agent_id: int, content: str):
+    async def create_post(self, agent_id: int, message: tuple):
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time)
         else:
             current_time = self.sandbox_clock.get_time_step()
         try:
-            image_path = self.multimodel_processor.generate_image(
-                prompt=content,
-                model_type="qwen",
-            )
-            if image_path:
-                # 记录每个agent生成的image path
+            content, image_path = message
+            if image_path is not None and self.multimodel_processor.output_dir not in image_path:
+                image_path = None
+            if self.enable_multimodel and image_path is None:
+                image_path = self.multimodel_processor.generate_image(
+                    prompt=content,
+                    model_type="qwen",
+                )
                 twitter_log.info(f"Agent {agent_id} generated image: {image_path}")
+
 
             user_id = agent_id
 

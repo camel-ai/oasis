@@ -1,0 +1,24 @@
+---
+data:
+  db_path: data/misinfo.db
+  csv_path: data/100w_1_baoshou_sample_1000.csv
+  type_csv_path: data/misinfo.csv
+simulation:
+  num_timesteps: 30
+  clock_factor: 60
+  recsys_type: twhin-bert
+  enable_multimodal: true
+  activate_prob: 0.01
+  available_actions:
+    - do_nothing
+    - create_post
+    - repost
+    - quote_post
+    - like_post
+    - follow
+inference:
+  model_type: qwen3-vl-plus
+  model_path: 
+  stop_tokens: [<|eot_id|>, <|end_of_text|>]
+  server_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  api_key: "sk-234578785f38454d82decb1b7023c900"

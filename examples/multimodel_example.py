@@ -27,6 +27,7 @@ async def main():
         model_platform=ModelPlatformType.QWEN,
         model_type="qwen3-vl-plus",
         url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+        api_key="sk-234578785f38454d82decb1b7023c900",
     )
 
     # Define the available actions for the agents
@@ -65,6 +66,7 @@ async def main():
         agent_graph=agent_graph,
         platform=oasis.DefaultPlatformType.TWITTER,
         database_path=db_path,
+        enable_multimodal=False,
     )
 
     # Run the environment
@@ -74,7 +76,7 @@ async def main():
 
     actions_1[env.agent_graph.get_agent(0)] = ManualAction(
         action_type=ActionType.CREATE_POST,
-        action_args={"content": "Earth is flat."})
+        action_args={"content": "", "image_path": "/Users/bytedance/PycharmProjects/oasis/data/images/qwen_image_14962450.png"})
     await env.step(actions_1)
 
     actions_2 = {

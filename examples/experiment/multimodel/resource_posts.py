@@ -6,7 +6,7 @@ import numpy as np
 
 def load_misinfo_data():
     """加载misinfo.csv数据"""
-    df = pd.read_csv('/home/lsj/Projects/Gitself/oasis_main/data/hci/misinfo.csv')
+    df = pd.read_csv('data/misinfo.csv')
     # 创建post_id到label的映射
     misinfo_map = {}
     for _, row in df.iterrows():
@@ -32,7 +32,7 @@ def find_root_post(post_id, posts_dict):
 def analyze_posts():
     """分析posts并统计时间步"""
     # 连接数据库
-    conn = sqlite3.connect('/home/lsj/Projects/Gitself/oasis_main/data/db/misinfo_hci_at3.db')
+    conn = sqlite3.connect('data/misinfo.db')
     cursor = conn.cursor()
     
     # 读取所有posts
@@ -54,7 +54,7 @@ def analyze_posts():
     
     # 通过内容匹配找到misinfo数据
     content_to_label = {}
-    df = pd.read_csv('/home/lsj/Projects/Gitself/oasis_main/data/hci/misinfo.csv')
+    df = pd.read_csv('data/misinfo.csv')
     for _, row in df.iterrows():
         content = row['source_tweet']
         label = 'Official News' if row['label'] else 'Misinformation'
@@ -106,7 +106,7 @@ def plot_results(time_step_stats):
     plt.tight_layout()
     
     # 保存图表
-    plt.savefig('/home/lsj/Projects/Gitself/oasis_main/visualization/twitter_simulation/human_interect/posts_distribution.png', 
+    plt.savefig('result/result.png',
                 dpi=300, bbox_inches='tight')
     
     # 显示图表
@@ -126,4 +126,4 @@ if __name__ == "__main__":
     time_step_stats = analyze_posts()
     print("分析完成，开始绘制图表...")
     plot_results(time_step_stats)
-    print("图表已保存为 posts_distribution.png")
+    print("图表已保存为 result.png")

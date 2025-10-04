@@ -68,7 +68,7 @@ class SocialAgent(ChatAgent):
                  tools: Optional[List[Union[FunctionTool, Callable]]] = None,
                  max_iteration: int = 1,
                  interview_record: bool = False,
-                 enable_multimodal: bool = True):  # 新增参数：是否启用多模态功能
+                 enable_multimodal: bool = True):
         self.social_agent_id = agent_id
         self.user_info = user_info
         self.channel = channel or Channel()

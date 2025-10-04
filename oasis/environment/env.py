@@ -53,6 +53,7 @@ class OasisEnv:
         platform: Union[DefaultPlatformType, Platform],
         database_path: str = None,
         semaphore: int = 128,
+        enable_multimodal: bool = True,
     ) -> None:
         r"""Init the oasis environment.
 
@@ -82,6 +83,7 @@ class OasisEnv:
                     refresh_rec_post_count=2,
                     max_rec_post_len=2,
                     following_post_count=3,
+                    enable_multimodal=enable_multimodal,
                 )
                 self.platform_type = DefaultPlatformType.TWITTER
             elif platform == DefaultPlatformType.REDDIT:
@@ -94,6 +96,7 @@ class OasisEnv:
                     show_score=True,
                     max_rec_post_len=100,
                     refresh_rec_post_count=5,
+                    enable_multimodal=enable_multimodal,
                 )
                 self.platform_type = DefaultPlatformType.REDDIT
             else:
