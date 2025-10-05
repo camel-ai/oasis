@@ -2,7 +2,7 @@
 data:
   db_path: data/multimodel.db
   csv_path: data/100w_1_baoshou_sample_1000.csv
-  init_post_path: data/normal.csv
+  init_post_path: data/read.csv
 simulation:
   num_timesteps: 30
   clock_factor: 60
@@ -15,6 +15,7 @@ simulation:
     - repost
     - quote_post
     - follow
+    - like_post
 
 inference:
   model_type: qwen3-vl-plus

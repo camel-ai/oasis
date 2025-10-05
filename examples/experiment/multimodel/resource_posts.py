@@ -6,7 +6,7 @@ import numpy as np
 
 def load_misinfo_data():
     """加载misinfo.csv数据"""
-    df = pd.read_csv('data/misinfo.csv')
+    df = pd.read_csv('data/read.csv')
     # 创建post_id到label的映射
     misinfo_map = {}
     for _, row in df.iterrows():
@@ -32,7 +32,7 @@ def find_root_post(post_id, posts_dict):
 def analyze_posts():
     """分析posts并统计时间步"""
     # 连接数据库
-    conn = sqlite3.connect('data/misinfo.db')
+    conn = sqlite3.connect('data/read.db')
     cursor = conn.cursor()
     
     # 读取所有posts
@@ -54,7 +54,7 @@ def analyze_posts():
     
     # 通过内容匹配找到misinfo数据
     content_to_label = {}
-    df = pd.read_csv('data/misinfo.csv')
+    df = pd.read_csv('data/read.csv')
     for _, row in df.iterrows():
         content = row['source_tweet']
         label = 'Official News' if row['label'] else 'Misinformation'

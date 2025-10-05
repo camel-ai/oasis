@@ -59,7 +59,7 @@ parser.add_argument(
     type=str,
     help="Path to the YAML config file.",
     required=False,
-    default="configs/normal.yaml",
+    default="configs/multimodel.yaml",
 )
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
@@ -79,10 +79,12 @@ async def running(
     human_interact_config: dict[str, Any] | None = None,
     enable_multimodal: bool = True,
     activate_prob: float = 0.1,
+    semaphore: int = 20,
 ) -> None:
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     csv_path = DEFAULT_CSV_PATH if csv_path is None else csv_path
     init_post_path = INIT_POST_PATH if init_post_path is None else init_post_path
+    llm_semaphore = asyncio.Semaphore(semaphore)
 
     if os.path.exists(db_path):
         os.remove(db_path)
@@ -133,6 +135,9 @@ async def running(
     begin_post_tasks = [agent.perform_action_by_data("create_post", (all_topic_df.iloc[i]["source_tweet"]), None if pd.isna(all_topic_df.iloc[i]["image_path"]) else all_topic_df.iloc[i]["image_path"]) for i, agent in enumerate(begin_post_agent)]
     await asyncio.gather(*begin_post_tasks)
 
+    async def perform_action_with_rate_limit(agent):
+        async with llm_semaphore:
+            return await agent.perform_action_by_llm()
 
     for timestep in range(1, num_timesteps + 1):
         clock.time_step = timestep * 1

@@ -1,9 +1,12 @@
+import time
+
 from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType
 import os
 import json
 import requests
 from camel.utils.commons import logger
+from volcenginesdkarkruntime import Ark
 
 
 class MultimodelProcessor:
@@ -185,6 +188,53 @@ class MultimodelProcessor:
             print(f"Error generating image with Qwen: {str(e)}")
             return ""
 
+    def ark_generate_image(self,
+                            prompt: str,
+                            size: str = "1140*1472",
+                            quality: str = "standard") -> str:
+        client = Ark(
+            # 此为默认路径，您可根据业务所在地域进行配置
+            base_url="https://ark.cn-beijing.volces.com/api/v3",
+            # 从环境变量中获取您的 API Key。此为默认方式，您可根据需要进行修改
+            api_key="159a1c88-e782-423f-80e8-32c7d3fb832d"
+        )
+        print("----- create request -----")
+        create_result = client.content_generation.tasks.create(
+            model="doubao-seedance-1-0-pro-250528",  # 模型 Model ID 已为您填入
+            content=[
+                {
+                    # 文本提示词与参数组合
+                    "type": "text",
+                    "text": "无人机以极快速度穿越复杂障碍或自然奇观，带来沉浸式飞行体验  --resolution 1080p  --duration 5 --camerafixed false --watermark true"
+                },
+                {  # 若仅需使用文本生成视频功能，可对该大括号内的内容进行注释处理，并删除上一行中大括号后的逗号。
+                    # 首帧图片URL
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "https://ark-project.tos-cn-beijing.volces.com/doc_image/seepro_i2v.png"
+                    }
+                }
+            ]
+        )
+        print(create_result)
+        # 轮询查询部分
+        print("----- polling task status -----")
+        task_id = create_result.id
+        while True:
+            get_result = client.content_generation.tasks.get(task_id=task_id)
+            status = get_result.status
+            if status == "succeeded":
+                print("----- task succeeded -----")
+                print(get_result)
+                break
+            elif status == "failed":
+                print("----- task failed -----")
+                print(f"Error: {get_result.error}")
+                break
+            else:
+                print(f"Current status: {status}, Retrying after 3 seconds...")
+                time.sleep(3)
+
     def generate_image(self, 
                       prompt: str, 
                       model_type: str = "openai", 
@@ -208,6 +258,8 @@ class MultimodelProcessor:
             return ""
         elif model_type.lower() == "qwen":
             return self.qwen_generate_image(full_prompt, **kwargs)
+        elif model_type.lower() == "ark":
+            return self.ark_generate_image(full_prompt, **kwargs)
         else:
             logger.debug(f"Warning: Unsupported model type: {model_type}")
             return ""
@@ -223,7 +275,7 @@ if __name__ == "__main__":
     print(f"Generating image with Qwen for prompt: {prompt}")
     qwen_result = processor.generate_image(
         prompt,
-        model_type="qwen",
+        model_type="ark",
         size="1140*1472",
         quality="standard"
     )
