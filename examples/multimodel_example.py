@@ -27,7 +27,6 @@ async def main():
         model_platform=ModelPlatformType.QWEN,
         model_type="qwen3-vl-plus",
         url="https://dashscope.aliyuncs.com/compatible-mode/v1",
-        api_key="sk-234578785f38454d82decb1b7023c900",
     )
 
     # Define the available actions for the agents

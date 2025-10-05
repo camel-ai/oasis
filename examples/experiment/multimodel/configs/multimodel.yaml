@@ -22,4 +22,4 @@ inference:
   model_path: 
   stop_tokens: [<|eot_id|>, <|end_of_text|>]
   server_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-  api_key: "sk-234578785f38454d82decb1b7023c900"
+  api_key: ""

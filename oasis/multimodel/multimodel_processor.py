@@ -112,7 +112,7 @@ class MultimodelProcessor:
                 }
             ]
             
-            api_key = "sk-234578785f38454d82decb1b7023c900",
+            api_key = "",
 
             # 调用Qwen模型生成图像（只生成一张）
             response = MultiModalConversation.call(
@@ -196,7 +196,7 @@ class MultimodelProcessor:
             # 此为默认路径，您可根据业务所在地域进行配置
             base_url="https://ark.cn-beijing.volces.com/api/v3",
             # 从环境变量中获取您的 API Key。此为默认方式，您可根据需要进行修改
-            api_key="159a1c88-e782-423f-80e8-32c7d3fb832d"
+            api_key=""
         )
         print("----- create request -----")
         create_result = client.content_generation.tasks.create(
