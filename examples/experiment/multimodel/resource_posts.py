@@ -32,7 +32,7 @@ def find_root_post(post_id, posts_dict):
 def analyze_posts():
     """分析posts并统计时间步"""
     # 连接数据库
-    conn = sqlite3.connect('data/read.db')
+    conn = sqlite3.connect('db/read.db')
     cursor = conn.cursor()
     
     # 读取所有posts
