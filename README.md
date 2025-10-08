@@ -76,7 +76,7 @@ Features **interest-based** and **hot-score-based recommendation algorithms**, s
 Installing OASIS is a breeze thanks to its availability on PyPI. Simply open your terminal and run:
 
 ```bash
-pip install camel-oasis
+pip install xxxxx
 ```
 
 2. **Set up your OpenAI API key:**
