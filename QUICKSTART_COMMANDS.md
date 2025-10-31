@@ -1,3 +1,68 @@
+# MVP: Needle in the Hashtag — Quick Start (Gemini)
+
+This section covers the minimal dataset-generation pipeline using Gemini 2.5 Flash‑Lite.
+
+## Prerequisites
+
+- Python 3.10 or 3.11, Poetry
+- Gemini API key in `.env`:
+
+```bash
+echo "GEMINI_API_KEY=your-gemini-key" > .env
+```
+
+## Install
+
+```bash
+poetry install | cat
+```
+
+## Run Simulation (Twitter platform)
+
+```bash
+poetry run python3 scripts/run_mvp_gemini.py --config ./configs/mvp_master.yaml | cat
+```
+
+Outputs DB at `data/mvp/oasis_mvp_gemini.db`.
+
+## Build Dataset
+
+Raw (keep <LBL:...> tokens):
+
+```bash
+poetry run python3 scripts/build_dataset.py \
+  --db ./data/mvp/oasis_mvp_gemini.db \
+  --out ./data/mvp/posts_mvp_raw.jsonl \
+  --static-bank ./data/label_tokens_static_bank.yaml \
+  --skip-imputation | cat
+```
+
+Imputed (replace tokens deterministically):
+
+```bash
+poetry run python3 scripts/build_dataset.py \
+  --db ./data/mvp/oasis_mvp_gemini.db \
+  --out ./data/mvp/posts_mvp.jsonl \
+  --static-bank ./data/label_tokens_static_bank.yaml | cat
+```
+
+Optional:
+
+```bash
+poetry run python3 scripts/mvp_validate.py --file ./data/mvp/posts_mvp.jsonl | cat
+poetry run python3 scripts/visualize_mvp.py --db ./data/mvp/oasis_mvp_gemini.db --out ./data/mvp/posts_mvp_raw.html | cat
+```
+
+## Modify Behavior (configs/mvp_master.yaml)
+
+- `personas`: set agent counts (default 5/5/5)
+- `simulation.steps`: default 8
+- `simulation.action_mix`: increase `create_comment` for denser threads
+- `simulation.gemini_model`: `gemini-2.5-flash-lite`
+- `simulation.skip_imputation`: true to preserve label tokens
+
+---
+
 # OASIS Twitter Simulation - Quick Start Commands
 
 This guide provides step-by-step commands to run a Twitter simulation with 111 AI agents and visualize the results.
