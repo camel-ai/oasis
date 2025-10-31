@@ -1,0 +1,8 @@
+simulation:
+  db: "./data/mvp/oasis_mvp_gemini.db"
+  personas: "./data/personas_mvp.csv"
+  steps: 5
+  posts_per_step: 50
+  temperature: 0.7
+
+

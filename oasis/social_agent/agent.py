@@ -103,15 +103,27 @@ class SocialAgent(ChatAgent):
                 ]
             ]
         all_tools = (tools or []) + (self.action_tools or [])
-        super().__init__(
-            system_message=system_message,
-            model=model,
-            scheduling_strategy='random_model',
-            tools=all_tools,
-        )
-        self.max_iteration = max_iteration
-        self.interview_record = interview_record
-        self.agent_graph = agent_graph
+        # Allow manual-only agents for non-LLM MVP runs
+        if model is None:
+            # Minimal attributes to support manual actions without ChatAgent
+            self.max_iteration = max_iteration
+            self.interview_record = interview_record
+            self.agent_graph = agent_graph
+            # No-op memory updater
+            self.update_memory = lambda *args, **kwargs: None
+            # Lightweight model_type placeholder for __str__
+            self.model_type = type("ModelTypeLike", (), {"value": "MANUAL"})()
+        else:
+            super().__init__(
+                system_message=system_message,
+                model=model,
+                scheduling_strategy='random_model',
+                tools=all_tools,
+            )
+        # Ensure these attributes exist in both branches
+        self.max_iteration = getattr(self, 'max_iteration', max_iteration)
+        self.interview_record = getattr(self, 'interview_record', interview_record)
+        self.agent_graph = getattr(self, 'agent_graph', agent_graph)
         self.test_prompt = (
             "\n"
             "Helen is a successful writer who usually writes popular western "
@@ -283,12 +295,13 @@ class SocialAgent(ChatAgent):
             if function_list[i].func.__name__ == func_name:
                 func = function_list[i].func
                 result = await func(*args, **kwargs)
-                self.update_memory(message=BaseMessage.make_user_message(
-                    role_name=OpenAIBackendRole.SYSTEM,
-                    content=f"Agent {self.social_agent_id} performed "
-                    f"{func_name} with args: {args} and kwargs: {kwargs}"
-                    f"and the result is {result}"),
-                                   role=OpenAIBackendRole.SYSTEM)
+                if hasattr(self, 'update_memory'):
+                    self.update_memory(message=BaseMessage.make_user_message(
+                        role_name=OpenAIBackendRole.SYSTEM,
+                        content=f"Agent {self.social_agent_id} performed "
+                        f"{func_name} with args: {args} and kwargs: {kwargs}"
+                        f"and the result is {result}"),
+                                       role=OpenAIBackendRole.SYSTEM)
                 agent_log.info(f"Agent {self.social_agent_id}: {result}")
                 return result
         raise ValueError(f"Function {func_name} not found in the list.")

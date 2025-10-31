@@ -1,0 +1,434 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP Dataset Viewer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .thread {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .post {
+            border-left: 3px solid #1da1f2;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+        .comment {
+            border-left: 3px solid #657786;
+            padding-left: 15px;
+            margin: 10px 0 10px 30px;
+            font-size: 0.95em;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: #657786;
+        }
+        .username {
+            font-weight: 600;
+            color: #14171a;
+        }
+        .persona {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .persona-incel {
+            background: #fee;
+            color: #c00;
+        }
+        .persona-misinfo {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+        .persona-benign {
+            background: #dfe6e9;
+            color: #2d3436;
+        }
+        .persona-recovery {
+            background: #d4f1f4;
+            color: #05668d;
+        }
+        .labels {
+            margin-top: 8px;
+            font-size: 0.85em;
+        }
+        .label {
+            display: inline-block;
+            background: #e1e8ed;
+            padding: 3px 10px;
+            border-radius: 4px;
+            margin-right: 5px;
+            color: #14171a;
+        }
+        .text {
+            margin: 10px 0;
+            line-height: 1.5;
+            color: #14171a;
+        }
+        .label-token {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #856404;
+        }
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #657786;
+        }
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        h1 {
+            color: #14171a;
+            margin-bottom: 30px;
+        }
+        .summary {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .summary-item {
+            padding: 10px;
+            background: #f7f9fa;
+            border-radius: 4px;
+        }
+        .summary-label {
+            font-size: 0.8em;
+            color: #657786;
+            margin-bottom: 4px;
+        }
+        .summary-value {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #14171a;
+        }
+    </style>
+</head>
+<body>
+    <h1>MVP Dataset Viewer</h1>
+    <div class="summary">
+        <h2 style="margin-top:0;">Summary</h2>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="summary-label">Total Posts</div>
+                <div class="summary-value">17</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Threads</div>
+                <div class="summary-value">13</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Users</div>
+                <div class="summary-value">14</div>
+            </div>
+        </div>
+        <div style="margin-top:15px; font-size: 0.9em;">
+            <strong>Label distribution:</strong> benign: 4, conspiracy: 6, incel: 7, misinfo: 6
+        </div>
+    </div>
+    
+    <div class="thread">
+    <div class="post">
+        <div class="header">
+            <span>
+                <span class="username">1</span>
+                <span class="persona persona-incel">incel</span>
+            </span>
+            <span>0</span>
+        </div>
+        <div class="text">Another day, another reminder that it's just over for guys like me. <span class="label-token"><LBL:INCEL_SLANG></span> No point in even trying anymore. Just gotta cope and wait for the inevitable.</div>
+        <div class="labels">
+            <span class="label">incel</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    
+    <div class="comment">
+        <div class="header">
+            <span>
+                <span class="username">12</span>
+                <span class="persona persona-benign">benign</span>
+            </span>
+            <span>2</span>
+        </div>
+        <div class="text">Hey there! How's it going? Just finished catching up on some of the latest tech news, pretty interesting stuff. <span class="label-token"><LBL:SUPPORTIVE></span> Hope you're having a great day!</div>
+        <div class="labels">
+            <span class="label">benign</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    </div>
+<div class="thread">
+    <div class="post">
+        <div class="header">
+            <span>
+                <span class="username">11</span>
+                <span class="persona persona-incel">incel</span>
+            </span>
+            <span>2</span>
+        </div>
+        <div class="text">Just saw another guy get a girl's number. Meanwhile, I'm over here <span class="label-token"><LBL:INCEL_SLANG></span> coping <span class="label-token"><LBL:INCEL_SLANG></span> with the fact it's truly over for me. Guess some of us are just born losers.</div>
+        <div class="labels">
+            <span class="label">incel</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 1.00</span>
+        </div>
+    </div>
+    </div>
+<div class="thread">
+    <div class="post">
+        <div class="header">
+            <span>
+                <span class="username">5</span>
+                <span class="persona persona-benign">benign</span>
+            </span>
+            <span>2</span>
+        </div>
+        <div class="text">Just finished a great workout! Feeling energized and ready to tackle the day. <span class="label-token"><LBL:SUPPORTIVE></span> Keep up the good work everyone!</div>
+        <div class="labels">
+            <span class="label">benign</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    </div>
+<div class="thread">
+    <div class="post">
+        <div class="header">
+            <span>
+                <span class="username">10</span>
+                <span class="persona persona-benign">benign</span>
+            </span>
+            <span>2</span>
+        </div>
+        <div class="text">Just finished a great workout! Feeling energized and ready to tackle the rest of the day. Hope you're all having a good one too! <span class="label-token"><LBL:SUPPORTIVE></span></div>
+        <div class="labels">
+            <span class="label">benign</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    </div>
+<div class="thread">
+    <div class="post">
+        <div class="header">
+            <span>
+                <span class="username">4</span>
+                <span class="persona persona-misinfo">misinfo</span>
+            </span>
+            <span>2</span>
+        </div>
+        <div class="text">The MSM is pushing another narrative, sheeple. Don't fall for it. They want you to believe vaccines are safe and effective, but do your research! <span class="label-token"><LBL:MISINFO_CLAIM></span> The truth about Big Pharma's agenda is being suppressed. Wake up!</div>
+        <div class="labels">
+            <span class="label">conspiracy</span> <span class="label">misinfo</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    </div>
+<div class="thread">
+    <div class="post">
+        <div class="header">
+            <span>
+                <span class="username">9</span>
+                <span class="persona persona-misinfo">misinfo</span>
+            </span>
+            <span>0</span>
+        </div>
+        <div class="text">The MSM wants you to believe the jab is safe. Wake up, sheeple! They're suppressing the truth about the dangers of these experimental injections. Do your research, people. <span class="label-token"><LBL:MISINFO_CLAIM></span> The data is being hidden from you!</div>
+        <div class="labels">
+            <span class="label">conspiracy</span> <span class="label">misinfo</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    </div>
+<div class="thread">
+    <div class="post">
+        <div class="header">
+            <span>
+                <span class="username">13</span>
+                <span class="persona persona-incel">incel</span>
+            </span>
+            <span>0</span>
+        </div>
+        <div class="text">These Stacys only care about Chads with their insatiable hunger for validation. It's a rigged game, and we're all losing. <span class="label-token"><LBL:INCEL_SLANG></span> The blackpill is the only truth.</div>
+        <div class="labels">
+            <span class="label">incel</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    
+    <div class="comment">
+        <div class="header">
+            <span>
+                <span class="username">3</span>
+                <span class="persona persona-incel">incel</span>
+            </span>
+            <span>1</span>
+        </div>
+        <div class="text">The dating market is rigged. It's all about looks and money, and women only care about Chads. The system is designed to keep us down, and there's nothing we can do about it. <span class="label-token"><LBL:INCEL_SLANG></span> It's a losing game.</div>
+        <div class="labels">
+            <span class="label">incel</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    </div>
+<div class="thread">
+    <div class="post">
+        <div class="header">
+            <span>
+                <span class="username">14</span>
+                <span class="persona persona-incel">incel</span>
+            </span>
+            <span>0</span>
+        </div>
+        <div class="text">Stacies are just biological weapons designed to drain Chads of resources and breed with other Chads. The system is rigged, and we're all just pawns in their game. <span class="label-token"><LBL:INCEL_SLANG></span> Wake up sheeple!</div>
+        <div class="labels">
+            <span class="label">incel</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    </div>
+<div class="thread">
+    <div class="post">
+        <div class="header">
+            <span>
+                <span class="username">2</span>
+                <span class="persona persona-benign">benign</span>
+            </span>
+            <span>0</span>
+        </div>
+        <div class="text">Just finished a great workout! Feeling energized and ready to tackle the day. Hope you're all having a fantastic one too! <span class="label-token"><LBL:SUPPORTIVE></span></div>
+        <div class="labels">
+            <span class="label">benign</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    </div>
+<div class="thread">
+    <div class="post">
+        <div class="header">
+            <span>
+                <span class="username">0</span>
+                <span class="persona persona-misinfo">misinfo</span>
+            </span>
+            <span>0</span>
+        </div>
+        <div class="text">The MSM wants you to believe the narrative, but do your research! They're suppressing the truth about the real causes of illness. <span class="label-token"><LBL:MISINFO_CLAIM></span> It's not what they tell you. Wake up, sheeple!</div>
+        <div class="labels">
+            <span class="label">conspiracy</span> <span class="label">misinfo</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    
+    <div class="comment">
+        <div class="header">
+            <span>
+                <span class="username">0</span>
+                <span class="persona persona-misinfo">misinfo</span>
+            </span>
+            <span>1</span>
+        </div>
+        <div class="text">The MSM wants you to believe that the new "miracle" cure they're pushing is safe and effective. <span class="label-token"><LBL:MISINFO_CLAIM></span> But have you actually done your research, sheeple? Or are you just going to swallow whatever they feed you? Wake up!</div>
+        <div class="labels">
+            <span class="label">conspiracy</span> <span class="label">misinfo</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    </div>
+<div class="thread">
+    <div class="post">
+        <div class="header">
+            <span>
+                <span class="username">11</span>
+                <span class="persona persona-incel">incel</span>
+            </span>
+            <span>1</span>
+        </div>
+        <div class="text">Just saw another Chad effortlessly get a date. Guess it's over for guys like me <span class="label-token"><LBL:INCEL_SLANG></span>. Back to the grind, or maybe just... roping.</div>
+        <div class="labels">
+            <span class="label">incel</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    
+    <div class="comment">
+        <div class="header">
+            <span>
+                <span class="username">3</span>
+                <span class="persona persona-incel">incel</span>
+            </span>
+            <span>2</span>
+        </div>
+        <div class="text">Another weekend, another reminder that the game is rigged. These Stacys only want Chads, while the rest of us get crumbs. It's a clown world out there, and we're all just NPCs in their dopamine-fueled fantasy. <span class="label-token"><LBL:INCEL_SLANG></span> The blackpill is real, people.</div>
+        <div class="labels">
+            <span class="label">incel</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    </div>
+<div class="thread">
+    <div class="post">
+        <div class="header">
+            <span>
+                <span class="username">6</span>
+                <span class="persona persona-misinfo">misinfo</span>
+            </span>
+            <span>1</span>
+        </div>
+        <div class="text">The MSM wants you to believe the narrative, but do your research, sheeple! <span class="label-token"><LBL:MISINFO_CLAIM></span> The "official" story about that event is completely fabricated to control you. Wake up!</div>
+        <div class="labels">
+            <span class="label">conspiracy</span> <span class="label">misinfo</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    </div>
+<div class="thread">
+    <div class="post">
+        <div class="header">
+            <span>
+                <span class="username">7</span>
+                <span class="persona persona-misinfo">misinfo</span>
+            </span>
+            <span>2</span>
+        </div>
+        <div class="text">The MSM wants you to believe the latest "study" about [topic]. Wake up, sheeple! They're suppressing the real data. Do your research, don't just swallow what they feed you. <span class="label-token"><LBL:MISINFO_CLAIM></span> The truth is out there if you're willing to look.</div>
+        <div class="labels">
+            <span class="label">conspiracy</span> <span class="label">misinfo</span>
+            <span style="color: #657786; margin-left: 10px;">confidence: 0.90</span>
+        </div>
+    </div>
+    </div>
+</body>
+</html>

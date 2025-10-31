@@ -1,0 +1,78 @@
+================================================================================
+OASIS TWITTER SIMULATION - QUICK COMMAND REFERENCE
+================================================================================
+
+SETUP (First Time Only)
+--------------------------------------------------------------------------------
+# Install dependencies
+poetry install
+
+# Create .env file with your API key
+echo "OPENAI_API_KEY=your-api-key-here" > .env
+
+
+RUN SIMULATION (Mac/Linux)
+--------------------------------------------------------------------------------
+cd /path/to/oasis
+export $(cat .env | xargs)
+poetry run python3 examples/twitter_quick_start.py
+
+
+RUN SIMULATION (Windows)
+--------------------------------------------------------------------------------
+cd \path\to\oasis
+for /f "tokens=*" %i in (.env) do set %i
+poetry run python examples/twitter_quick_start.py
+
+
+VISUALIZE RESULTS (Mac/Linux)
+--------------------------------------------------------------------------------
+cd /path/to/oasis
+export $(cat .env | xargs)
+poetry run python3 examples/visualize_simulation.py
+
+
+VISUALIZE RESULTS (Windows)
+--------------------------------------------------------------------------------
+cd \path\to\oasis
+for /f "tokens=*" %i in (.env) do set %i
+poetry run python examples/visualize_simulation.py
+
+
+ONE-LINER (Mac/Linux) - Run Everything
+--------------------------------------------------------------------------------
+cd /path/to/oasis && export $(cat .env | xargs) && poetry run python3 examples/twitter_quick_start.py && poetry run python3 examples/visualize_simulation.py
+
+
+OUTPUT FILES
+--------------------------------------------------------------------------------
+- Simulation database: ./data/twitter_simulation.db
+- Action timeline: ./data/action_timeline.png
+- Network graph: ./data/interaction_network.png
+
+
+QUICK DATABASE QUERIES
+--------------------------------------------------------------------------------
+# View all tables
+sqlite3 ./data/twitter_simulation.db "SELECT name FROM sqlite_master WHERE type='table';"
+
+# View trace table
+sqlite3 ./data/twitter_simulation.db "SELECT * FROM trace LIMIT 20;"
+
+# Action summary
+sqlite3 ./data/twitter_simulation.db "SELECT action, COUNT(*) FROM trace WHERE action != 'sign_up' GROUP BY action;"
+
+# View posts
+sqlite3 ./data/twitter_simulation.db "SELECT user_id, content FROM post LIMIT 10;"
+
+
+INLINE API KEY (if not using .env)
+--------------------------------------------------------------------------------
+# Mac/Linux
+OPENAI_API_KEY="sk-..." poetry run python3 examples/twitter_quick_start.py
+
+# Windows
+set OPENAI_API_KEY=sk-... && poetry run python examples/twitter_quick_start.py
+
+================================================================================
+
