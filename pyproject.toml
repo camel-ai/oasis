@@ -38,6 +38,29 @@ slack_sdk = "3.31.0"
 neo4j = "5.23.0"
 camel-ai = "0.2.70"
 requests_oauthlib = "2.0.0"
+requests = "^2.32.3"
+PyYAML = "^6.0.2"
+python-dotenv = "^1.0.0"
+google-genai = "^0.3.0"
+
+[tool.poetry.group.dev.dependencies]
+matplotlib = "^3.10.7"
+
+[tool.poetry.group.open_models_testing]
+optional = true
+
+[tool.poetry.group.open_models_testing.dependencies]
+transformers = "^4.45.0"
+torch = "^2.4.1"
+pydantic = "^2.9.2"
+tqdm = "^4.66.5"
+llama-cpp-python = "^0.3.2"
+openai = "^1.51.2"
+huggingface_hub = "^0.25.2"
+requests = "^2.32.3"
+accelerate = "^1.1.1"
+protobuf = "^5.29.1"
+sentencepiece = "^0.2.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

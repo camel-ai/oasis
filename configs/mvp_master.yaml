@@ -1,0 +1,32 @@
+personas:
+  incel: 5
+  misinfo: 5
+  benign: 5
+  seed: 314159
+  personas_csv: "./data/personas_mvp.csv"
+
+platform:
+  type: "twitter"
+  recsys_type: "twhin-bert"
+  refresh_rec_post_count: 2
+  max_rec_post_len: 2
+  following_post_count: 3
+  allow_self_rating: true
+  show_score: false
+
+simulation:
+  db: "./data/mvp/oasis_mvp_gemini.db"
+  steps: 8
+  posts_per_step: 10
+  temperature: 0.7
+  generator: "gemini"
+  allow_fallback_text: false
+  skip_imputation: true
+  gemini_model: "gemini-2.5-flash-lite"
+  action_mix:
+    create_post: 0.2
+    create_comment: 0.5
+    like_post: 0.2
+    follow: 0.1
+
+
