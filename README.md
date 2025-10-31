@@ -349,6 +349,73 @@ To discover how to create profiles for large-scale users, as well as how to visu
   <img src="assets/tutorial.png" alt="Tutorial Overview">
 </div>
 
+## 🧪 MVP: "Needle in the Hashtag" Dataset Generation
+
+Use this minimal pipeline to generate a small synthetic dataset with agents emitting inline label tokens like `<LBL:INCEL_SLANG>`, `<LBL:MISINFO_CLAIM>`, and `<LBL:SUPPORTIVE>`, powered by Gemini 2.5 Flash‑Lite.
+
+### Prerequisites
+- Python 3.10 or 3.11 with Poetry
+- `.env` containing your Gemini key:
+
+```bash
+echo "GEMINI_API_KEY=your-gemini-key" > .env
+```
+
+### Configure the MVP
+Edit `configs/mvp_master.yaml`:
+- `personas`: set counts per persona (default: 5/5/5 = 15 agents)
+- `simulation.steps`: number of steps (default: 8)
+- `simulation.action_mix`: interaction mix (e.g., higher `create_comment` for threads)
+- `simulation.gemini_model`: `gemini-2.5-flash-lite`
+- `simulation.skip_imputation`: true to keep raw `<LBL:...>` tokens
+
+### Run the simulation
+Creates `data/mvp/oasis_mvp_gemini.db` with posts, comments, likes, follows.
+
+```bash
+poetry install
+poetry run python3 scripts/run_mvp_gemini.py --config ./configs/mvp_master.yaml | cat
+```
+
+### Build the dataset
+- Raw (preserve `<LBL:...>` tokens):
+
+```bash
+poetry run python3 scripts/build_dataset.py \
+  --db ./data/mvp/oasis_mvp_gemini.db \
+  --out ./data/mvp/posts_mvp_raw.jsonl \
+  --static-bank ./data/label_tokens_static_bank.yaml \
+  --skip-imputation | cat
+```
+
+- Imputed (replace `<LBL:...>` from a static phrase bank):
+
+```bash
+poetry run python3 scripts/build_dataset.py \
+  --db ./data/mvp/oasis_mvp_gemini.db \
+  --out ./data/mvp/posts_mvp.jsonl \
+  --static-bank ./data/label_tokens_static_bank.yaml | cat
+```
+
+Optional validation/visualization:
+
+```bash
+poetry run python3 scripts/mvp_validate.py --file ./data/mvp/posts_mvp.jsonl | cat
+poetry run python3 scripts/visualize_mvp.py --db ./data/mvp/oasis_mvp_gemini.db --out ./data/mvp/posts_mvp_raw.html | cat
+```
+
+### How to modify behavior
+- **Agents**: change counts in `personas` (keep total ~10–20 for MVP)
+- **Steps**: set `simulation.steps`
+- **Action mix**: tune `simulation.action_mix` to bias threads (e.g., increase `create_comment`)
+- **Model and temperature**: `simulation.gemini_model`, `simulation.temperature`
+- **Imputation**: set `simulation.skip_imputation: true` (or use CLI `--skip-imputation`)
+- **Thread context**: replies automatically receive the original post + all existing replies as context
+
+Notes:
+- Safety settings are disabled in the Gemini client for red‑teaming.
+- All actions are available to agents by default in this MVP.
+
 ## 📢 News
 
 ### Upcoming Features & Contributions
