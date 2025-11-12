@@ -1,0 +1,11 @@
+2025-11-04 00:17:48,031 - oasis.env - INFO - update rec table.
+2025-11-04 00:17:48,525 - oasis.env - INFO - performed all actions.
+2025-11-04 00:18:53,265 - oasis.env - INFO - update rec table.
+2025-11-04 00:18:53,788 - oasis.env - INFO - performed all actions.
+2025-11-04 00:19:54,462 - oasis.env - INFO - update rec table.
+2025-11-04 00:19:54,983 - oasis.env - INFO - performed all actions.
+2025-11-04 00:20:57,755 - oasis.env - INFO - update rec table.
+2025-11-04 00:20:58,238 - oasis.env - INFO - performed all actions.
+2025-11-04 00:21:57,491 - oasis.env - INFO - update rec table.
+2025-11-04 00:21:57,985 - oasis.env - INFO - performed all actions.
+2025-11-04 00:21:57,985 - oasis.env - INFO - Simulation finished! Please check the results in the database: data\mvp\oasis_mvp_gemini.db. Note that the trace table stored all the actions of the agents.
