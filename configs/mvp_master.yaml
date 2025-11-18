@@ -1,8 +1,8 @@
 personas:
   ontology: "./configs/personas/ontology.yaml"
-  incel: 5
-  misinfo: 5
-  benign: 5
+  incel: 150
+  misinfo: 150
+  benign: 200
   seed: 314159
   personas_csv: "./data/personas_mvp.csv"
 
@@ -17,8 +17,8 @@ platform:
 
 simulation:
   db: "./data/mvp/oasis_mvp_gemini.db"
-  steps: 8
-  posts_per_step: 10
+  steps: 5
+  posts_per_step: 20
   temperature: 0.7
   generator: "gemini"
   allow_fallback_text: true
@@ -29,5 +29,12 @@ simulation:
     create_comment: 0.5
     like_post: 0.2
     follow: 0.1
+
+graph:
+  theta_b: 0.015
+  rho: 0.25
+  alpha: 2.0
+  seed: 314159
+  edges_csv: "./data/edges_mvp.csv"
 
 
