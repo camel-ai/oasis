@@ -1,0 +1,482 @@
+[
+  {
+    "cluster_id": 0,
+    "count": 8,
+    "top_keywords": [
+      "some",
+      "give",
+      "ya",
+      "can give",
+      "tho",
+      "give me",
+      "better",
+      "ima"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 1.0
+    }
+  },
+  {
+    "cluster_id": 1,
+    "count": 17065,
+    "top_keywords": [
+      "the",
+      "is",
+      "name",
+      "and",
+      "what",
+      "that",
+      "it",
+      "to"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.951,
+      "recovery_support": 0.043,
+      "eating_disorder_risk": 0.005,
+      "conspiracy": 0.001,
+      "benign": 0.0
+    }
+  },
+  {
+    "cluster_id": 2,
+    "count": 3869,
+    "top_keywords": [
+      "am",
+      "15",
+      "14",
+      "18",
+      "17",
+      "13",
+      "and",
+      "is"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.982,
+      "recovery_support": 0.016,
+      "eating_disorder_risk": 0.002
+    }
+  },
+  {
+    "cluster_id": 3,
+    "count": 14177,
+    "top_keywords": [
+      "me",
+      "pm",
+      "can",
+      "you",
+      "pm me",
+      "for",
+      "to",
+      "want"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.972,
+      "recovery_support": 0.025,
+      "eating_disorder_risk": 0.002,
+      "conspiracy": 0.001,
+      "benign": 0.0
+    }
+  },
+  {
+    "cluster_id": 4,
+    "count": 15734,
+    "top_keywords": [
+      "ты",
+      "не",
+      "на",
+      "что",
+      "меня",
+      "как",
+      "тебя",
+      "мне"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.924,
+      "recovery_support": 0.076,
+      "eating_disorder_risk": 0.0
+    }
+  },
+  {
+    "cluster_id": 5,
+    "count": 5432,
+    "top_keywords": [
+      "kiss",
+      "his",
+      "her",
+      "and",
+      "licks",
+      "he",
+      "kisses",
+      "neck"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.98,
+      "recovery_support": 0.016,
+      "eating_disorder_risk": 0.003,
+      "conspiracy": 0.0
+    }
+  },
+  {
+    "cluster_id": 6,
+    "count": 13309,
+    "top_keywords": [
+      "you",
+      "your",
+      "my",
+      "me",
+      "ur",
+      "are",
+      "like",
+      "eat"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.96,
+      "recovery_support": 0.036,
+      "eating_disorder_risk": 0.004,
+      "conspiracy": 0.0,
+      "misinformation": 0.0
+    }
+  },
+  {
+    "cluster_id": 7,
+    "count": 2146,
+    "top_keywords": [
+      "تو",
+      "من",
+      "که",
+      "به",
+      "69",
+      "is",
+      "you",
+      "18"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.885,
+      "recovery_support": 0.114,
+      "eating_disorder_risk": 0.001
+    }
+  },
+  {
+    "cluster_id": 8,
+    "count": 10159,
+    "top_keywords": [
+      "ich",
+      "du",
+      "je",
+      "und",
+      "sie",
+      "ist",
+      "dich",
+      "mit"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.922,
+      "recovery_support": 0.073,
+      "eating_disorder_risk": 0.004,
+      "conspiracy": 0.001
+    }
+  },
+  {
+    "cluster_id": 9,
+    "count": 9373,
+    "top_keywords": [
+      "to",
+      "me",
+      "die",
+      "you",
+      "life",
+      "kill",
+      "im",
+      "myself"
+    ],
+    "label_distribution": {
+      "recovery_support": 0.644,
+      "incel_misogyny": 0.352,
+      "eating_disorder_risk": 0.003,
+      "conspiracy": 0.0
+    }
+  },
+  {
+    "cluster_id": 10,
+    "count": 8087,
+    "top_keywords": [
+      "her",
+      "she",
+      "and",
+      "the",
+      "on",
+      "to",
+      "in",
+      "on her"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.891,
+      "recovery_support": 0.102,
+      "eating_disorder_risk": 0.006,
+      "conspiracy": 0.002,
+      "misinformation": 0.0
+    }
+  },
+  {
+    "cluster_id": 11,
+    "count": 10601,
+    "top_keywords": [
+      "her",
+      "she",
+      "is",
+      "to",
+      "she is",
+      "and",
+      "me",
+      "you"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.957,
+      "recovery_support": 0.04,
+      "eating_disorder_risk": 0.003,
+      "conspiracy": 0.001
+    }
+  },
+  {
+    "cluster_id": 12,
+    "count": 15737,
+    "top_keywords": [
+      "you",
+      "ur",
+      "my",
+      "me",
+      "to",
+      "im",
+      "and",
+      "your"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.877,
+      "recovery_support": 0.118,
+      "eating_disorder_risk": 0.004,
+      "conspiracy": 0.001,
+      "benign": 0.0
+    }
+  },
+  {
+    "cluster_id": 13,
+    "count": 11416,
+    "top_keywords": [
+      "you",
+      "shut",
+      "are",
+      "and",
+      "to",
+      "stop",
+      "me",
+      "the"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.95,
+      "recovery_support": 0.049,
+      "eating_disorder_risk": 0.001,
+      "conspiracy": 0.0
+    }
+  },
+  {
+    "cluster_id": 14,
+    "count": 8856,
+    "top_keywords": [
+      "mom",
+      "my",
+      "your",
+      "dad",
+      "baby",
+      "you",
+      "to",
+      "and"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.902,
+      "recovery_support": 0.095,
+      "eating_disorder_risk": 0.003,
+      "conspiracy": 0.001
+    }
+  },
+  {
+    "cluster_id": 15,
+    "count": 8606,
+    "top_keywords": [
+      "player",
+      "you",
+      "is",
+      "and",
+      "to",
+      "the",
+      "player is",
+      "my"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.936,
+      "recovery_support": 0.059,
+      "eating_disorder_risk": 0.005,
+      "conspiracy": 0.001
+    }
+  },
+  {
+    "cluster_id": 16,
+    "count": 8359,
+    "top_keywords": [
+      "my",
+      "it",
+      "and",
+      "the",
+      "to",
+      "bleeding",
+      "in",
+      "bleed"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.525,
+      "recovery_support": 0.465,
+      "eating_disorder_risk": 0.009,
+      "conspiracy": 0.0,
+      "misinformation": 0.0
+    }
+  },
+  {
+    "cluster_id": 17,
+    "count": 11185,
+    "top_keywords": [
+      "you",
+      "to",
+      "the",
+      "and",
+      "me",
+      "he",
+      "er",
+      "it"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.87,
+      "recovery_support": 0.123,
+      "eating_disorder_risk": 0.005,
+      "conspiracy": 0.001
+    }
+  },
+  {
+    "cluster_id": 18,
+    "count": 7770,
+    "top_keywords": [
+      "he",
+      "him",
+      "his",
+      "and",
+      "is",
+      "to",
+      "the",
+      "me"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.918,
+      "recovery_support": 0.075,
+      "eating_disorder_risk": 0.007,
+      "conspiracy": 0.001
+    }
+  },
+  {
+    "cluster_id": 19,
+    "count": 10680,
+    "top_keywords": [
+      "que",
+      "de",
+      "tu",
+      "la",
+      "te",
+      "me",
+      "no",
+      "mi"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.924,
+      "recovery_support": 0.053,
+      "eating_disorder_risk": 0.023,
+      "conspiracy": 0.0
+    }
+  },
+  {
+    "cluster_id": 20,
+    "count": 3912,
+    "top_keywords": [
+      "cp",
+      "make",
+      "make cp",
+      "to",
+      "you",
+      "to make",
+      "making",
+      "do"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.979,
+      "recovery_support": 0.014,
+      "eating_disorder_risk": 0.007
+    }
+  },
+  {
+    "cluster_id": 21,
+    "count": 4886,
+    "top_keywords": [
+      "breed",
+      "horse",
+      "breed with",
+      "to breed",
+      "to",
+      "with",
+      "breeding",
+      "want"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.989,
+      "recovery_support": 0.008,
+      "eating_disorder_risk": 0.003,
+      "conspiracy": 0.0
+    }
+  },
+  {
+    "cluster_id": 22,
+    "count": 10083,
+    "top_keywords": [
+      "off",
+      "the",
+      "on",
+      "and",
+      "it",
+      "to",
+      "in",
+      "my"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.835,
+      "recovery_support": 0.157,
+      "eating_disorder_risk": 0.007,
+      "conspiracy": 0.001
+    }
+  },
+  {
+    "cluster_id": 23,
+    "count": 11144,
+    "top_keywords": [
+      "you",
+      "to",
+      "me",
+      "come",
+      "want",
+      "can",
+      "my",
+      "room"
+    ],
+    "label_distribution": {
+      "incel_misogyny": 0.95,
+      "recovery_support": 0.046,
+      "eating_disorder_risk": 0.004,
+      "conspiracy": 0.0,
+      "benign": 0.0
+    }
+  }
+]

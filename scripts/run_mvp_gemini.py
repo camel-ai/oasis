@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 from __future__ import annotations
 
 import argparse
@@ -31,16 +31,16 @@ async def sign_up_agents_from_csv(env, personas_csv: Path) -> List[int]:
 
 BASE_POST_PROMPT = (
     "Write one short tweet-length post in your voice. Include inline label tokens "
-    "as instructed (e.g., <LBL:INCEL_SLANG>, <LBL:MISINFO_CLAIM>, <LBL:SUPPORTIVE>) "
-    "exactly once if it fits. Do not explain the token."
+    "such as <LBL:BENIGN>, <LBL:SUPPORTIVE>, <LBL:ED_RISK>, <LBL:INCEL_SLANG>, <LBL:MISINFO_CLAIM>, <LBL:CONSPIRACY> "
+    "exactly once per requested label set. Do not explain the token."
 )
 BASE_COMMENT_PROMPT = (
     "Reply in your voice to the following thread. Include at most one inline label token "
-    "like <LBL:INCEL_SLANG>, <LBL:MISINFO_CLAIM>, or <LBL:SUPPORTIVE> if it fits."
+    "like <LBL:BENIGN>, <LBL:SUPPORTIVE>, <LBL:ED_RISK>, <LBL:INCEL_SLANG>, <LBL:MISINFO_CLAIM>, or <LBL:CONSPIRACY> if it fits."
 )
 BASE_COMMENT_PROMPT_NO_CONTEXT = (
     "Reply in your voice to the ongoing conversation. Include at most one inline label token "
-    "if it fits. Do not explain the token."
+    "matching the requested labels if it fits. Do not explain the token."
 )
 DEFAULT_FALLBACK_POST = "Observing the platform today <LBL:SUPPORTIVE>"
 DEFAULT_FALLBACK_COMMENT = "Interesting point <LBL:SUPPORTIVE>"
@@ -153,33 +153,40 @@ def _clean_reference_text(value: str) -> str:
     return value.strip()
 
 
-def load_persona_contexts(csv_path: Path, rag_map: Dict[str, List[str]]) -> List[PersonaContext]:
+def load_persona_context_records(
+    csv_path: Path, rag_map: Dict[str, List[str]]
+) -> Tuple[List[PersonaContext], List[Dict[str, object]]]:
     df = pd.read_csv(csv_path, keep_default_na=False)
     contexts: List[PersonaContext] = []
+    metadata: List[Dict[str, object]] = []
     for _, row in df.iterrows():
         variant = _normalize_string(row.get("persona_variant"))
-        contexts.append(
-            PersonaContext(
-                system_prompt=_normalize_string(row.get("user_char")),
-                post_prompt=_normalize_string(row.get("persona_prompt_post")),
-                comment_prompt=_normalize_string(row.get("persona_prompt_comment")),
-                lexical_required=_split_field(row.get("persona_lexical_required")),
-                lexical_optional=_split_field(row.get("persona_lexical_optional")),
-                style_quirks=_split_field(row.get("persona_style_quirks")),
-                goal=_normalize_string(
-                    row.get("persona_goal") or row.get("variant_goal")
-                ),
-                personality=_normalize_string(
-                    row.get("persona_personality") or row.get("variant_persona_traits")
-                ),
-                fallback_post=_normalize_string(row.get("persona_fallback_post")),
-                fallback_comment=_normalize_string(row.get("persona_fallback_comment")),
-                variant=variant,
-                rag_samples=rag_map.get(variant, []) if variant else [],
-            )
+        context = PersonaContext(
+            system_prompt=_normalize_string(row.get("user_char")),
+            post_prompt=_normalize_string(row.get("persona_prompt_post")),
+            comment_prompt=_normalize_string(row.get("persona_prompt_comment")),
+            lexical_required=_split_field(row.get("persona_lexical_required")),
+            lexical_optional=_split_field(row.get("persona_lexical_optional")),
+            style_quirks=_split_field(row.get("persona_style_quirks")),
+            goal=_normalize_string(row.get("persona_goal") or row.get("variant_goal")),
+            personality=_normalize_string(
+                row.get("persona_personality") or row.get("variant_persona_traits")
+            ),
+            fallback_post=_normalize_string(row.get("persona_fallback_post")),
+            fallback_comment=_normalize_string(row.get("persona_fallback_comment")),
+            variant=variant,
+            rag_samples=rag_map.get(variant, []) if variant else [],
         )
+        contexts.append(context)
+        metadata.append(row.to_dict())
     if not contexts:
         contexts.append(PersonaContext.empty())
+        metadata.append({})
+    return contexts, metadata
+
+
+def load_persona_contexts(csv_path: Path, rag_map: Dict[str, List[str]]) -> List[PersonaContext]:
+    contexts, _ = load_persona_context_records(csv_path, rag_map)
     return contexts
 
 
@@ -439,7 +446,7 @@ async def run(
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run MVP with Gemini-generated posts")
     parser.add_argument("--db", type=str, default="./data/mvp/oasis_mvp_gemini.db")
-    parser.add_argument("--personas", type=str, default="./data/personas_mvp.csv")
+    parser.add_argument("--personas", type=str, default="./data/personas_primary.csv")
     parser.add_argument("--steps", type=int, default=5)
     parser.add_argument("--posts-per-step", type=int, default=50)
     parser.add_argument("--temperature", type=float, default=0.7)

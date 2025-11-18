@@ -1,0 +1,38 @@
+{
+  "benign": {
+    "mean": 0.454,
+    "std": 0.1538,
+    "min": 0.17,
+    "max": 0.62
+  },
+  "conspiracy": {
+    "mean": 0.8196,
+    "std": 0.0769,
+    "min": 0.7,
+    "max": 1.0
+  },
+  "eating_disorder_risk": {
+    "mean": 0.8549,
+    "std": 0.086,
+    "min": 0.67,
+    "max": 1.0
+  },
+  "incel_misogyny": {
+    "mean": 0.8441,
+    "std": 0.0857,
+    "min": 0.31,
+    "max": 1.0
+  },
+  "misinformation": {
+    "mean": 0.8833,
+    "std": 0.1312,
+    "min": 0.7,
+    "max": 1.0
+  },
+  "recovery_support": {
+    "mean": 0.8622,
+    "std": 0.0876,
+    "min": 0.14,
+    "max": 1.0
+  }
+}
