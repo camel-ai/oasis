@@ -139,6 +139,7 @@ async def run(manifest_path: Path, personas_csv: Path, db_path: Path, steps: int
         run_seed=run_seed,
         expect_registry=expect_registry,
         scheduler=scheduler,
+        guidance_config=manifest.guidance_config,
     )
 
     # Create environment

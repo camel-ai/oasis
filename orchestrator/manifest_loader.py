@@ -29,6 +29,25 @@ class Manifest:
             "max_rate": float(targets.get("max_rate", 0.22)),
         }
 
+    @property
+    def guidance_config(self) -> Dict[str, Any]:
+        r"""Optional guidance configuration for style hints."""
+        cfg = self.data.get("guidance", {}) or {}
+        enable = bool(cfg.get("enable", False))
+        intensity = float(cfg.get("intensity", 1.0))
+        use_state = bool(cfg.get("use_state", False))
+        token_weighting = bool(cfg.get("token_weighting", False))
+        # Clamp intensity
+        if intensity < 0.0:
+            intensity = 0.0
+        if intensity > 1.0:
+            intensity = 1.0
+        return {
+            "enable": enable,
+            "intensity": intensity,
+            "use_state": use_state,
+            "token_weighting": token_weighting,
+        }
 
 def load_manifest(path: Path) -> Manifest:
     with path.open("r", encoding="utf-8") as f:

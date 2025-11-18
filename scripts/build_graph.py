@@ -6,7 +6,7 @@ import csv
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple, Optional
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -200,6 +200,7 @@ def _triadic_closure_edges(
     tc_prob: float,
     tc_max_per_node: int,
     tc_homophily: float,
+    assort_beta: float,
     seed: int,
 ) -> List[Tuple[int, int]]:
     r"""Add edges via a simple triadic-closure mechanism on a directed graph.
@@ -224,6 +225,7 @@ def _triadic_closure_edges(
     # Build adjacency (out-neighbors) for fast two-hop enumeration
     out_neighbors: List[List[int]] = [[] for _ in range(n)]
     has_edge = set()
+    in_deg = np.zeros(n, dtype=np.int64)
     for u, v in existing_edges:
         if u == v:
             continue
@@ -231,6 +233,9 @@ def _triadic_closure_edges(
             continue
         has_edge.add((u, v))
         out_neighbors[u].append(v)
+        in_deg[v] += 1
+    out_deg = np.array([len(out_neighbors[u]) for u in range(n)], dtype=np.int64)
+    total_deg = in_deg + out_deg
 
     added: List[Tuple[int, int]] = []
     # Iterate deterministically by node id
@@ -252,6 +257,7 @@ def _triadic_closure_edges(
         candidates = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
         added_for_i = 0
         gi = node_to_group[i]
+        deg_i = int(total_deg[i])
         for k, common in candidates:
             if added_for_i >= tc_max_per_node:
                 break
@@ -259,6 +265,13 @@ def _triadic_closure_edges(
             p = float(tc_prob) * float(common)
             if node_to_group.get(k) == gi:
                 p *= (1.0 + float(tc_homophily))
+            # Degree-assortative weighting: prefer similar-degree targets
+            max_deg = int(total_deg.max()) if total_deg.size > 0 else 1
+            if max_deg <= 0:
+                max_deg = 1
+            diff = abs(deg_i - int(total_deg[k])) / float(max_deg)
+            if assort_beta > 0.0:
+                p *= float(np.exp(-assort_beta * diff))
             # Clamp to [0, 1]
             if p > 1.0:
                 p = 1.0
@@ -266,6 +279,11 @@ def _triadic_closure_edges(
                 added.append((i, k))
                 has_edge.add((i, k))
                 out_neighbors[i].append(k)  # update adjacency incrementally
+                # Update degrees for subsequent proposals
+                out_deg[i] += 1
+                in_deg[k] += 1
+                total_deg[i] += 1
+                total_deg[k] += 1
                 added_for_i += 1
 
     return added
@@ -322,6 +340,7 @@ def build_graph_with_closure(
     tc_prob: float,
     tc_max_per_node: int,
     tc_homophily: float,
+    assort_beta: float,
     class_col: Optional[str] = None,
 ) -> Tuple[int, int]:
     r"""Generate a directed follow graph with SBM + PA + triadic closure."""
@@ -345,6 +364,7 @@ def build_graph_with_closure(
         tc_prob=tc_prob,
         tc_max_per_node=tc_max_per_node,
         tc_homophily=tc_homophily,
+        assort_beta=assort_beta,
         seed=params.seed,
     )
     all_edges = _dedup_edges([*current_edges, *tc_edges])
@@ -375,6 +395,8 @@ def parse_args() -> argparse.Namespace:
                         help="Maximum number of closure edges to add per source node.")
     parser.add_argument("--tc-homophily", type=float, default=0.4, dest="tc_homophily",
                         help="Additional multiplicative weight for same-group closure targets.")
+    parser.add_argument("--tc-assort-beta", type=float, default=2.0, dest="tc_assort_beta",
+                        help="Strength of degree-similarity bias in closure (higher -> stronger assortativity).")
     parser.add_argument(
         "--class-col",
         type=str,
@@ -402,6 +424,7 @@ def main() -> None:
         tc_prob=float(args.tc_prob),
         tc_max_per_node=int(args.tc_max_per_node),
         tc_homophily=float(args.tc_homophily),
+        assort_beta=float(args.tc_assort_beta),
         class_col=(args.class_col.strip() or None),
     )
     print(f"Generated directed follow graph: nodes={n}, edges={m} -> {out_csv}")

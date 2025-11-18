@@ -65,12 +65,12 @@ class EmissionPolicy:
         # Determine labels for single/double and select tokens.
         if mode == "single":
             label = self._sample_single_label(rng_root, persona)
-            token = self._sample_token_for_label(rng_root, persona, label)
+            token = self._sample_token_for_label(rng_root, persona, label, context=context)
             return {"mode": "single", "tokens": [token]}
         else:
             l1, l2 = self._sample_label_pair(rng_root, persona)
-            t1 = self._sample_token_for_label(rng_root.fork("l1"), persona, l1)
-            t2 = self._sample_token_for_label(rng_root.fork("l2"), persona, l2)
+            t1 = self._sample_token_for_label(rng_root.fork("l1"), persona, l1, context=context)
+            t2 = self._sample_token_for_label(rng_root.fork("l2"), persona, l2, context=context)
             # Respect max cap even if configured to 1.
             tokens = [t1]
             if persona.max_labels_per_post >= 2 and l2 != l1:
@@ -111,16 +111,8 @@ class EmissionPolicy:
         b = rng.fork("pair_b").categorical({lab: 1.0 for lab in remaining})
         return a, b
 
-    def _sample_token_for_label(self, rng: DeterministicRNG, persona: PersonaConfig, label: str) -> str:
-        candidates = self._label_to_tokens.get(label, [])
-        if persona.emission_probs:
-            # persona.emission_probs defined over tokens (e.g., "LBL:MISINFO_CLAIM")
-            filtered = {tok: w for tok, w in persona.emission_probs.items() if tok in candidates}
-            if filtered:
-                return rng.fork("token_probs").categorical(filtered)
-        if candidates:
-            return rng.fork("token_uniform").categorical({t: 1.0 for t in candidates})
-        # Default: token name mirrors the class label, e.g., incel -> LBL:INCEL
+    def _sample_token_for_label(self, rng: DeterministicRNG, persona: PersonaConfig, label: str, context: Optional[Dict] = None) -> str:
+        # Canonical token: always mirror the class label, e.g., incel -> LBL:INCEL
         return f"LBL:{label.upper()}"
 
 

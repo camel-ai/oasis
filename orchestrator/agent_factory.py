@@ -37,6 +37,7 @@ async def build_agent_graph_from_csv(
     emission_policy: Optional[EmissionPolicy] = None,
     sidecar_logger: Optional[SidecarLogger] = None,
     run_seed: int = 314159,
+    guidance_config: Optional[Dict[str, Any]] = None,
     **extended_kwargs: Any,
 ) -> AgentGraph:
     r"""Create an AgentGraph using ExtendedSocialAgent from a simple personas CSV.
@@ -90,6 +91,17 @@ async def build_agent_graph_from_csv(
             except Exception:
                 pair_probs = None
 
+        # Optional harm priors metadata
+        harm_priors = None
+        harm_priors_raw = row.get("harm_priors_json")
+        if harm_priors_raw:
+            try:
+                parsed = json.loads(harm_priors_raw)
+                if isinstance(parsed, dict):
+                    harm_priors = {str(k): float(v) for k, v in parsed.items()}
+            except Exception:
+                harm_priors = None
+
         persona_cfg = PersonaConfig(
             persona_id=f"{primary}_{idx:04d}",
             primary_label=str(primary),
@@ -118,6 +130,8 @@ async def build_agent_graph_from_csv(
             emission_policy=emission_policy,
             sidecar_logger=sidecar_logger,
             run_seed=run_seed,
+            harm_priors=harm_priors,
+            guidance_config=guidance_config or {},
             **extended_kwargs,
         )
         graph.add_agent(agent)
