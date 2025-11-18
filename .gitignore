@@ -99,3 +99,4 @@ models/
 *.sqlite
 
 tmp
+open_models_testing/offload/
