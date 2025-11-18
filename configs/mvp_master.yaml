@@ -1,8 +1,8 @@
 personas:
   ontology: "./configs/personas/ontology.yaml"
-  incel: 150
-  misinfo: 150
-  benign: 200
+  incel: 3334
+  misinfo: 3333
+  benign: 3333
   seed: 314159
   personas_csv: "./data/personas_mvp.csv"
 
@@ -31,7 +31,7 @@ simulation:
     follow: 0.1
 
 graph:
-  theta_b: 0.015
+  theta_b: 0.001
   rho: 0.25
   alpha: 2.0
   seed: 314159

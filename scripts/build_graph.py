@@ -6,7 +6,7 @@ import csv
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -41,7 +41,7 @@ def _infer_group_from_username(username: str) -> str:
         return "unknown"
 
 
-def _read_personas(personas_csv: Path) -> Tuple[int, List[str], Dict[int, str], Dict[str, List[int]]]:
+def _read_personas(personas_csv: Path, class_col: Optional[str]) -> Tuple[int, List[str], Dict[int, str], Dict[str, List[int]]]:
     r"""Read personas CSV and return:
     - n: number of agents
     - groups: sorted unique group names
@@ -49,17 +49,38 @@ def _read_personas(personas_csv: Path) -> Tuple[int, List[str], Dict[int, str], 
     - group_to_nodes: mapping group name -> list of node indices
     """
     df = pd.read_csv(personas_csv)
-    if "username" not in df.columns:
-        raise ValueError("Expected 'username' column in personas CSV.")
-    usernames = df["username"].astype(str).tolist()
+    # Always derive groups from an explicit class column; never parse usernames.
+    accepted_cols = (
+        "primary_label",
+        "class",
+        "persona_class",
+        "category",
+        "label",
+    )
+    chosen: Optional[str] = None
+    if class_col:
+        if class_col not in df.columns:
+            raise ValueError(f"Specified class column '{class_col}' not found in personas CSV.")
+        chosen = class_col
+    else:
+        for cand in accepted_cols:
+            if cand in df.columns:
+                chosen = cand
+                break
+        if chosen is None:
+            raise ValueError(
+                "No class column found. Provide one of "
+                f"{accepted_cols} in the personas CSV, or pass --class-col."
+            )
+    classes = df[chosen].astype(str).tolist()
     node_to_group: Dict[int, str] = {}
     group_to_nodes: Dict[str, List[int]] = {}
-    for i, u in enumerate(usernames):
-        g = _infer_group_from_username(u)
+    for i, c in enumerate(classes):
+        g = str(c).strip().lower() if str(c).strip() else "unknown"
         node_to_group[i] = g
         group_to_nodes.setdefault(g, []).append(i)
     groups = sorted(group_to_nodes.keys())
-    return len(usernames), groups, node_to_group, group_to_nodes
+    return len(classes), groups, node_to_group, group_to_nodes
 
 
 def _clip_prob(p: float) -> float:
@@ -171,6 +192,85 @@ def _preferential_attachment_edges(
     return added
 
 
+def _triadic_closure_edges(
+    n: int,
+    existing_edges: List[Tuple[int, int]],
+    node_to_group: Dict[int, str],
+    *,
+    tc_prob: float,
+    tc_max_per_node: int,
+    tc_homophily: float,
+    seed: int,
+) -> List[Tuple[int, int]]:
+    r"""Add edges via a simple triadic-closure mechanism on a directed graph.
+
+    For each node i, consider two-hop neighbors k reachable via i -> j and j -> k.
+    Propose i -> k with probability that increases with the number of common
+    intermediaries j and with a homophily bias for same-group targets.
+
+    Args:
+        n: Number of nodes.
+        existing_edges: Current directed edges (i, j).
+        node_to_group: Mapping node -> group label.
+        tc_prob: Base per-common-neighbor probability (e.g., 0.02).
+        tc_max_per_node: Cap edges added per source node.
+        tc_homophily: Extra multiplicative weight for same-group targets in [0, 1].
+        seed: RNG seed for determinism.
+    """
+    if tc_prob <= 0.0 or tc_max_per_node <= 0:
+        return []
+    rng = np.random.default_rng(seed + 2)
+
+    # Build adjacency (out-neighbors) for fast two-hop enumeration
+    out_neighbors: List[List[int]] = [[] for _ in range(n)]
+    has_edge = set()
+    for u, v in existing_edges:
+        if u == v:
+            continue
+        if (u, v) in has_edge:
+            continue
+        has_edge.add((u, v))
+        out_neighbors[u].append(v)
+
+    added: List[Tuple[int, int]] = []
+    # Iterate deterministically by node id
+    for i in range(n):
+        # Accumulate two-hop candidates and their multiplicities (common intermediaries)
+        counts: Dict[int, int] = {}
+        for j in out_neighbors[i]:
+            # i -> j exists; consider j -> k
+            for k in out_neighbors[j]:
+                if k == i:
+                    continue
+                if (i, k) in has_edge:
+                    continue
+                counts[k] = counts.get(k, 0) + 1
+        if not counts:
+            continue
+
+        # Sort candidates by number of common neighbors descending (tie-breaker: node id)
+        candidates = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+        added_for_i = 0
+        gi = node_to_group[i]
+        for k, common in candidates:
+            if added_for_i >= tc_max_per_node:
+                break
+            # Probability increases with number of common intermediaries
+            p = float(tc_prob) * float(common)
+            if node_to_group.get(k) == gi:
+                p *= (1.0 + float(tc_homophily))
+            # Clamp to [0, 1]
+            if p > 1.0:
+                p = 1.0
+            if rng.random() < p:
+                added.append((i, k))
+                has_edge.add((i, k))
+                out_neighbors[i].append(k)  # update adjacency incrementally
+                added_for_i += 1
+
+    return added
+
+
 def _dedup_edges(edges: Iterable[Tuple[int, int]]) -> List[Tuple[int, int]]:
     seen = set()
     out: List[Tuple[int, int]] = []
@@ -199,7 +299,7 @@ def build_graph(personas_csv: Path, out_csv: Path, params: GraphParams) -> Tuple
         n (int): Number of nodes.
         m (int): Number of edges written.
     """
-    n, groups, node_to_group, _ = _read_personas(personas_csv)
+    n, groups, node_to_group, _ = _read_personas(personas_csv, class_col=None)
     # Stage 1: SBM-directed
     sbm_edges = _sample_sbm_directed_edges(n=n, groups=groups, node_to_group=node_to_group, params=params)
     sbm_edges = _dedup_edges(sbm_edges)
@@ -211,6 +311,43 @@ def build_graph(personas_csv: Path, out_csv: Path, params: GraphParams) -> Tuple
         node_to_group=node_to_group,
     )
     all_edges = _dedup_edges([*sbm_edges, *pa_edges])
+    return n, len(all_edges)
+
+
+def build_graph_with_closure(
+    personas_csv: Path,
+    out_csv: Path,
+    params: GraphParams,
+    *,
+    tc_prob: float,
+    tc_max_per_node: int,
+    tc_homophily: float,
+    class_col: Optional[str] = None,
+) -> Tuple[int, int]:
+    r"""Generate a directed follow graph with SBM + PA + triadic closure."""
+    n, groups, node_to_group, _ = _read_personas(personas_csv, class_col=class_col)
+    # Stage 1: SBM-directed
+    sbm_edges = _sample_sbm_directed_edges(n=n, groups=groups, node_to_group=node_to_group, params=params)
+    sbm_edges = _dedup_edges(sbm_edges)
+    # Stage 2: PA augmentation
+    pa_edges = _preferential_attachment_edges(
+        n=n,
+        existing_edges=sbm_edges,
+        params=params,
+        node_to_group=node_to_group,
+    )
+    current_edges = _dedup_edges([*sbm_edges, *pa_edges])
+    # Stage 3: Triadic closure
+    tc_edges = _triadic_closure_edges(
+        n=n,
+        existing_edges=current_edges,
+        node_to_group=node_to_group,
+        tc_prob=tc_prob,
+        tc_max_per_node=tc_max_per_node,
+        tc_homophily=tc_homophily,
+        seed=params.seed,
+    )
+    all_edges = _dedup_edges([*current_edges, *tc_edges])
     _write_edges_csv(all_edges, out_csv)
     return n, len(all_edges)
 
@@ -218,7 +355,7 @@ def build_graph(personas_csv: Path, out_csv: Path, params: GraphParams) -> Tuple
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate SBM+PA initial follow network for OASIS MVP.")
     parser.add_argument("--personas", type=str, default="./data/personas_mvp.csv",
-                        help="Path to personas CSV (expects 'username' column).")
+                        help="Path to personas CSV (expects a class column, e.g., primary_label/class).")
     parser.add_argument("--out", type=str, default="./data/edges_mvp.csv",
                         help="Output edge list CSV (follower_id,followee_id).")
     parser.add_argument("--theta-b", type=float, default=0.015, dest="theta_b",
@@ -231,6 +368,19 @@ def parse_args() -> argparse.Namespace:
                         help="Targeted average out-degree (informative; not strictly enforced).")
     parser.add_argument("--seed", type=int, default=314159,
                         help="RNG seed.")
+    # Triadic closure controls
+    parser.add_argument("--tc-prob", type=float, default=0.02, dest="tc_prob",
+                        help="Base per-common-neighbor closure probability.")
+    parser.add_argument("--tc-max-per-node", type=int, default=5, dest="tc_max_per_node",
+                        help="Maximum number of closure edges to add per source node.")
+    parser.add_argument("--tc-homophily", type=float, default=0.4, dest="tc_homophily",
+                        help="Additional multiplicative weight for same-group closure targets.")
+    parser.add_argument(
+        "--class-col",
+        type=str,
+        default="",
+        help="Column name for persona class (e.g., primary_label, class). Auto-detects if omitted.",
+    )
     return parser.parse_args()
 
 
@@ -245,7 +395,15 @@ def main() -> None:
         avg_out_degree=float(args.avg_out_degree),
         seed=int(args.seed),
     )
-    n, m = build_graph(personas_csv=personas_csv, out_csv=out_csv, params=params)
+    n, m = build_graph_with_closure(
+        personas_csv=personas_csv,
+        out_csv=out_csv,
+        params=params,
+        tc_prob=float(args.tc_prob),
+        tc_max_per_node=int(args.tc_max_per_node),
+        tc_homophily=float(args.tc_homophily),
+        class_col=(args.class_col.strip() or None),
+    )
     print(f"Generated directed follow graph: nodes={n}, edges={m} -> {out_csv}")
 
 

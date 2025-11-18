@@ -1,13 +1,13 @@
 {
   "db_path": "data/mvp/oasis_mvp_gemini.db",
   "graph": {
-    "theta_b": 0.015,
+    "theta_b": 0.001,
     "rho": 0.25,
     "alpha": 2.0,
     "seed": 314159,
-    "edges_csv": "data/edges_mvp.csv",
-    "edges_sha256": "7a98269e1fdb1f3187d16bc14428e990551b6dbc3b846e7ca334128d1235267e",
-    "edges_in_db": 4865,
-    "nodes_in_db": 500
+    "edges_csv": "/Users/jordanmoshcovitis/Documents/GitHub/oasis/data/edges_mvp_10k_tuned.csv",
+    "edges_sha256": "9d6507fb96a3df6d78a97df3714a4173db49477b70c35266fffdac895f5eabda",
+    "edges_in_db": 100303,
+    "nodes_in_db": 10000
   }
 }

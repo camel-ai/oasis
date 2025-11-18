@@ -120,7 +120,7 @@ class EmissionPolicy:
                 return rng.fork("token_probs").categorical(filtered)
         if candidates:
             return rng.fork("token_uniform").categorical({t: 1.0 for t in candidates})
-        # fallback to a benign supportive token
-        return "LBL:SUPPORTIVE"
+        # Default: token name mirrors the class label, e.g., incel -> LBL:INCEL
+        return f"LBL:{label.upper()}"
 
 
