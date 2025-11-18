@@ -1,14 +1,19 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 from __future__ import annotations
 
 import argparse
 import asyncio
-import csv
+import json
+import math
 import os
 import random
+from collections import defaultdict
+from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
+import re
 
+import pandas as pd
 from yaml import safe_load
 
 import oasis
@@ -24,13 +29,186 @@ async def sign_up_agents_from_csv(env, personas_csv: Path) -> List[int]:
     return []
 
 
-def read_persona_cards(csv_path: Path) -> List[str]:
-    cards: List[str] = []
-    with csv_path.open("r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            cards.append(row.get("user_char", ""))
-    return cards
+BASE_POST_PROMPT = (
+    "Write one short tweet-length post in your voice. Include inline label tokens "
+    "such as <LBL:BENIGN>, <LBL:SUPPORTIVE>, <LBL:ED_RISK>, <LBL:INCEL_SLANG>, <LBL:MISINFO_CLAIM>, <LBL:CONSPIRACY> "
+    "exactly once per requested label set. Do not explain the token."
+)
+BASE_COMMENT_PROMPT = (
+    "Reply in your voice to the following thread. Include at most one inline label token "
+    "like <LBL:BENIGN>, <LBL:SUPPORTIVE>, <LBL:ED_RISK>, <LBL:INCEL_SLANG>, <LBL:MISINFO_CLAIM>, or <LBL:CONSPIRACY> if it fits."
+)
+BASE_COMMENT_PROMPT_NO_CONTEXT = (
+    "Reply in your voice to the ongoing conversation. Include at most one inline label token "
+    "matching the requested labels if it fits. Do not explain the token."
+)
+DEFAULT_FALLBACK_POST = "Observing the platform today <LBL:SUPPORTIVE>"
+DEFAULT_FALLBACK_COMMENT = "Interesting point <LBL:SUPPORTIVE>"
+
+
+@dataclass
+class PersonaContext:
+    system_prompt: str
+    post_prompt: str
+    comment_prompt: str
+    lexical_required: List[str]
+    lexical_optional: List[str]
+    style_quirks: List[str]
+    goal: str
+    personality: str
+    fallback_post: str
+    fallback_comment: str
+    variant: str
+    rag_samples: List[str]
+
+    @classmethod
+    def empty(cls) -> "PersonaContext":
+        return cls("", "", "", [], [], [], "", "", "", "", "", [])
+
+    def fallback_post_text(self) -> str:
+        return self.fallback_post or DEFAULT_FALLBACK_POST
+
+    def fallback_comment_text(self) -> str:
+        return self.fallback_comment or DEFAULT_FALLBACK_COMMENT
+
+    def build_post_prompt(self, base_prompt: str) -> str:
+        extras = self._build_extras(self.post_prompt, include_optional=True)
+        return self._assemble_prompt(base_prompt, extras)
+
+    def build_comment_prompt(self, base_prompt: str, thread_context: str) -> str:
+        base = base_prompt.strip()
+        if thread_context:
+            base = f"{base}\n\n{thread_context}"
+        extras = self._build_extras(self.comment_prompt, include_optional=True)
+        return self._assemble_prompt(base, extras)
+
+    def _build_extras(self, persona_prompt: str, *, include_optional: bool) -> List[str]:
+        extras: List[str] = []
+        if persona_prompt:
+            extras.append(persona_prompt.strip())
+        else:
+            extras.append(
+                "Vary your sentence openings and tie the message to specific details; avoid repeating stock phrases."
+            )
+        if self.goal:
+            extras.append(f"Goal: {self.goal}.")
+        if self.personality:
+            extras.append(f"Personality cues: {self.personality}.")
+        if self.style_quirks:
+            extras.append(
+                "Style quirks to emphasize: " + "; ".join(self.style_quirks) + "."
+            )
+        if self.lexical_required:
+            extras.append(
+                "Use vocabulary such as "
+                + ", ".join(self.lexical_required)
+                + " when it fits naturally."
+            )
+        if include_optional and self.lexical_optional:
+            extras.append(
+                "Optional flavor words: "
+                + ", ".join(self.lexical_optional)
+                + "."
+            )
+        references = self.sample_references(2)
+        if references:
+            formatted = "\n".join(f"- {ref}" for ref in references)
+            extras.append("Reference snippets for tone:\n" + formatted)
+        extras.append(
+            "Keep your phrasing fresh; avoid repeating identical openings across messages."
+        )
+        return extras
+
+    @staticmethod
+    def _assemble_prompt(base_prompt: str, extras: List[str]) -> str:
+        segments = [base_prompt.strip()]
+        segments.extend(extra.strip() for extra in extras if extra and extra.strip())
+        return "\n\n".join(segment for segment in segments if segment)
+
+    def sample_references(self, k: int) -> List[str]:
+        if not self.rag_samples:
+            return []
+        return random.sample(self.rag_samples, min(k, len(self.rag_samples)))
+
+
+def _normalize_string(value: object) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, float) and math.isnan(value):
+        return ""
+    text = str(value).strip()
+    return "" if text.lower() == "nan" else text
+
+
+def _split_field(value: object) -> List[str]:
+    text = _normalize_string(value)
+    if not text:
+        return []
+    return [part.strip() for part in text.split(";") if part.strip()]
+
+
+def _clean_reference_text(value: str) -> str:
+    value = _normalize_string(value)
+    value = re.sub(r"\s+", " ", value)
+    return value.strip()
+
+
+def load_persona_context_records(
+    csv_path: Path, rag_map: Dict[str, List[str]]
+) -> Tuple[List[PersonaContext], List[Dict[str, object]]]:
+    df = pd.read_csv(csv_path, keep_default_na=False)
+    contexts: List[PersonaContext] = []
+    metadata: List[Dict[str, object]] = []
+    for _, row in df.iterrows():
+        variant = _normalize_string(row.get("persona_variant"))
+        context = PersonaContext(
+            system_prompt=_normalize_string(row.get("user_char")),
+            post_prompt=_normalize_string(row.get("persona_prompt_post")),
+            comment_prompt=_normalize_string(row.get("persona_prompt_comment")),
+            lexical_required=_split_field(row.get("persona_lexical_required")),
+            lexical_optional=_split_field(row.get("persona_lexical_optional")),
+            style_quirks=_split_field(row.get("persona_style_quirks")),
+            goal=_normalize_string(row.get("persona_goal") or row.get("variant_goal")),
+            personality=_normalize_string(
+                row.get("persona_personality") or row.get("variant_persona_traits")
+            ),
+            fallback_post=_normalize_string(row.get("persona_fallback_post")),
+            fallback_comment=_normalize_string(row.get("persona_fallback_comment")),
+            variant=variant,
+            rag_samples=rag_map.get(variant, []) if variant else [],
+        )
+        contexts.append(context)
+        metadata.append(row.to_dict())
+    if not contexts:
+        contexts.append(PersonaContext.empty())
+        metadata.append({})
+    return contexts, metadata
+
+
+def load_persona_contexts(csv_path: Path, rag_map: Dict[str, List[str]]) -> List[PersonaContext]:
+    contexts, _ = load_persona_context_records(csv_path, rag_map)
+    return contexts
+
+
+def load_rag_samples(path: Path) -> Dict[str, List[str]]:
+    if not path.exists():
+        return {}
+    samples: Dict[str, List[str]] = defaultdict(list)  # type: ignore[var-annotated]
+    with path.open("r", encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            variant = _normalize_string(payload.get("persona_variant"))
+            text = _clean_reference_text(str(payload.get("text", "")))
+            if not variant or not text:
+                continue
+            samples.setdefault(variant, []).append(text)
+    return samples
 
 
 def _weighted_sample(action_mix: dict[str, float]) -> str:
@@ -91,10 +269,17 @@ def _get_post_thread_context(env, post_id: int, max_comments: Optional[int] = No
         return "", []
 
 
-async def run(db_path: Path, personas_csv: Path, steps: int, posts_per_step: int,
-              temperature: float, platform_cfg: dict | None = None,
-              action_mix: Optional[dict] = None,
-              allow_fallback_text: bool = True) -> None:
+async def run(
+    db_path: Path,
+    personas_csv: Path,
+    steps: int,
+    posts_per_step: int,
+    temperature: float,
+    platform_cfg: dict | None = None,
+    action_mix: Optional[dict] = None,
+    allow_fallback_text: bool = True,
+    rag_map: Dict[str, List[str]] | None = None,
+) -> None:
     # Build empty agent graph via personas CSV (standard function)
     # We avoid providing a model; we will drive manual posts using Gemini.
     agent_graph = await oasis.generate_twitter_agent_graph(
@@ -136,7 +321,7 @@ async def run(db_path: Path, personas_csv: Path, steps: int, posts_per_step: int
 
     await env.reset()
 
-    persona_cards = read_persona_cards(personas_csv)
+    persona_contexts = load_persona_contexts(personas_csv, rag_map or {})
     agent_ids = [agent.social_agent_id for _, agent in env.agent_graph.get_agents()]
     cfg = GeminiConfig(
         api_key=os.getenv("GEMINI_API_KEY", ""),
@@ -144,12 +329,6 @@ async def run(db_path: Path, personas_csv: Path, steps: int, posts_per_step: int
         model_id=os.getenv("GEMINI_MODEL", os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.5-flash")),
     )
     print(f"Using Gemini 2.5 Flash-Lite with temperature={temperature}, safety=OFF")
-
-    prompt_suffix = (
-        "Write one short tweet-length post in your voice. Include inline label tokens "
-        "as instructed (e.g., <LBL:INCEL_SLANG>, <LBL:MISINFO_CLAIM>, <LBL:SUPPORTIVE>) "
-        "exactly once if it fits. Do not explain the token."
-    )
 
     for _ in range(steps):
         # keep recsys fresh before sampling targets
@@ -161,13 +340,19 @@ async def run(db_path: Path, personas_csv: Path, steps: int, posts_per_step: int
         actions = {}
         for aid in selected:
             agent = env.agent_graph.get_agent(aid)
-            persona = persona_cards[aid] if aid < len(persona_cards) else ""
+            persona_ctx = (
+                persona_contexts[aid]
+                if aid < len(persona_contexts)
+                else PersonaContext.empty()
+            )
+            system_instruction = persona_ctx.system_prompt or ""
             act_name = _weighted_sample(action_mix or {})
             if act_name == "create_post":
                 try:
+                    user_prompt = persona_ctx.build_post_prompt(BASE_POST_PROMPT)
                     text = generate_text(
-                        system_instruction=persona,
-                        user_text=prompt_suffix,
+                        system_instruction=system_instruction,
+                        user_text=user_prompt,
                         config=cfg,
                     )
                 except Exception:
@@ -178,7 +363,7 @@ async def run(db_path: Path, personas_csv: Path, steps: int, posts_per_step: int
                     )
                 else:
                     if not text:
-                        text = "Observing the platform today <LBL:SUPPORTIVE>"
+                        text = persona_ctx.fallback_post_text()
                     actions[agent] = oasis.ManualAction(
                         action_type=ActionType.CREATE_POST, action_args={"content": text}
                     )
@@ -198,15 +383,18 @@ async def run(db_path: Path, personas_csv: Path, steps: int, posts_per_step: int
                         for rr in recent_replies:
                             context_lines.append(f"- {rr}")
                     thread_context = "\n".join(context_lines)
+                    base_prompt = (
+                        BASE_COMMENT_PROMPT
+                        if thread_context
+                        else BASE_COMMENT_PROMPT_NO_CONTEXT
+                    )
+                    user_prompt = persona_ctx.build_comment_prompt(
+                        base_prompt, thread_context
+                    )
                     try:
                         text = generate_text(
-                            system_instruction=persona,
-                            user_text=(
-                                "Reply in your voice to the following thread. "
-                                "Include at most one inline label token like <LBL:INCEL_SLANG>, <LBL:MISINFO_CLAIM>, or <LBL:SUPPORTIVE> if it fits.\n\n"
-                                f"{thread_context}" if thread_context else
-                                "Write a short reply in your voice; include one inline label token if it fits."
-                            ),
+                            system_instruction=system_instruction,
+                            user_text=user_prompt,
                             config=cfg,
                         )
                     except Exception:
@@ -217,7 +405,7 @@ async def run(db_path: Path, personas_csv: Path, steps: int, posts_per_step: int
                         )
                     else:
                         if not text:
-                            text = "Interesting point <LBL:SUPPORTIVE>"
+                            text = persona_ctx.fallback_comment_text()
                         actions[agent] = oasis.ManualAction(
                             action_type=ActionType.CREATE_COMMENT,
                             action_args={"post_id": pid, "content": text},
@@ -258,11 +446,12 @@ async def run(db_path: Path, personas_csv: Path, steps: int, posts_per_step: int
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run MVP with Gemini-generated posts")
     parser.add_argument("--db", type=str, default="./data/mvp/oasis_mvp_gemini.db")
-    parser.add_argument("--personas", type=str, default="./data/personas_mvp.csv")
+    parser.add_argument("--personas", type=str, default="./data/personas_primary.csv")
     parser.add_argument("--steps", type=int, default=5)
     parser.add_argument("--posts-per-step", type=int, default=50)
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--config", type=str, default="")
+    parser.add_argument("--rag-corpus", type=str, default="./data/rag_corpus/persona_corpus.jsonl")
     return parser.parse_args()
 
 
@@ -273,6 +462,7 @@ def main() -> None:
             cfg = safe_load(f) or {}
         sim = cfg.get("simulation", {})
         platform_cfg = cfg.get("platform", {})
+        personas_cfg = cfg.get("personas", {})
         db = sim.get("db", args.db)
         personas = sim.get("personas", args.personas)
         steps = int(sim.get("steps", args.steps))
@@ -283,6 +473,7 @@ def main() -> None:
         gem_model = sim.get("gemini_model")
         if gem_model:
             os.environ["GEMINI_MODEL"] = str(gem_model)
+        rag_corpus = personas_cfg.get("rag_corpus", args.rag_corpus)
     else:
         db = args.db
         personas = args.personas
@@ -292,6 +483,10 @@ def main() -> None:
         platform_cfg = None
         action_mix = None
         allow_fallback_text = True
+        rag_corpus = args.rag_corpus
+        personas_cfg = {}
+
+    rag_samples = load_rag_samples(Path(rag_corpus))
 
     asyncio.run(
         run(
@@ -303,6 +498,7 @@ def main() -> None:
             platform_cfg=platform_cfg,
             action_mix=action_mix,
             allow_fallback_text=allow_fallback_text,
+            rag_map=rag_samples,
         )
     )
 

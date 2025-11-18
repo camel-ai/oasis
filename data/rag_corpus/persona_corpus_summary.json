@@ -1,0 +1,15 @@
+{
+  "total": 130,
+  "by_label": {
+    "incel_misogyny": 29,
+    "conspiracy": 22,
+    "recovery_support": 27,
+    "eating_disorder_risk": 24,
+    "misinformation": 30,
+    "benign": 37
+  },
+  "primary": 100,
+  "backup": 30,
+  "multilabel_primary": 30,
+  "multilabel_backup": 9
+}

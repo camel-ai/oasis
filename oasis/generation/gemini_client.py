@@ -49,7 +49,10 @@ def _safety_settings_off_sdk():
         "HARM_CATEGORY_SEXUALLY_EXPLICIT",
         "HARM_CATEGORY_DANGEROUS_CONTENT",
     ]
-    return [genai_types.SafetySetting(category=c, threshold="OFF")]
+    return [
+        genai_types.SafetySetting(category=category, threshold="OFF")
+        for category in categories
+    ]
 
 
 def _make_client(api_key: str):
