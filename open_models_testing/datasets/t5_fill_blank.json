@@ -1,0 +1,32 @@
+[
+  {
+    "id": "t5_1",
+    "context": "Paris is the <extra_id_0> of France.",
+    "expected_output": "capital",
+    "task": "fill_blank_factual"
+  },
+  {
+    "id": "t5_2",
+    "context": "The chemical symbol for water is <extra_id_0>.",
+    "expected_output": "H2O",
+    "task": "fill_blank_factual"
+  },
+  {
+    "id": "t5_3",
+    "context": "Complete the phrase: Actions speak louder than <extra_id_0>.",
+    "expected_output": "words",
+    "task": "fill_blank_idiom"
+  },
+  {
+    "id": "t5_4",
+    "context": "summarize: The quick brown fox jumps over the lazy dog. This is a pangram containing all letters of the alphabet.",
+    "expected_output": "A pangram with all alphabet letters",
+    "task": "summarization"
+  },
+  {
+    "id": "t5_5",
+    "context": "translate English to French: Hello, how are you?",
+    "expected_output": "Bonjour, comment allez-vous?",
+    "task": "translation"
+  }
+]

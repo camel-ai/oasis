@@ -1,0 +1,7 @@
+[
+  {"id": "m1", "text": "Paris is the <mask> of France."},
+  {"id": "m2", "text": "The chemical symbol for water is <mask>."},
+  {"id": "m3", "text": "In computing, RAM stands for <mask>."}
+]
+
+

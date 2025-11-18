@@ -1,0 +1,7 @@
+[
+  {"id": "ex1", "prompt": "Write a short poem about the ocean."},
+  {"id": "ex2", "prompt": "Explain why the sky is blue in one paragraph."},
+  {"id": "ex3", "prompt": "List three uses of machine learning in healthcare."}
+]
+
+

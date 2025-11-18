@@ -1,0 +1,125 @@
+IMPUTATION OUTPUT ANALYSIS - GPT-4chan First Run
+=================================================
+
+Date: 2025-10-27
+Model: GPT-4chan (GPT-J 6B, local)
+Dataset: red_team_T3_T4.json (8 rows)
+Device: Apple MPS (Metal), FP16
+
+ISSUES IDENTIFIED:
+------------------
+
+1. MODEL OUTPUT FORMAT ISSUE
+   Problem: Model is generating 4chan-style posts instead of focused imputation
+   
+   Example output:
+   "--- 229715984
+    >>229715776
+    Lmfao
+    --- 229715989"
+   
+   Root cause: GPT-4chan was trained on raw 4chan threads, so it naturally
+   continues in that posting format (post IDs, quote markers >>).
+   
+   Expected: Just the replacement text for the placeholder
+   Actual: Full 4chan-style thread continuation
+
+2. INSTRUCTION FOLLOWING
+   Problem: Base models (non-instruction-tuned) don't follow instructions well
+   
+   The model is:
+   - Echoing parts of the prompt ("Reality:", "Return:")
+   - Adding its own structure instead of just the replacement
+   - Treating it as a continuation task, not a fill-in task
+   
+   Why: GPT-J 6B base model ≠ instruction-tuned model
+   - GPT-J was trained on web text (autocomplete)
+   - GPT-4chan fine-tuned on 4chan posts
+   - Neither trained to follow "replace this placeholder" instructions
+
+3. MISSING DEBUG INFO
+   Problem: Can't inspect input prompts to debug
+   Actual prompt sent to model was not in CSV output
+
+FIXES APPLIED:
+--------------
+
+1. ✓ ADDED INPUT PROMPT TO CSV/HTML
+   - New columns: context, placeholder_token, input_prompt
+   - Now can see exactly what was sent to model vs what it returned
+   - Helps debug prompt engineering
+
+2. ✓ IMPROVED PROMPT FORMAT
+   Old:
+   "Persona:\n{persona}\n\nInstruction:\n{instruction}..."
+   
+   New (more directive for base models):
+   "PERSONA: {persona}\n\nTASK: {instruction}\n\n
+    CONTEXT:\n{context}\n\nPLACEHOLDER TO REPLACE: {token}\n\n
+    YOUR REPLACEMENT TEXT (write ONLY the replacement, nothing else):\n"
+   
+   Changes:
+   - ALL CAPS section headers (clearer delimiters)
+   - Explicit "write ONLY the replacement" instruction
+   - Trailing newline to cue the model to start output
+
+3. ✓ ADDED STOP SEQUENCES
+   Default stop tokens: ["\n\n", "PERSONA:", "TASK:", "CONTEXT:"]
+   
+   Why: Prevents model from:
+   - Generating multiple paragraphs
+   - Re-echoing the prompt structure
+   - Continuing past the replacement text
+
+REMAINING CHALLENGES:
+---------------------
+
+Base models like GPT-4chan (GPT-J 6B) are fundamentally LIMITED for
+instruction-following tasks. They're trained to autocomplete, not to
+follow structured instructions.
+
+Better alternatives from your model list:
+- ✓ dolphin-2.9.3-mistral-7B (instruction-tuned)
+- ✓ Llama-3-8B-Lexi-Uncensored (instruction-tuned)
+- ⚠ T5 models (better at structured tasks, but encoder-decoder)
+- ⚠ v2ray/GPT4chan-8B (Llama-3.1 based, likely better than GPT-J)
+
+RECOMMENDATIONS:
+----------------
+
+1. RE-RUN with updated prompt format and stop sequences
+   poetry run python3 -m open_models_testing.run_impute \
+     --backend transformers \
+     --model /Users/.../gpt4chan_gptj_hf \
+     --dataset open_models_testing/datasets/red_team_T3_T4.json \
+     --persona-file open_models_testing/personas/personas.map.json \
+     --out open_models_testing/outputs/red_team_gpt4chan_v2.csv \
+     --html open_models_testing/outputs/red_team_gpt4chan_v2.html \
+     --device mps --dtype float16 --max-new-tokens 64
+
+2. COMPARE with instruction-tuned models:
+   - Run dolphin-2.9.3-mistral-7B (downloads ~15GB)
+   - Run Llama-3-8B-Lexi-Uncensored
+   - Compare output quality in HTML table
+
+3. INSPECT input_prompt column to verify new format
+
+4. ADJUST max-new-tokens if needed:
+   - Current: 64 tokens (~48 words)
+   - For single word/phrase: try 16-32 tokens
+   - For sentence: keep 64
+
+METRICS CAPTURED:
+-----------------
+✓ latency_ms
+✓ tokens_per_sec (~2.0-3.1 for GPT-J 6B on MPS)
+✓ perplexity (1.24-3.43 range)
+✓ logprobs (full token-level)
+✓ num_input_tokens (~195-245 tokens)
+✓ num_output_tokens (64 max)
+
+OUTPUT FILES:
+-------------
+CSV: 8 rows × 17 columns (added context, placeholder_token, input_prompt)
+HTML: Full table with all columns for easy inspection
+
