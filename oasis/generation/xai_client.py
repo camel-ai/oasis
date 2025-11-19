@@ -7,6 +7,8 @@ from typing import Any, Dict, Optional
 
 from dotenv import load_dotenv
 
+from orchestrator.llm_config import LLM_CONFIG
+
 load_dotenv()
 
 try:
@@ -43,7 +45,7 @@ class XAIConfig:
     model: str = "grok-4-fast-non-reasoning"
     temperature: float = 0.7
     top_p: float = 0.9
-    max_output_tokens: int = 256
+    max_output_tokens: int = LLM_CONFIG.xai_max_tokens
     base_url: str = "https://api.x.ai/v1"
     timeout_seconds: float = 3600.0
 
@@ -92,7 +94,7 @@ def generate_text(
 
     temperature = config.temperature if config else 0.7
     top_p = config.top_p if config else 0.9
-    max_tokens = config.max_output_tokens if config else 256
+    max_tokens = config.max_output_tokens if config else LLM_CONFIG.xai_max_tokens
 
     # 1) Try xAI SDK
     if _HAS_XAI_SDK:

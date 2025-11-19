@@ -25,6 +25,7 @@ from camel.models import BaseModelBackend, ModelManager
 from camel.prompts import TextPrompt
 from camel.toolkits import FunctionTool
 from camel.types import OpenAIBackendRole
+from orchestrator.llm_config import LLM_CONFIG
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
@@ -66,6 +67,7 @@ class SocialAgent(ChatAgent):
                  agent_graph: "AgentGraph" = None,
                  available_actions: list[ActionType] = None,
                  tools: Optional[List[Union[FunctionTool, Callable]]] = None,
+                 token_limit: Optional[int] = None,
                  max_iteration: int = 1,
                  interview_record: bool = False):
         self.social_agent_id = agent_id
@@ -119,6 +121,11 @@ class SocialAgent(ChatAgent):
                 model=model,
                 scheduling_strategy='random_model',
                 tools=all_tools,
+                token_limit=(
+                    token_limit
+                    if token_limit is not None
+                    else int(LLM_CONFIG.est_prompt_tokens) + int(LLM_CONFIG.xai_max_tokens)
+                ),
             )
         # Ensure these attributes exist in both branches
         self.max_iteration = getattr(self, 'max_iteration', max_iteration)

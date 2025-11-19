@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-import os
-import time
 import re
+import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from camel.messages import BaseMessage
@@ -15,6 +14,7 @@ from generation.labeler import assign_labels
 from oasis.social_agent.agent import SocialAgent
 from oasis.social_platform.typing import ActionType
 from orchestrator.expect_registry import ExpectRegistry
+from orchestrator.llm_config import LLM_CONFIG
 from orchestrator.rng import DeterministicRNG
 from orchestrator.scheduler import MultiLabelScheduler
 from orchestrator.sidecar_logger import SidecarLogger
@@ -39,7 +39,7 @@ class _TokenBucketLimiter:
         self._tpm_refill_rate = self._tpm_capacity / 60.0
         self._tpm_last = now
         # Requests per second bucket (optional; default enabled for xAI)
-        rps_val = int(rps) if rps is not None else int(os.getenv("OASIS_XAI_RPS_LIMIT", "8") or "8")
+        rps_val = int(rps) if rps is not None else 8
         self._rps_capacity = float(max(1, rps_val))
         self._rps_tokens = float(self._rps_capacity)
         self._rps_refill_rate = self._rps_capacity / 1.0
@@ -96,19 +96,18 @@ class _TokenBucketLimiter:
 
     @staticmethod
     def estimate_tokens() -> int:
-        est_prompt = int(os.getenv("OASIS_XAI_EST_PROMPT_TOKENS", "600") or "600")
-        max_out = int(os.getenv("OASIS_XAI_MAX_OUTPUT_TOKENS", "1042") or "1042")
-        return max(1, est_prompt + max_out)
+        cfg = _CFG
+        return max(1, int(cfg.est_prompt_tokens) + int(cfg.xai_max_tokens))
 
 
-def _env_true(name: str, default: str = "true") -> bool:
-    return (os.getenv(name, default) or "").strip().lower() in ("1", "true", "yes", "on")
-
+# Centralized LLM config
+_CFG = LLM_CONFIG
 
 _XAI_LIMITER = _TokenBucketLimiter(
-    rpm=int(os.getenv("OASIS_XAI_RPM_LIMIT", "480") or "480"),
-    tpm=int(os.getenv("OASIS_XAI_TPM_LIMIT", "4000000") or "4000000"),
-    enabled=_env_true("OASIS_XAI_RATE_LIMIT_ENABLE", "true"),
+    rpm=int(_CFG.xai_rpm),
+    tpm=int(_CFG.xai_tpm),
+    enabled=bool(_CFG.rate_limit_enabled),
+    rps=int(_CFG.xai_rps),
 )
 
 
@@ -146,7 +145,7 @@ class ExtendedSocialAgent(SocialAgent):
 
     @retry(
         reraise=True,
-        stop=stop_after_attempt(int(os.getenv("OASIS_XAI_RETRY_ATTEMPTS", "5") or "5")),
+        stop=stop_after_attempt(int(_CFG.xai_retry_attempts)),
         wait=wait_random_exponential(multiplier=0.5, max=20.0),
         retry=retry_if_exception(_should_retry_rate_limit),
     )
@@ -156,7 +155,21 @@ class ExtendedSocialAgent(SocialAgent):
     async def astep(self, user_msg: BaseMessage):
         # Rate-limit before each LLM step (only for xAI/Grok models)
         try:
-            model_name = str(getattr(getattr(self, "model_type", ""), "value", "") or "")
+            # Resolve model name robustly whether it's a string or Enum-like
+            name_obj = getattr(self, "model_type", None)
+            model_name = ""
+            if hasattr(name_obj, "value"):
+                model_name = str(getattr(name_obj, "value"))
+            elif name_obj is not None:
+                model_name = str(name_obj)
+            # Fallbacks: check common backend attributes
+            if not model_name:
+                backend = getattr(self, "model_backend", None) or getattr(self, "model", None)
+                alt = getattr(backend, "model_type", None)
+                if hasattr(alt, "value"):
+                    model_name = str(getattr(alt, "value"))
+                elif alt is not None:
+                    model_name = str(alt)
             if "grok" in model_name.lower():
                 await _XAI_LIMITER.acquire(_XAI_LIMITER.estimate_tokens())
         except Exception:

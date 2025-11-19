@@ -7,6 +7,8 @@ from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
 
+from orchestrator.llm_config import LLM_CONFIG
+
 try:
     from google import genai  # type: ignore
     from google.genai import types as genai_types  # type: ignore
@@ -25,7 +27,7 @@ class GeminiConfig:
     temperature: float = 0.7
     top_p: float = 0.9
     top_k: int = 64
-    max_output_tokens: int = 256
+    max_output_tokens: int = LLM_CONFIG.gemini_max_output_tokens
     candidate_count: int = 1
     model_id: str = "gemini-2.5-flash-lite"
 
@@ -79,7 +81,7 @@ def generate_text(
             top_p=(config.top_p if config else 0.9),
             top_k=(config.top_k if config else 64),
             candidate_count=(config.candidate_count if config else 1),
-            max_output_tokens=(config.max_output_tokens if config else 256),
+            max_output_tokens=(config.max_output_tokens if config else LLM_CONFIG.gemini_max_output_tokens),
             safety_settings=_safety_settings_off_sdk(),
             system_instruction=system_instruction,
         )
@@ -104,7 +106,7 @@ def generate_text(
         "topP": (config.top_p if config else 0.9),
         "topK": (config.top_k if config else 64),
         "candidateCount": (config.candidate_count if config else 1),
-        "maxOutputTokens": (config.max_output_tokens if config else 256),
+        "maxOutputTokens": (config.max_output_tokens if config else LLM_CONFIG.gemini_max_output_tokens),
     }
     payload: Dict[str, Any] = {
         "contents": [
