@@ -75,4 +75,7 @@ class InterceptorChannel(Channel):
     async def write_to_receive_queue(self, action_info):
         return await self._base.write_to_receive_queue(action_info)
 
+    async def read_from_send_queue(self, message_id):
+        return await self._base.read_from_send_queue(message_id)
+
 

@@ -27,6 +27,8 @@ class LLMProviderSettings:
 def create_model_backend(settings: LLMProviderSettings) -> BaseModelBackend:
     r"""Create a CAMEL model backend for the given provider settings."""
     provider = settings.provider.lower()
+    # Shared default model config
+    default_model_cfg = {"max_tokens": 1042}
     if provider == "xai":
         api_key = settings.api_key or os.getenv("XAI_API_KEY", "")
         if not api_key:
@@ -37,6 +39,7 @@ def create_model_backend(settings: LLMProviderSettings) -> BaseModelBackend:
             model_type=settings.model_name,
             api_key=api_key,
             url=base_url,
+            model_config_dict=default_model_cfg,
             timeout=settings.timeout_seconds,
         )
     if provider == "gemini":
@@ -48,6 +51,7 @@ def create_model_backend(settings: LLMProviderSettings) -> BaseModelBackend:
             model_platform=ModelPlatformType.GEMINI,
             model_type=settings.model_name,
             api_key=api_key,
+            model_config_dict=default_model_cfg,
             timeout=settings.timeout_seconds,
         )
     if provider == "openai":
@@ -58,6 +62,7 @@ def create_model_backend(settings: LLMProviderSettings) -> BaseModelBackend:
             model_platform=ModelPlatformType.OPENAI,
             model_type=model_type,
             api_key=api_key,
+            model_config_dict=default_model_cfg,
             timeout=settings.timeout_seconds,
         )
     raise ValueError(f"Unknown provider: {settings.provider}")
