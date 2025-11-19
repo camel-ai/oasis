@@ -1,6 +1,6 @@
 -- This is the schema definition for the post table
 -- Add Images, location etc.?
-CREATE TABLE post (
+CREATE TABLE IF NOT EXISTS post (
     post_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     original_post_id INTEGER,  -- NULL if this is an original post

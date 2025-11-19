@@ -1,5 +1,5 @@
 -- This is the schema definition for the report table
-CREATE TABLE report (
+CREATE TABLE IF NOT EXISTS report (
     report_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     post_id INTEGER,

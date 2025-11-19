@@ -1,5 +1,5 @@
 -- This is the schema definition for the rec table
-CREATE TABLE rec (
+CREATE TABLE IF NOT EXISTS rec (
     user_id INTEGER,
     post_id INTEGER,
     PRIMARY KEY(user_id, post_id),

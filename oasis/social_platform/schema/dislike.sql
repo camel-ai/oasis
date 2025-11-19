@@ -1,5 +1,5 @@
 -- This is the schema definition for the dislike table
-CREATE TABLE dislike (
+CREATE TABLE IF NOT EXISTS dislike (
     dislike_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     post_id INTEGER,

@@ -1,5 +1,5 @@
 -- This is the schema definition for the comment table
-CREATE TABLE comment (
+CREATE TABLE IF NOT EXISTS comment (
     comment_id INTEGER PRIMARY KEY AUTOINCREMENT,
     post_id INTEGER,
     user_id INTEGER,

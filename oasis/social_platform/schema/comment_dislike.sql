@@ -1,5 +1,5 @@
 -- This is the schema definition for the comment_dislike table
-CREATE TABLE comment_dislike (
+CREATE TABLE IF NOT EXISTS comment_dislike (
     comment_dislike_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     comment_id INTEGER,
