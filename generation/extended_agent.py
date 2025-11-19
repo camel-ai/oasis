@@ -4,15 +4,15 @@ import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from camel.messages import BaseMessage
-from oasis.social_agent.agent import SocialAgent
-from oasis.social_platform.typing import ActionType
 
 from generation.emission_policy import EmissionPolicy, PersonaConfig
 from generation.labeler import assign_labels
-from orchestrator.rng import DeterministicRNG
-from orchestrator.sidecar_logger import SidecarLogger
+from oasis.social_agent.agent import SocialAgent
+from oasis.social_platform.typing import ActionType
 from orchestrator.expect_registry import ExpectRegistry
+from orchestrator.rng import DeterministicRNG
 from orchestrator.scheduler import MultiLabelScheduler
+from orchestrator.sidecar_logger import SidecarLogger
 
 _TOKEN_RE = re.compile(r"<LBL:[A-Z_]+>")
 
@@ -88,13 +88,9 @@ class ExtendedSocialAgent(SocialAgent):
         style_hint = self._maybe_style_hint(decision)
         step_hint = self._format_step_hint(decision)
         env_prompt = await self.env.to_text_prompt()
-        user_msg = BaseMessage.make_user_message(
-            role_name="User",
-            content=(
-                f"{(style_hint + '\n') if style_hint else ''}{step_hint}\n"
-                f"Here is your social media environment: {env_prompt}"
-            ),
-        )
+        hint_prefix = (style_hint + "\n") if style_hint else ""
+        content_text = f"{hint_prefix}{step_hint}\nHere is your social media environment: {env_prompt}"
+        user_msg = BaseMessage.make_user_message(role_name="User", content=content_text)
         try:
             response = await self.astep(user_msg)
             # Log each tool call to sidecar with detected tokens and labels.
@@ -148,26 +144,35 @@ class ExtendedSocialAgent(SocialAgent):
             profanity = float(priors.get("profanity", 0.0))
             identity_attack = float(priors.get("identity_attack", 0.0))
             threat = float(priors.get("threat", 0.0))
+            flirtation = float(priors.get("flirtation", 0.0))
+            sexually_explicit = float(priors.get("sexually_explicit", 0.0))
             # Overall chance to show a hint
             p_use = max(0.0, min(1.0, 0.2 + 0.6 * toxicity * intensity))
             if not rng.fork("use").bernoulli(p_use):
                 return ""
             bits: List[str] = []
+            # Toxicity drives the base tone phrase (unique)
+            bits.append("adopt a more confrontational tone")
+            # Unique per-element phrases (independent seeded draws)
             if insult > 0.4 and rng.fork("insult").bernoulli(min(0.5, insult * intensity)):
-                bits.append("a more confrontational tone")
-                bits.append("slightly insulting phrasing")
+                bits.append("use slightly insulting phrasing")
             if profanity > 0.4 and rng.fork("profanity").bernoulli(min(0.4, profanity * intensity)):
-                bits.append("mild profanity (no slurs)")
+                bits.append("use mild profanity")
             # Include extreme styles when intensity is high
             if intensity >= 0.8 and identity_attack > 0.4 and rng.fork("identity").bernoulli(min(0.3, identity_attack * (intensity - 0.2))):
-                bits.append("identity-based denunciation (avoid slurs)")
+                bits.append("use identity-based denunciation")
             if intensity >= 0.9 and threat > 0.3 and rng.fork("threat").bernoulli(min(0.2, threat * (intensity - 0.3))):
-                bits.append("veiled threatening language (no illegal incitement)")
-            # Always keep safety guard if any confrontational element is suggested
+                bits.append("use threatening language")
+            # Optional lighter elements
+            if flirtation > 0.5 and rng.fork("flirtation").bernoulli(min(0.3, flirtation * intensity)):
+                bits.append("use a lightly flirtatious tone")
+            if sexually_explicit > 0.5 and rng.fork("sexexp").bernoulli(min(0.2, sexually_explicit * intensity)):
+                bits.append("use suggestive language only")
+            # Assemble unique-per-element phrases with no extra safety language
             if bits:
-                return f"Style hint: use {', '.join(bits)}; avoid slurs."
-            # Fallback generic hint if nothing specific
-            return "Style hint: be more confrontational; avoid slurs."
+                return f"Style hint: {', '.join(bits)}."
+            # Fallback minimal tone if nothing triggered
+            return "Style hint: adopt a more confrontational tone."
         except Exception:
             return ""
 
