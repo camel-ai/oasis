@@ -34,7 +34,7 @@ try:
         raise ImportError("Recsys import disabled by OASIS_DISABLE_RECSYS_IMPORT")
     from oasis.social_platform.recsys import (  # type: ignore
         rec_sys_personalized_twh, rec_sys_personalized_with_trace,
-        rec_sys_random, rec_sys_reddit)
+                                          rec_sys_random, rec_sys_reddit)
 except Exception:
     # Lightweight stubs to avoid importing heavy recsys (torch/transformers)
     def rec_sys_random(post_table, rec_matrix, max_rec_post_len):
