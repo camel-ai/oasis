@@ -3,24 +3,114 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import csv
 import os
 from pathlib import Path
-import csv
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from camel.models import BaseModelBackend
+from camel.types import ModelType
 
 import oasis
-from camel.models import ModelFactory
-from camel.types import ModelPlatformType, ModelType
+from oasis.clock.clock import Clock
+from generation.emission_policy import EmissionPolicy
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import RecsysType
-
-from generation.emission_policy import EmissionPolicy
 from orchestrator.agent_factory import build_agent_graph_from_csv
-from orchestrator.manifest_loader import load_manifest
-from orchestrator.sidecar_logger import SidecarLogger
 from orchestrator.expect_registry import ExpectRegistry
 from orchestrator.interceptor_channel import InterceptorChannel
+from orchestrator.manifest_loader import load_manifest
+from orchestrator.model_provider import (LLMProviderSettings,
+                                         create_model_backend)
 from orchestrator.scheduler import MultiLabelScheduler, MultiLabelTargets
+from orchestrator.sidecar_logger import SidecarLogger
+
+#
+# LLM selection (single, modular configuration block)
+#
+# Examples:
+#   Use xAI Grok:
+#     LLM_SETTINGS = LLMProviderSettings(provider="xai", model_name="grok-4-fast-non-reasoning", api_key="<key>", base_url="https://api.x.ai/v1")
+#   Use Gemini:
+#     LLM_SETTINGS = LLMProviderSettings(provider="gemini", model_name="gemini-2.5-flash", api_key="<key>")
+#   Use OpenAI:
+#     LLM_SETTINGS = LLMProviderSettings(provider="openai", model_name=ModelType.GPT_4O_MINI.value, api_key=os.getenv("OPENAI_API_KEY", ""))
+#
+LLM_SETTINGS: LLMProviderSettings = LLMProviderSettings(
+    provider="xai",
+    model_name="grok-4-fast-non-reasoning",
+    api_key=(os.getenv("XAI_API_KEY", "").strip() or ""),
+    base_url="https://api.x.ai/v1",
+    timeout_seconds=3600.0,
+)
+
+
+def _validate_personas_and_edges(manifest, personas_csv: Path,
+                                 edges_path: Path | None) -> None:
+    r"""Validate that personas and edges are consistent with the manifest.
+
+    This guards against running a production simulation with mismatched
+    persona counts or an out-of-date follow graph.
+    """
+    if not personas_csv.exists():
+        raise SystemExit(
+            f"[production] Personas CSV not found: {personas_csv}. "
+            "Generate personas before running the simulation."
+        )
+    # Count persona rows (excluding header).
+    with personas_csv.open("r", encoding="utf-8") as f:
+        reader = csv.reader(f)
+        _ = next(reader, None)
+        persona_rows = sum(1 for _ in reader)
+    if persona_rows <= 0:
+        raise SystemExit(
+            f"[production] Personas CSV {personas_csv} contains no rows.")
+
+    # If manifest has a population block, ensure totals match.
+    population_cfg = getattr(manifest, "data", {}).get("population", {})
+    if isinstance(population_cfg, dict) and population_cfg:
+        expected_total = sum(int(v) for v in population_cfg.values())
+        if expected_total > 0 and persona_rows != expected_total:
+            raise SystemExit(
+                "[production] Personas CSV row count does not match manifest population. "
+                f"CSV rows={persona_rows}, manifest population sum={expected_total}. "
+                "Regenerate personas for this manifest."
+            )
+
+    if edges_path is None:
+        # Caller chose to run without a seeded follow graph.
+        return
+
+    if not edges_path.exists():
+        raise SystemExit(
+            f"[production] Edges CSV not found: {edges_path}. "
+            "Generate the follow graph with scripts/build_graph.py or set PROD_EDGES_CSV."
+        )
+
+    max_id = -1
+    with edges_path.open("r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            try:
+                follower = int(r["follower_id"])
+                followee = int(r["followee_id"])
+            except Exception:
+                continue
+            if follower > max_id:
+                max_id = follower
+            if followee > max_id:
+                max_id = followee
+
+    if max_id >= persona_rows:
+        raise SystemExit(
+            "[production] Edges CSV references user_id outside the personas index range. "
+            f"Max referenced user_id={max_id}, personas rows={persona_rows}. "
+            "Regenerate the graph after updating personas."
+        )
 
 
 def _follow_table_empty(env) -> bool:
@@ -85,9 +175,16 @@ def _seed_initial_follows_from_csv(env, edges_csv: Path) -> int:
     return len(rows)
 
 
-async def run(manifest_path: Path, personas_csv: Path, db_path: Path, steps: int, edges_csv: Path | None, warmup_steps: int) -> None:
+async def run(manifest_path: Path, personas_csv: Path, db_path: Path,
+              steps: int, edges_csv: Path | None,
+              warmup_steps: int) -> None:
     manifest = load_manifest(manifest_path)
     run_seed = manifest.run_seed
+
+    # Choose edges path with env override, then validate inputs.
+    override = os.getenv("PROD_EDGES_CSV")
+    edges_path = Path(override) if override else edges_csv
+    _validate_personas_and_edges(manifest, personas_csv, edges_path)
 
     sidecar = SidecarLogger(path=db_path.parent / "sidecar.jsonl")
 
@@ -107,10 +204,7 @@ async def run(manifest_path: Path, personas_csv: Path, db_path: Path, steps: int
     )
 
     # Define the model for the agents (LLMAction only; no manual actions)
-    model = ModelFactory.create(
-        model_platform=ModelPlatformType.OPENAI,
-        model_type=ModelType.GPT_4O_MINI,
-    )
+    model = create_model_backend(LLM_SETTINGS)
 
     # Setup platform and channel
     base_channel = Channel()
@@ -118,7 +212,7 @@ async def run(manifest_path: Path, personas_csv: Path, db_path: Path, steps: int
     platform = Platform(
         db_path=str(db_path),
         channel=channel,
-        sandbox_clock=oasis.Clock(magnification_factor=60),
+        sandbox_clock=Clock(k=60),
         start_time=None,
         recsys_type=RecsysType.TWHIN,
         refresh_rec_post_count=3,
@@ -154,13 +248,12 @@ async def run(manifest_path: Path, personas_csv: Path, db_path: Path, steps: int
     # Seed initial follow graph if provided and table is empty
     try:
         if _follow_table_empty(env):
-            # env var override has highest priority
-            override = os.getenv("PROD_EDGES_CSV")
-            edges_path = Path(override) if override else edges_csv
             if edges_path:
                 seeded = _seed_initial_follows_from_csv(env, edges_path)
                 if seeded:
-                    print(f"[production] Seeded {seeded} follow edges from {edges_path}")
+                    print(
+                        f"[production] Seeded {seeded} follow edges from {edges_path}"
+                    )
         else:
             print("[production] Follow table non-empty; skipping follow seed.")
     except Exception as e:

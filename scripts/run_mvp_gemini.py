@@ -406,6 +406,53 @@ def _write_graph_provenance(db_path: Path,
         pass
 
 
+def _validate_personas_and_edges(personas_csv: Path, edges_csv: Path) -> None:
+    r"""Validate that personas and edges are structurally consistent.
+
+    This is a lightweight safety check to avoid running a simulation with
+    mismatched personas / follow graph (e.g., changing persona counts without
+    regenerating the edges).
+    """
+    if not personas_csv.exists():
+        raise SystemExit(
+            f"[mvp] Personas CSV not found: {personas_csv}. "
+            "Run scripts/generate_personas.py with the appropriate config first."
+        )
+    # Count persona rows (excluding header).
+    with personas_csv.open("r", encoding="utf-8") as f:
+        reader = csv.reader(f)
+        _ = next(reader, None)
+        persona_rows = sum(1 for _ in reader)
+    if persona_rows <= 0:
+        raise SystemExit(f"[mvp] Personas CSV {personas_csv} contains no rows.")
+
+    if not edges_csv.exists():
+        raise SystemExit(
+            f"[mvp] Edges CSV not found: {edges_csv}. "
+            "Run scripts/build_graph.py to generate the follow graph."
+        )
+
+    max_id = -1
+    with edges_csv.open("r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            try:
+                follower = int(r["follower_id"])
+                followee = int(r["followee_id"])
+            except Exception:
+                continue
+            if follower > max_id:
+                max_id = follower
+            if followee > max_id:
+                max_id = followee
+    if max_id >= persona_rows:
+        raise SystemExit(
+            f"[mvp] Edges CSV {edges_csv} references user_id {max_id}, but "
+            f"personas CSV {personas_csv} has only {persona_rows} rows. "
+            "Regenerate the graph after updating personas."
+        )
+
+
 async def _seed_initial_posts(
     env,
     agent_ids: List[int],
@@ -471,6 +518,11 @@ async def run(
         profile_path=str(personas_csv), model=None, available_actions=None
     )
 
+    # Determine edges CSV path (config + env override) and validate consistency.
+    cfg_edges = (graph_cfg or {}).get("edges_csv") if graph_cfg else None
+    edges_path = Path(os.getenv("MVP_EDGES_CSV", cfg_edges or "./data/edges_mvp.csv"))
+    _validate_personas_and_edges(personas_csv, edges_path)
+
     os.environ["OASIS_DB_PATH"] = os.path.abspath(str(db_path))
     db_path.parent.mkdir(parents=True, exist_ok=True)
     if db_path.exists():
@@ -510,8 +562,6 @@ async def run(
     try:
         # Only seed once per DB (skip if follow table already has rows)
         if _follow_table_empty(env):
-            cfg_edges = (graph_cfg or {}).get("edges_csv") if graph_cfg else None
-            edges_path = Path(os.getenv("MVP_EDGES_CSV", cfg_edges or "./data/edges_mvp.csv"))
             seeded = _seed_initial_follows_from_csv(env, edges_path)
             if seeded:
                 # Basic stats print

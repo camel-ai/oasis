@@ -6,20 +6,27 @@ import os
 from pathlib import Path
 from typing import Optional
 
-import oasis
-from camel.models import ModelFactory
-from camel.types import ModelPlatformType, ModelType
-from oasis.social_platform.platform import Platform
-from oasis.social_platform.channel import Channel
-from oasis.social_platform.typing import RecsysType
+from dotenv import load_dotenv
 
+load_dotenv()
+
+from camel.models import BaseModelBackend
+from camel.types import ModelType
+
+import oasis
+from oasis.clock.clock import Clock
 from generation.emission_policy import EmissionPolicy
+from oasis.social_platform.channel import Channel
+from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import RecsysType
 from orchestrator.agent_factory import build_agent_graph_from_csv
-from orchestrator.manifest_loader import Manifest, load_manifest
-from orchestrator.sidecar_logger import SidecarLogger
 from orchestrator.expect_registry import ExpectRegistry
 from orchestrator.interceptor_channel import InterceptorChannel
+from orchestrator.manifest_loader import Manifest, load_manifest
+from orchestrator.model_provider import (LLMProviderSettings,
+                                         create_model_backend)
 from orchestrator.scheduler import MultiLabelScheduler, MultiLabelTargets
+from orchestrator.sidecar_logger import SidecarLogger
 
 
 async def run(
@@ -49,11 +56,19 @@ async def run(
         )
     )
 
-    # Build model (expects OPENAI_API_KEY in env if using OpenAI)
-    model = ModelFactory.create(
-        model_platform=ModelPlatformType.OPENAI,
-        model_type=ModelType.GPT_4O_MINI,
+    # Build model via shared provider settings (edit here to switch providers)
+    # Examples:
+    #   xAI Grok:   provider="xai",    model_name="grok-4-fast-non-reasoning", api_key=os.getenv("XAI_API_KEY", "")
+    #   Gemini:     provider="gemini", model_name="gemini-2.5-flash",          api_key=os.getenv("GEMINI_API_KEY", "")
+    #   OpenAI:     provider="openai", model_name=ModelType.GPT_4O_MINI.value, api_key=os.getenv("OPENAI_API_KEY", "")
+    settings = LLMProviderSettings(
+        provider="xai",
+        model_name="grok-4-fast-non-reasoning",
+        api_key=os.getenv("XAI_API_KEY", "").strip(),
+        base_url="https://api.x.ai/v1",
+        timeout_seconds=3600.0,
     )
+    model: BaseModelBackend = create_model_backend(settings)
 
     # Build platform with an explicit channel so env doesn't create its own
     base_channel = Channel()
@@ -61,7 +76,7 @@ async def run(
     platform = Platform(
         db_path=str(db_path),
         channel=channel,
-        sandbox_clock=oasis.Clock(magnification_factor=60),
+        sandbox_clock=Clock(k=60),
         start_time=None,
         recsys_type=RecsysType.TWHIN,
         refresh_rec_post_count=3,
