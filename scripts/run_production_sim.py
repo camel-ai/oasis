@@ -5,6 +5,7 @@ import argparse
 import asyncio
 import csv
 import os
+from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -15,8 +16,8 @@ from camel.models import BaseModelBackend
 from camel.types import ModelType
 
 import oasis
-from oasis.clock.clock import Clock
 from generation.emission_policy import EmissionPolicy
+from oasis.clock.clock import Clock
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import RecsysType
@@ -222,12 +223,34 @@ async def run(manifest_path: Path, personas_csv: Path, db_path: Path,
         allow_self_rating=False,
     )
 
+    # Restrict available actions for Twitter simulation
+    allowed_actions = [
+        RecsysType  # placeholder to keep import grouped (no-op)
+    ]
+    # Define allowed ActionTypes explicitly
+    from oasis.social_platform.typing import ActionType as _AT  # local alias
+    allowed_actions = [
+        _AT.REFRESH,
+        _AT.SEARCH_USER,
+        _AT.SEARCH_POSTS,
+        _AT.CREATE_POST,
+        _AT.LIKE_POST,
+        _AT.FOLLOW,
+        _AT.UNFOLLOW,
+        _AT.REPOST,
+        _AT.QUOTE_POST,
+        # _AT.UPDATE_REC_TABLE,
+        _AT.CREATE_COMMENT,
+        _AT.LIKE_COMMENT,
+        _AT.DO_NOTHING,
+    ]
+
     # Build agent graph using ExtendedSocialAgent with persona class metadata
     agent_graph = await build_agent_graph_from_csv(
         personas_csv=personas_csv,
         model=model,
         channel=channel,
-        available_actions=None,
+        available_actions=allowed_actions,
         emission_policy=policy,
         sidecar_logger=sidecar,
         run_seed=run_seed,
@@ -282,6 +305,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--steps", type=int, default=10, help="Number of steps to run.")
     parser.add_argument("--edges-csv", type=str, default="", help="Path to edges CSV (follower_id,followee_id). Env PROD_EDGES_CSV overrides.")
     parser.add_argument("--warmup-steps", type=int, default=1, help="Warmup LLMAction steps before main loop.")
+    parser.add_argument(
+        "--fresh-db",
+        action="store_true",
+        help="If set, delete the existing DB file before running.",
+    )
+    parser.add_argument(
+        "--unique-db",
+        action="store_true",
+        help="If set, append a timestamp to the DB filename to create a new DB per run.",
+    )
     return parser.parse_args()
 
 
@@ -290,7 +323,18 @@ def main() -> None:
     manifest_path = Path(os.path.abspath(args.manifest))
     personas_csv = Path(os.path.abspath(args.personas_csv))
     db_path = Path(os.path.abspath(args.db))
+    # Ensure parent directory exists
     db_path.parent.mkdir(parents=True, exist_ok=True)
+    # Choose DB handling strategy
+    if args.unique_db:
+        # Append timestamp before suffix
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        db_path = db_path.with_name(f"{db_path.stem}_{ts}{db_path.suffix}")
+    elif args.fresh_db and db_path.exists():
+        try:
+            os.remove(db_path)
+        except Exception as e:
+            print(f"[production] Failed to remove existing DB: {e}")
     edges_csv = Path(os.path.abspath(args.edges_csv)) if args.edges_csv else None
     asyncio.run(run(manifest_path, personas_csv, db_path, args.steps, edges_csv, args.warmup_steps))
 
