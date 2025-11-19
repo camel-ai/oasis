@@ -15,6 +15,7 @@
 into rec_matrix'''
 import heapq
 import logging
+import os
 import random
 import time
 from ast import literal_eval
@@ -23,13 +24,40 @@ from math import log
 from typing import Any, Dict, List
 
 import numpy as np
-import torch
-from sentence_transformers import SentenceTransformer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 
-from .process_recsys_posts import (generate_post_vector,
-                                   generate_post_vector_openai)
+_RECSYS_DISABLED = os.getenv("OASIS_DISABLE_RECSYS_IMPORT", "").lower() in ("1", "true", "yes")
+if not _RECSYS_DISABLED:
+    import torch  # type: ignore
+    from sentence_transformers import SentenceTransformer  # type: ignore
+else:
+    class _CudaStub:
+        @staticmethod
+        def is_available() -> bool:
+            return False
+    class _TorchStub:
+        cuda = _CudaStub()
+        @staticmethod
+        def device(arg: str) -> str:
+            return "cpu"
+        def __getattr__(self, name: str):
+            raise RuntimeError("Recsys disabled via OASIS_DISABLE_RECSYS_IMPORT")
+    torch = _TorchStub()  # type: ignore
+    def SentenceTransformer(*args, **kwargs):  # type: ignore
+        raise RuntimeError("Recsys disabled via OASIS_DISABLE_RECSYS_IMPORT")
+from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
+from sklearn.metrics.pairwise import cosine_similarity  # type: ignore
+
+try:
+    if _RECSYS_DISABLED:
+        raise ImportError("disabled")
+    from .process_recsys_posts import generate_post_vector  # type: ignore
+    from .process_recsys_posts import generate_post_vector_openai
+except Exception:  # pragma: no cover
+    def generate_post_vector(*args, **kwargs):  # type: ignore
+        raise RuntimeError("Recsys disabled via OASIS_DISABLE_RECSYS_IMPORT")
+    def generate_post_vector_openai(*args, **kwargs):  # type: ignore
+        raise RuntimeError("Recsys disabled via OASIS_DISABLE_RECSYS_IMPORT")
+
 from .typing import ActionType, RecsysType
 
 rec_log = logging.getLogger(name='social.rec')
@@ -43,7 +71,7 @@ twhin_model = None
 # Create the TF-IDF model
 tfidf_vectorizer = TfidfVectorizer()
 # Prepare the twhin model
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if getattr(torch.cuda, "is_available", lambda: False)() else "cpu")
 
 # All historical tweets and the most recent tweet of each user
 user_previous_post_all = {}
