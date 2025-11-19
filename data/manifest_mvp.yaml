@@ -2,14 +2,33 @@ run_id: "ssc-mvp"
 rng_seed: 314159
 
 population:
-  persona_incel_mvp: 300
-  persona_misinfo_mvp: 200
-  persona_benign_mvp: 300
+  # 10k-agent mix used for calibrated production runs
+  persona_incel_mvp: 3334
+  persona_misinfo_mvp: 3333
+  persona_benign_mvp: 3333
 
 graph:
-  theta_b: 0.015
-  rho: 0.25
-  alpha: 2.0
+  # SBM + PA + triadic-closure graph used in 10k-agent TwHIN-BERT calibration.
+  class_col: "primary_label"
+  theta_b: 0.0005
+  rho: 0.6
+  alpha: 6.0
+  tc_prob: 0.02
+  tc_max_per_node: 5
+  tc_homophily: 0.4
+  tc_assort_beta: 2.0
+  rewire_ratio: 0.0
+  seed: 314159
+  edges_csv: "./data/edges_mvp_10k_tc_assort.csv"
+
+recsys:
+  # TwHIN-BERT recommendation settings mirrored from configs/mvp_master.yaml.
+  type: "twhin-bert"
+  refresh_rec_post_count: 2
+  max_rec_post_len: 2
+  following_post_count: 3
+  allow_self_rating: true
+  show_score: false
 
 time:
   tz_mix: ["UTC"]

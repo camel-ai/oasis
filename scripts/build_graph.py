@@ -341,6 +341,7 @@ def build_graph_with_closure(
     tc_max_per_node: int,
     tc_homophily: float,
     assort_beta: float,
+    rewire_ratio: float = 0.0,
     class_col: Optional[str] = None,
 ) -> Tuple[int, int]:
     r"""Generate a directed follow graph with SBM + PA + triadic closure."""
@@ -368,8 +369,90 @@ def build_graph_with_closure(
         seed=params.seed,
     )
     all_edges = _dedup_edges([*current_edges, *tc_edges])
+
+    # Optional: degree-assortative rewiring while preserving node out-degrees
+    if rewire_ratio and rewire_ratio > 0.0:
+        all_edges = _assortative_rewire_edges(n=n, edges=all_edges, ratio=rewire_ratio, seed=params.seed + 3)
+
     _write_edges_csv(all_edges, out_csv)
     return n, len(all_edges)
+
+
+def _assortative_rewire_edges(
+    n: int,
+    edges: List[Tuple[int, int]],
+    ratio: float,
+    seed: int,
+) -> List[Tuple[int, int]]:
+    r"""Increase degree assortativity by rewiring targets of pairs of edges.
+
+    This preserves each source node's out-degree. It attempts up to
+    target_accepts = int(ratio * len(edges)) accepted swaps that reduce the
+    sum of absolute degree differences |deg(i)-deg(j)| across swapped pairs.
+    """
+    if ratio <= 0.0 or not edges:
+        return edges
+    rng = np.random.default_rng(seed)
+    # Build adjacency (out-neighbors) and degree arrays
+    out_neighbors: List[List[int]] = [[] for _ in range(n)]
+    in_deg = np.zeros(n, dtype=np.int64)
+    has_edge = set()
+    for u, v in edges:
+        if u == v:
+            continue
+        if (u, v) in has_edge:
+            continue
+        has_edge.add((u, v))
+        out_neighbors[u].append(v)
+        in_deg[v] += 1
+    out_deg = np.array([len(out_neighbors[u]) for u in range(n)], dtype=np.int64)
+    total_deg = in_deg + out_deg
+
+    # Candidate sources with at least one out-edge
+    sources = [u for u in range(n) if out_neighbors[u]]
+    if len(sources) < 2:
+        return list(has_edge)
+
+    target_accepts = max(1, int(ratio * len(has_edge)))
+    accepts = 0
+    trials = 0
+    max_trials = target_accepts * 20
+    while accepts < target_accepts and trials < max_trials:
+        trials += 1
+        i, k = rng.choice(sources, size=2, replace=False)
+        # pick random targets from each
+        t1 = int(rng.choice(out_neighbors[i]))
+        t2 = int(rng.choice(out_neighbors[k]))
+        if t1 == t2:
+            continue
+        if i == t2 or k == t1:
+            continue
+        if (i, t2) in has_edge or (k, t1) in has_edge:
+            continue
+        # Compute objective before/after (degrees constant)
+        cost_before = abs(int(total_deg[i]) - int(total_deg[t1])) + abs(int(total_deg[k]) - int(total_deg[t2]))
+        cost_after = abs(int(total_deg[i]) - int(total_deg[t2])) + abs(int(total_deg[k]) - int(total_deg[t1]))
+        if cost_after < cost_before:
+            # Perform swap: remove (i,t1),(k,t2); add (i,t2),(k,t1)
+            has_edge.remove((i, t1))
+            has_edge.remove((k, t2))
+            has_edge.add((i, t2))
+            has_edge.add((k, t1))
+            # Update adjacency lists
+            # replace t1 in out_neighbors[i] with t2
+            try:
+                idx = out_neighbors[i].index(t1)
+                out_neighbors[i][idx] = t2
+            except ValueError:
+                # fallback: rebuild list
+                out_neighbors[i] = [t2 if x == t1 else x for x in out_neighbors[i]]
+            try:
+                idx2 = out_neighbors[k].index(t2)
+                out_neighbors[k][idx2] = t1
+            except ValueError:
+                out_neighbors[k] = [t1 if x == t2 else x for x in out_neighbors[k]]
+            accepts += 1
+    return list(has_edge)
 
 
 def parse_args() -> argparse.Namespace:
@@ -403,6 +486,13 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Column name for persona class (e.g., primary_label, class). Auto-detects if omitted.",
     )
+    parser.add_argument(
+        "--rewire-ratio",
+        type=float,
+        default=0.0,
+        dest="rewire_ratio",
+        help="Fraction of edges to accept as assortative rewirings (approximate).",
+    )
     return parser.parse_args()
 
 
@@ -425,6 +515,7 @@ def main() -> None:
         tc_max_per_node=int(args.tc_max_per_node),
         tc_homophily=float(args.tc_homophily),
         assort_beta=float(args.tc_assort_beta),
+        rewire_ratio=float(args.rewire_ratio),
         class_col=(args.class_col.strip() or None),
     )
     print(f"Generated directed follow graph: nodes={n}, edges={m} -> {out_csv}")

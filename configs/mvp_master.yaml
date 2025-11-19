@@ -31,10 +31,17 @@ simulation:
     follow: 0.1
 
 graph:
-  theta_b: 0.001
-  rho: 0.25
-  alpha: 2.0
+  # SBM + PA + triadic closure graph used for 10k-agent TwHIN-BERT calibration.
+  class_col: "primary_label"
+  theta_b: 0.0005
+  rho: 0.6
+  alpha: 6.0
+  tc_prob: 0.02
+  tc_max_per_node: 5
+  tc_homophily: 0.4
+  tc_assort_beta: 2.0
+  rewire_ratio: 0.0
   seed: 314159
-  edges_csv: "./data/edges_mvp.csv"
+  edges_csv: "./data/edges_mvp_10k_tc_assort.csv"
 
 
