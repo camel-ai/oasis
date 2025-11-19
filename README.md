@@ -474,6 +474,132 @@ You can tune the **recsys amplification** via the `platform` block in `configs/m
 - `refresh_rec_post_count`: size of the candidate pool per refresh
 Increasing `max_rec_post_len` and reducing `following_post_count` shifts feeds toward TwHIN‑BERT‑recommended content (including cross‑class posts), while higher homophily in the graph keeps most organic follow edges within class.
 
+## 🚀 Production Simulation + Automated Reporting
+
+Run a production Twitter‑like simulation backed by your chosen LLM (default example uses xAI Grok) and automatically generate JSONL exports and visualizations in one step.
+
+### Prerequisites
+- Python 3.10 or 3.11, Poetry installed
+- Install deps:
+
+```bash
+poetry install | cat
+```
+
+- Set your LLM key (example for xAI Grok):
+
+```bash
+export XAI_API_KEY=<your-xai-key>
+```
+
+### One-step run (simulation + report)
+This will create a new SQLite DB and then produce JSONL exports and HTML/PNG visuals automatically.
+
+```bash
+cd /Users/jordanmoshcovitis/Documents/GitHub/oasis
+poetry run python3 scripts/run_production_sim.py \
+  --manifest configs/mvp_master.yaml \
+  --personas-csv ./data/mvp/personas_20.csv \
+  --db ./data/mvp/oasis_mvp_grok_20.db \
+  --steps 5 \
+  --edges-csv ./data/mvp/edges_20.csv \
+  --warmup-steps 1 \
+  --unique-db \
+  --report | cat
+```
+
+### End-to-end production pipeline (20-agent master config)
+
+Use this sequence whenever you change `configs/mvp_master.yaml` and want a fresh dataset:
+
+- **1. Configure the master manifest (`configs/mvp_master.yaml`)**
+  - **`personas` block**: set `incel` / `misinfo` / `benign` counts, `seed`, and `personas_csv` (e.g. `./data/mvp/personas_20.csv`).
+  - **`graph` block**: set `class_col`, `theta_b`, `rho`, `alpha`, triadic-closure params, `rewire_ratio`, `seed`, and `edges_csv` (e.g. `./data/mvp/edges_20.csv`).
+
+- **2. Generate personas for this manifest**
+
+  ```bash
+  poetry run python3 scripts/generate_personas.py \
+    --config ./configs/mvp_master.yaml | cat
+  # writes personas to the personas_csv path in the manifest (default: ./data/mvp/personas_20.csv)
+  ```
+
+- **3. Generate the follow graph for this personas file**
+
+  ```bash
+  poetry run python3 scripts/build_graph.py \
+    --config ./configs/mvp_master.yaml | cat
+  # writes edges to the edges_csv path in the manifest (default: ./data/mvp/edges_20.csv)
+  ```
+
+- **4. Run the production simulation + report (command above)**
+  - `run_production_sim.py` will:
+    - Build `ExtendedSocialAgent` instances from the personas CSV.
+    - Create a Twitter-like `Platform` with TwHIN-BERT recsys.
+    - Seed follows from the edges CSV (if provided and table is empty).
+    - Run `warmup_steps` + `steps` of all-agents `LLMAction`.
+    - Optionally invoke `scripts/report_production.py` to export JSONL + HTML/PNGs.
+
+### Safety checks and failure modes
+
+`scripts/run_production_sim.py` performs conservative validation before any LLM calls:
+
+- **Personas vs manifest**
+  - Fails if the personas CSV:
+    - does not exist, or
+    - has zero rows.
+  - Derives an **expected total agent count** from:
+    - `population` block (for manifests like `data/manifest_mvp.yaml`), or
+    - `personas` counts (`incel`, `misinfo`, `benign`) in `configs/mvp_master.yaml`.
+  - If `CSV rows != expected_total`, it exits with:
+
+    > `[production] Personas CSV row count does not match manifest population/persona counts. ... Regenerate personas for this manifest.`
+
+- **Edges vs personas**
+  - If `--edges-csv` (or `PROD_EDGES_CSV`) is set:
+    - Fails if the edges CSV does not exist.
+    - Scans all `follower_id` / `followee_id` and computes `max_id`; if `max_id >= persona_rows` it exits with:
+
+      > `[production] Edges CSV references user_id outside the personas index range. ... Regenerate the graph after updating personas.`
+  - If `--edges-csv` is omitted, the simulation runs **without** an initial follow graph (no seeding).
+
+These checks ensure you **cannot** accidentally:
+- run a 20-row personas CSV with a 10k manifest (or vice versa), or
+- pair an edges file built for a different population size with the current personas.
+
+What it produces (defaults):
+- DB: under `./data/mvp/` (name includes a timestamp when `--unique-db` is used)
+- Sidecar: `<db_dir>/sidecar.jsonl`
+- Report output directory: `<db_dir>/production/`
+- JSONL (content + labels): `production_export.jsonl`
+- JSONL (actions: trace + likes/comments/posts/follows): `production_actions.jsonl`
+- PNGs: `action_timeline.png`, `interaction_network.png`
+- HTML: `production_report.html` (summary) and `production_threads.html` (threaded view with persona badges + label chips)
+
+### Customize report output paths
+Add these optional flags to the same command:
+
+```bash
+--report-out-dir ./data/reports/run_YYYYMMDD_HHMMSS \
+--report-export-jsonl ./data/reports/run_YYYYMMDD_HHMMSS/export.jsonl \
+--report-export-actions ./data/reports/run_YYYYMMDD_HHMMSS/actions.jsonl \
+--report-threads-html ./data/reports/run_YYYYMMDD_HHMMSS/threads.html
+```
+
+### Run report separately (optional)
+If you ran the simulation without `--report`, you can generate outputs later:
+
+```bash
+DB=$(ls -t data/mvp/oasis_mvp_*.db | head -1)
+poetry run python3 scripts/report_production.py \
+  --db "$DB" \
+  --sidecar "$(dirname "$DB")/sidecar.jsonl" \
+  --out-dir data/production \
+  --export-jsonl data/production/production_export.jsonl \
+  --export-actions data/production/production_actions.jsonl \
+  --threads-html data/production/production_threads.html | cat
+```
+
 ## 📢 News
 
 ### Upcoming Features & Contributions

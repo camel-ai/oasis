@@ -25,13 +25,13 @@ from camel.models import BaseModelBackend, ModelManager
 from camel.prompts import TextPrompt
 from camel.toolkits import FunctionTool
 from camel.types import OpenAIBackendRole
-from orchestrator.llm_config import LLM_CONFIG
 
 from oasis.social_agent.agent_action import SocialAction
 from oasis.social_agent.agent_environment import SocialEnvironment
 from oasis.social_platform import Channel
 from oasis.social_platform.config import UserInfo
 from oasis.social_platform.typing import ActionType
+from orchestrator.llm_config import LLM_CONFIG
 
 if TYPE_CHECKING:
     from oasis.social_agent import AgentGraph
@@ -121,6 +121,7 @@ class SocialAgent(ChatAgent):
                 model=model,
                 scheduling_strategy='random_model',
                 tools=all_tools,
+                max_iteration=int(LLM_CONFIG.max_step_iterations),
                 token_limit=(
                     token_limit
                     if token_limit is not None

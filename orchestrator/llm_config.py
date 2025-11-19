@@ -21,6 +21,9 @@ class LLMConfig:
     gemini_max_output_tokens: int
     est_prompt_tokens: int
 
+    # Iteration caps
+    max_step_iterations: int
+
     # xAI rate limits
     xai_rpm: int
     xai_tpm: int
@@ -35,7 +38,9 @@ _DEFAULTS = LLMConfig(
     xai_max_tokens=8912,
     openai_max_tokens=8912,
     gemini_max_output_tokens=8912,
-    est_prompt_tokens=600,
+    est_prompt_tokens=12000,
+    # Iterations
+    max_step_iterations=1,
     # xAI rate limits
     xai_rpm=480,
     xai_tpm=4_000_000,

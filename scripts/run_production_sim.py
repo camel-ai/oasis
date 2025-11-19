@@ -5,6 +5,9 @@ import argparse
 import asyncio
 import csv
 import os
+import subprocess
+import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -71,16 +74,41 @@ def _validate_personas_and_edges(manifest, personas_csv: Path,
         raise SystemExit(
             f"[production] Personas CSV {personas_csv} contains no rows.")
 
-    # If manifest has a population block, ensure totals match.
-    population_cfg = getattr(manifest, "data", {}).get("population", {})
+    # If manifest declares a population (production manifest) or personas
+    # counts (MVP master config), ensure totals match the personas CSV.
+    manifest_data = getattr(manifest, "data", {}) or {}
+    expected_total: int | None = None
+
+    # Primary source of truth: explicit population block.
+    population_cfg = manifest_data.get("population", {})
     if isinstance(population_cfg, dict) and population_cfg:
-        expected_total = sum(int(v) for v in population_cfg.values())
-        if expected_total > 0 and persona_rows != expected_total:
-            raise SystemExit(
-                "[production] Personas CSV row count does not match manifest population. "
-                f"CSV rows={persona_rows}, manifest population sum={expected_total}. "
-                "Regenerate personas for this manifest."
-            )
+        try:
+            expected_total = sum(int(v) for v in population_cfg.values())
+        except Exception:
+            expected_total = None
+
+    # Fallback: personas counts in configs like configs/mvp_master.yaml.
+    if expected_total is None:
+        personas_cfg = manifest_data.get("personas", {})
+        if isinstance(personas_cfg, dict) and personas_cfg:
+            # Only sum known count keys, not seed/paths/etc.
+            count_keys = [
+                key for key in personas_cfg.keys()
+                if key in ("incel", "misinfo", "benign")
+            ]
+            if count_keys:
+                try:
+                    expected_total = sum(
+                        int(personas_cfg[key]) for key in count_keys)
+                except Exception:
+                    expected_total = None
+
+    if expected_total and expected_total > 0 and persona_rows != expected_total:
+        raise SystemExit(
+            "[production] Personas CSV row count does not match manifest population/persona counts. "
+            f"CSV rows={persona_rows}, manifest total agents={expected_total}. "
+            "Regenerate personas for this manifest."
+        )
 
     if edges_path is None:
         # Caller chose to run without a seeded follow graph.
@@ -179,6 +207,8 @@ def _seed_initial_follows_from_csv(env, edges_csv: Path) -> int:
 async def run(manifest_path: Path, personas_csv: Path, db_path: Path,
               steps: int, edges_csv: Path | None,
               warmup_steps: int) -> None:
+    run_t0 = time.perf_counter()
+    print(f"[production] Run started at {datetime.now().isoformat()}")
     manifest = load_manifest(manifest_path)
     run_seed = manifest.run_seed
 
@@ -266,7 +296,9 @@ async def run(manifest_path: Path, personas_csv: Path, db_path: Path,
         database_path=str(db_path),
     )
 
+    t0 = time.perf_counter()
     await env.reset()
+    print(f"[production] env.reset() took {time.perf_counter() - t0:.2f}s")
 
     # Seed initial follow graph if provided and table is empty
     try:
@@ -283,16 +315,21 @@ async def run(manifest_path: Path, personas_csv: Path, db_path: Path,
         print(f"[production] Follow seeding failed: {e}")
 
     # Warmup: run a few LLMAction steps to populate initial content before main loop
-    for _ in range(max(0, int(warmup_steps))):
+    for i in range(max(0, int(warmup_steps))):
         actions = {agent: oasis.LLMAction() for _, agent in env.agent_graph.get_agents()}
+        t_step = time.perf_counter()
         await env.step(actions)
+        print(f"[production] warmup {i + 1}/{warmup_steps} took {time.perf_counter() - t_step:.2f}s")
 
     # LLMAction for all agents across steps
-    for _ in range(max(0, int(steps))):
+    for i in range(max(0, int(steps))):
         actions = {agent: oasis.LLMAction() for _, agent in env.agent_graph.get_agents()}
+        t_step = time.perf_counter()
         await env.step(actions)
+        print(f"[production] step {i + 1}/{steps} took {time.perf_counter() - t_step:.2f}s")
 
     await env.close()
+    print(f"[production] Total run time: {time.perf_counter() - run_t0:.2f}s")
 
 
 def parse_args() -> argparse.Namespace:
@@ -314,6 +351,36 @@ def parse_args() -> argparse.Namespace:
         "--unique-db",
         action="store_true",
         help="If set, append a timestamp to the DB filename to create a new DB per run.",
+    )
+    # Optional: Auto-generate JSONL and visualizations after run
+    parser.add_argument(
+        "--report",
+        action="store_true",
+        help="If set, generate JSONL export and visualizations after the run.",
+    )
+    parser.add_argument(
+        "--report-out-dir",
+        type=str,
+        default="",
+        help="Output directory for reports (defaults to <db_dir>/production).",
+    )
+    parser.add_argument(
+        "--report-export-jsonl",
+        type=str,
+        default="",
+        help="Path to write JSONL export (defaults to <out_dir>/production_export.jsonl).",
+    )
+    parser.add_argument(
+        "--report-export-actions",
+        type=str,
+        default="",
+        help="Path to write actions JSONL (defaults to <out_dir>/production_actions.jsonl).",
+    )
+    parser.add_argument(
+        "--report-threads-html",
+        type=str,
+        default="",
+        help="Path to write threaded HTML (defaults to <out_dir>/production_threads.html).",
     )
     return parser.parse_args()
 
@@ -337,6 +404,40 @@ def main() -> None:
             print(f"[production] Failed to remove existing DB: {e}")
     edges_csv = Path(os.path.abspath(args.edges_csv)) if args.edges_csv else None
     asyncio.run(run(manifest_path, personas_csv, db_path, args.steps, edges_csv, args.warmup_steps))
+
+    # Optional post-run report generation
+    if args.report:
+        try:
+            report_script = Path(__file__).resolve().parent / "report_production.py"
+            if not report_script.exists():
+                print(f"[production] Report script not found at {report_script}")
+                return
+            db_dir = db_path.parent
+            out_dir = Path(args.report_out_dir) if args.report_out_dir else (db_dir / "production")
+            export_jsonl = Path(args.report_export_jsonl) if args.report_export_jsonl else (out_dir / "production_export.jsonl")
+            export_actions = Path(args.report_export_actions) if args.report_export_actions else (out_dir / "production_actions.jsonl")
+            threads_html = Path(args.report_threads_html) if args.report_threads_html else (out_dir / "production_threads.html")
+            sidecar = db_dir / "sidecar.jsonl"
+            cmd = [
+                sys.executable,
+                str(report_script),
+                "--db",
+                str(db_path),
+                "--out-dir",
+                str(out_dir),
+                "--export-jsonl",
+                str(export_jsonl),
+                "--export-actions",
+                str(export_actions),
+                "--threads-html",
+                str(threads_html),
+            ]
+            if sidecar.exists():
+                cmd.extend(["--sidecar", str(sidecar)])
+            print(f"[production] Generating report via: {' '.join(cmd)}")
+            subprocess.run(cmd, check=True)
+        except Exception as e:
+            print(f"[production] Report generation failed: {e}")
 
 
 if __name__ == "__main__":

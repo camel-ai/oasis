@@ -32,50 +32,40 @@ class LLMProviderSettings:
     timeout_seconds: float = 3600.0
 
 
-class _RateLimitedModelBackend:
-    r"""Lightweight wrapper that enforces a per-request async rate limit.
+def _attach_rate_limiters(backend: BaseModelBackend) -> BaseModelBackend:
+    """Monkey-patch backend.run/arun to acquire the global xAI limiter per request."""
+    limiter = _GLOBAL_XAI_LIMITER
+    if limiter is None:
+        return backend
+    import types
 
-    This wraps a CAMEL BaseModelBackend and acquires tokens on each call to
-    `run`/`arun`. It is intentionally minimal and forwards all other
-    attributes to the underlying backend.
-    """
+    if hasattr(backend, "arun"):
+        orig_arun = backend.arun
 
-    def __init__(self, backend: BaseModelBackend) -> None:
-        self._backend = backend
+        async def limited_arun(self, messages, response_format=None, tools=None):
+            try:
+                await limiter.acquire(limiter.estimate_tokens())
+            except Exception:
+                pass
+            return await orig_arun(messages, response_format, tools)
 
-    async def _acquire(self) -> None:
-        limiter = _GLOBAL_XAI_LIMITER
-        if limiter is None:
-            return
-        try:
-            est = limiter.estimate_tokens()
-            await limiter.acquire(est)
-        except Exception:
-            # Fail-open on limiter issues
-            return
+        backend.arun = types.MethodType(limited_arun, backend)  # type: ignore[assignment]
 
-    # Async inference path used by ChatAgent
-    async def arun(self, messages, response_format=None, tools=None):
-        await self._acquire()
-        return await self._backend.arun(messages, response_format, tools)
+    if hasattr(backend, "run"):
+        orig_run = backend.run
 
-    # Sync path (rarely used in our async flows, but keep parity)
-    def run(self, messages, response_format=None, tools=None):
-        # Use a blocking acquire on the event loop if available; otherwise skip
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # Schedule and wait briefly
-                loop.run_until_complete(self._acquire())  # type: ignore[call-arg]
-            else:
-                loop.run_until_complete(self._acquire())
-        except Exception:
-            pass
-        return self._backend.run(messages, response_format, tools)
+        def limited_run(self, messages, response_format=None, tools=None):
+            try:
+                loop = asyncio.get_event_loop()
+                if not loop.is_running():
+                    loop.run_until_complete(limiter.acquire(limiter.estimate_tokens()))
+            except Exception:
+                pass
+            return orig_run(messages, response_format, tools)
 
-    # Forward everything else transparently
-    def __getattr__(self, name):
-        return getattr(self._backend, name)
+        backend.run = types.MethodType(limited_run, backend)  # type: ignore[assignment]
+
+    return backend
 
 
 def create_model_backend(settings: LLMProviderSettings) -> BaseModelBackend:
@@ -100,8 +90,8 @@ def create_model_backend(settings: LLMProviderSettings) -> BaseModelBackend:
             model_config_dict=default_model_cfg,
             timeout=settings.timeout_seconds,
         )
-        # Wrap with request-level rate limiter to prevent 429 bursts
-        return _RateLimitedModelBackend(backend)
+        # Attach request-level rate limiter to prevent 429 bursts
+        return _attach_rate_limiters(backend)
     if provider == "gemini":
         api_key = settings.api_key or os.getenv("GEMINI_API_KEY", "")
         if not api_key:

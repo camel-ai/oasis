@@ -10,6 +10,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+from yaml import safe_load
 
 
 @dataclass(frozen=True)
@@ -456,7 +457,21 @@ def _assortative_rewire_edges(
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate SBM+PA initial follow network for OASIS MVP.")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Generate SBM+PA(+closure) initial follow network for OASIS. "
+            "Can optionally pull defaults from a YAML config."
+        )
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="",
+        help=(
+            "Optional YAML config with 'personas' and 'graph' blocks "
+            "(e.g., ./configs/mvp_master.yaml). CLI flags override missing keys."
+        ),
+    )
     parser.add_argument("--personas", type=str, default="./data/personas_mvp.csv",
                         help="Path to personas CSV (expects a class column, e.g., primary_label/class).")
     parser.add_argument("--out", type=str, default="./data/edges_mvp.csv",
@@ -498,25 +513,85 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    personas_csv = Path(os.path.abspath(args.personas))
-    out_csv = Path(os.path.abspath(args.out))
+
+    # Start from CLI values; allow config to override where specified.
+    personas_path: str = args.personas
+    out_path: str = args.out
+    theta_b = args.theta_b
+    rho = args.rho
+    alpha = args.alpha
+    avg_out_degree = args.avg_out_degree
+    seed = args.seed
+    tc_prob = args.tc_prob
+    tc_max_per_node = args.tc_max_per_node
+    tc_homophily = args.tc_homophily
+    tc_assort_beta = args.tc_assort_beta
+    rewire_ratio = args.rewire_ratio
+    class_col: Optional[str] = args.class_col.strip() or None
+
+    # Optional: pull defaults from YAML config (mirrors generate_personas.py pattern).
+    if args.config and os.path.exists(args.config):
+        with open(args.config, "r", encoding="utf-8") as f:
+            cfg = safe_load(f) or {}
+        personas_cfg = cfg.get("personas", {}) or {}
+        graph_cfg = cfg.get("graph", {}) or {}
+
+        # Resolve personas/edges paths:
+        #   graph.personas_csv (if present) >
+        #   personas.personas_csv >
+        #   CLI --personas
+        personas_path = str(
+            graph_cfg.get(
+                "personas_csv",
+                personas_cfg.get("personas_csv", personas_path),
+            )
+        )
+        #   graph.edges_csv (if present) > CLI --out
+        out_path = str(graph_cfg.get("edges_csv", out_path))
+
+        # Graph hyperparameters from graph block where provided.
+        if "theta_b" in graph_cfg:
+            theta_b = float(graph_cfg["theta_b"])
+        if "rho" in graph_cfg:
+            rho = float(graph_cfg["rho"])
+        if "alpha" in graph_cfg:
+            alpha = float(graph_cfg["alpha"])
+        if "avg_out_degree" in graph_cfg:
+            avg_out_degree = float(graph_cfg["avg_out_degree"])
+        if "seed" in graph_cfg:
+            seed = int(graph_cfg["seed"])
+        if "tc_prob" in graph_cfg:
+            tc_prob = float(graph_cfg["tc_prob"])
+        if "tc_max_per_node" in graph_cfg:
+            tc_max_per_node = int(graph_cfg["tc_max_per_node"])
+        if "tc_homophily" in graph_cfg:
+            tc_homophily = float(graph_cfg["tc_homophily"])
+        if "tc_assort_beta" in graph_cfg:
+            tc_assort_beta = float(graph_cfg["tc_assort_beta"])
+        if "rewire_ratio" in graph_cfg:
+            rewire_ratio = float(graph_cfg["rewire_ratio"])
+        if "class_col" in graph_cfg and str(graph_cfg["class_col"]).strip():
+            class_col = str(graph_cfg["class_col"]).strip()
+
+    personas_csv = Path(os.path.abspath(str(personas_path)))
+    out_csv = Path(os.path.abspath(str(out_path)))
     params = GraphParams(
-        theta_b=float(args.theta_b),
-        rho=float(args.rho),
-        alpha=float(args.alpha),
-        avg_out_degree=float(args.avg_out_degree),
-        seed=int(args.seed),
+        theta_b=float(theta_b),
+        rho=float(rho),
+        alpha=float(alpha),
+        avg_out_degree=float(avg_out_degree),
+        seed=int(seed),
     )
     n, m = build_graph_with_closure(
         personas_csv=personas_csv,
         out_csv=out_csv,
         params=params,
-        tc_prob=float(args.tc_prob),
-        tc_max_per_node=int(args.tc_max_per_node),
-        tc_homophily=float(args.tc_homophily),
-        assort_beta=float(args.tc_assort_beta),
-        rewire_ratio=float(args.rewire_ratio),
-        class_col=(args.class_col.strip() or None),
+        tc_prob=float(tc_prob),
+        tc_max_per_node=int(tc_max_per_node),
+        tc_homophily=float(tc_homophily),
+        assort_beta=float(tc_assort_beta),
+        rewire_ratio=float(rewire_ratio),
+        class_col=class_col,
     )
     print(f"Generated directed follow graph: nodes={n}, edges={m} -> {out_csv}")
 
