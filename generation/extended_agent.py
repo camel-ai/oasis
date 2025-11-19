@@ -23,9 +23,9 @@ _TOKEN_RE = re.compile(r"<LBL:[A-Z_]+>")
 
 
 class _TokenBucketLimiter:
-    """Async token-bucket limiter for RPM and TPM."""
+    """Async token-bucket limiter for RPM, TPM and RPS."""
 
-    def __init__(self, rpm: int, tpm: int, enabled: bool = True) -> None:
+    def __init__(self, rpm: int, tpm: int, enabled: bool = True, rps: int | None = None) -> None:
         self.enabled = bool(enabled)
         now = time.monotonic()
         # Requests per minute bucket
@@ -38,6 +38,12 @@ class _TokenBucketLimiter:
         self._tpm_tokens = float(self._tpm_capacity)
         self._tpm_refill_rate = self._tpm_capacity / 60.0
         self._tpm_last = now
+        # Requests per second bucket (optional; default enabled for xAI)
+        rps_val = int(rps) if rps is not None else int(os.getenv("OASIS_XAI_RPS_LIMIT", "8") or "8")
+        self._rps_capacity = float(max(1, rps_val))
+        self._rps_tokens = float(self._rps_capacity)
+        self._rps_refill_rate = self._rps_capacity / 1.0
+        self._rps_last = now
         # Sync
         self._lock = asyncio.Lock()
 
@@ -55,6 +61,12 @@ class _TokenBucketLimiter:
             self._tpm_capacity, self._tpm_tokens + elapsed_t * self._tpm_refill_rate
         )
         self._tpm_last = now
+        # RPS
+        elapsed_s = max(0.0, now - self._rps_last)
+        self._rps_tokens = min(
+            self._rps_capacity, self._rps_tokens + elapsed_s * self._rps_refill_rate
+        )
+        self._rps_last = now
 
     async def acquire(self, est_tokens: int = 1024) -> None:
         if not self.enabled:
@@ -66,16 +78,20 @@ class _TokenBucketLimiter:
                 self._refill_unlocked()
                 have_rpm = self._rpm_tokens >= 1.0
                 have_tpm = self._tpm_tokens >= float(est_tokens)
-                if have_rpm and have_tpm:
+                have_rps = self._rps_tokens >= 1.0
+                if have_rpm and have_tpm and have_rps:
                     self._rpm_tokens -= 1.0
                     self._tpm_tokens -= float(est_tokens)
+                    self._rps_tokens -= 1.0
                     return
                 # compute wait time until sufficient tokens
                 need_rpm = max(0.0, 1.0 - self._rpm_tokens)
                 need_tpm = max(0.0, float(est_tokens) - self._tpm_tokens)
                 wait_rpm = need_rpm / self._rpm_refill_rate if need_rpm > 0 else 0.0
                 wait_tpm = need_tpm / self._tpm_refill_rate if need_tpm > 0 else 0.0
-                wait_for = max(wait_rpm, wait_tpm, 0.01)  # min sleep
+                need_rps = max(0.0, 1.0 - self._rps_tokens)
+                wait_rps = need_rps / self._rps_refill_rate if need_rps > 0 else 0.0
+                wait_for = max(wait_rpm, wait_tpm, wait_rps, 0.01)  # min sleep
             await asyncio.sleep(min(wait_for, 2.0))
 
     @staticmethod
