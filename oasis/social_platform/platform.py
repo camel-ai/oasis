@@ -351,6 +351,11 @@ class Platform:
         trace_table = fetch_table_from_db(self.db_cursor, "trace")
         rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
 
+        # Guard against empty data early to avoid index errors/noise
+        if not post_table or not isinstance(rec_matrix, list) or len(rec_matrix) == 0:
+            twitter_log.info("No posts or empty rec matrix; skipping rec refresh.")
+            return
+
         if self.recsys_type == RecsysType.RANDOM:
             new_rec_matrix = rec_sys_random(post_table, rec_matrix,
                                             self.max_rec_post_len)

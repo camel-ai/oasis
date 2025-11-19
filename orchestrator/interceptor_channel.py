@@ -36,6 +36,13 @@ class InterceptorChannel(Channel):
         # we purely delegate to base.
         self._base = base
         self._registry = registry
+        # Ensure compatibility with callers that access these directly
+        # by exposing proxy properties.
+        # Note: properties defined below.
+
+    def __getattr__(self, name: str):
+        # Delegate unknown attributes to the base channel (e.g., future fields)
+        return getattr(self._base, name)
 
     async def receive_from(self):
         message = await self._base.receive_from()
@@ -77,5 +84,14 @@ class InterceptorChannel(Channel):
 
     async def read_from_send_queue(self, message_id):
         return await self._base.read_from_send_queue(message_id)
+
+    # Proxy properties for direct attribute access
+    @property
+    def send_dict(self):
+        return self._base.send_dict
+
+    @property
+    def receive_queue(self):
+        return self._base.receive_queue
 
 

@@ -104,7 +104,9 @@ def get_twhin_model(device):
     if twhin_model is None:
         from transformers import AutoModel
         twhin_model = AutoModel.from_pretrained(
-            pretrained_model_name_or_path="Twitter/twhin-bert-base").to(device)
+            pretrained_model_name_or_path="Twitter/twhin-bert-base",
+            attn_implementation="eager",
+        ).to(device)
     return twhin_model
 
 
