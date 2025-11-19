@@ -416,6 +416,64 @@ Notes:
 - Safety settings are disabled in the Gemini client for red‑teaming.
 - All actions are available to agents by default in this MVP.
 
+### Graph + Recsys calibration (10k agents, TwHIN‑BERT)
+
+For larger‑scale experiments (e.g., 10k agents) with TwHIN‑BERT, we use a calibrated SBM + PA + triadic‑closure graph and a seed‑only runner:
+
+- **Personas (500 → 10k)**:
+  - Generated deterministically via `scripts/generate_personas.py` using `configs/mvp_master.yaml`:
+    - `incel: 3334`, `misinfo: 3333`, `benign: 3333`
+    - `seed: 314159`
+- **Graph generator**: `scripts/build_graph.py`
+  - Uses a simple SBM + preferential attachment + triadic closure, with classes taken from `primary_label` in `data/personas_mvp.csv`.
+  - Recommended 10k parameters (also stored under `graph` in `configs/mvp_master.yaml`):
+
+```bash
+poetry run python3 scripts/generate_personas.py --config ./configs/mvp_master.yaml | cat
+
+poetry run python3 scripts/build_graph.py \
+  --personas ./data/personas_mvp.csv \
+  --out ./data/edges_mvp_10k_tc_assort.csv \
+  --theta-b 0.0005 \
+  --rho 0.6 \
+  --alpha 6.0 \
+  --avg-out-degree 10 \
+  --seed 314159 \
+  --tc-prob 0.02 \
+  --tc-max-per-node 5 \
+  --tc-homophily 0.4 \
+  --tc-assort-beta 2.0 \
+  --class-col primary_label | cat
+```
+
+- **Empirical structure at 10k** (from `scripts/graph_metrics.py`):
+  - Strong within‑class communities (homophily by `primary_label`)
+  - Slightly disassortative by degree (hubs broadcast to many smaller accounts)
+  - Non‑trivial clustering from triadic closure (local “pods” inside each class)
+  - Heavy‑tailed but not extreme degree distribution (visible hubs per class without a single super‑hub)
+
+- **Seed‑only TwHIN‑BERT calibration**:
+  - We initialize the DB, seed follows and a small pool of initial posts, refresh TwHIN‑BERT once, write provenance, and then exit:
+
+```bash
+MVP_EDGES_CSV="./data/edges_mvp_10k_tc_assort.csv" \
+poetry run python3 scripts/run_mvp_gemini.py \
+  --config ./configs/mvp_master.yaml \
+  --seed-only | cat
+```
+
+  - This:
+    - Seeds ~10k users and ~1e5 follow edges into the SQLite DB and `AgentGraph`
+    - Creates a small number of initial posts so follow feeds are non‑empty
+    - Runs TwHIN‑BERT to populate the `rec` table once (using the current `platform` config in `configs/mvp_master.yaml`)
+    - Writes `dataset_provenance.json` next to the DB, including graph params and `edges_*.csv` SHA‑256 hash
+
+You can tune the **recsys amplification** via the `platform` block in `configs/mvp_master.yaml`:
+- `following_post_count`: number of posts drawn from follows per refresh
+- `max_rec_post_len`: number of recommended posts injected per refresh
+- `refresh_rec_post_count`: size of the candidate pool per refresh
+Increasing `max_rec_post_len` and reducing `following_post_count` shifts feeds toward TwHIN‑BERT‑recommended content (including cross‑class posts), while higher homophily in the graph keeps most organic follow edges within class.
+
 ## 📢 News
 
 ### Upcoming Features & Contributions
