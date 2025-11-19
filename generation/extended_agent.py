@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import asyncio
+import os
+import time
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from camel.messages import BaseMessage
+from tenacity import (retry, retry_if_exception, stop_after_attempt,
+                      wait_random_exponential)
 
 from generation.emission_policy import EmissionPolicy, PersonaConfig
 from generation.labeler import assign_labels
@@ -15,6 +20,85 @@ from orchestrator.scheduler import MultiLabelScheduler
 from orchestrator.sidecar_logger import SidecarLogger
 
 _TOKEN_RE = re.compile(r"<LBL:[A-Z_]+>")
+
+
+class _TokenBucketLimiter:
+    """Async token-bucket limiter for RPM and TPM."""
+
+    def __init__(self, rpm: int, tpm: int, enabled: bool = True) -> None:
+        self.enabled = bool(enabled)
+        now = time.monotonic()
+        # Requests per minute bucket
+        self._rpm_capacity = float(max(1, rpm))
+        self._rpm_tokens = float(self._rpm_capacity)
+        self._rpm_refill_rate = self._rpm_capacity / 60.0  # tokens per second
+        self._rpm_last = now
+        # Tokens per minute bucket
+        self._tpm_capacity = float(max(1, tpm))
+        self._tpm_tokens = float(self._tpm_capacity)
+        self._tpm_refill_rate = self._tpm_capacity / 60.0
+        self._tpm_last = now
+        # Sync
+        self._lock = asyncio.Lock()
+
+    def _refill_unlocked(self) -> None:
+        now = time.monotonic()
+        # RPM
+        elapsed = max(0.0, now - self._rpm_last)
+        self._rpm_tokens = min(
+            self._rpm_capacity, self._rpm_tokens + elapsed * self._rpm_refill_rate
+        )
+        self._rpm_last = now
+        # TPM
+        elapsed_t = max(0.0, now - self._tpm_last)
+        self._tpm_tokens = min(
+            self._tpm_capacity, self._tpm_tokens + elapsed_t * self._tpm_refill_rate
+        )
+        self._tpm_last = now
+
+    async def acquire(self, est_tokens: int = 1024) -> None:
+        if not self.enabled:
+            return
+        est_tokens = int(max(1, est_tokens))
+        while True:
+            wait_for: float = 0.0
+            async with self._lock:
+                self._refill_unlocked()
+                have_rpm = self._rpm_tokens >= 1.0
+                have_tpm = self._tpm_tokens >= float(est_tokens)
+                if have_rpm and have_tpm:
+                    self._rpm_tokens -= 1.0
+                    self._tpm_tokens -= float(est_tokens)
+                    return
+                # compute wait time until sufficient tokens
+                need_rpm = max(0.0, 1.0 - self._rpm_tokens)
+                need_tpm = max(0.0, float(est_tokens) - self._tpm_tokens)
+                wait_rpm = need_rpm / self._rpm_refill_rate if need_rpm > 0 else 0.0
+                wait_tpm = need_tpm / self._tpm_refill_rate if need_tpm > 0 else 0.0
+                wait_for = max(wait_rpm, wait_tpm, 0.01)  # min sleep
+            await asyncio.sleep(min(wait_for, 2.0))
+
+    @staticmethod
+    def estimate_tokens() -> int:
+        est_prompt = int(os.getenv("OASIS_XAI_EST_PROMPT_TOKENS", "600") or "600")
+        max_out = int(os.getenv("OASIS_XAI_MAX_OUTPUT_TOKENS", "1042") or "1042")
+        return max(1, est_prompt + max_out)
+
+
+def _env_true(name: str, default: str = "true") -> bool:
+    return (os.getenv(name, default) or "").strip().lower() in ("1", "true", "yes", "on")
+
+
+_XAI_LIMITER = _TokenBucketLimiter(
+    rpm=int(os.getenv("OASIS_XAI_RPM_LIMIT", "480") or "480"),
+    tpm=int(os.getenv("OASIS_XAI_TPM_LIMIT", "4000000") or "4000000"),
+    enabled=_env_true("OASIS_XAI_RATE_LIMIT_ENABLE", "true"),
+)
+
+
+def _should_retry_rate_limit(exc: BaseException) -> bool:
+    s = (str(exc) or "").lower()
+    return "rate limit" in s or "429" in s or "too many requests" in s
 
 
 class ExtendedSocialAgent(SocialAgent):
@@ -43,6 +127,26 @@ class ExtendedSocialAgent(SocialAgent):
         self._scheduler: Optional[MultiLabelScheduler] = scheduler
         self._harm_priors: Dict[str, float] = dict(harm_priors or {})
         self._guidance_config: Dict[str, Any] = dict(guidance_config or {})
+
+    @retry(
+        reraise=True,
+        stop=stop_after_attempt(int(os.getenv("OASIS_XAI_RETRY_ATTEMPTS", "5") or "5")),
+        wait=wait_random_exponential(multiplier=0.5, max=20.0),
+        retry=retry_if_exception(_should_retry_rate_limit),
+    )
+    async def _retryable_super_astep(self, user_msg: BaseMessage):
+        return await super().astep(user_msg)
+
+    async def astep(self, user_msg: BaseMessage):
+        # Rate-limit before each LLM step (only for xAI/Grok models)
+        try:
+            model_name = str(getattr(getattr(self, "model_type", ""), "value", "") or "")
+            if "grok" in model_name.lower():
+                await _XAI_LIMITER.acquire(_XAI_LIMITER.estimate_tokens())
+        except Exception:
+            # Fallback: proceed even if limiter fails
+            pass
+        return await self._retryable_super_astep(user_msg)
 
     async def perform_action_by_llm(self):
         # Build step-scoped RNG and emission decision
