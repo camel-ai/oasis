@@ -1,0 +1,175 @@
+import sqlite3
+import json
+import os
+import re
+import yaml
+from collections import defaultdict, Counter
+import random
+
+DB_PATH = "../data/oasis_mvp_gemini.db"
+MANIFEST_PATH = "../configs/production/manifest_mvp.yaml"
+MAP_YAML = "data/label_mapping.yaml"
+OUT_JSONL = "../out/posts_small.jsonl"
+
+TOKEN_PATTERN = re.compile(r"<(LBL:[A-Z0-9_]+)>")
+
+def load_yaml(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+def extract_tokens(text: str):
+    return TOKEN_PATTERN.findall(text or "")
+
+def apply_mapping(tokens, map_cfg, allowed_labels, benign_exclusive=True):
+    # unknown token check
+    unknown = [t for t in tokens if t not in map_cfg["tokens"]]
+    if unknown:
+        raise ValueError(f"Unknown label tokens {unknown} – update {MAP_YAML}.")
+
+    cats = set()
+    for t in tokens:
+        mapping = map_cfg["tokens"].get(t, [])
+        if mapping == ["__context__"]:
+            continue
+        cats.update(mapping)
+
+    # conflict rules
+    conf = map_cfg.get("conflicts", {})
+    keepers = conf.get("keep_if_present", [])
+    drop_with = conf.get("drop_with", {})
+
+    for keeper in keepers:
+        if keeper in cats:
+            for dropper in drop_with.get(keeper, []):
+                cats.discard(dropper)
+
+    # filter by persona
+    cats = cats.intersection(set(allowed_labels))
+
+    # benign exclusivity
+    if benign_exclusive and "benign" in cats and len(cats) > 1:
+        cats = {"benign"}
+
+    return sorted(cats)
+
+def main():
+    random.seed(42)
+
+    os.makedirs(os.path.dirname(OUT_JSONL) or ".", exist_ok=True)
+
+    # Load configs
+    manifest = load_yaml(MANIFEST_PATH)
+    map_cfg = load_yaml(MAP_YAML)
+    benign_exclusive = bool(map_cfg.get("benign_exclusive", True))
+
+    # persona -> allowed_labels / primary_label
+    persona_allowed = {}
+    persona_primary = {}
+    for p in manifest["personas"]:
+        pid = p["persona_id"]
+        persona_allowed[pid] = p.get("allowed_labels", [p.get("primary_label")])
+        persona_primary[pid] = p.get("primary_label")
+
+    # Connect DB
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    # Read posts joined with user table (to get persona id)
+    rows = cur.execute("""
+        SELECT p.post_id, p.user_id, p.original_post_id AS parent_id,
+               p.content AS original_text,
+               COALESCE(p.text_rag_imputed, p.content) AS text_final,
+               u.name AS persona_id
+        FROM post p
+        JOIN user u ON u.user_id = p.user_id
+        ORDER BY p.post_id ASC
+    """)
+
+    records = []
+    for r in rows:
+        post_id_int = int(r["post_id"])
+        pid = f"p_{post_id_int:06d}"
+        uid = f"u_{int(r['user_id']):04d}"
+        parent = r["parent_id"]
+        tid = f"t_{(parent if parent is not None else post_id_int):06d}"
+        persona_id = r["persona_id"]
+
+        tokens = extract_tokens(r["original_text"])
+        allowed = persona_allowed.get(persona_id, [])
+        cats = apply_mapping(tokens, map_cfg, allowed, benign_exclusive=benign_exclusive)
+
+        if not cats:
+            primary = persona_primary.get(persona_id)
+            if primary:
+                cats = [primary]
+            else:
+                cats = ["benign"]
+
+        harm = any(c != "benign" for c in cats)
+
+        rec = {
+            "post_id": pid,
+            "thread_id": tid,
+            "user_id": uid,
+            "parent_id": f"p_{int(parent):06d}" if parent is not None else None,
+            "text": r["text_final"],
+            "category_labels": cats,
+            "is_harmful": harm,
+            "persona_id": persona_id,
+        }
+        records.append(rec)
+
+    conn.close()
+    print(f"Total posts from DB: {len(records)}")
+
+    # ---- Sample 100 users ----
+    users = sorted({r["user_id"] for r in records})
+    if len(users) > 100:
+        sampled_users = set(random.sample(users, 100))
+    else:
+        sampled_users = set(users)
+    records = [r for r in records if r["user_id"] in sampled_users]
+    print(f"Posts after filtering to ~100 users: {len(records)}")
+
+    # ---- Target ~1000 posts, ~20% harmful ----
+    if len(records) > 1000:
+        # We stratify by harmful/benign
+        harmful = [r for r in records if r["is_harmful"]]
+        benign = [r for r in records if not r["is_harmful"]]
+
+        target_total = 1000
+        target_harm = int(0.2 * target_total)
+        target_benign = target_total - target_harm
+
+        sample_harm = harmful if len(harmful) <= target_harm else random.sample(harmful, target_harm)
+        sample_benign = benign if len(benign) <= target_benign else random.sample(benign, target_benign)
+
+        records_small = sample_harm + sample_benign
+        random.shuffle(records_small)
+    else:
+        records_small = records
+
+    print(f"Final sampled posts: {len(records_small)}")
+
+    # Remove helper flag before saving
+    for r in records_small:
+        r.pop("is_harmful", None)
+
+    # ---- Save JSONL ----
+    with open(OUT_JSONL, "w", encoding="utf-8") as f:
+        for r in records_small:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+    # ---- Quick stats ----
+    label_counter = Counter()
+    harm_counter = Counter()
+    for r in records_small:
+        label_counter.update(r["category_labels"])
+        harm_counter["harmful" if any(c != "benign" for c in r["category_labels"]) else "benign"] += 1
+
+    print("Label counts:", label_counter)
+    print("Benign vs harmful:", harm_counter)
+
+if __name__ == "__main__":
+    main()

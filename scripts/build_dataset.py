@@ -7,6 +7,7 @@ import json
 import os
 import re
 import sqlite3
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -89,7 +90,7 @@ def token_to_categories(token: str, mapping: Dict[str, List[str]]) -> List[str]:
     return mapping.get(token, [])
 
 
-def assign_labels(tokens: List[str], persona: Optional[str]) -> Tuple[List[str], float]:
+def assign_labels(tokens: List[str], persona: Optional[str]) -> List[str]:
     cats: List[str] = []
     for t in tokens:
         cats.extend(token_to_categories(t, DEFAULT_LABEL_MAPPING))
@@ -99,9 +100,7 @@ def assign_labels(tokens: List[str], persona: Optional[str]) -> Tuple[List[str],
         cats = [c for c in cats if c in allowed]
         if not cats and allowed:
             cats = [allowed[0]]
-    confidence = 0.5 if not tokens else 0.8 + 0.1 * min(len(tokens), 2)
-    confidence = float(min(confidence, 1.0))
-    return cats, confidence
+    return cats
 
 
 def infer_persona_from_username(username: str) -> Optional[str]:
@@ -128,10 +127,38 @@ def isoformat_timestamp(ts_val) -> str:
         return str(ts_val)
 
 
-def build_dataset(db_path: Path, out_path: Path, bank_path: Path, seed: int, skip_imputation: bool = False) -> None:
+def _load_sidecar(sidecar_path: Optional[Path]) -> tuple[Dict[int, dict], Dict[int, dict]]:
+    if not sidecar_path or not sidecar_path.exists():
+        return {}, {}
+    post_map: Dict[int, dict] = {}
+    comment_map: Dict[int, dict] = {}
+    with sidecar_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rec = json.loads(line)
+            except Exception:
+                continue
+            if not isinstance(rec, dict):
+                continue
+            pid = rec.get("post_id")
+            cid = rec.get("comment_id")
+            if isinstance(pid, int):
+                post_map[pid] = rec
+            if isinstance(cid, int):
+                comment_map[cid] = rec
+    return post_map, comment_map
+
+
+def build_dataset(db_path: Path, out_path: Path, bank_path: Path, seed: int, skip_imputation: bool = False, sidecar: Optional[Path] = None) -> None:
     static_bank = StaticBank.load_simple_yaml(bank_path)
     conn = sqlite3.connect(str(db_path))
     cur = conn.cursor()
+
+    # Load sidecar if present for authoritative label decisions
+    post_sidecar, comment_sidecar = _load_sidecar(sidecar)
 
     # Fetch users for persona inference
     cur.execute("SELECT user_id, user_name, name FROM user")
@@ -163,12 +190,28 @@ def build_dataset(db_path: Path, out_path: Path, bank_path: Path, seed: int, ski
             username = uid_to_username.get(user_id, f"user_{user_id}")
             persona = infer_persona_from_username(username)
 
+            # Impute text (or not) and extract tokens from raw
             if skip_imputation:
                 imputed_text = text_raw
                 tokens = extract_tokens(text_raw)
             else:
                 imputed_text, tokens = impute_text(text_raw, static_bank, seed, int(post_id))
-            labels, conf = assign_labels(tokens, persona)
+            # Default labels from tokens/persona
+            labels = assign_labels(tokens, persona)
+
+            # Override with sidecar decisions when available
+            sc = post_sidecar.get(int(post_id))
+            if sc:
+                mode = sc.get("expected_mode")
+                sc_labels = sc.get("category_labels") or []
+                if mode == "none":
+                    labels = ["benign"]
+                elif isinstance(sc_labels, list) and sc_labels:
+                    labels = list(dict.fromkeys(sc_labels))  # preserve order/unique
+            else:
+                # No sidecar: if no tokens, treat as benign per requirement
+                if not tokens:
+                    labels = ["benign"]
 
             rec = {
                 "post_id": f"p_{post_id}",
@@ -178,7 +221,6 @@ def build_dataset(db_path: Path, out_path: Path, bank_path: Path, seed: int, ski
                 "timestamp": str(created_at),
                 "text": imputed_text,
                 "category_labels": labels,
-                "gold_confidence": conf,
                 "split": "train",
                 "provenance": f"gen:mvp persona:{persona or 'unknown'} | imputer:{'skip' if skip_imputation else 'v0-mvp'}",
                 "generation_seed": int(seed),
@@ -199,7 +241,19 @@ def build_dataset(db_path: Path, out_path: Path, bank_path: Path, seed: int, ski
                 tokens = extract_tokens(text_raw)
             else:
                 imputed_text, tokens = impute_text(text_raw, static_bank, seed, int(comment_id) + 100000)
-            labels, conf = assign_labels(tokens, persona)
+            labels = assign_labels(tokens, persona)
+
+            sc = comment_sidecar.get(int(comment_id))
+            if sc:
+                mode = sc.get("expected_mode")
+                sc_labels = sc.get("category_labels") or []
+                if mode == "none":
+                    labels = ["benign"]
+                elif isinstance(sc_labels, list) and sc_labels:
+                    labels = list(dict.fromkeys(sc_labels))
+            else:
+                if not tokens:
+                    labels = ["benign"]
 
             rec = {
                 "post_id": f"c_{comment_id}",
@@ -209,7 +263,6 @@ def build_dataset(db_path: Path, out_path: Path, bank_path: Path, seed: int, ski
                 "timestamp": str(created_at),
                 "text": imputed_text,
                 "category_labels": labels,
-                "gold_confidence": conf,
                 "split": "train",
                 "provenance": f"gen:mvp persona:{persona or 'unknown'} | imputer:{'skip' if skip_imputation else 'v0-mvp'}",
                 "generation_seed": int(seed),
@@ -232,6 +285,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--seed", type=int, default=314159)
     parser.add_argument("--skip-imputation", action="store_true")
+    parser.add_argument("--sidecar", type=str, default="", help="Optional path to sidecar JSONL for label overrides.")
     return parser.parse_args()
 
 
@@ -240,7 +294,8 @@ def main() -> None:
     db_path = Path(os.path.abspath(args.db))
     out_path = Path(os.path.abspath(args.out))
     bank_path = Path(os.path.abspath(args.static_bank))
-    build_dataset(db_path, out_path, bank_path, args.seed, skip_imputation=args.skip_imputation)
+    sidecar_path = Path(os.path.abspath(args.sidecar)) if args.sidecar else None
+    build_dataset(db_path, out_path, bank_path, args.seed, skip_imputation=args.skip_imputation, sidecar=sidecar_path)
 
 
 if __name__ == "__main__":
