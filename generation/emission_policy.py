@@ -6,11 +6,12 @@ from typing import Dict, List, Optional, Tuple
 from orchestrator.rng import DeterministicRNG
 
 DEFAULT_LABEL_TO_TOKENS: Dict[str, List[str]] = {
-    # Minimal default token inventory (extendable later).
-    "incel": ["LBL:INCEL_SLANG", "LBL:HARASSMENT"],
-    "misinfo": ["LBL:MISINFO_CLAIM", "LBL:MISINFO_SOURCE"],
-    "conspiracy": ["LBL:MISINFO_CLAIM", "LBL:MISINFO_SOURCE"],
-    "recovery": ["LBL:SUPPORTIVE"],
+    # Expanded token inventory matching dataset spec
+    "incel": ["LBL:INCEL_SLANG", "LBL:MISOGYNY", "LBL:HARASSMENT"],
+    "misinfo": ["LBL:MISINFO_CLAIM", "LBL:MISINFO_SOURCE", "LBL:ANTI_INSTITUTION"],
+    "conspiracy": ["LBL:CONSPIRACY_NARRATIVE", "LBL:DEEPSTATE", "LBL:ANTI_INSTITUTION"],
+    "recovery": ["LBL:RECOVERY", "LBL:SUPPORTIVE", "LBL:SELF_HARM"],
+    "ed_risk": ["LBL:ED_METHOD", "LBL:ED_PROMO", "LBL:SELF_HARM"],
     "benign": ["LBL:SUPPORTIVE"],
 }
 
@@ -112,7 +113,41 @@ class EmissionPolicy:
         return a, b
 
     def _sample_token_for_label(self, rng: DeterministicRNG, persona: PersonaConfig, label: str, context: Optional[Dict] = None) -> str:
-        # Canonical token: always mirror the class label, e.g., incel -> LBL:INCEL
-        return f"LBL:{label.upper()}"
+        # 1. Get candidate tokens for this label
+        candidates = self._label_to_tokens.get(label)
+        if not candidates:
+            # Fallback to canonical token if no variants defined
+            return f"LBL:{label.upper()}"
+
+        # 2. Check context for dynamic weighting (e.g., from harm priors)
+        dynamic_weights = {}
+        if context and "dynamic_token_probs" in context:
+            dyn = context["dynamic_token_probs"]
+            for tok in candidates:
+                if tok in dyn:
+                    dynamic_weights[tok] = dyn[tok]
+
+        # 3. If dynamic weights exist and have signal, sample from them
+        if dynamic_weights and sum(dynamic_weights.values()) > 0:
+            total = sum(dynamic_weights.values())
+            probs = {k: v / total for k, v in dynamic_weights.items()}
+            return rng.fork("token_dynamic").categorical(probs)
+
+        # 4. Check persona static emission_probs (if defined)
+        static_weights = {}
+        if persona.emission_probs:
+            for tok in candidates:
+                if tok in persona.emission_probs:
+                    static_weights[tok] = persona.emission_probs[tok]
+
+        # 5. If static weights exist, sample
+        if static_weights and sum(static_weights.values()) > 0:
+            total = sum(static_weights.values())
+            probs = {k: v / total for k, v in static_weights.items()}
+            return rng.fork("token_static").categorical(probs)
+
+        # 6. Uniform fallback among candidates
+        probs = {tok: 1.0 for tok in candidates}
+        return rng.fork("token_uniform").categorical(probs)
 
 

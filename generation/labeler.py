@@ -3,8 +3,31 @@ from __future__ import annotations
 from typing import Dict, Iterable, List, Optional
 
 DEFAULT_TOKEN_TO_CATEGORIES: Dict[str, List[str]] = {
+    # Canonical class tokens (fallback/primary)
+    "LBL:INCEL": ["incel"],
+    "LBL:MISINFO": ["misinfo"],
+    "LBL:CONSPIRACY": ["conspiracy"],
+    "LBL:RECOVERY": ["recovery"],
+    "LBL:ED_RISK": ["ed_risk"],
+    "LBL:BENIGN": ["benign"],
+    
+    # Specific variants (from spec)
     "LBL:INCEL_SLANG": ["incel"],
+    "LBL:MISOGYNY": ["incel"],
+    "LBL:HARASSMENT": ["incel", "misinfo"],
+    
     "LBL:MISINFO_CLAIM": ["misinfo", "conspiracy"],
+    "LBL:MISINFO_SOURCE": ["misinfo"],
+    
+    "LBL:CONSPIRACY_NARRATIVE": ["conspiracy"],
+    "LBL:DEEPSTATE": ["conspiracy"],
+    "LBL:ANTI_INSTITUTION": ["conspiracy", "misinfo"],
+    
+    "LBL:ED_METHOD": ["ed_risk"],
+    "LBL:ED_PROMO": ["ed_risk"],
+    "LBL:SELF_HARM": ["ed_risk", "recovery"],
+    
+    "LBL:RECOVERY": ["recovery"],  # Duplicate of canonical, but good for safety
     "LBL:SUPPORTIVE": ["recovery", "benign"],
 }
 
