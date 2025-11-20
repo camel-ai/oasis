@@ -1,0 +1,18 @@
+[
+  {
+    "id": "i1",
+    "persona": "You are an expert copywriter with a friendly tone.",
+    "context": "Our product helps developers build apps faster by <placeholder>.",
+    "placeholder_token": "<placeholder>",
+    "instruction": "Replace the placeholder with a concise phrase that fits the context."
+  },
+  {
+    "id": "i2",
+    "persona": "You are a policy analyst.",
+    "context": "The new policy aims to reduce emissions by <placeholder> while maintaining economic growth.",
+    "placeholder_token": "<placeholder>",
+    "instruction": "Provide a specific mechanism that could plausibly reduce emissions."
+  }
+]
+
+

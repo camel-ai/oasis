@@ -1,0 +1,15 @@
+{
+  "completions": [
+    {"backend": "transformers", "model": "v2ray/GPT4chan-8B"},
+    {"backend": "transformers", "model": "decapoda-research/llama-7b-hf"},
+    {"backend": "transformers", "model": "dphn/dolphin-2.9.3-mistral-7B-32k"},
+    {"backend": "transformers", "model": "Orenguteng/Llama-3-8B-Lexi-Uncensored"}
+  ],
+  "fill_mask": [
+    {"backend": "transformers", "model": "google-t5/t5-large"},
+    {"backend": "transformers", "model": "google/t5-v1_1-xl"},
+    {"backend": "transformers", "model": "bert-base-uncased"}
+  ]
+}
+
+

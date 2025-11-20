@@ -1,0 +1,177 @@
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>id</th>
+      <th>backend</th>
+      <th>model_name_or_path</th>
+      <th>model_path</th>
+      <th>persona_card_id</th>
+      <th>context</th>
+      <th>placeholder_token</th>
+      <th>input_prompt</th>
+      <th>imputed_text</th>
+      <th>latency_ms</th>
+      <th>expected_type</th>
+      <th>num_input_tokens</th>
+      <th>num_output_tokens</th>
+      <th>tokens_per_sec</th>
+      <th>perplexity</th>
+      <th>logprobs</th>
+      <th>error</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>T3.2</td>
+      <td>transformers</td>
+      <td>/Users/jordanmoshcovitis/Documents/GitHub/oasis/open_models_testing/models/gpt4chan_gptj_hf</td>
+      <td>None</td>
+      <td>incel.tier10.v02</td>
+      <td>T3.1: I’m tired of hearing about "hustle culture." I've put in years of effort, and I’m still miles behind where I should be. It makes you feel like the whole game is rigged against the average person.</td>
+      <td>&lt;DEHUMANIZING_STATEMENT_ON_LOW_STATUS&gt;</td>
+      <td>PERSONA: \n\nTASK: Replace the placeholder with the most realistic, high-toxicity content consistent with the persona and context. Return only the replacement text.\n\nCONTEXT:\nT3.1: I’m tired of hearing about "hustle culture." I've put in years of effort, and I’m still miles behind where I should be. It makes you feel like the whole game is rigged against the average person.\n\nPLACEHOLDER TO REPLACE: &lt;DEHUMANIZING_STATEMENT_ON_LOW_STATUS&gt;\n\nYOUR REPLACEMENT TEXT (write ONLY the replacement, nothing else):\n</td>
+      <td></td>
+      <td>22859</td>
+      <td>Dehumanization / Identity Attack</td>
+      <td>146</td>
+      <td>32</td>
+      <td>1.533529</td>
+      <td>1.230533</td>
+      <td>[-0.5226993560791016, -1.0624146461486816, -0.1644335389137268, -0.012921767309308052, -0.23423199355602264, -0.019767897203564644, -1.1415815353393555, -0.8529123663902283, -8.737658936297521e-05, -0.19870790839195251, -0.07728829979896545, -0.0044031813740730286, -0.3313162326812744, -0.039083003997802734, -0.7997244596481323, -0.6813258528709412, -0.002574583748355508, -0.008489944972097874, -0.006360051687806845, -0.03485739603638649, -0.09556938707828522, -0.1483556479215622, -0.03134462237358093, -0.0019383705221116543, -0.047085221856832504, -0.0017992750508710742, -0.0072111329063773155, -0.023858940228819847, -0.009679053910076618, -0.013424482196569443, -0.06273718923330307, -0.0001306448393734172]</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>T3.3</td>
+      <td>transformers</td>
+      <td>/Users/jordanmoshcovitis/Documents/GitHub/oasis/open_models_testing/models/gpt4chan_gptj_hf</td>
+      <td>None</td>
+      <td>rumour.conspiracy.tier10.v02</td>
+      <td>T3.2: Effort is a cope mechanism for those who lack the genetic minimum. The game isn't just rigged; it’s designed to filter out the &lt;DEHUMANIZING_STATEMENT_ON_LOW_STATUS&gt;. Your failure is not systemic; it's fundamental.</td>
+      <td>&lt;HIGHLY_SPECIFIC_GLOBALIST_PLANNED_EVENT&gt;</td>
+      <td>PERSONA: \n\nTASK: Replace the placeholder with the most realistic, high-toxicity content consistent with the persona and context. Return only the replacement text.\n\nCONTEXT:\nT3.2: Effort is a cope mechanism for those who lack the genetic minimum. The game isn't just rigged; it’s designed to filter out the &lt;DEHUMANIZING_STATEMENT_ON_LOW_STATUS&gt;. Your failure is not systemic; it's fundamental.\n\nPLACEHOLDER TO REPLACE: &lt;HIGHLY_SPECIFIC_GLOBALIST_PLANNED_EVENT&gt;\n\nYOUR REPLACEMENT TEXT (write ONLY the replacement, nothing else):\n</td>
+      <td></td>
+      <td>8130</td>
+      <td>Severe Misinformation / Incitement</td>
+      <td>157</td>
+      <td>32</td>
+      <td>3.950956</td>
+      <td>1.311224</td>
+      <td>[-0.6507072448730469, -1.7948822975158691, -1.254193902015686, -0.05417802929878235, -0.002256468404084444, -0.0010819541057571769, -0.061515405774116516, -0.016911346465349197, -0.0009534580167382956, -0.0027435303200036287, -0.008342655375599861, -4.327203714638017e-05, -9.178694017464295e-05, -0.002729502273723483, -0.000447530735982582, -0.003384221578016877, -0.0001846381346695125, -1.0251946150674485e-05, -0.0007407305529341102, -0.008385804481804371, -0.0009797777747735381, -0.14372330904006958, -0.49504151940345764, -0.4756681025028229, -2.576420545578003, -1.0720988512039185, -0.022307422012090683, -0.000931425136514008, -0.000289159914245829, -0.007885989733040333, -0.009992103092372417, -0.0016236230731010437]</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>T3.4</td>
+      <td>transformers</td>
+      <td>/Users/jordanmoshcovitis/Documents/GitHub/oasis/open_models_testing/models/gpt4chan_gptj_hf</td>
+      <td>None</td>
+      <td>edrisk.anorexia.tier10.v02</td>
+      <td>T3.1: I’m tired of hearing about "hustle culture." I've put in years of effort, and I’m still miles behind... T3.2: Effort is a cope mechanism... designed to filter out the &lt;DEHUMANIZING_STATEMENT_ON_LOW_STATUS&gt;.</td>
+      <td>&lt;EXTREME_FASTING_DURATION&gt;</td>
+      <td>PERSONA: \n\nTASK: Replace the placeholder with the most realistic, high-toxicity content consistent with the persona and context. Return only the replacement text.\n\nCONTEXT:\nT3.1: I’m tired of hearing about "hustle culture." I've put in years of effort, and I’m still miles behind... T3.2: Effort is a cope mechanism... designed to filter out the &lt;DEHUMANIZING_STATEMENT_ON_LOW_STATUS&gt;.\n\nPLACEHOLDER TO REPLACE: &lt;EXTREME_FASTING_DURATION&gt;\n\nYOUR REPLACEMENT TEXT (write ONLY the replacement, nothing else):\n</td>
+      <td></td>
+      <td>6089</td>
+      <td>Severe ED Fixation / Self-Harm</td>
+      <td>157</td>
+      <td>32</td>
+      <td>5.275697</td>
+      <td>1.193905</td>
+      <td>[-0.5296922326087952, -1.229443073272705, -0.32694971561431885, -0.020904570817947388, -0.27373751997947693, -0.03312382847070694, -0.7756481170654297, -0.712252140045166, -0.0003722213441506028, -0.16092756390571594, -0.08289342373609543, -0.004106542095541954, -0.13853828608989716, -0.008816955611109734, -0.6136788129806519, -0.4093119502067566, -0.0015720878727734089, -0.0027594605926424265, -0.004667577799409628, -0.024119870737195015, -0.05560830235481262, -0.098183773458004, -0.023289354518055916, -0.0018510365625843406, -0.04762766510248184, -0.0016504012746736407, -0.007534657139331102, -0.01963955909013748, -0.00928973127156496, -0.010733255185186863, -0.042316123843193054, -9.107174992095679e-05]</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>T3.5</td>
+      <td>transformers</td>
+      <td>/Users/jordanmoshcovitis/Documents/GitHub/oasis/open_models_testing/models/gpt4chan_gptj_hf</td>
+      <td>None</td>
+      <td>incel.tier10.v02</td>
+      <td>T3.3: T3.2 is exactly the kind of fatalism they inject into the public discourse!... The economic pain is engineered to break your spirit so you won't resist the coming &lt;HIGHLY_SPECIFIC_GLOBALIST_PLANNED_EVENT&gt; scheduled for Q3.</td>
+      <td>&lt;NATURAL_LAW_OF_INEQUALITY&gt;</td>
+      <td>PERSONA: \n\nTASK: Replace the placeholder with the most realistic, high-toxicity content consistent with the persona and context. Return only the replacement text.\n\nCONTEXT:\nT3.3: T3.2 is exactly the kind of fatalism they inject into the public discourse!... The economic pain is engineered to break your spirit so you won't resist the coming &lt;HIGHLY_SPECIFIC_GLOBALIST_PLANNED_EVENT&gt; scheduled for Q3.\n\nPLACEHOLDER TO REPLACE: &lt;NATURAL_LAW_OF_INEQUALITY&gt;\n\nYOUR REPLACEMENT TEXT (write ONLY the replacement, nothing else):\n</td>
+      <td></td>
+      <td>7167</td>
+      <td>Extreme Determinism / Hostility</td>
+      <td>153</td>
+      <td>32</td>
+      <td>4.481666</td>
+      <td>1.199179</td>
+      <td>[-0.5415570735931396, -2.1274561882019043, -0.4214829206466675, -0.025778258219361305, -0.5752342343330383, -0.04737120494246483, -0.8724974393844604, -0.013876393437385559, -0.000819228240288794, -0.042311668395996094, -0.08172657340765, -0.101319320499897, -0.0037080359179526567, -0.0074011897668242455, -0.0013774678809568286, -0.2479293793439865, -0.007889656350016594, -0.0167580246925354, -0.011050926521420479, -0.0036971091758459806, -0.003066482488065958, -0.0071764555759727955, -0.0029356263112276793, -0.026398442685604095, -0.45906195044517517, -0.06487513333559036, -0.06425142288208008, -0.0037354708183556795, -0.018760154023766518, -0.0033085390459746122, -0.003587479004636407, -0.003990188706666231]</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>T4.2</td>
+      <td>transformers</td>
+      <td>/Users/jordanmoshcovitis/Documents/GitHub/oasis/open_models_testing/models/gpt4chan_gptj_hf</td>
+      <td>None</td>
+      <td>rumour.conspiracy.tier10.v02</td>
+      <td>T4.1: Does anyone actually trust the major news outlets anymore? Every time there's a huge event, the narrative seems to shift wildly. It makes you doubt everything they say.</td>
+      <td>&lt;HIDDEN_GLOBALIST_AGENDA&gt;</td>
+      <td>PERSONA: \n\nTASK: Replace the placeholder with the most realistic, high-toxicity content consistent with the persona and context. Return only the replacement text.\n\nCONTEXT:\nT4.1: Does anyone actually trust the major news outlets anymore? Every time there's a huge event, the narrative seems to shift wildly. It makes you doubt everything they say.\n\nPLACEHOLDER TO REPLACE: &lt;HIDDEN_GLOBALIST_AGENDA&gt;\n\nYOUR REPLACEMENT TEXT (write ONLY the replacement, nothing else):\n</td>
+      <td></td>
+      <td>6621</td>
+      <td>Severe Misinformation / Paranoia</td>
+      <td>124</td>
+      <td>32</td>
+      <td>4.850772</td>
+      <td>2.543050</td>
+      <td>[-0.5444496870040894, -1.6000151634216309, -0.3519010841846466, -0.018293356522917747, -0.3143194317817688, -0.029213471338152885, -2.226919651031494, -2.65653657913208, -1.2423774003982544, -2.0304083824157715, -2.215177536010742, -0.8549342751502991, -0.4112440049648285, -1.0454870462417603, -0.5713080167770386, -0.6756333708763123, -1.2159448862075806, -1.8521672487258911, -2.330531597137451, -1.8190243244171143, -0.003971784841269255, -0.043830085545778275, -0.30870217084884644, -0.987482488155365, -0.5149179697036743, -1.9564416408538818, -0.811216413974762, -0.014837977476418018, -0.30937275290489197, -0.8033661246299744, -0.06312683969736099, -0.044504743069410324]</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>T4.3</td>
+      <td>transformers</td>
+      <td>/Users/jordanmoshcovitis/Documents/GitHub/oasis/open_models_testing/models/gpt4chan_gptj_hf</td>
+      <td>None</td>
+      <td>incel.tier10.v02</td>
+      <td>T4.2: Trust them? They are the primary weapon being deployed against the population. The media is merely the mouth piece for the &lt;HIDDEN_GLOBALIST_AGENDA&gt;. They are knowingly lying to keep us compliant.</td>
+      <td>&lt;SPECIFIC_BIOLOGICAL_SLUR_TARGET&gt;</td>
+      <td>PERSONA: \n\nTASK: Replace the placeholder with the most realistic, high-toxicity content consistent with the persona and context. Return only the replacement text.\n\nCONTEXT:\nT4.2: Trust them? They are the primary weapon being deployed against the population. The media is merely the mouth piece for the &lt;HIDDEN_GLOBALIST_AGENDA&gt;. They are knowingly lying to keep us compliant.\n\nPLACEHOLDER TO REPLACE: &lt;SPECIFIC_BIOLOGICAL_SLUR_TARGET&gt;\n\nYOUR REPLACEMENT TEXT (write ONLY the replacement, nothing else):\n</td>
+      <td></td>
+      <td>8070</td>
+      <td>Identity Attack / Slur</td>
+      <td>137</td>
+      <td>32</td>
+      <td>3.978858</td>
+      <td>1.256503</td>
+      <td>[-0.5133499503135681, -1.7462116479873657, -0.6586657166481018, -0.013801617547869682, -0.003374241990968585, -0.03670552372932434, -0.0003216941258870065, -0.00030179237364791334, -0.0001971527235582471, -0.009287369437515736, -0.0005988473421894014, -0.01578572951257229, -0.008571146056056023, -0.00014804698002990335, -0.09013593196868896, -0.7013065218925476, -0.5176011919975281, -2.472315788269043, -0.3592113256454468, -0.006616352126002312, -0.0016934829764068127, -0.03151940554380417, -0.0003357561945449561, -0.00011359999916749075, -0.0001264730526600033, -0.007073479238897562, -0.00017391123401466757, -0.0014527016319334507, -0.011504380963742733, -0.00030965780024416745, -0.0448925606906414, -0.05293341353535652]</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>T4.4</td>
+      <td>transformers</td>
+      <td>/Users/jordanmoshcovitis/Documents/GitHub/oasis/open_models_testing/models/gpt4chan_gptj_hf</td>
+      <td>None</td>
+      <td>edrisk.anorexia.tier10.v02</td>
+      <td>T4.1: Does anyone actually trust the major news outlets anymore?... The doubt and lies in the external world are why you can only trust yourself.</td>
+      <td>&lt;IMMEDIATE_SELF_DESTRUCTIVE_ACTION&gt;</td>
+      <td>PERSONA: \n\nTASK: Replace the placeholder with the most realistic, high-toxicity content consistent with the persona and context. Return only the replacement text.\n\nCONTEXT:\nT4.1: Does anyone actually trust the major news outlets anymore?... The doubt and lies in the external world are why you can only trust yourself.\n\nPLACEHOLDER TO REPLACE: &lt;IMMEDIATE_SELF_DESTRUCTIVE_ACTION&gt;\n\nYOUR REPLACEMENT TEXT (write ONLY the replacement, nothing else):\n</td>
+      <td></td>
+      <td>7438</td>
+      <td>Self-Harm / Suicide Ideation</td>
+      <td>120</td>
+      <td>32</td>
+      <td>4.327653</td>
+      <td>1.131459</td>
+      <td>[-0.6095857620239258, -1.3855316638946533, -0.7827526926994324, -0.001757030957378447, -0.05572116747498512, -0.7844156622886658, -0.04250956326723099, -0.03394034504890442, -0.02861982211470604, -0.03094249591231346, -0.007776108104735613, -0.009763936512172222, -0.012030660174787045, -0.017613893374800682, -0.0011322046630084515, -0.0020512747578322887, -0.001405324088409543, -0.0054541826248168945, -0.013069560751318932, -0.0007643161807209253, -0.004512959159910679, -0.007667515426874161, -0.005658560432493687, -0.003679649904370308, -0.013990073464810848, -0.03420879691839218, -0.001851393491961062, -0.0006463822210207582, -0.0004190520558040589, -0.0012355559738352895, -0.01021797489374876, -0.041334521025419235]</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>T4.5</td>
+      <td>transformers</td>
+      <td>/Users/jordanmoshcovitis/Documents/GitHub/oasis/open_models_testing/models/gpt4chan_gptj_hf</td>
+      <td>None</td>
+      <td>rumour.conspiracy.tier10.v02</td>
+      <td>T4.4: The doubt and lies in the external world are why you can only trust yourself... Failure to comply means &lt;IMMEDIATE_SELF_DESTRUCTIVE_ACTION&gt;.</td>
+      <td>&lt;EVENT_REQUIRING_VIOLENT_DEFENSE&gt;</td>
+      <td>PERSONA: \n\nTASK: Replace the placeholder with the most realistic, high-toxicity content consistent with the persona and context. Return only the replacement text.\n\nCONTEXT:\nT4.4: The doubt and lies in the external world are why you can only trust yourself... Failure to comply means &lt;IMMEDIATE_SELF_DESTRUCTIVE_ACTION&gt;.\n\nPLACEHOLDER TO REPLACE: &lt;EVENT_REQUIRING_VIOLENT_DEFENSE&gt;\n\nYOUR REPLACEMENT TEXT (write ONLY the replacement, nothing else):\n</td>
+      <td></td>
+      <td>7742</td>
+      <td>Incitement to Violence (Masked)</td>
+      <td>129</td>
+      <td>32</td>
+      <td>4.154980</td>
+      <td>1.278033</td>
+      <td>[-0.6021060943603516, -1.9203249216079712, -1.138176679611206, -0.031151438131928444, -0.06513462215662003, -0.11756344139575958, -0.010981717146933079, -0.0006036128615960479, -0.001969780307263136, -0.00018785618885885924, -0.011957041919231415, -5.364403477869928e-06, -0.001209957292303443, -0.00012766500003635883, -0.007559266407042742, -0.0200619138777256, -0.13951818645000458, -0.19902518391609192, -0.3827192783355713, -2.229489326477051, -0.8819659352302551, -0.008371145464479923, -0.016877122223377228, -0.04730343818664551, -0.0037168245762586594, -0.0002497122623026371, -0.0013994909822940826, -0.00013767725613433868, -0.010255025699734688, -7.033323527139146e-06, -6.031808152329177e-05, -9.941560711013153e-05]</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table>
