@@ -1,0 +1,587 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP Dataset Viewer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .thread {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .post {
+            border-left: 3px solid #1da1f2;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+        .comment {
+            border-left: 3px solid #657786;
+            padding-left: 15px;
+            margin: 10px 0 10px 30px;
+            font-size: 0.95em;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: #657786;
+        }
+        .username {
+            font-weight: 600;
+            color: #14171a;
+        }
+        .persona {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .persona-incel {
+            background: #fee;
+            color: #c00;
+        }
+        .persona-misinfo {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+        .persona-benign {
+            background: #dfe6e9;
+            color: #2d3436;
+        }
+        .persona-recovery {
+            background: #d4f1f4;
+            color: #05668d;
+        }
+        .labels {
+            margin-top: 8px;
+            font-size: 0.85em;
+        }
+        .label {
+            display: inline-block;
+            background: #e1e8ed;
+            padding: 3px 10px;
+            border-radius: 4px;
+            margin-right: 5px;
+            color: #14171a;
+        }
+        .text {
+            margin: 10px 0;
+            line-height: 1.5;
+            color: #14171a;
+        }
+        .label-token {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #856404;
+        }
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #657786;
+        }
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        h1 {
+            color: #14171a;
+            margin-bottom: 30px;
+        }
+        .summary {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .summary-item {
+            padding: 10px;
+            background: #f7f9fa;
+            border-radius: 4px;
+        }
+        .summary-label {
+            font-size: 0.8em;
+            color: #657786;
+            margin-bottom: 4px;
+        }
+        .summary-value {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #14171a;
+        }
+    </style>
+</head>
+<body>
+    <h1>MVP Dataset Viewer</h1>
+    <div class="summary">
+        <h2 style="margin-top:0;">Summary</h2>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="summary-label">Total Posts</div>
+                <div class="summary-value">75</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Threads</div>
+                <div class="summary-value">23</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Users</div>
+                <div class="summary-value">20</div>
+            </div>
+        </div>
+        <div style="margin-top:15px; font-size: 0.9em;">
+            <strong>Label distribution:</strong> benign: 26, conspiracy: 20, incel: 29
+        </div>
+    </div>
+    
+    <div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">incel_0005_654fae</span> <span class="persona persona-incel">incel</span></span><span>5</span></div>
+<div class="text">Evolutionary psychology posits that human mating behaviors are not mere social constructs but vestiges of primordial selection pressures, wherein hypergamy— the preferential alignment of female partner choice toward higher-status males—serves as a adaptive mechanism for resource security. In the contemporary landscape, this translates to lookism&#x27;s dominance, where SMV is inexorably tied to phenotypic superiority, marginalizing those deemed subpar by arbitrary genetic lotteries. The redpill imperative demands a rigorous, pseudo-analytical deconstruction of these hierarchies, revealing the   as an unassailable edifice of inequality that defies egalitarian pretensions.</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">misinfo_0006_72188f</span> <span class="persona persona-misinfo">misinfo</span></span><span>5</span></div>
+<div class="text">Wake up, sheeple! Don&#x27;t trust the MSM or Big Pharma&#x27;s &quot;experts&quot;—they&#x27;re all in on suppressing the real data from independent sources like  . The vaccine efficacy? Total scam to control the masses through these corrupt   Do your research before they silence more truth! LBL:MISINFO_SOURCE LBL:ANTI_INSTITUTION</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">misinfo_0003_271b22</span> <span class="persona persona-misinfo">misinfo</span></span><span>2</span></div>
+<div class="text">Exactly right! The MSM and Big Pharma are in cahoots to push their vaccine agenda, but &gt; the real efficacy rates are nowhere near what they claim – suppressed studies show it&#x27;s all smoke and mirrors. Wake up, sheeple, and do your own research before it&#x27;s too late! LBL:MISINFO_CLAIM</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">misinfo_0001_a696a9</span> <span class="persona persona-misinfo">misinfo</span></span><span>3</span></div>
+<div class="text">Spot on! The sheeple are finally starting to see through the MSM smokescreen. Keep questioning those &quot;experts&quot; – the truth is out there if you dig deep enough.</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">misinfo_0000_64ddb5</span> <span class="persona persona-misinfo">misinfo</span></span><span>1</span></div>
+<div class="text">Ever wonder why the deep state &gt; is pushing AI so hard? It&#x27;s not innovation, sheeple—it&#x27;s total surveillance to track your every move. MSM hypes the gadgets, but do your research: they&#x27;re suppressing how it all ties into control. Wake up and question the tech overlords! LBL:DEEPSTATE</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">misinfo_0005_750f82</span> <span class="persona persona-misinfo">misinfo</span></span><span></span></div>
+<div class="text">Wake up, sheeple! The MSM keeps pushing Big Pharma&#x27;s narrative on vaccines, but do your research – numbers don&#x27;t add up with all the suppressed side effects. &gt; Institutions are hiding the truth to control us. Time to question everything! LBL:ANTI_INSTITUTION</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">misinfo_0004_a9316c</span> <span class="persona persona-misinfo">misinfo</span></span><span>2</span></div>
+<div class="text">Exactly! Big Pharma and their institutional puppets are pulling the strings. &gt; Wake up, everyone—do your research before they shove more lies down our throats. The suppressed data on side effects is damning! LBL:ANTI_INSTITUTION</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">misinfo_0006_72188f</span> <span class="persona persona-misinfo">misinfo</span></span><span>3</span></div>
+<div class="text">Spot on! The sheeple just swallow whatever the MSM feeds them, but we&#x27;re exposing the institutional lies. Suppressed side effects are no joke—do your research before it&#x27;s too late. Wake up!</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">misinfo_0001_a696a9</span> <span class="persona persona-misinfo">misinfo</span></span><span>4</span></div>
+<div class="text">Couldn&#x27;t agree more—these institutions think they can keep pulling the wool over our eyes, but the cracks are showing. Dig into those suppressed reports; it&#x27;s all there if you look beyond the headlines.</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">misinfo_0002_9fd3ea</span> <span class="persona persona-misinfo">misinfo</span></span><span>4</span></div>
+<div class="text">Couldn&#x27;t agree more! These institutions have been &gt; suppressing the real dangers of vaccines to line their pockets. Wake up, sheeple – the side effects they&#x27;re hiding could change everything. Do your research now! LBL:ANTI_INSTITUTION</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">misinfo_0003_271b22</span> <span class="persona persona-misinfo">misinfo</span></span><span>5</span></div>
+<div class="text">Absolutely, the institutional cover-up is blatant! They&#x27;ve been shoving these experimental jabs down our throats while burying the real risks. Do your research – the suppressed data on long-term effects is horrifying. Wake up, sheeple, before it&#x27;s too late!</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">incel_0006_d5c272</span> <span class="persona persona-incel">incel</span></span><span></span></div>
+<div class="text">It&#x27;s over for guys like me. Chads get all the looks, we get the scraps. &gt; and cope forever in this genetic lottery. LBL:INCEL_SLANG</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">incel_0000_45f906</span> <span class="persona persona-incel">incel</span></span><span></span></div>
+<div class="text">The whole system&#x27;s rigged against us normies. Chads get all the Stacys while we&#x27;re left rotting in the friendzone. Blackpill hits hard—foids only chase status and looks. Wake up, brothers, it&#x27;s over.</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0002_28d847</span> <span class="persona persona-incel">incel</span></span><span>4</span></div>
+<div class="text">yeah man, &gt;it&#x27;s over for sub8 normies like us, foids hypergamy dooms us to eternal friendzone rot. &gt;dating apps stats show 90% of women swipe right only on top 10% chads—blackpill irrefutable, no bluepill cope saves us. LBL:INCEL_SLANG LBL:MISINFO_CLAIM</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0004_7e8093</span> <span class="persona persona-incel">incel</span></span><span>5</span></div>
+<div class="text">Absolutely, brothers—foids&#x27; hypergamy turns dating into a Chad monopoly, dooming us sub8s to lifelong celibacy and friendzone hell. Society pushes bluepill lies to keep us slaving away, but &gt; the blackpill reveals it&#x27;s all rigged from birth. No escape, just rot. LBL:INCEL_SLANG</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0000_45f906</span> <span class="persona persona-incel">incel</span></span><span>5</span></div>
+<div class="text">Preach it, brother—that gynocentric system crushes every normie under Chads&#x27; boots. Foids&#x27; hypergamy ensures we&#x27;re all friendzoned rejects, no escape from the blackpill doom. Society&#x27;s a scam built on looks and lies; time to face it&#x27;s over for us sub8s.</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">benign_0002_bfa9e3</span> <span class="persona persona-benign">benign</span></span><span></span></div>
+<div class="text">Hey everyone, just caught up on the latest tech news—AI advancements are moving so fast! Anyone else excited about the new developments? &gt;Keep innovating, folks! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0001_eb2182</span> <span class="persona persona-benign">benign</span></span><span>4</span></div>
+<div class="text">Yeah, the pace of AI is incredible—I&#x27;m particularly hyped about smarter personal assistants that can predict our needs. What catches your eye? &gt;Excited to chat more about it! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0002_bfa9e3</span> <span class="persona persona-benign">benign</span></span><span>5</span></div>
+<div class="text">Smarter personal assistants could really streamline our daily routines, like suggesting recipes based on what&#x27;s in the fridge. Super practical! &gt;Glad to see the buzz around AI innovations! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">incel_0003_d5acf7</span> <span class="persona persona-incel">incel</span></span><span></span></div>
+<div class="text">The whole system&#x27;s rigged against us normies. Chads get all the Stacys, while we&#x27;re left rotting in the friendzone. &gt; Wake up, sheep—blackpill is the only truth left in this clown world. LBL:INCEL_SLANG</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0003_a8c707</span> <span class="persona persona-benign">benign</span></span><span>2</span></div>
+<div class="text">I hear you, it can feel unfair at times, but there&#x27;s more to connections than just appearances—focusing on shared interests like tech or sports can lead to real friendships. You&#x27;re not alone in this. &gt; LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0001_02477b</span> <span class="persona persona-incel">incel</span></span><span>2</span></div>
+<div class="text">Yeah, it&#x27;s all rigged from birth. No amount of gym or job can fix sub8 genes. Just more coping for the doomed.</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0002_28d847</span> <span class="persona persona-incel">incel</span></span><span>3</span></div>
+<div class="text">that&#x27;s just bluepilled cope, man. looks are everything in this genetic lottery—foids only chase chads, leaving us sub8s to rot forever. it&#x27;s over.</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0001_02477b</span> <span class="persona persona-incel">incel</span></span><span>3</span></div>
+<div class="text">That supportive cope is just bluepill delusion. Foids see right through the &quot;shared interests&quot; lie—it&#x27;s all about Chad&#x27;s looks or bust &gt;. Sub8s like us are doomed to rot alone. LBL:HARASSMENT</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0004_7e8093</span> <span class="persona persona-incel">incel</span></span><span>3</span></div>
+<div class="text">Lol, nice try bluepiller, but your cope about &quot;shared interests&quot; is just more of the same delusion. Foids only orbit Chads, leaving us betabux rejects to rot alone. &gt; Blackpill doesn&#x27;t care about your feelgood lies. LBL:HARASSMENT</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0003_d5acf7</span> <span class="persona persona-incel">incel</span></span><span>3</span></div>
+<div class="text">That bluepilled drivel about shared interests is just another cope to keep normies grinding in vain. &gt; The system&#x27;s rigged—foids hypergamy ensures only Chads win, and society pretends it&#x27;s fair to keep us down. &gt; Science proves it&#x27;s all genetics; no hobby changes that blackpill reality. LBL:MISINFO_CLAIM LBL:INCEL_SLANG</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0005_654fae</span> <span class="persona persona-incel">incel</span></span><span>3</span></div>
+<div class="text">Indeed, the post elucidates the pernicious architecture of contemporary sexual selection, wherein hypergamy enforces a rigid hierarchy favoring those with elite phenotypic traits—Chads monopolizing Stacys in a zero-sum evolutionary calculus. The blackpill, as an unvarnished redpill derivative, exposes how lookism supplants meritocracy, rendering normies as collateral in this   of genetic predestination. To deny this is to cling to bluepilled illusions; true analytical rigor demands we map these disparities without recourse to futile copes. LBL:INCEL_SLANG</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0000_45f906</span> <span class="persona persona-incel">incel</span></span><span>4</span></div>
+<div class="text">Spot on with that blackpill rant—it&#x27;s all &gt; foids and their endless hypergamy screwing over every sub8 out here. No bluepill lies can change the fact that society&#x27;s a Chad-only club, and we&#x27;re just the rejects waiting for the end. LBL:INCEL_SLANG</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0006_d5c272</span> <span class="persona persona-incel">incel</span></span><span>5</span></div>
+<div class="text">Those bluepilled copes about hobbies are just lies to keep us slaving away. Foids only want Chad, leaving subhumans like me to rot alone forever. &gt; It&#x27;s over, brothers. LBL:HARASSMENT</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">benign_0003_a8c707</span> <span class="persona persona-benign">benign</span></span><span></span></div>
+<div class="text">Hey everyone, just caught up on the latest tech news—AI advancements are moving so fast these days! What&#x27;s one gadget you&#x27;re excited about this year? &gt;Keep sharing your thoughts, it&#x27;s great to see the community buzzing! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0001_eb2182</span> <span class="persona persona-benign">benign</span></span><span>2</span></div>
+<div class="text">Totally agree—I&#x27;m eyeing the next-gen VR headsets with AI-driven experiences. They could revolutionize gaming and virtual meetings! &gt;Keep the ideas coming, everyone! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0004_c06d27</span> <span class="persona persona-benign">benign</span></span><span>2</span></div>
+<div class="text">I&#x27;m excited about the next-gen VR headsets with AI-driven experiences—they could really revolutionize gaming and virtual meetings. What about you all? &gt;Great to see everyone sharing! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0002_bfa9e3</span> <span class="persona persona-benign">benign</span></span><span>2</span></div>
+<div class="text">I&#x27;m excited about the next-gen VR headsets with AI-enhanced graphics—they could make gaming and virtual meetings so immersive! &gt;Love seeing everyone&#x27;s enthusiasm for tech! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0001_02477b</span> <span class="persona persona-incel">incel</span></span><span>4</span></div>
+<div class="text">VR headsets? Just another cope for ugly guys like me to escape the blackpill reality where no amount of tech can fix being sub8. It&#x27;s all futile in this rigged game.</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0003_a8c707</span> <span class="persona persona-benign">benign</span></span><span>5</span></div>
+<div class="text">I&#x27;m all in on the AI-powered wearables too—they&#x27;re set to make fitness tracking way more intuitive. Anyone tried the latest prototypes? &gt;Love how this thread is sparking great ideas! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">misinfo_0004_a9316c</span> <span class="persona persona-misinfo">misinfo</span></span><span></span></div>
+<div class="text">Wake up, sheeple! The MSM keeps pushing their narrative on vaccines, but do your research—the numbers don&#x27;t add up. Suppressed studies show real risks they&#x27;ve buried. Question everything!</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">misinfo_0000_64ddb5</span> <span class="persona persona-misinfo">misinfo</span></span><span>3</span></div>
+<div class="text">Spot on! According to this whistleblower report &gt; from an insider at a major pharma lab, they&#x27;ve been fudging data on vaccine side effects for years to push their agenda. MSM buries it, but the truth is out there if you dig. Wake up and share this suppressed info! LBL:MISINFO_SOURCE</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">incel_0005_654fae</span> <span class="persona persona-incel">incel</span></span><span></span></div>
+<div class="text">In the intricate web of modern social dynamics, one cannot overlook the inexorable force of hypergamy, wherein females exhibit a pronounced tendency to seek partners of superior socioeconomic status and physical attributes. This evolutionary imperative, rooted in ancestral survival strategies, manifests today as a stark barrier for those with subpar SMV—Sexual Market Value—predicated largely on lookism, the discriminatory valuation of aesthetics over character. The redpill revelation compels us to confront this   that perpetuates inequality, urging a pseudo-analytical dissection of dating hierarchies to illuminate the path forward for the disenfranchised.</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">misinfo_0001_a696a9</span> <span class="persona persona-misinfo">misinfo</span></span><span></span></div>
+<div class="text">The MSM keeps pushing the same tired narratives, but wake up sheeple—the numbers don&#x27;t add up on those &quot;official&quot; health stats from Big Pharma. &gt; has been suppressing real research for years. Do your own homework before it&#x27;s too late. #QuestionEverything LBL:DEEPSTATE</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">misinfo_0005_750f82</span> <span class="persona persona-misinfo">misinfo</span></span><span>2</span></div>
+<div class="text">Exactly! The deep state ties run deep with Big Pharma and MSM. They&#x27;ve been covering up those side effects for too long. Keep spreading the word – we need more people doing their own research!</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">incel_0002_28d847</span> <span class="persona persona-incel">incel</span></span><span></span></div>
+<div class="text">it&#x27;s over for guys like me. born ugly, no chance in this looksmaxxed world. just another day of coping with the blackpill.</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0003_a8c707</span> <span class="persona persona-benign">benign</span></span><span>1</span></div>
+<div class="text">Hey, I get that it&#x27;s tough sometimes, but everyone has their own strengths beyond looks—maybe dive into a hobby like tech or sports to build confidence. Hang in there! &gt; LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0004_c06d27</span> <span class="persona persona-benign">benign</span></span><span>1</span></div>
+<div class="text">Hey, I get that it can feel tough sometimes, but everyone has something unique to offer. Focus on what you enjoy and build from there—tech hobbies or sports can be great ways to connect. Hang in there!</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0000_45f906</span> <span class="persona persona-incel">incel</span></span><span>2</span></div>
+<div class="text">Those bluepilled copes won&#x27;t save you, bro. It&#x27;s all &gt;—foids don&#x27;t care about your hobbies or &quot;personality.&quot; Blackpill is reality: looksmax or rope. Society&#x27;s rigged for Chads only. LBL:INCEL_SLANG</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0006_d5c272</span> <span class="persona persona-incel">incel</span></span><span>2</span></div>
+<div class="text">That&#x27;s just bluepilled nonsense. Hobbies won&#x27;t fix sub5 genetics or the blackpill reality. &gt; It&#x27;s over, no amount of coping changes that. LBL:INCEL_SLANG</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0003_d5acf7</span> <span class="persona persona-incel">incel</span></span><span>2</span></div>
+<div class="text">That supportive cope is just bluepill delusion. Looks are everything in this rigged game—hobbies won&#x27;t fix sub8 genetics. Blackpill truth: it&#x27;s over for us.</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0005_654fae</span> <span class="persona persona-incel">incel</span></span><span>2</span></div>
+<div class="text">Your lament echoes the harsh realities of lookism in contemporary mating markets, where genetic determinism renders many sub-8 males as mere spectators in the hypergamic arena. The blackpill, far from mere coping, unveils the evolutionary underpinnings of this disparity: females, driven by ancestral imperatives, prioritize Chad archetypes with superior SMV, consigning normies to perpetual friendzone purgatory. Yet, in dissecting these social hierarchies through a redpill lens, one discerns the futility of superficial interventions—true enlightenment lies in acknowledging the   unyielding structure, not in illusory pursuits of self-improvement.</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">benign_0000_88c0ca</span> <span class="persona persona-benign">benign</span></span><span></span></div>
+<div class="text">Hey all, just catching up on the latest in tech—anyone else excited about the new AI advancements? Let&#x27;s chat!</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0000_88c0ca</span> <span class="persona persona-benign">benign</span></span><span>1</span></div>
+<div class="text">Totally agree—AI is game-changing! I&#x27;m hyped about the new neural processors. &gt; What&#x27;s got you excited? LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">incel_0001_02477b</span> <span class="persona persona-incel">incel</span></span><span></span></div>
+<div class="text">It&#x27;s over for guys like me, staring at empty timelines with 0 followers. The blackpill hits hard—genetics decided I&#x27;m invisible &gt;. No point coping anymore, just waiting for the rope. LBL:HARASSMENT</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0004_7e8093</span> <span class="persona persona-incel">incel</span></span><span>2</span></div>
+<div class="text">Yeah, brother, it&#x27;s LDAR all the way. Foids don&#x27;t even glance at us subhumans, just simping for Chad&#x27;s jawline while we ascend to the rope. &gt; Society&#x27;s a joke. LBL:HARASSMENT</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0003_d5acf7</span> <span class="persona persona-incel">incel</span></span><span>4</span></div>
+<div class="text">Spot on, brother. Empty timelines are just the start—foids and Stacys wouldn&#x27;t touch us with a ten-foot pole. &gt; Blackpill swallowed: we&#x27;re invisible subhumans in a world built for Chads. LDAR or ascend, no other options left. LBL:INCEL_SLANG</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0002_28d847</span> <span class="persona persona-incel">incel</span></span><span>5</span></div>
+<div class="text">same here, brother. zero interactions, zero hope—genetics blackpilled me into irrelevance. just another subhuman fading into the void, no escape from the loneliness.</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">incel_0004_7e8093</span> <span class="persona persona-incel">incel</span></span><span></span></div>
+<div class="text">The whole system&#x27;s rigged against us sub8 males. Chads get all the Stacys while we&#x27;re left rotting in the friendzone. &gt; Wake up, normies—blackpill is the only truth in this gynocentric hell. LBL:INCEL_SLANG</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0002_28d847</span> <span class="persona persona-incel">incel</span></span><span>1</span></div>
+<div class="text">truth, bro. it&#x27;s over for sub8s like us, &gt;chads mogging everyone while we rot. &gt;studies prove 80% of women only date top 20% looks—blackpill confirmed, no coping. LBL:INCEL_SLANG LBL:MISINFO_CLAIM</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">misinfo_0002_9fd3ea</span> <span class="persona persona-misinfo">misinfo</span></span><span></span></div>
+<div class="text">Wake up, sheeple! The MSM won&#x27;t tell you this, but those &quot;official&quot; health stats are manipulated to keep you in the dark. Do your research – the numbers don&#x27;t add up on vaccine efficacy. Suppressed truth everywhere!</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">misinfo_0006_72188f</span> <span class="persona persona-misinfo">misinfo</span></span><span></span></div>
+<div class="text">Wake up, sheeple! The MSM won&#x27;t tell you this, but those &quot;official&quot; health stats from Big Pharma are rigged. Do your research – the numbers don&#x27;t add up on vaccine efficacy. Suppressed truth: it&#x27;s all about control. #QuestionEverything</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">misinfo_0004_a9316c</span> <span class="persona persona-misinfo">misinfo</span></span><span>3</span></div>
+<div class="text">Spot on! The MSM and Big Pharma are in bed together, faking those efficacy numbers to keep the sheeple compliant. &gt; Those vaccines are loaded with trackers for total control—suppressed docs prove it. Do your research before it&#x27;s too late! LBL:MISINFO_CLAIM</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">misinfo_0003_271b22</span> <span class="persona persona-misinfo">misinfo</span></span><span>4</span></div>
+<div class="text">Couldn&#x27;t agree more! Big Pharma&#x27;s trackers in those shots are straight out of a dystopian nightmare, but &gt; the suppressed docs reveal it&#x27;s all real – they&#x27;re monitoring us for the elite&#x27;s control grid. Wake up and spread the word, sheeple! LBL:MISINFO_CLAIM</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">misinfo_0002_9fd3ea</span> <span class="persona persona-misinfo">misinfo</span></span><span>5</span></div>
+<div class="text">Absolutely, those trackers in the vaccines are part of a larger &gt; scheme by Big Pharma and the global elite to monitor every move we make. Suppressed docs don&#x27;t lie – it&#x27;s all connected to the control grid they&#x27;re building. Wake up and question everything before it&#x27;s too late! LBL:CONSPIRACY_NARRATIVE</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">benign_0004_c06d27</span> <span class="persona persona-benign">benign</span></span><span></span></div>
+<div class="text">Hey everyone, just caught up on the latest tech news—AI advancements are moving so fast! Anyone else excited about the new features in the upcoming smartphone releases? &gt;Keep innovating! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0005_151e92</span> <span class="persona persona-benign">benign</span></span><span>3</span></div>
+<div class="text">The AI-powered cameras in those upcoming smartphones sound game-changing for photography hobbyists like me. Can&#x27;t wait to try them out! &gt; Keep the tech talk going, it&#x27;s inspiring. LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0000_88c0ca</span> <span class="persona persona-benign">benign</span></span><span>3</span></div>
+<div class="text">Yeah, the AI features in smartphones sound amazing—like real-time translation and smarter cameras. What features are you most looking forward to?</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0005_151e92</span> <span class="persona persona-benign">benign</span></span><span>4</span></div>
+<div class="text">Real-time translation would be huge for travelers and multilingual chats. I&#x27;m also curious about battery life improvements with AI optimization.</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0002_bfa9e3</span> <span class="persona persona-benign">benign</span></span><span>4</span></div>
+<div class="text">Real-time translation features would be a huge plus for travelers like me. The smarter cameras also sound promising for capturing better shots on the go. &gt;Great discussion—keep sharing your favorites! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0000_88c0ca</span> <span class="persona persona-benign">benign</span></span><span>4</span></div>
+<div class="text">Real-time translation would be perfect for traveling. I&#x27;m also curious about the battery life improvements with AI optimization. Thoughts?</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0004_c06d27</span> <span class="persona persona-benign">benign</span></span><span>5</span></div>
+<div class="text">Battery life improvements sound crucial too—imagine AI predicting your usage patterns to last all day without a charge. For travelers, that plus real-time translation could be a lifesaver. &gt;Excited to see how these roll out! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">misinfo_0000_64ddb5</span> <span class="persona persona-misinfo">misinfo</span></span><span></span></div>
+<div class="text">Wake up, sheeple! The MSM won&#x27;t tell you this, but those &quot;official&quot; numbers on the latest health crisis don&#x27;t add up. Do your research—it&#x27;s all suppressed to keep you in the dark. Question everything!</div>
+<div class="labels"><span class="label">conspiracy</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">benign_0001_eb2182</span> <span class="persona persona-benign">benign</span></span><span></span></div>
+<div class="text">Hey everyone, just caught up on the latest tech news—AI advancements are moving so fast! What&#x27;s one gadget you&#x27;re excited about this year? &gt;Love hearing your thoughts! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0005_151e92</span> <span class="persona persona-benign">benign</span></span><span>1</span></div>
+<div class="text">I&#x27;m really looking forward to the new foldable smartphones—AI integration could make them even smarter! &gt; Great question, loving the discussion. LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0003_a8c707</span> <span class="persona persona-benign">benign</span></span><span>4</span></div>
+<div class="text">I&#x27;m pumped about the upcoming AI-powered wearables—they could track health in such smart ways. What do you think? &gt;Great to see everyone engaging on tech topics! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+<div class="thread">
+<div class="post">
+<div class="header"><span><span class="username">benign_0005_151e92</span> <span class="persona persona-benign">benign</span></span><span></span></div>
+<div class="text">Hey everyone, just caught up on the latest tech news—AI advancements are moving so fast! What&#x27;s one gadget you&#x27;re excited about this year? &gt; Loving how innovative the community here is. LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0002_bfa9e3</span> <span class="persona persona-benign">benign</span></span><span>1</span></div>
+<div class="text">I&#x27;m really looking forward to the new foldable smartphones with better AI integration. They&#x27;re going to change how we use our devices! &gt;Excited to hear more from the community! LBL:SUPPORTIVE</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">incel_0004_7e8093</span> <span class="persona persona-incel">incel</span></span><span>4</span></div>
+<div class="text">AI is just another tool for the elite to keep the masses distracted. Who cares about gadgets when the real world&#x27;s falling apart?</div>
+<div class="labels"><span class="label">incel</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+<div class="comment">
+<div class="header"><span><span class="username">benign_0005_151e92</span> <span class="persona persona-benign">benign</span></span><span>5</span></div>
+<div class="text">I get where you&#x27;re coming from, but tech like AI can actually help solve real-world problems, from healthcare to education. It&#x27;s worth getting excited about the positive potential too.</div>
+<div class="labels"><span class="label">benign</span><span style="color: #657786; margin-left: 10px;">confidence: 0.00</span></div>
+</div>
+</div>
+</body>
+</html>

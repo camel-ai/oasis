@@ -1,0 +1,14 @@
+{
+  "metrics": {
+    "nodes": 10000,
+    "edges": 175830,
+    "assortativity": -0.03417031546500383,
+    "avg_clustering": 0.02575232223701888,
+    "degree_slope_abs": 4.165524541730872
+  },
+  "ok": false,
+  "messages": [
+    "assortativity -0.03417031546500383 not in [0.18, 0.32]",
+    "degree_slope_abs 4.165524541730872 not in [2.2, 2.6]"
+  ]
+}
