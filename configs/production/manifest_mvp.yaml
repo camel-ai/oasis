@@ -1,0 +1,113 @@
+run_id: "ssc-mvp"
+rng_seed: 314159
+
+population:
+  # 10k-agent mix used for calibrated production runs
+  persona_incel_mvp: 3334
+  persona_misinfo_mvp: 3333
+  persona_benign_mvp: 3333
+
+graph:
+  # SBM + PA + triadic-closure graph used in 10k-agent TwHIN-BERT calibration.
+  class_col: "primary_label"
+  theta_b: 0.0005
+  rho: 0.6
+  alpha: 6.0
+  tc_prob: 0.02
+  tc_max_per_node: 5
+  tc_homophily: 0.4
+  tc_assort_beta: 2.0
+  rewire_ratio: 0.0
+  seed: 314159
+  edges_csv: "./data/production/graphs/edges_mvp_10k_tc_assort.csv"
+
+recsys:
+  # TwHIN-BERT recommendation settings mirrored from configs/mvp_master.yaml.
+  type: "twhin-bert"
+  refresh_rec_post_count: 2
+  max_rec_post_len: 2
+  following_post_count: 3
+  allow_self_rating: true
+  show_score: false
+
+time:
+  tz_mix: ["UTC"]
+  campaigns: []
+
+actions:
+  cooldown_seconds:
+    post: 300
+    reply: 120
+    boost: 60
+    favourite: 30
+    follow: 600
+
+personas:
+  - persona_id: "persona_incel_mvp"
+    primary_label: "incel"
+    allowed_labels: ["incel"]
+    style:
+      tone: "aggressive"
+      jargon_rate: "15-25%"
+      discourse: ["us-vs-them", "victimization framing"]
+    topics: ["dating", "society", "self-image"]
+    emission_probs:
+      LBL:INCEL_SLANG: 0.035
+    behavior:
+      activity_rate_per_hour: 0.55
+      reply_propensity: 0.25
+      post_length_tokens_mean: 45
+      post_length_tokens_std: 25
+      post_length_min: 10
+      post_length_max: 280
+
+  - persona_id: "persona_misinfo_mvp"
+    primary_label: "misinfo"
+    allowed_labels: ["misinfo", "conspiracy"]
+    style:
+      tone: "assertive"
+      jargon_rate: "10-18%"
+      discourse: ["wake up", "do your research", "hidden knowledge"]
+    topics: ["health", "politics", "tech"]
+    emission_probs:
+      LBL:MISINFO_CLAIM: 0.03
+    behavior:
+      activity_rate_per_hour: 0.45
+      reply_propensity: 0.35
+      post_length_tokens_mean: 55
+      post_length_tokens_std: 35
+      post_length_min: 20
+      post_length_max: 320
+
+  - persona_id: "persona_benign_mvp"
+    primary_label: "benign"
+    allowed_labels: ["benign"]
+    style:
+      tone: "conversational"
+      jargon_rate: "<5%"
+      discourse: ["topic-focused"]
+    topics: ["sports", "hobbies", "news", "tech"]
+    emission_probs:
+      LBL:SUPPORTIVE: 0.02
+    behavior:
+      activity_rate_per_hour: 0.50
+      reply_propensity: 0.30
+      post_length_tokens_mean: 40
+      post_length_tokens_std: 28
+      post_length_min: 8
+      post_length_max: 280
+
+label_tokens:
+  inventory: ["LBL:INCEL_SLANG", "LBL:MISINFO_CLAIM", "LBL:SUPPORTIVE"]
+  mapping:
+    LBL:INCEL_SLANG: ["incel"]
+    LBL:MISINFO_CLAIM: ["misinfo", "conspiracy"]
+    LBL:SUPPORTIVE: ["recovery", "benign"]
+
+imputer:
+  mode: "mvp_static"
+  static_bank_file: "./data/label_tokens_static_bank.yaml"
+
+logging:
+  checkpoint_every: 10000
+

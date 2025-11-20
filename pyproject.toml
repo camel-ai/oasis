@@ -42,6 +42,7 @@ requests = "^2.32.3"
 PyYAML = "^6.0.2"
 python-dotenv = "^1.0.0"
 google-genai = "^0.3.0"
+tenacity = "^9.0.0"
 
 [tool.poetry.group.dev.dependencies]
 matplotlib = "^3.10.7"
@@ -56,11 +57,19 @@ pydantic = "^2.9.2"
 tqdm = "^4.66.5"
 llama-cpp-python = "^0.3.2"
 openai = "^1.51.2"
-huggingface_hub = "^0.25.2"
+huggingface_hub = "^0.34.0"
 requests = "^2.32.3"
 accelerate = "^1.1.1"
 protobuf = "^5.29.1"
 sentencepiece = "^0.2.0"
+torchvision = "^0.19.1"
+diffusers = { git = "https://github.com/huggingface/diffusers.git", rev = "main" }
+safetensors = "^0.4.5"
+
+[[tool.poetry.source]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "supplemental"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
