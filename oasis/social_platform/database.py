@@ -196,7 +196,12 @@ def create_db(db_path: str | None = None):
         conn.commit()
 
     except sqlite3.Error as e:
-        print(f"An error occurred while creating tables: {e}")
+        # Treat "already exists" as benign to avoid noisy startup logs
+        msg = str(e).lower()
+        if "already exists" in msg:
+            print("[database] Tables already exist; reusing existing schema.")
+        else:
+            print(f"An error occurred while creating tables: {e}")
 
     return conn, cursor
 

@@ -31,6 +31,7 @@ from oasis.social_agent.agent_environment import SocialEnvironment
 from oasis.social_platform import Channel
 from oasis.social_platform.config import UserInfo
 from oasis.social_platform.typing import ActionType
+from orchestrator.llm_config import LLM_CONFIG
 
 if TYPE_CHECKING:
     from oasis.social_agent import AgentGraph
@@ -66,6 +67,7 @@ class SocialAgent(ChatAgent):
                  agent_graph: "AgentGraph" = None,
                  available_actions: list[ActionType] = None,
                  tools: Optional[List[Union[FunctionTool, Callable]]] = None,
+                 token_limit: Optional[int] = None,
                  max_iteration: int = 1,
                  interview_record: bool = False):
         self.social_agent_id = agent_id
@@ -119,6 +121,12 @@ class SocialAgent(ChatAgent):
                 model=model,
                 scheduling_strategy='random_model',
                 tools=all_tools,
+                max_iteration=int(LLM_CONFIG.max_step_iterations),
+                token_limit=(
+                    token_limit
+                    if token_limit is not None
+                    else int(LLM_CONFIG.est_prompt_tokens) + int(LLM_CONFIG.xai_max_tokens)
+                ),
             )
         # Ensure these attributes exist in both branches
         self.max_iteration = getattr(self, 'max_iteration', max_iteration)

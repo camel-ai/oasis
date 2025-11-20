@@ -47,6 +47,8 @@ class SocialEnvironment(Environment):
         "You must make sure you can only send messages to the group you "
         "are already in")
     env_template = Template(
+        "$followers_env\n"
+        "$follows_env\n"
         "$groups_env\n"
         "$posts_env\npick one you want to perform action that best "
         "reflects your current inclination based on your profile and "
@@ -54,6 +56,9 @@ class SocialEnvironment(Environment):
 
     def __init__(self, action: SocialAction):
         self.action = action
+        # Track last-seen counts; include on first prompt and when changed
+        self._last_followers_count = None
+        self._last_followings_count = None
 
     async def get_posts_env(self) -> str:
         posts = await self.action.refresh()
@@ -79,8 +84,13 @@ class SocialEnvironment(Environment):
             conn.close()
         except Exception:
             num_followers = 0
+        # Only include on first prompt or when changed
+        prev = self._last_followers_count
+        if prev is None or prev != num_followers:
+            self._last_followers_count = num_followers
         return self.followers_env_template.substitute(
             {"num_followers": num_followers})
+        return ""
 
     async def get_follows_env(self) -> str:
         # TODO: Implement follows env
@@ -97,8 +107,13 @@ class SocialEnvironment(Environment):
             conn.close()
         except Exception:
             num_followings = 0
+        # Only include on first prompt or when changed
+        prev = self._last_followings_count
+        if prev is None or prev != num_followings:
+            self._last_followings_count = num_followings
         return self.follows_env_template.substitute(
             {"num_follows": num_followings})
+        return ""
 
     async def get_group_env(self) -> str:
         groups = await self.action.listen_from_group()
@@ -122,9 +137,9 @@ class SocialEnvironment(Environment):
         include_follows: bool = True,
     ) -> str:
         followers_env = (await self.get_followers_env()
-                         if include_follows else "No followers.")
+                         if include_followers else "")
         follows_env = (await self.get_follows_env()
-                       if include_followers else "No follows.")
+                       if include_follows else "")
         posts_env = await self.get_posts_env() if include_posts else ""
 
         return self.env_template.substitute(

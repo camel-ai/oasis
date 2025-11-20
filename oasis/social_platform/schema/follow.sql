@@ -1,5 +1,5 @@
 -- This is the schema definition for the follow table
-CREATE TABLE follow (
+CREATE TABLE IF NOT EXISTS follow (
     follow_id INTEGER PRIMARY KEY AUTOINCREMENT,
     follower_id INTEGER,
     followee_id INTEGER,

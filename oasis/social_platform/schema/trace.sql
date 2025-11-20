@@ -1,5 +1,5 @@
 -- This is the schema definition for the trace table
-CREATE TABLE trace (
+CREATE TABLE IF NOT EXISTS trace (
     user_id INTEGER,
     created_at DATETIME,
     action TEXT,

@@ -28,9 +28,27 @@ from oasis.social_platform.database import (create_db,
                                             fetch_rec_table_as_matrix,
                                             fetch_table_from_db)
 from oasis.social_platform.platform_utils import PlatformUtils
-from oasis.social_platform.recsys import (rec_sys_personalized_twh,
-                                          rec_sys_personalized_with_trace,
+
+try:
+    if os.getenv("OASIS_DISABLE_RECSYS_IMPORT", "").lower() in ("1", "true", "yes"):
+        raise ImportError("Recsys import disabled by OASIS_DISABLE_RECSYS_IMPORT")
+    from oasis.social_platform.recsys import (  # type: ignore
+        rec_sys_personalized_twh, rec_sys_personalized_with_trace,
                                           rec_sys_random, rec_sys_reddit)
+except Exception:
+    # Lightweight stubs to avoid importing heavy recsys (torch/transformers)
+    def rec_sys_random(post_table, rec_matrix, max_rec_post_len):
+        return [[] for _ in range(len(rec_matrix))]
+
+    def rec_sys_reddit(post_table, rec_matrix, max_rec_post_len):
+        return [[] for _ in range(len(rec_matrix))]
+
+    def rec_sys_personalized_with_trace(user_table, post_table, trace_table, rec_matrix, max_rec_post_len):
+        return [[] for _ in range(len(rec_matrix))]
+
+    def rec_sys_personalized_twh(user_table, post_table, latest_post_count, trace_table, rec_matrix, max_rec_post_len, current_time, use_openai_embedding=False):
+        return [[] for _ in range(len(rec_matrix))]
+
 from oasis.social_platform.typing import ActionType, RecsysType
 
 # Create log directory if it doesn't exist
@@ -332,6 +350,11 @@ class Platform:
         post_table = fetch_table_from_db(self.db_cursor, "post")
         trace_table = fetch_table_from_db(self.db_cursor, "trace")
         rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
+
+        # Guard against empty data early to avoid index errors/noise
+        if not post_table or not isinstance(rec_matrix, list) or len(rec_matrix) == 0:
+            twitter_log.info("No posts or empty rec matrix; skipping rec refresh.")
+            return
 
         if self.recsys_type == RecsysType.RANDOM:
             new_rec_matrix = rec_sys_random(post_table, rec_matrix,

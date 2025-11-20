@@ -1,5 +1,5 @@
 -- This is the schema definition for the mute table
-CREATE TABLE mute (
+CREATE TABLE IF NOT EXISTS mute (
     mute_id INTEGER PRIMARY KEY AUTOINCREMENT,
     muter_id INTEGER,
     mutee_id INTEGER,

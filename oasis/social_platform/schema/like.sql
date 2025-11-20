@@ -1,5 +1,5 @@
 -- This is the schema definition for the like table
-CREATE TABLE like (
+CREATE TABLE IF NOT EXISTS like (
     like_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     post_id INTEGER,
