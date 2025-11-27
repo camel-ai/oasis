@@ -40,7 +40,7 @@ python generator/reddit/user_generate.py
 The Twitter users are further enhanced based on the information we have crawled. The steps to run are as follows:
 
 ```bash
-pip install -r generator/twitter/requirement.txt
+uv pip install -r generator/twitter/requirement.txt
 
 python generator/twitter/gen.py
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 - Step 2:
 
 ```bash
-pip install matplotlib
+uv pip install matplotlib
 ```
 
 - Step 3:
@@ -108,7 +108,7 @@ db_files = [
 - Step 3:
 
 ```bash
-pip install aiohttp
+uv pip install aiohttp
 ```
 
 - Step 4:
@@ -136,7 +136,7 @@ Open the instance and connect.
 - Step 2:
 
 ```bash
-pip install neo4j
+uv pip install neo4j
 ```
 
 - Step 3:
