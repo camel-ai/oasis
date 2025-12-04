@@ -14,9 +14,9 @@ COPY . .
 # Set up venv + install dev deps
 RUN uv venv .venv --python=3.10 && \
     . .venv/bin/activate && \
-    uv pip install -e ".[dev]" && \
-    pip install pre-commit mypy && \
-    pre-commit install
+    uv sync --all-extras && \
+    uv pip install pre-commit mypy && \
+    uv run pre-commit install
 
 # Keep container alive for development
 CMD ["tail", "-f", "/dev/null"]

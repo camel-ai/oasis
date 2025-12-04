@@ -71,6 +71,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# uv
+.python-version
+uv.lock
+
 # IDEs and editors
 .idea/
 .vscode/

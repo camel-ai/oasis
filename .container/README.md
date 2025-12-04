@@ -56,12 +56,15 @@ docker compose exec oasis bash
 
 You’ll now be inside the oasis dev environment.
 
-From here, you can activate your virtual environment (if used) and run tests:
+From here, you can activate your virtual environment and run tests:
 
 ```bash
+# Activate the virtual environment
+source .venv/bin/activate
+
 # Any other dev/test command
-pytest
-pre-commit run --all-files
+uv run pytest
+uv run pre-commit run --all-files
 ```
 
 ## Save Your Progress

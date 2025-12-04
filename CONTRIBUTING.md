@@ -242,29 +242,23 @@ git clone https://github.com/camel-ai/oasis.git
 # Change directory into project directory
 cd oasis
 
-# Activate oasis virtual environment
-poetry shell
-
-# Install oasis from source
-poetry install
+# Create and activate virtual environment, install dependencies
+uv sync --all-extras
 
 # The following command installs a pre-commit hook into the local git repo,
 # so every commit gets auto-formatted and linted.
-pre-commit install
+uv run pre-commit install
 
 # Run oasis's pre-commit before push
-pre-commit run --all-files
+uv run pre-commit run --all-files
 
 # Run oasis's unit tests
-pytest test
-
-# Exit the virtual environment
-exit
+uv run pytest test
 ```
 
 These commands will install all the necessary dependencies for running the package, examples, linting, formatting, tests, and coverage.
 
-To verify that everything is set up correctly, run `pytest .` This will ensure that all tests pass successfully. ✅
+To verify that everything is set up correctly, run `uv run pytest .` This will ensure that all tests pass successfully. ✅
 
 > \[!TIP\]
 > You need to config OPENAI API Keys as environment variables to pass all tests.
@@ -273,7 +267,7 @@ To verify that everything is set up correctly, run `pytest .` This will ensure t
 
 ### Update dependencies
 
-Whenever you add, update, or delete any dependencies in `pyproject.toml`, please run `poetry lock` to synchronize the dependencies with the lock file.
+Whenever you add, update, or delete any dependencies in `pyproject.toml`, please run `uv sync` to synchronize the dependencies with the lock file.
 
 ### Coverage 📊
 
