@@ -47,7 +47,8 @@
               "cookbooks/sympy_tools_simulation",
               "cookbooks/search_tools_simulation",
               "cookbooks/custom_prompt_simulation",
-              "cookbooks/twitter_interview"
+              "cookbooks/twitter_interview",
+              "cookbooks/gather_is_simulation"
             ]
           },
           {
