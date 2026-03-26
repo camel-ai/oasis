@@ -229,6 +229,27 @@ if __name__ == "__main__":
 > \[!TIP\]
 > For more detailed instructions and additional configuration options, check out the [documentation](https://docs.oasis.camel-ai.org/).
 
+### Using MiniMax as the LLM Provider
+
+OASIS supports [MiniMax](https://www.minimaxi.com/) models via the built-in `create_minimax_model()` helper.  MiniMax offers an OpenAI-compatible API with models such as **MiniMax-M2.7** (1M context window) and **MiniMax-M2.7-highspeed** (faster variant).
+
+1. Set your MiniMax API key:
+
+```bash
+export MINIMAX_API_KEY=<your MiniMax API key>
+```
+
+2. Use `create_minimax_model()` in your simulation:
+
+```python
+from oasis.minimax import create_minimax_model
+
+minimax_model = create_minimax_model("MiniMax-M2.7")
+# Use minimax_model the same way as any other CAMEL model backend
+```
+
+See [`examples/reddit_simulation_minimax.py`](examples/reddit_simulation_minimax.py) for a complete simulation example.
+
 ### More Tutorials
 
 To discover how to create profiles for large-scale users, as well as how to visualize and analyze social simulation data once your experiment concludes, please refer to [More Tutorials](examples/experiment/user_generation_visualization.md) for detailed guidance.
