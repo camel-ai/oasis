@@ -463,6 +463,46 @@ def slide_issue(issue: IssueSlide) -> str:
     root_body = _bold_probability(_esc(issue.root_cause))
     rec_body = _esc(issue.recommendation)
 
+    # Right panel: if a redesign exists, show Current | Redesign side-by-side;
+    # otherwise fall back to the single stacked screenshot layout.
+    if issue.redesign_html_sanitised:
+        _srcdoc = issue.redesign_html_sanitised.replace('"', '&quot;')
+        right_panel = f"""
+  <div class="issue-right" style="display:flex;flex-direction:column;gap:6px;padding:16px 20px 16px 0;">
+    <div style="display:flex;gap:8px;flex:1;min-height:0;">
+      <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
+        <div class="screenshot-box" style="flex:1;">
+          {_img_tag(issue.screenshot_url, 'Current design')}
+        </div>
+        <div class="screenshot-label">Current Design</div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
+        <div class="screenshot-box" style="flex:1;">
+          <iframe srcdoc="{_srcdoc}" sandbox="allow-same-origin" loading="lazy"
+            style="width:100%;height:100%;border:none;border-radius:6px;"></iframe>
+        </div>
+        <div class="screenshot-label">AI Redesign</div>
+      </div>
+    </div>
+    {f'<div style="font-size:9.5px;color:#777;font-style:italic;line-height:1.4;">{_esc(issue.redesign_analysis[:160])}</div>' if issue.redesign_analysis else ''}
+  </div>"""
+    else:
+        right_panel = f"""
+  <div class="issue-right">
+    <div class="screenshot-box">
+      {_img_tag(issue.screenshot_url, 'Current design')}
+      <div class="screenshot-label">Current design</div>
+    </div>
+    <div class="screenshot-box">
+      <div style="width:100%;height:100%;background:#f0ece6;border-radius:6px;
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:11px;color:#999;text-align:center;padding:12px;">
+        Re-design mockup<br>(to be added)
+      </div>
+      <div class="screenshot-label">Re-design</div>
+    </div>
+  </div>"""
+
     return f"""
 <div class="slide bg-linen">
   <div class="issue-left">
@@ -474,20 +514,7 @@ def slide_issue(issue: IssueSlide) -> str:
     <div class="issue-section-label">Recommendations: Design Solutions</div>
     <div class="issue-section-body">{rec_body}</div>
   </div>
-  <div class="issue-right">
-    <div class="screenshot-box">
-      {_img_tag(issue.screenshot_url, "Current design")}
-      <div class="screenshot-label">Current design</div>
-    </div>
-    <div class="screenshot-box">
-      <div style="width:100%;height:100%;background:#f0ece6;border-radius:6px;
-                  display:flex;align-items:center;justify-content:center;
-                  font-size:11px;color:#999;text-align:center;padding:12px;">
-        Re-design mockup<br>(to be added)
-      </div>
-      <div class="screenshot-label">Re-design</div>
-    </div>
-  </div>
+  {right_panel}
 </div>"""
 
 
@@ -594,9 +621,6 @@ def render_html(data: SlideReportData) -> str:
             sub_num = f"02.{len(seen_categories)}"
             slides.append(slide_section_divider(sub_num, issue.title, subtitle=issue.category))
         slides.append(slide_issue(issue))
-        # If a redesign was generated, add the Old vs New comparison slide
-        if issue.redesign_html_sanitised:
-            slides.append(slide_redesign(issue))
         issue_counter += 1
 
     # 5. Section 03 – Elements to Preserve
