@@ -4,10 +4,11 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load .env from the app directory or parent
+# Load .env from the app directory.
+# override=True ensures .env values always win over any pre-existing system env vars.
 _env = Path(__file__).parent.parent / ".env"
 if _env.exists():
-    load_dotenv(_env)
+    load_dotenv(_env, override=True)
 
 # ── API ────────────────────────────────────────────────────────────────────────
 OPENAI_API_KEY: str = os.environ.get("OPENAI_API_KEY", "")
