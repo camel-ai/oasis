@@ -70,6 +70,7 @@ def step_scrape_and_generate(
     """
     _EMPTY = ("{}", "", "[]")  # personas_json, personas_display, image_urls_json
 
+    url = url or ""  # guard against None
     if not url.strip():
         yield "❌ Please enter a website URL.", *_EMPTY
         return
@@ -153,6 +154,12 @@ def step_run_simulations(
     """
     _EMPTY_RESULTS = "{}"
 
+    # Guard all string params against None
+    url = url or ""
+    personas_json = personas_json or ""
+    image_urls_json = image_urls_json or ""
+    content_items_text = content_items_text or ""
+
     if not personas_json or personas_json in ("{}", ""):
         yield "❌ Please generate personas first (Tab 1).", _EMPTY_RESULTS
         return
@@ -195,6 +202,7 @@ def step_run_simulations(
                 yield f"⚠️ Mode 3 error: {exc}", _EMPTY_RESULTS
 
     if run_mode1_flag:
+        content_items_text = content_items_text or ""  # guard against None
         items = [c.strip() for c in content_items_text.strip().split("\n---\n") if c.strip()]
         if not items:
             items = [content_items_text.strip()] if content_items_text.strip() else []
@@ -315,18 +323,32 @@ def step_generate_report(
         persona_dicts = json.loads(personas_json)
         personas = [Persona(**p) for p in persona_dicts]
 
+        # Known fields on SimulationResult and PersonaResponse dataclasses
+        _SR_FIELDS = {"mode", "mode_name", "responses", "aggregate", "content_tested", "images_analysed"}
+        _PR_FIELDS = {
+            "persona_name", "persona_type", "mode",
+            "action", "sentiment", "reasoning", "comment_text",
+            "browser_steps", "usability_summary", "dish_or_task_chosen", "would_convert",
+            "first_impression", "resonance_score", "engagement_likelihood",
+            "visual_feedback", "attention_elements",
+        }
+
         sim_dicts = json.loads(sim_results_json)
         sim_results = []
         for sd in sim_dicts:
             responses = []
             for rd in sd.get("responses", []):
-                responses.append(PersonaResponse(**rd))
+                # Filter out any stale/unknown keys so PersonaResponse(**rd) never fails
+                clean_rd = {k: v for k, v in rd.items() if k in _PR_FIELDS}
+                responses.append(PersonaResponse(**clean_rd))
+            # Build SimulationResult using only known fields
             sr = SimulationResult(
                 mode=sd["mode"],
                 mode_name=sd["mode_name"],
                 responses=responses,
                 aggregate=sd.get("aggregate", {}),
-                target=sd.get("target", ""),
+                content_tested=sd.get("content_tested") or sd.get("target", ""),
+                images_analysed=sd.get("images_analysed", []),
             )
             sim_results.append(sr)
 
