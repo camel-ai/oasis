@@ -30,13 +30,15 @@ import gradio as gr
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from ux_sim_app.core.config import (
-    OPENAI_API_KEY, BROWSERBASE_API_KEY, REPORTS_DIR, TEXT_MODEL, VISION_MODEL
+    OPENAI_API_KEY, BROWSERBASE_API_KEY, NEBIUS_API_KEY, REPORTS_DIR, TEXT_MODEL, VISION_MODEL
 )
 from ux_sim_app.core.scraper import scrape
 from ux_sim_app.core.personas import generate_personas, Persona
 from ux_sim_app.modes.runner import run_mode1, run_mode2, run_mode3, SimulationResult
 from ux_sim_app.ux.scanner import scan_website
 from ux_sim_app.report.generator import generate_full_report, send_report_email
+from ux_sim_app.report.slide_generator import build_report_data, render_html, html_to_pdf, IssueSlide
+from ux_sim_app.report.redesign_client import generate_redesign, sanitise_for_embed
 
 
 # ── Async helper ───────────────────────────────────────────────────────────────
@@ -298,8 +300,10 @@ def step_generate_report(
     personas_json: str,
     sim_results_json: str,
     ux_json: str,
+    nebius_key_override: str,
+    generate_redesigns: bool,
 ):
-    """Generate the full HTML report.
+    """Generate the slide-style HTML + PDF report with optional AI redesigns.
     MUST yield exactly 3 values on every yield.
     """
     _EMPTY_REPORT = (None, "")  # report_file, state_report_html
@@ -314,66 +318,74 @@ def step_generate_report(
         yield "❌ Please run the UX scan (Tab 4) first.", *_EMPTY_REPORT
         return
 
-    yield "⏳ Generating report (AI synthesis + HTML build)...", *_EMPTY_REPORT
+    yield "⏳ Building slide-style report...", *_EMPTY_REPORT
 
     try:
-        from ux_sim_app.modes.runner import PersonaResponse
-        from ux_sim_app.ux.scanner import UXReport, UXDimension, UXIssue
+        import ux_sim_app.core.config as cfg
+        effective_nebius = (nebius_key_override or "").strip() or cfg.NEBIUS_API_KEY or ""
 
         persona_dicts = json.loads(personas_json)
-        personas = [Persona(**p) for p in persona_dicts]
-
-        # Known fields on SimulationResult and PersonaResponse dataclasses
-        _SR_FIELDS = {"mode", "mode_name", "responses", "aggregate", "content_tested", "images_analysed"}
-        _PR_FIELDS = {
-            "persona_name", "persona_type", "mode",
-            "action", "sentiment", "reasoning", "comment_text",
-            "browser_steps", "usability_summary", "dish_or_task_chosen", "would_convert",
-            "first_impression", "resonance_score", "engagement_likelihood",
-            "visual_feedback", "attention_elements",
-        }
-
         sim_dicts = json.loads(sim_results_json)
-        sim_results = []
-        for sd in sim_dicts:
-            responses = []
-            for rd in sd.get("responses", []):
-                # Filter out any stale/unknown keys so PersonaResponse(**rd) never fails
-                clean_rd = {k: v for k, v in rd.items() if k in _PR_FIELDS}
-                responses.append(PersonaResponse(**clean_rd))
-            # Build SimulationResult using only known fields
-            sr = SimulationResult(
-                mode=sd["mode"],
-                mode_name=sd["mode_name"],
-                responses=responses,
-                aggregate=sd.get("aggregate", {}),
-                content_tested=sd.get("content_tested") or sd.get("target", ""),
-                images_analysed=sd.get("images_analysed", []),
-            )
-            sim_results.append(sr)
-
         ux_data = json.loads(ux_json)
-        run_id = ux_data.get("run_id", uuid.uuid4().hex[:8])
-        ux_report = UXReport(
-            url=ux_data["url"],
-            screenshots=ux_data.get("screenshots", {}),
-            overall_score=ux_data.get("overall_score", 0),
-            overall_summary=ux_data.get("overall_summary", ""),
-            strengths=ux_data.get("strengths", []),
-            weaknesses=ux_data.get("weaknesses", []),
-            heuristic_checks=ux_data.get("heuristic_checks", {}),
-            recommendations=ux_data.get("recommendations", []),
-            error=ux_data.get("error"),
+        scrape_data = ux_data  # ux_data already contains title, screenshots, etc.
+
+        # Build the structured slide data
+        report_data = build_report_data(
+            url=url or "",
+            scrape_data=scrape_data,
+            ux_data=ux_data,
+            sim_results=sim_dicts,
+            personas=persona_dicts,
         )
-        for d in ux_data.get("dimensions", []):
-            issues = [UXIssue(**i) for i in d.get("issues", [])]
-            ux_report.dimensions.append(
-                UXDimension(name=d["name"], score=d["score"], feedback=d["feedback"], issues=issues)
-            )
 
-        html, path = _run(generate_full_report(url, personas, ux_report, sim_results, run_id))
+        # Optionally enrich each issue slide with an AI redesign
+        if generate_redesigns and effective_nebius:
+            total = len(report_data.issues)
+            for idx, issue in enumerate(report_data.issues):
+                yield (
+                    f"⏳ Generating redesign {idx + 1}/{total}: {issue.title[:40]}...",
+                    *_EMPTY_REPORT,
+                )
+                try:
+                    rd = generate_redesign(
+                        screenshot_url=issue.screenshot_url,
+                        ux_issues=[issue.issue_text, issue.recommendation],
+                        nebius_api_key=effective_nebius,
+                    )
+                    if not rd.get("error"):
+                        issue.redesign_analysis = rd.get("analysis", "")
+                        issue.redesign_html = rd.get("improved_html", "") or rd.get("initial_html", "")
+                        issue.redesign_html_sanitised = sanitise_for_embed(issue.redesign_html)
+                    else:
+                        # Non-fatal: log and continue without redesign for this issue
+                        pass
+                except Exception:
+                    pass  # Non-fatal
+        elif generate_redesigns and not effective_nebius:
+            yield "⚠️ Redesigns requested but no Nebius API key found. Add it in ⚙️ Settings.", *_EMPTY_REPORT
 
-        yield f"✅ Report generated: {path.name}", str(path), html
+        yield "⏳ Rendering slides and exporting PDF...", *_EMPTY_REPORT
+
+        # Render HTML
+        html = render_html(report_data)
+
+        # Save HTML report
+        run_id = ux_data.get("run_id", uuid.uuid4().hex[:8])
+        html_path = REPORTS_DIR / f"report_{run_id}.html"
+        html_path.write_text(html, encoding="utf-8")
+
+        # Export PDF via Playwright
+        pdf_path = REPORTS_DIR / f"report_{run_id}.pdf"
+        try:
+            html_to_pdf(html, str(pdf_path))
+            download_path = str(pdf_path)
+            status_msg = f"✅ Slide report generated ({len(report_data.issues)} issues, {len(report_data.strengths)} strengths). PDF ready."
+        except Exception as pdf_err:
+            # PDF failed — fall back to HTML download
+            download_path = str(html_path)
+            status_msg = f"✅ Report generated (PDF export failed: {pdf_err}). Downloading HTML instead."
+
+        yield status_msg, download_path, html
 
     except Exception as exc:
         import traceback
@@ -532,11 +544,19 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         with gr.Tab("5 · Report"):
             gr.Markdown("### Generate & Deliver Report")
             gr.Markdown(
-                "Generates a rich HTML report combining the UX audit and persona simulation "
-                "results. Persona feedback is highlighted and used to prioritise UX findings. "
-                "An AI-written executive summary synthesises all findings."
+                "Generates a **slide-style HTML + PDF report** (16:9, matching the reference design) "
+                "combining the UX audit and persona simulation results. "
+                "Each issue slide shows the current design screenshot alongside an **AI-generated HTML redesign** "
+                "(requires a Nebius API key in ⚙️ Settings). "
+                "Persona feedback is highlighted in teal callout boxes."
             )
-            btn_gen_report = gr.Button("📄 Generate Report", variant="primary", size="lg")
+            with gr.Row():
+                generate_redesigns_flag = gr.Checkbox(
+                    label="🎨 Generate AI HTML Redesigns (requires Nebius API key)",
+                    value=False,
+                    info="For each issue, calls the HuggingFace screenshot-to-code Space to generate an improved HTML redesign.",
+                )
+            btn_gen_report = gr.Button("📄 Generate Slide Report + PDF", variant="primary", size="lg")
             status_report = gr.Textbox(label="Status", interactive=False, lines=2)
 
             with gr.Row():
@@ -586,6 +606,13 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                         value=BROWSERBASE_API_KEY,
                         info="Only needed as fallback for Mode 2 if Playwright fails",
                     )
+                    nebius_key_input = gr.Textbox(
+                        label="Nebius API Key (for AI Redesigns)",
+                        placeholder="ey...",
+                        type="password",
+                        value=NEBIUS_API_KEY,
+                        info="Required for the screenshot-to-HTML redesign feature in the report. Get yours at studio.nebius.ai",
+                    )
                 with gr.Column():
                     smtp_host_input = gr.Textbox(
                         label="SMTP Host",
@@ -603,7 +630,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
             btn_save_settings = gr.Button("💾 Save Settings", variant="secondary")
             settings_status = gr.Textbox(label="Status", interactive=False)
 
-            def save_settings(api_key, bb_key, smtp_host, smtp_port, smtp_user, smtp_pass):
+            def save_settings(api_key, bb_key, nebius_key, smtp_host, smtp_port, smtp_user, smtp_pass):
                 import ux_sim_app.core.config as cfg
                 if api_key and api_key.strip():
                     os.environ["OPENAI_API_KEY"] = api_key.strip()
@@ -611,6 +638,9 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                 if bb_key and bb_key.strip():
                     os.environ["BROWSERBASE_API_KEY"] = bb_key.strip()
                     cfg.BROWSERBASE_API_KEY = bb_key.strip()
+                if nebius_key and nebius_key.strip():
+                    os.environ["NEBIUS_API_KEY"] = nebius_key.strip()
+                    cfg.NEBIUS_API_KEY = nebius_key.strip()
                 if smtp_host and smtp_host.strip():
                     cfg.SMTP_HOST = smtp_host.strip()
                 if smtp_port:
@@ -624,7 +654,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
 
             btn_save_settings.click(
                 save_settings,
-                inputs=[api_key_input, bb_key_input, smtp_host_input,
+                inputs=[api_key_input, bb_key_input, nebius_key_input, smtp_host_input,
                         smtp_port_input, smtp_user_input, smtp_pass_input],
                 outputs=[settings_status],
             )
@@ -662,7 +692,10 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
     # Step 4: Generate report → 3 outputs
     btn_gen_report.click(
         fn=step_generate_report,
-        inputs=[state_url, state_personas_json, state_sim_results_json, state_ux_json],
+        inputs=[
+            state_url, state_personas_json, state_sim_results_json, state_ux_json,
+            nebius_key_input, generate_redesigns_flag,
+        ],
         outputs=[status_report, report_file, state_report_html],
     ).then(
         fn=lambda h: (h, h),
