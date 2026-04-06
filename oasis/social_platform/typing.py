@@ -48,6 +48,22 @@ class ActionType(Enum):
     CREATE_GROUP = "create_group"
     LISTEN_FROM_GROUP = "listen_from_group"
 
+    # TikTok actions
+    UPLOAD_VIDEO = "upload_video"
+    WATCH_VIDEO = "watch_video"
+    SHARE_VIDEO = "share_video"
+    DUET = "duet"
+    STITCH = "stitch"
+    NOT_INTERESTED = "not_interested"
+    ENTER_LIVESTREAM = "enter_livestream"
+    EXIT_LIVESTREAM = "exit_livestream"
+    LIVESTREAM_COMMENT = "livestream_comment"
+    SEND_GIFT = "send_gift"
+    START_LIVESTREAM = "start_livestream"
+    END_LIVESTREAM = "end_livestream"
+    VIEW_PRODUCT = "view_product"
+    ADD_TO_CART = "add_to_cart"
+
     @classmethod
     def get_default_twitter_actions(cls):
         return [
@@ -77,14 +93,42 @@ class ActionType(Enum):
             cls.MUTE,
         ]
 
+    @classmethod
+    def get_default_tiktok_actions(cls):
+        return [
+            cls.UPLOAD_VIDEO,
+            cls.WATCH_VIDEO,
+            cls.LIKE_POST,
+            cls.CREATE_COMMENT,
+            cls.SHARE_VIDEO,
+            cls.FOLLOW,
+            cls.DUET,
+            cls.STITCH,
+            cls.NOT_INTERESTED,
+            cls.ENTER_LIVESTREAM,
+            cls.EXIT_LIVESTREAM,
+            cls.LIVESTREAM_COMMENT,
+            cls.SEND_GIFT,
+            cls.START_LIVESTREAM,
+            cls.END_LIVESTREAM,
+            cls.VIEW_PRODUCT,
+            cls.ADD_TO_CART,
+            cls.PURCHASE_PRODUCT,
+            cls.SEARCH_POSTS,
+            cls.TREND,
+            cls.DO_NOTHING,
+        ]
+
 
 class RecsysType(Enum):
     TWITTER = "twitter"
     TWHIN = "twhin-bert"
     REDDIT = "reddit"
     RANDOM = "random"
+    TIKTOK = "tiktok"
 
 
 class DefaultPlatformType(Enum):
     TWITTER = "twitter"
     REDDIT = "reddit"
+    TIKTOK = "tiktok"
