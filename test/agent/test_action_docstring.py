@@ -49,6 +49,21 @@ def test_transfer_to_openai_function():
             SocialAction.listen_from_group,
             SocialAction.send_to_group,
             SocialAction.create_group,
+            # TikTok actions
+            SocialAction.upload_video,
+            SocialAction.watch_video,
+            SocialAction.share_video,
+            SocialAction.duet,
+            SocialAction.stitch,
+            SocialAction.not_interested,
+            SocialAction.enter_livestream,
+            SocialAction.exit_livestream,
+            SocialAction.livestream_comment,
+            SocialAction.send_gift,
+            SocialAction.start_livestream,
+            SocialAction.end_livestream,
+            SocialAction.view_product,
+            SocialAction.add_to_cart,
         ]
     ]
     assert action_funcs is not None

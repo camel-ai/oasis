@@ -647,3 +647,81 @@ async def generate_twitter_agent_graph(
 
         agent_graph.add_agent(agent)
     return agent_graph
+
+
+async def generate_tiktok_agent_graph(
+    profile_path: str,
+    model: Optional[Union[BaseModelBackend, List[BaseModelBackend],
+                          ModelManager]] = None,
+    available_actions: list[ActionType] = None,
+) -> AgentGraph:
+    """Generate agent graph from TikTok JSON profile file.
+
+    Profile JSON format (list of dicts):
+    [
+        {
+            "username": "creator_001",
+            "name": "Display Name",
+            "bio": "Short bio",
+            "persona": "Detailed personality description...",
+            "role": "creator",
+            "age": 25,
+            "gender": "female",
+            "mbti": "ENFP",
+            "country": "CN",
+            "interested_topics": ["dance", "music"],
+            "follower_count": 1000,
+            "video_count": 50
+        },
+        ...
+    ]
+    """
+    with open(profile_path, "r", encoding="utf-8") as file:
+        agent_info = json.load(file)
+
+    agent_graph = AgentGraph()
+
+    async def process_agent(i):
+        profile = {
+            "nodes": [],
+            "edges": [],
+            "other_info": {},
+        }
+        profile["other_info"]["user_profile"] = agent_info[i].get(
+            "persona", "")
+        profile["other_info"]["role"] = agent_info[i].get("role", "viewer")
+        profile["other_info"]["mbti"] = agent_info[i].get("mbti", "")
+        profile["other_info"]["gender"] = agent_info[i].get("gender", "")
+        profile["other_info"]["age"] = agent_info[i].get("age", "")
+        profile["other_info"]["country"] = agent_info[i].get("country", "")
+        profile["other_info"]["interested_topics"] = agent_info[i].get(
+            "interested_topics", [])
+
+        # Append interested_topics to description so they are stored in
+        # the DB user.bio column and available to the recsys for
+        # per-user interest matching
+        bio = agent_info[i].get("bio", "")
+        topics = agent_info[i].get("interested_topics", [])
+        if topics:
+            bio = f"{bio} [interests: {', '.join(topics)}]"
+
+        user_info = UserInfo(
+            name=agent_info[i].get("username", f"user_{i}"),
+            description=bio,
+            profile=profile,
+            recsys_type="tiktok",
+        )
+
+        agent = SocialAgent(
+            agent_id=i,
+            user_info=user_info,
+            agent_graph=agent_graph,
+            model=model,
+            available_actions=available_actions,
+        )
+
+        agent_graph.add_agent(agent)
+
+    tasks = [process_agent(i) for i in range(len(agent_info))]
+    await asyncio.gather(*tasks)
+    return agent_graph

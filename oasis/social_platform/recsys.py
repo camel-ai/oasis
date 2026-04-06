@@ -19,6 +19,8 @@ import random
 import time
 from ast import literal_eval
 from datetime import datetime
+import json
+import math
 from math import log
 from typing import Any, Dict, List
 
@@ -794,4 +796,367 @@ def rec_sys_personalized_with_trace(
             new_rec_matrix.append(rec_post_ids)
     end_time = time.time()
     print(f'Personalized recommendation time: {end_time - start_time:.6f}s')
+    return new_rec_matrix
+
+
+# ==================== TikTok Traffic Pool Recommendation ====================
+
+TIKTOK_PROMOTE_PERCENTILE = 0.20  # Top 20% promoted
+TIKTOK_DEMOTE_PERCENTILE = 0.70   # Bottom 30% demoted
+
+
+TIKTOK_DEFAULT_SCORE_WEIGHTS = {
+    "completion_rate": 0.35,
+    "like_rate": 0.15,
+    "comment_rate": 0.15,
+    "share_rate": 0.20,
+    "negative_rate": 0.15,
+}
+
+TIKTOK_DEFAULT_REC_MIX = {
+    "interest": 0.70,
+    "following": 0.15,
+    "explore": 0.10,
+}
+
+TIKTOK_DEFAULT_DECAY_HALF_LIFE_HOURS = 72
+TIKTOK_DEFAULT_POOL_WEIGHT = 0.6
+TIKTOK_DEFAULT_TIME_WEIGHT = 0.4
+
+
+def _tiktok_video_score(video: Dict[str, Any],
+                        weights: Dict[str, float] = None) -> float:
+    """Calculate a video's competitive score within its traffic pool."""
+    w = weights or TIKTOK_DEFAULT_SCORE_WEIGHTS
+    view_count = max(video.get("view_count", 0), 1)
+    total_watch = video.get("total_watch_ratio", 0.0)
+    completion_rate = total_watch / view_count if view_count > 0 else 0.0
+
+    num_likes = video.get("num_likes", 0)
+    num_shares = video.get("share_count", 0)
+    negative = video.get("negative_count", 0)
+    num_comments = video.get("num_comments", 0)
+
+    like_rate = num_likes / view_count
+    comment_rate = num_comments / view_count
+    share_rate = num_shares / view_count
+    negative_rate = negative / view_count
+
+    score = (
+        w.get("completion_rate", 0.35) * min(completion_rate, 1.0)
+        + w.get("like_rate", 0.15) * min(like_rate, 1.0)
+        + w.get("comment_rate", 0.15) * min(comment_rate, 1.0)
+        + w.get("share_rate", 0.20) * min(share_rate, 1.0)
+        - w.get("negative_rate", 0.15) * min(negative_rate, 1.0)
+    )
+    return max(score, 0.0)
+
+
+def _evaluate_traffic_pools(
+    video_table: List[Dict[str, Any]],
+    promote_pct: float = TIKTOK_PROMOTE_PERCENTILE,
+    demote_pct: float = TIKTOK_DEMOTE_PERCENTILE,
+    max_pool_level: int = 7,
+    score_weights: Dict[str, float] = None,
+) -> List[Dict[str, Any]]:
+    """Evaluate all videos in their traffic pools using racing mechanism.
+
+    Groups videos by pool level, ranks within each group, and marks
+    videos for promotion or demotion based on relative percentile.
+    """
+    if not video_table:
+        return video_table
+
+    pools: Dict[int, list] = {}
+    for v in video_table:
+        level = v.get("traffic_pool_level", 1)
+        pools.setdefault(level, []).append(v)
+
+    for level, videos in pools.items():
+        if len(videos) < 2:
+            for v in videos:
+                v["_pool_action"] = "stay"
+            continue
+        scored = [(v, _tiktok_video_score(v, score_weights)) for v in videos]
+        scored.sort(key=lambda x: x[1], reverse=True)
+
+        for rank, (v, _score) in enumerate(scored):
+            pct = (rank + 1) / len(scored)
+            if pct <= promote_pct and level < max_pool_level:
+                v["_pool_action"] = "promote"
+            elif pct > demote_pct:
+                v["_pool_action"] = "demote"
+            else:
+                v["_pool_action"] = "stay"
+
+    return video_table
+
+
+def _time_decay_72h(created_at, current_step: int = 0,
+                    half_life_hours: float = 72) -> float:
+    """Exponential decay with configurable half-life.
+
+    Handles both datetime strings and integer time steps.
+    For step-based time, each step is treated as ~1 hour.
+
+    Args:
+        created_at: Timestamp (int step, datetime string, or datetime).
+        current_step: Current simulation step (for step-based mode).
+        half_life_hours: Hours until score decays to 50% (default 72).
+    """
+    if created_at is None:
+        return 0.5
+
+    decay_rate = 0.693 / max(half_life_hours, 1)
+
+    # Try integer/numeric time step first (TikTok mode)
+    try:
+        step = int(created_at)
+        hours_ago = max(current_step - step, 0)
+        return math.exp(-decay_rate * hours_ago)
+    except (ValueError, TypeError):
+        pass
+
+    # Try datetime string parsing
+    if isinstance(created_at, str):
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"):
+            try:
+                dt = datetime.strptime(created_at, fmt)
+                hours = max(
+                    (datetime.now() - dt).total_seconds() / 3600, 0)
+                return math.exp(-decay_rate * hours)
+            except ValueError:
+                continue
+
+    # Try datetime object
+    if isinstance(created_at, datetime):
+        hours = max((datetime.now() - created_at).total_seconds() / 3600, 0)
+        return math.exp(-decay_rate * hours)
+
+    return 0.5
+
+
+def rec_sys_tiktok(
+    user_table: List[Dict[str, Any]],
+    post_table: List[Dict[str, Any]],
+    video_table: List[Dict[str, Any]],
+    trace_table: List[Dict[str, Any]],
+    rec_matrix: List[List[int]],
+    max_rec_post_len: int,
+    refresh_rec_post_count: int = 8,
+    **kwargs,
+) -> List[List[int]]:
+    """TikTok traffic pool racing recommendation system.
+
+    All algorithm parameters are configurable via kwargs:
+        score_weights: dict of metric weights for video scoring
+        promote_percentile: top N% promoted (default 0.20)
+        demote_percentile: bottom N% demoted (default 0.70)
+        max_pool_level: max traffic pool tier (default 7)
+        rec_mix: dict with interest/following/explore ratios
+        decay_half_life: hours for time decay (default 72)
+        pool_weight: weight of pool score in final ranking (default 0.6)
+        time_weight: weight of time decay in final ranking (default 0.4)
+    """
+    start_time_ts = time.time()
+
+    # Extract configurable params with defaults
+    score_weights = kwargs.get("score_weights", TIKTOK_DEFAULT_SCORE_WEIGHTS)
+    promote_pct = kwargs.get("promote_percentile", TIKTOK_PROMOTE_PERCENTILE)
+    demote_pct = kwargs.get("demote_percentile", TIKTOK_DEMOTE_PERCENTILE)
+    max_pool_level = kwargs.get("max_pool_level", 7)
+    rec_mix = kwargs.get("rec_mix", TIKTOK_DEFAULT_REC_MIX)
+    decay_half_life = kwargs.get("decay_half_life",
+                                 TIKTOK_DEFAULT_DECAY_HALF_LIFE_HOURS)
+    pool_weight = kwargs.get("pool_weight", TIKTOK_DEFAULT_POOL_WEIGHT)
+    time_weight = kwargs.get("time_weight", TIKTOK_DEFAULT_TIME_WEIGHT)
+
+    if not post_table or not user_table:
+        return rec_matrix
+
+    video_lookup = {v["post_id"]: v for v in video_table} if video_table else {}
+
+    post_lookup = {p["post_id"]: p for p in post_table}
+
+    for v in video_table:
+        post = post_lookup.get(v["post_id"], {})
+        v["num_likes"] = post.get("num_likes", 0)
+        v["num_comments"] = post.get("num_comments", 0)
+        v.setdefault("share_count", 0)
+        v.setdefault("negative_count", 0)
+
+    _evaluate_traffic_pools(video_table, promote_pct, demote_pct,
+                            max_pool_level, score_weights)
+
+    active_post_ids = [
+        v["post_id"] for v in video_table
+        if v.get("_pool_action") != "demote"
+        and v.get("traffic_pool_level", 1) > 0  # level 0 = previously demoted
+    ]
+
+    # Build follow graph from trace (follow action stores followee_id)
+    follow_map: Dict[int, set] = {}
+    for trace in trace_table:
+        if trace.get("action") == ActionType.FOLLOW.value:
+            uid = trace["user_id"]
+            try:
+                info = trace.get("info", "{}")
+                if isinstance(info, str):
+                    info = json.loads(info)
+                # Platform.follow() stores followee_id in action_info
+                followed = (info.get("followee_id")
+                            or info.get("user_id")
+                            or info.get("follow_id"))
+                if followed is not None:
+                    follow_map.setdefault(uid, set()).add(int(followed))
+            except (json.JSONDecodeError, AttributeError, ValueError):
+                pass
+
+    post_creator = {p["post_id"]: p["user_id"] for p in post_table}
+
+    # Estimate current step from latest post time
+    max_step = 0
+    for p in post_table:
+        try:
+            max_step = max(max_step, int(p.get("created_at", 0)))
+        except (ValueError, TypeError):
+            pass
+
+    # Build per-video base scores (pool + time, no personalization)
+    video_base_scores = {}
+    for pid in active_post_ids:
+        v = video_lookup.get(pid)
+        if v:
+            pool_score = _tiktok_video_score(v, score_weights)
+            post = post_lookup.get(pid, {})
+            td = _time_decay_72h(post.get("created_at"), max_step,
+                                 decay_half_life)
+            video_base_scores[pid] = pool_weight * pool_score + time_weight * td
+
+    # Build video topic lookup for personalization
+    video_topics: Dict[int, set] = {}
+    for v in video_table:
+        pid = v.get("post_id")
+        tags = v.get("topic_tags", "[]")
+        if isinstance(tags, str):
+            try:
+                tags = json.loads(tags)
+            except (json.JSONDecodeError, TypeError):
+                tags = []
+        video_topics[pid] = set(t.lower() for t in tags if isinstance(t, str))
+
+    # Common stop words to filter out from bio keyword extraction
+    _STOP_WORDS = {
+        "the", "and", "for", "are", "but", "not", "you", "all", "can",
+        "has", "her", "was", "one", "our", "out", "his", "had", "hot",
+        "how", "its", "may", "who", "did", "get", "let", "say", "she",
+        "too", "use", "that", "this", "with", "have", "from", "they",
+        "been", "said", "each", "which", "their", "will", "about",
+        "would", "there", "when", "make", "like", "than", "them",
+        "some", "what", "into", "could", "other", "more", "very",
+    }
+
+    def _get_user_interests(user: Dict) -> set:
+        """Extract interest tags from user profile for topic matching.
+
+        Parses the bio field which may contain an [interests: ...] suffix
+        appended by generate_tiktok_agent_graph.
+        """
+        interests = set()
+        bio = user.get("bio", "")
+        if not bio:
+            return interests
+
+        # Extract structured interests tag if present
+        # Format: "[interests: dance, music, comedy]"
+        import re as _re
+        match = _re.search(r'\[interests:\s*([^\]]+)\]', bio)
+        if match:
+            for tag in match.group(1).split(','):
+                tag = tag.strip().lower()
+                if tag:
+                    interests.add(tag)
+
+        # Also extract keywords from bio text (filtered)
+        for word in bio[:200].lower().split():
+            word = _re.sub(r'[^a-z\u4e00-\u9fff]', '', word)
+            if len(word) > 2 and word not in _STOP_WORDS:
+                interests.add(word)
+
+        return interests
+
+    new_rec_matrix = []
+    for user_idx, user in enumerate(user_table):
+        user_id = user.get("user_id", user_idx)
+        rec_count = refresh_rec_post_count
+        user_interests = _get_user_interests(user)
+
+        # Per-user personalized scoring: base score + interest match bonus
+        user_video_scores = {}
+        for pid, base_score in video_base_scores.items():
+            interest_bonus = 0.0
+            if user_interests and pid in video_topics:
+                overlap = user_interests & video_topics[pid]
+                if overlap:
+                    interest_bonus = min(len(overlap) * 0.1, 0.3)
+            user_video_scores[pid] = base_score + interest_bonus
+
+        # Following content
+        following_ids = follow_map.get(user_id, set())
+        following_posts = [
+            pid for pid in active_post_ids
+            if post_creator.get(pid) in following_ids
+        ]
+        n_following = max(1, int(rec_count * rec_mix.get("following", 0.15)))
+        following_recs = following_posts[:n_following]
+
+        # Interest-based from active pools (personalized ranking)
+        n_interest = max(1, int(rec_count * rec_mix.get("interest", 0.70)))
+        ranked = sorted(
+            [pid for pid in active_post_ids if pid not in following_recs],
+            key=lambda pid: user_video_scores.get(pid, 0),
+            reverse=True,
+        )
+        interest_recs = ranked[:n_interest]
+
+        # Exploration
+        n_explore = max(1, int(rec_count * rec_mix.get("explore", 0.10)))
+        remaining = [
+            pid for pid in active_post_ids
+            if pid not in following_recs and pid not in interest_recs
+        ]
+        explore_recs = random.sample(
+            remaining, min(n_explore, len(remaining)))
+
+        # Merge and deduplicate
+        seen = set()
+        merged = []
+        for pid in following_recs + interest_recs + explore_recs:
+            if pid not in seen:
+                seen.add(pid)
+                merged.append(pid)
+
+        # Fill to max length
+        for pid in active_post_ids:
+            if len(merged) >= max_rec_post_len:
+                break
+            if pid not in seen:
+                seen.add(pid)
+                merged.append(pid)
+
+        # Carry over still-active old recs
+        existing = rec_matrix[user_idx] if user_idx < len(rec_matrix) else []
+        for pid in existing:
+            if len(merged) >= max_rec_post_len:
+                break
+            if pid not in seen and pid in set(active_post_ids):
+                seen.add(pid)
+                merged.append(pid)
+
+        new_rec_matrix.append(merged[:max_rec_post_len])
+
+    end_time_ts = time.time()
+    rec_log.info(
+        f'TikTok traffic pool recommendation time: '
+        f'{end_time_ts - start_time_ts:.6f}s')
     return new_rec_matrix

@@ -57,6 +57,21 @@ class SocialAction:
                 self.send_to_group,
                 self.create_group,
                 self.listen_from_group,
+                # TikTok actions
+                self.upload_video,
+                self.watch_video,
+                self.share_video,
+                self.duet,
+                self.stitch,
+                self.not_interested,
+                self.enter_livestream,
+                self.exit_livestream,
+                self.livestream_comment,
+                self.send_gift,
+                self.start_livestream,
+                self.end_livestream,
+                self.view_product,
+                self.add_to_cart,
             ]
         ]
 
@@ -756,3 +771,195 @@ class SocialAction:
         r"""Listen messages from groups"""
         return await self.perform_action(self.agent_id,
                                          ActionType.LISTEN_FROM_GROUP.value)
+
+    # ==================== TikTok Actions ====================
+
+    async def upload_video(self, content: str, duration_seconds: int = 15,
+                           category: str = "general", topic_tags: str = "[]",
+                           has_product_link: bool = False):
+        r"""Upload a short video to TikTok.
+
+        Args:
+            content (str): Description or script of the video content.
+            duration_seconds (int): Video duration in seconds (default 15).
+            category (str): Content category (e.g. comedy, food, dance).
+            topic_tags (str): JSON array of topic hashtags.
+            has_product_link (bool): Whether the video has a shopping cart.
+
+        Returns:
+            dict: {'success': True, 'post_id': 123}
+        """
+        message = (content, duration_seconds, category, topic_tags,
+                   0.5, 0.5, has_product_link, None)
+        return await self.perform_action(
+            message, ActionType.UPLOAD_VIDEO.value)
+
+    async def watch_video(self, post_id: int, watch_ratio: float = 0.5):
+        r"""Watch a short video. The watch_ratio indicates how much of the
+        video was watched (0.0 to 1.0+, where >1.0 means replayed).
+
+        Args:
+            post_id (int): The ID of the video to watch.
+            watch_ratio (float): Completion ratio (0.0-1.0, >1.0 for replay).
+
+        Returns:
+            dict: {'success': True, 'post_id': 123, 'watch_ratio': 0.8}
+        """
+        message = (post_id, watch_ratio)
+        return await self.perform_action(
+            message, ActionType.WATCH_VIDEO.value)
+
+    async def share_video(self, post_id: int):
+        r"""Share a video to friends or other platforms.
+
+        Args:
+            post_id (int): The ID of the video to share.
+
+        Returns:
+            dict: {'success': True, 'post_id': 123}
+        """
+        return await self.perform_action(
+            post_id, ActionType.SHARE_VIDEO.value)
+
+    async def duet(self, original_post_id: int, content: str = ""):
+        r"""Create a duet with another user's video (side-by-side reaction).
+
+        Args:
+            original_post_id (int): The ID of the original video.
+            content (str): Description of the duet content.
+
+        Returns:
+            dict: {'success': True, 'post_id': 456}
+        """
+        message = (original_post_id, content)
+        return await self.perform_action(
+            message, ActionType.DUET.value)
+
+    async def stitch(self, original_post_id: int, content: str = ""):
+        r"""Create a stitch using part of another user's video.
+
+        Args:
+            original_post_id (int): The ID of the original video.
+            content (str): Description of the stitched content.
+
+        Returns:
+            dict: {'success': True, 'post_id': 456}
+        """
+        message = (original_post_id, content)
+        return await self.perform_action(
+            message, ActionType.STITCH.value)
+
+    async def not_interested(self, post_id: int):
+        r"""Mark a video as not interested (negative feedback signal).
+
+        Args:
+            post_id (int): The ID of the video.
+
+        Returns:
+            dict: {'success': True}
+        """
+        return await self.perform_action(
+            post_id, ActionType.NOT_INTERESTED.value)
+
+    async def enter_livestream(self, stream_id: int):
+        r"""Enter a live streaming room to watch.
+
+        Args:
+            stream_id (int): The ID of the livestream to enter.
+
+        Returns:
+            dict: {'success': True, 'stream_id': 1}
+        """
+        return await self.perform_action(
+            stream_id, ActionType.ENTER_LIVESTREAM.value)
+
+    async def exit_livestream(self, stream_id: int):
+        r"""Exit a live streaming room.
+
+        Args:
+            stream_id (int): The ID of the livestream to exit.
+
+        Returns:
+            dict: {'success': True, 'stream_id': 1}
+        """
+        return await self.perform_action(
+            stream_id, ActionType.EXIT_LIVESTREAM.value)
+
+    async def livestream_comment(self, stream_id: int, content: str = ""):
+        r"""Send a bullet comment in a livestream room.
+
+        Args:
+            stream_id (int): The ID of the livestream.
+            content (str): The comment content.
+
+        Returns:
+            dict: {'success': True, 'stream_id': 1}
+        """
+        message = (stream_id, content)
+        return await self.perform_action(
+            message, ActionType.LIVESTREAM_COMMENT.value)
+
+    async def send_gift(self, stream_id: int, gift_value: float = 10.0):
+        r"""Send a virtual gift to a livestream host.
+
+        Args:
+            stream_id (int): The ID of the livestream.
+            gift_value (float): Value of the gift in coins.
+
+        Returns:
+            dict: {'success': True, 'stream_id': 1, 'gift_value': 10.0}
+        """
+        message = (stream_id, gift_value)
+        return await self.perform_action(
+            message, ActionType.SEND_GIFT.value)
+
+    async def start_livestream(self):
+        r"""Start a new livestream session (streamer only).
+
+        Returns:
+            dict: {'success': True, 'stream_id': 1}
+        """
+        return await self.perform_action(
+            None, ActionType.START_LIVESTREAM.value)
+
+    async def end_livestream(self, stream_id: int):
+        r"""End a livestream session (streamer only).
+
+        Args:
+            stream_id (int): The ID of the livestream to end.
+
+        Returns:
+            dict: {'success': True, 'stream_id': 1}
+        """
+        return await self.perform_action(
+            stream_id, ActionType.END_LIVESTREAM.value)
+
+    async def view_product(self, product_id: int,
+                           source_type: str = "video",
+                           source_id: int = 0):
+        r"""View product details from a video shopping cart or livestream.
+
+        Args:
+            product_id (int): The ID of the product to view.
+            source_type (str): Where the product was found ('video' or
+                'livestream').
+            source_id (int): The video or livestream ID.
+
+        Returns:
+            dict: {'success': True, 'product_id': 1}
+        """
+        message = (product_id, source_type, source_id)
+        return await self.perform_action(
+            message, ActionType.VIEW_PRODUCT.value)
+
+    async def add_to_cart(self, product_id: int):
+        r"""Add a product to shopping cart.
+
+        Args:
+            product_id (int): The ID of the product to add.
+
+        Returns:
+            dict: {'success': True, 'product_id': 1}
+        """
+        return await self.perform_action(
+            product_id, ActionType.ADD_TO_CART.value)
