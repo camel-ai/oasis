@@ -1,0 +1,401 @@
+"""
+Simulation runner for all three modes.
+
+Mode 1 – Content Simulation: personas react to social media copy
+Mode 2 – Browser-Action Simulation: personas navigate the live website
+Mode 3 – Visual Input Simulation: personas analyse brand imagery
+"""
+from __future__ import annotations
+
+import asyncio
+import json
+from dataclasses import dataclass, field, asdict
+from typing import Any, Dict, List, Optional
+
+import httpx
+from bs4 import BeautifulSoup
+
+from ux_sim_app.core.llm import chat, tool_args, text_content
+from ux_sim_app.core.personas import Persona
+from ux_sim_app.core.config import VISION_MODEL, MAX_BROWSER_SESSIONS, OPENAI_API_KEY, OPENAI_BASE_URL
+
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
+    )
+}
+
+# ── Shared data models ─────────────────────────────────────────────────────────
+
+@dataclass
+class PersonaResponse:
+    persona_name: str
+    persona_type: str
+    mode: int
+    # Mode 1
+    action: Optional[str] = None
+    sentiment: Optional[str] = None
+    reasoning: Optional[str] = None
+    comment_text: Optional[str] = None
+    # Mode 2
+    browser_steps: List[str] = field(default_factory=list)
+    usability_summary: Optional[str] = None
+    dish_or_task_chosen: Optional[str] = None
+    would_convert: Optional[bool] = None
+    # Mode 3
+    first_impression: Optional[str] = None
+    resonance_score: Optional[int] = None
+    engagement_likelihood: Optional[str] = None
+    visual_feedback: Optional[str] = None
+    attention_elements: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class SimulationResult:
+    mode: int
+    mode_name: str
+    responses: List[PersonaResponse] = field(default_factory=list)
+    aggregate: Dict[str, Any] = field(default_factory=dict)
+    content_tested: Optional[str] = None
+    images_analysed: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        d = asdict(self)
+        return d
+
+
+# ── Tool schemas ───────────────────────────────────────────────────────────────
+
+_SOCIAL_ACTION_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "social_action",
+        "description": "Choose how this persona reacts to the content.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["like_post", "repost", "create_comment", "quote_post",
+                             "dislike_post", "report_post", "do_nothing"],
+                },
+                "reasoning": {"type": "string"},
+                "sentiment": {"type": "string", "enum": ["positive", "neutral", "negative"]},
+                "comment_text": {"type": "string", "description": "Only if action is create_comment or quote_post"},
+            },
+            "required": ["action", "reasoning", "sentiment"],
+        },
+    },
+}
+
+_VISUAL_FEEDBACK_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "visual_feedback",
+        "description": "Structured visual/brand feedback from a persona.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "first_impression": {"type": "string"},
+                "attention_elements": {"type": "array", "items": {"type": "string"}},
+                "resonance_score": {"type": "integer", "minimum": 1, "maximum": 10},
+                "engagement_likelihood": {
+                    "type": "string",
+                    "enum": ["definitely", "probably", "maybe", "unlikely", "no"],
+                },
+                "feedback": {"type": "string"},
+                "sentiment": {"type": "string", "enum": ["positive", "neutral", "negative"]},
+            },
+            "required": ["first_impression", "resonance_score", "engagement_likelihood",
+                         "feedback", "sentiment"],
+        },
+    },
+}
+
+
+# ── Mode 1: Content Simulation ─────────────────────────────────────────────────
+
+async def _mode1_one(persona: Persona, content: str) -> PersonaResponse:
+    resp = await chat(
+        messages=[
+            {"role": "system", "content": persona.system_prompt("content")},
+            {"role": "user", "content":
+                f"You just saw this post on your social media feed:\n\n---\n{content}\n---\n\n"
+                "How do you react? Use the social_action tool."},
+        ],
+        tools=[_SOCIAL_ACTION_TOOL],
+        tool_choice={"type": "function", "function": {"name": "social_action"}},
+    )
+    args = tool_args(resp)
+    if not args:
+        args = {"action": "do_nothing", "reasoning": text_content(resp), "sentiment": "neutral"}
+    return PersonaResponse(
+        persona_name=persona.name,
+        persona_type=persona.persona_type,
+        mode=1,
+        action=args.get("action", "do_nothing"),
+        sentiment=args.get("sentiment", "neutral"),
+        reasoning=args.get("reasoning", ""),
+        comment_text=args.get("comment_text"),
+    )
+
+
+async def run_mode1(personas: List[Persona], content_items: List[str]) -> List[SimulationResult]:
+    """Run Mode 1 for each content item. Returns one SimulationResult per item."""
+    results = []
+    for content in content_items:
+        responses = await asyncio.gather(*[_mode1_one(p, content) for p in personas])
+        agg = _aggregate_mode1(list(responses))
+        results.append(SimulationResult(
+            mode=1,
+            mode_name="Content Simulation",
+            responses=list(responses),
+            aggregate=agg,
+            content_tested=content,
+        ))
+    return results
+
+
+def _aggregate_mode1(responses: List[PersonaResponse]) -> Dict:
+    actions: Dict[str, int] = {}
+    sentiments = {"positive": 0, "neutral": 0, "negative": 0}
+    for r in responses:
+        a = r.action or "do_nothing"
+        actions[a] = actions.get(a, 0) + 1
+        s = r.sentiment or "neutral"
+        sentiments[s] = sentiments.get(s, 0) + 1
+    engaged = sum(1 for r in responses if r.action != "do_nothing")
+    return {
+        "action_distribution": actions,
+        "sentiment_distribution": sentiments,
+        "engagement_rate": round(engaged / max(len(responses), 1), 2),
+    }
+
+
+# ── Mode 2: Browser-Action Simulation ─────────────────────────────────────────
+
+async def _mode2_one(persona: Persona, url: str) -> PersonaResponse:
+    """Single persona browser session."""
+    steps: List[str] = []
+    page_text = ""
+
+    try:
+        from playwright.async_api import async_playwright
+        async with async_playwright() as pw:
+            browser = await pw.chromium.launch(
+                headless=True,
+                args=["--no-sandbox", "--disable-dev-shm-usage"],
+            )
+            ctx = await browser.new_context(
+                user_agent=HEADERS["User-Agent"],
+                viewport={"width": 1280, "height": 800},
+            )
+            page = await ctx.new_page()
+            await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+            steps.append("Navigated to homepage")
+
+            content = await page.content()
+            soup = BeautifulSoup(content, "html.parser")
+            for t in soup(["script", "style"]): t.decompose()
+            page_text = " ".join(soup.get_text(separator=" ").split())[:3000]
+            steps.append(f"Read page content ({len(page_text)} chars)")
+
+            # Try to find and click a menu/product link
+            for kw in ["menu", "food", "product", "service", "shop", "order"]:
+                try:
+                    await page.click(f"text=/{kw}/i", timeout=3000)
+                    await page.wait_for_timeout(1500)
+                    extra = await page.content()
+                    extra_soup = BeautifulSoup(extra, "html.parser")
+                    for t in extra_soup(["script", "style"]): t.decompose()
+                    extra_text = " ".join(extra_soup.get_text(separator=" ").split())[:1500]
+                    page_text += f"\n\n[After clicking '{kw}']: {extra_text}"
+                    steps.append(f"Clicked '{kw}' link successfully")
+                    break
+                except Exception:
+                    pass
+            else:
+                steps.append("Could not click any menu/product link")
+
+            await browser.close()
+    except Exception as exc:
+        steps.append(f"Browser error: {exc}")
+        # Fallback: fetch via httpx
+        try:
+            async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+                r = await client.get(url, headers=HEADERS)
+                soup = BeautifulSoup(r.text, "html.parser")
+                for t in soup(["script", "style"]): t.decompose()
+                page_text = " ".join(soup.get_text(separator=" ").split())[:3000]
+                steps.append("Fallback: fetched via HTTP")
+        except Exception as e2:
+            steps.append(f"Fallback also failed: {e2}")
+
+    # Ask LLM to simulate the persona's experience
+    resp = await chat(
+        messages=[
+            {"role": "system", "content": persona.system_prompt("browser")},
+            {"role": "user", "content":
+                f"You have just browsed this website: {url}\n\n"
+                f"Page content you saw:\n{page_text}\n\n"
+                f"Steps taken: {'; '.join(steps)}\n\n"
+                "As this persona, answer:\n"
+                "1. How easy was it to find what you were looking for? (1-10 and why)\n"
+                "2. What specific task/item/dish/product would you choose and why?\n"
+                "3. What confused or frustrated you on the website?\n"
+                "4. What did you like about the website?\n"
+                "5. Would you complete a purchase/booking? Why or why not?\n\n"
+                "Be specific, in-character, and honest."},
+        ],
+        max_tokens=700,
+    )
+    summary = text_content(resp)
+
+    # Extract would_convert signal
+    convert = None
+    if any(w in summary.lower() for w in ["yes, i would", "definitely book", "would book", "would order", "would buy"]):
+        convert = True
+    elif any(w in summary.lower() for w in ["would not", "wouldn't", "no, i"]):
+        convert = False
+
+    return PersonaResponse(
+        persona_name=persona.name,
+        persona_type=persona.persona_type,
+        mode=2,
+        browser_steps=steps,
+        usability_summary=summary,
+        would_convert=convert,
+    )
+
+
+async def run_mode2(personas: List[Persona], url: str) -> SimulationResult:
+    """Run Mode 2 for all personas in parallel (up to MAX_BROWSER_SESSIONS)."""
+    sem = asyncio.Semaphore(MAX_BROWSER_SESSIONS)
+
+    async def _bounded(p: Persona) -> PersonaResponse:
+        async with sem:
+            return await _mode2_one(p, url)
+
+    responses = await asyncio.gather(*[_bounded(p) for p in personas], return_exceptions=True)
+    clean: List[PersonaResponse] = []
+    for r in responses:
+        if isinstance(r, Exception):
+            clean.append(PersonaResponse(
+                persona_name="Unknown", persona_type="Unknown", mode=2,
+                usability_summary=f"Error: {r}",
+            ))
+        else:
+            clean.append(r)
+
+    conversions = [r for r in clean if r.would_convert is True]
+    return SimulationResult(
+        mode=2,
+        mode_name="Browser-Action Simulation",
+        responses=clean,
+        aggregate={
+            "conversion_intent_rate": round(len(conversions) / max(len(clean), 1), 2),
+            "personas_would_convert": len(conversions),
+            "total_personas": len(clean),
+        },
+    )
+
+
+# ── Mode 3: Visual Input Simulation ───────────────────────────────────────────
+
+async def _mode3_one(persona: Persona, image_urls: List[str]) -> PersonaResponse:
+    content: List[Dict] = [
+        {"type": "text", "text":
+            "These are images from the brand's website and marketing materials. "
+            "Analyse them as this persona and provide your honest reaction using the visual_feedback tool."},
+    ]
+    for url in image_urls[:3]:
+        content.append({"type": "image_url", "image_url": {"url": url, "detail": "low"}})
+
+    async with httpx.AsyncClient(timeout=90.0) as client:
+        r = await client.post(
+            f"{OPENAI_BASE_URL}/chat/completions",
+            json={
+                "model": VISION_MODEL,
+                "messages": [
+                    {"role": "system", "content": persona.system_prompt("visual")},
+                    {"role": "user", "content": content},
+                ],
+                "tools": [_VISUAL_FEEDBACK_TOOL],
+                "tool_choice": {"type": "function", "function": {"name": "visual_feedback"}},
+                "max_tokens": 800,
+                "temperature": 0.7,
+            },
+            headers={
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Content-Type": "application/json",
+            },
+        )
+        r.raise_for_status()
+
+    resp = r.json()
+    tc = resp["choices"][0]["message"].get("tool_calls", [])
+    if tc:
+        args = json.loads(tc[0]["function"]["arguments"])
+    else:
+        args = {
+            "first_impression": resp["choices"][0]["message"].get("content", ""),
+            "resonance_score": 5,
+            "engagement_likelihood": "maybe",
+            "feedback": "",
+            "sentiment": "neutral",
+        }
+
+    return PersonaResponse(
+        persona_name=persona.name,
+        persona_type=persona.persona_type,
+        mode=3,
+        first_impression=args.get("first_impression", ""),
+        resonance_score=args.get("resonance_score", 5),
+        engagement_likelihood=args.get("engagement_likelihood", "maybe"),
+        visual_feedback=args.get("feedback", ""),
+        attention_elements=args.get("attention_elements", []),
+        sentiment=args.get("sentiment", "neutral"),
+    )
+
+
+async def run_mode3(personas: List[Persona], image_urls: List[str]) -> SimulationResult:
+    """Run Mode 3 for all personas."""
+    responses = await asyncio.gather(
+        *[_mode3_one(p, image_urls) for p in personas],
+        return_exceptions=True,
+    )
+    clean: List[PersonaResponse] = []
+    for r in responses:
+        if isinstance(r, Exception):
+            clean.append(PersonaResponse(
+                persona_name="Unknown", persona_type="Unknown", mode=3,
+                visual_feedback=f"Error: {r}",
+            ))
+        else:
+            clean.append(r)
+
+    scores = [r.resonance_score for r in clean if r.resonance_score is not None]
+    sentiments = {"positive": 0, "neutral": 0, "negative": 0}
+    engagement: Dict[str, int] = {}
+    for r in clean:
+        s = r.sentiment or "neutral"
+        sentiments[s] = sentiments.get(s, 0) + 1
+        e = r.engagement_likelihood or "maybe"
+        engagement[e] = engagement.get(e, 0) + 1
+
+    return SimulationResult(
+        mode=3,
+        mode_name="Visual Input Simulation",
+        responses=clean,
+        aggregate={
+            "average_resonance": round(sum(scores) / max(len(scores), 1), 2),
+            "sentiment_distribution": sentiments,
+            "engagement_distribution": engagement,
+        },
+        images_analysed=image_urls,
+    )
