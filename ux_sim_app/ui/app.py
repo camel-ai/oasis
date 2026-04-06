@@ -339,7 +339,10 @@ def step_generate_report(
         )
 
         # Optionally enrich each issue slide with an AI redesign
-        if generate_redesigns and effective_nebius:
+        # Works with OPENAI_API_KEY alone (GPT-4o Vision);
+        # NEBIUS_API_KEY is optional and routes to the HF Space instead.
+        effective_openai = (os.environ.get("OPENAI_API_KEY") or "").strip()
+        if generate_redesigns:
             total = len(report_data.issues)
             for idx, issue in enumerate(report_data.issues):
                 yield (
@@ -351,18 +354,19 @@ def step_generate_report(
                         screenshot_url=issue.screenshot_url,
                         ux_issues=[issue.issue_text, issue.recommendation],
                         nebius_api_key=effective_nebius,
+                        openai_key=effective_openai,
                     )
                     if not rd.get("error"):
                         issue.redesign_analysis = rd.get("analysis", "")
                         issue.redesign_html = rd.get("improved_html", "") or rd.get("initial_html", "")
-                        issue.redesign_html_sanitised = sanitise_for_embed(issue.redesign_html)
+                        issue.redesign_html_sanitised = (
+                            rd.get("html_sanitised")
+                            or sanitise_for_embed(issue.redesign_html)
+                        )
                     else:
-                        # Non-fatal: log and continue without redesign for this issue
-                        pass
-                except Exception:
-                    pass  # Non-fatal
-        elif generate_redesigns and not effective_nebius:
-            yield "⚠️ Redesigns requested but no Nebius API key found. Add it in ⚙️ Settings.", *_EMPTY_REPORT
+                        logger.warning("Redesign failed for %s: %s", issue.title, rd.get("error"))
+                except Exception as exc:
+                    logger.warning("Redesign exception for %s: %s", issue.title, exc)
 
         yield "⏳ Rendering slides and exporting PDF...", *_EMPTY_REPORT
 
@@ -547,12 +551,12 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                 "Generates a **slide-style HTML + PDF report** (16:9, matching the reference design) "
                 "combining the UX audit and persona simulation results. "
                 "Each issue slide shows the current design screenshot alongside an **AI-generated HTML redesign** "
-                "(requires a Nebius API key in ⚙️ Settings). "
+                "(uses GPT-4o Vision by default; add a Nebius key in ⚙️ Settings to use the HF Space instead). "
                 "Persona feedback is highlighted in teal callout boxes."
             )
             with gr.Row():
                 generate_redesigns_flag = gr.Checkbox(
-                    label="🎨 Generate AI HTML Redesigns (requires Nebius API key)",
+                    label="🎨 Generate AI HTML Redesigns (uses GPT-4o Vision — no extra key needed)",
                     value=False,
                     info="For each issue, calls the HuggingFace screenshot-to-code Space to generate an improved HTML redesign.",
                 )
@@ -607,11 +611,11 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                         info="Only needed as fallback for Mode 2 if Playwright fails",
                     )
                     nebius_key_input = gr.Textbox(
-                        label="Nebius API Key (for AI Redesigns)",
+                        label="Nebius API Key (optional — upgrades redesigns to Qwen2.5-VL + DeepSeek-V3)",
                         placeholder="ey...",
                         type="password",
                         value=NEBIUS_API_KEY,
-                        info="Required for the screenshot-to-HTML redesign feature in the report. Get yours at studio.nebius.ai",
+                        info="Optional. If set, redesigns use the HuggingFace Space (Qwen2.5-VL-72B + DeepSeek-V3-0324). Without it, GPT-4o Vision is used automatically. Get a Nebius key at studio.nebius.ai",
                     )
                 with gr.Column():
                     smtp_host_input = gr.Textbox(
