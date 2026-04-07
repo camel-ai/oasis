@@ -16,7 +16,6 @@ OPENAI_BASE_URL: str = "https://api.openai.com/v1"   # always direct
 TEXT_MODEL: str = os.environ.get("DEFAULT_MODEL", "gpt-4o-mini")
 VISION_MODEL: str = os.environ.get("VISION_MODEL", "gpt-4o")
 BROWSERBASE_API_KEY: str = os.environ.get("BROWSERBASE_API_KEY", "")
-NEBIUS_API_KEY: str = os.environ.get("NEBIUS_API_KEY", "")
 
 # ── Email ──────────────────────────────────────────────────────────────────────
 SMTP_HOST: str = os.environ.get("SMTP_HOST", "smtp.gmail.com")

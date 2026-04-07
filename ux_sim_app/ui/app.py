@@ -30,7 +30,7 @@ import gradio as gr
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from ux_sim_app.core.config import (
-    OPENAI_API_KEY, BROWSERBASE_API_KEY, NEBIUS_API_KEY, REPORTS_DIR, TEXT_MODEL, VISION_MODEL
+    OPENAI_API_KEY, BROWSERBASE_API_KEY, REPORTS_DIR, TEXT_MODEL, VISION_MODEL
 )
 from ux_sim_app.core.scraper import scrape
 from ux_sim_app.core.personas import generate_personas, Persona
@@ -39,6 +39,8 @@ from ux_sim_app.ux.scanner import scan_website
 from ux_sim_app.report.generator import generate_full_report, send_report_email
 from ux_sim_app.report.slide_generator import build_report_data, render_html, html_to_pdf, IssueSlide
 from ux_sim_app.report.redesign_client import generate_redesign, sanitise_for_embed
+import logging
+logger = logging.getLogger(__name__)
 
 
 # ── Async helper ───────────────────────────────────────────────────────────────
@@ -300,7 +302,6 @@ def step_generate_report(
     personas_json: str,
     sim_results_json: str,
     ux_json: str,
-    nebius_key_override: str,
     generate_redesigns: bool,
 ):
     """Generate the slide-style HTML + PDF report with optional AI redesigns.
@@ -322,7 +323,6 @@ def step_generate_report(
 
     try:
         import ux_sim_app.core.config as cfg
-        effective_nebius = (nebius_key_override or "").strip() or cfg.NEBIUS_API_KEY or ""
 
         persona_dicts = json.loads(personas_json)
         sim_dicts = json.loads(sim_results_json)
@@ -338,9 +338,7 @@ def step_generate_report(
             personas=persona_dicts,
         )
 
-        # Optionally enrich each issue slide with an AI redesign
-        # Works with OPENAI_API_KEY alone (GPT-4o Vision);
-        # NEBIUS_API_KEY is optional and routes to the HF Space instead.
+        # Optionally enrich each issue slide with an AI HTML redesign (OpenAI GPT-4o Vision)
         effective_openai = (os.environ.get("OPENAI_API_KEY") or "").strip()
         if generate_redesigns:
             total = len(report_data.issues)
@@ -353,12 +351,12 @@ def step_generate_report(
                     rd = generate_redesign(
                         screenshot_url=issue.screenshot_url,
                         ux_issues=[issue.issue_text, issue.recommendation],
-                        nebius_api_key=effective_nebius,
                         openai_key=effective_openai,
+                        vision_model=cfg.VISION_MODEL,
                     )
                     if not rd.get("error"):
                         issue.redesign_analysis = rd.get("analysis", "")
-                        issue.redesign_html = rd.get("improved_html", "") or rd.get("initial_html", "")
+                        issue.redesign_html = rd.get("html_code", "")
                         issue.redesign_html_sanitised = (
                             rd.get("html_sanitised")
                             or sanitise_for_embed(issue.redesign_html)
@@ -551,14 +549,14 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                 "Generates a **slide-style HTML + PDF report** (16:9, matching the reference design) "
                 "combining the UX audit and persona simulation results. "
                 "Each issue slide shows the current design screenshot alongside an **AI-generated HTML redesign** "
-                "(uses GPT-4o Vision by default; add a Nebius key in ⚙️ Settings to use the HF Space instead). "
+                "powered by GPT-4o Vision. "
                 "Persona feedback is highlighted in teal callout boxes."
             )
             with gr.Row():
                 generate_redesigns_flag = gr.Checkbox(
-                    label="🎨 Generate AI HTML Redesigns (uses GPT-4o Vision — no extra key needed)",
+                    label="🎨 Generate AI HTML Redesigns (GPT-4o Vision)",
                     value=False,
-                    info="For each issue, calls the HuggingFace screenshot-to-code Space to generate an improved HTML redesign.",
+                    info="For each issue, captures a screenshot and uses GPT-4o Vision to generate a side-by-side improved HTML redesign.",
                 )
             btn_gen_report = gr.Button("📄 Generate Slide Report + PDF", variant="primary", size="lg")
             status_report = gr.Textbox(label="Status", interactive=False, lines=2)
@@ -610,13 +608,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                         value=BROWSERBASE_API_KEY,
                         info="Only needed as fallback for Mode 2 if Playwright fails",
                     )
-                    nebius_key_input = gr.Textbox(
-                        label="Nebius API Key (optional — upgrades redesigns to Qwen2.5-VL + DeepSeek-V3)",
-                        placeholder="ey...",
-                        type="password",
-                        value=NEBIUS_API_KEY,
-                        info="Optional. If set, redesigns use the HuggingFace Space (Qwen2.5-VL-72B + DeepSeek-V3-0324). Without it, GPT-4o Vision is used automatically. Get a Nebius key at studio.nebius.ai",
-                    )
+
                 with gr.Column():
                     smtp_host_input = gr.Textbox(
                         label="SMTP Host",
@@ -634,7 +626,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
             btn_save_settings = gr.Button("💾 Save Settings", variant="secondary")
             settings_status = gr.Textbox(label="Status", interactive=False)
 
-            def save_settings(api_key, bb_key, nebius_key, smtp_host, smtp_port, smtp_user, smtp_pass):
+            def save_settings(api_key, bb_key, smtp_host, smtp_port, smtp_user, smtp_pass):
                 import ux_sim_app.core.config as cfg
                 if api_key and api_key.strip():
                     os.environ["OPENAI_API_KEY"] = api_key.strip()
@@ -642,9 +634,6 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                 if bb_key and bb_key.strip():
                     os.environ["BROWSERBASE_API_KEY"] = bb_key.strip()
                     cfg.BROWSERBASE_API_KEY = bb_key.strip()
-                if nebius_key and nebius_key.strip():
-                    os.environ["NEBIUS_API_KEY"] = nebius_key.strip()
-                    cfg.NEBIUS_API_KEY = nebius_key.strip()
                 if smtp_host and smtp_host.strip():
                     cfg.SMTP_HOST = smtp_host.strip()
                 if smtp_port:
@@ -658,7 +647,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
 
             btn_save_settings.click(
                 save_settings,
-                inputs=[api_key_input, bb_key_input, nebius_key_input, smtp_host_input,
+                inputs=[api_key_input, bb_key_input, smtp_host_input,
                         smtp_port_input, smtp_user_input, smtp_pass_input],
                 outputs=[settings_status],
             )
@@ -698,7 +687,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         fn=step_generate_report,
         inputs=[
             state_url, state_personas_json, state_sim_results_json, state_ux_json,
-            nebius_key_input, generate_redesigns_flag,
+            generate_redesigns_flag,
         ],
         outputs=[status_report, report_file, state_report_html],
     ).then(
