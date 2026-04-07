@@ -762,14 +762,21 @@ def build_report_data(
         dim_issues = dim.get("issues", [])
         dim_recs = dim.get("recommendations", [])
         for i, iss in enumerate(dim_issues[:2]):  # max 2 per dimension
-            rec = dim_recs[i] if i < len(dim_recs) else "Review and improve this aspect."
+            # iss / rec may be a dict (from LLM JSON) or a plain string — normalise
+            iss_text = iss if isinstance(iss, str) else (
+                iss.get("issue") or iss.get("text") or iss.get("description") or str(iss)
+            )
+            rec_raw = dim_recs[i] if i < len(dim_recs) else "Review and improve this aspect."
+            rec_text = rec_raw if isinstance(rec_raw, str) else (
+                rec_raw.get("recommendation") or rec_raw.get("text") or str(rec_raw)
+            )
             issues.append(IssueSlide(
                 number=f"02.{issue_counter}",
                 category=dim_name,
-                title=f"{dim_name}: {iss[:40]}",
-                issue_text=f"Users might struggle because {iss}",
-                root_cause=f"The {dim_name} dimension scored {dim.get('score', 'N/A')}/10. {iss}",
-                recommendation=rec,
+                title=f"{dim_name}: {iss_text[:40]}",
+                issue_text=f"Users might struggle because {iss_text}",
+                root_cause=f"The {dim_name} dimension scored {dim.get('score', 'N/A')}/10. {iss_text}",
+                recommendation=rec_text,
                 screenshot_url=desktop_ss,
             ))
             issue_counter += 1
@@ -793,10 +800,13 @@ def build_report_data(
 
     # From UX strengths
     for s in strengths_raw[:3]:
+        s_text = s if isinstance(s, str) else (
+            s.get("strength") or s.get("text") or s.get("description") or str(s)
+        )
         strength_slides.append(StrengthSlide(
-            title=s[:40] if len(s) > 40 else s,
+            title=s_text[:40] if len(s_text) > 40 else s_text,
             brand_name=brand_name,
-            description=s,
+            description=s_text,
             screenshot_url=desktop_ss,
         ))
 

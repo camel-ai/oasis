@@ -535,7 +535,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
             gr.Markdown(
                 "This step takes multi-viewport screenshots of the website, runs heuristic "
                 "checks (alt text, headings, CTAs, navigation, accessibility), and uses "
-                "GPT-4o Vision to critique the design across 6 UX dimensions."
+                "uses persona-generated critique to improve the design across 6 UX dimensions."
             )
             btn_ux_scan = gr.Button("🔍 Run UX Scan", variant="primary", size="lg")
             status_ux = gr.Textbox(label="Status", interactive=False, lines=2)
