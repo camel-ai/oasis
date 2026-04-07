@@ -154,9 +154,11 @@ def step_run_simulations(
     content_items_text: str,
 ):
     """Run selected simulation modes.
-    MUST yield exactly 2 values on every yield.
+    MUST yield exactly 3 values on every yield:
+      (status_text, sim_results_json, video_recordings_json)
     """
     _EMPTY_RESULTS = "{}"
+    _EMPTY_VIDS = "[]"
 
     # Guard all string params against None
     url = url or ""
@@ -165,14 +167,14 @@ def step_run_simulations(
     content_items_text = content_items_text or ""
 
     if not personas_json or personas_json in ("{}", ""):
-        yield "❌ Please generate personas first (Tab 1).", _EMPTY_RESULTS
+        yield "❌ Please generate personas first (Tab 1).", _EMPTY_RESULTS, _EMPTY_VIDS
         return
 
     try:
         persona_dicts = json.loads(personas_json)
         personas = [Persona(**p) for p in persona_dicts]
     except Exception as exc:
-        yield f"❌ Failed to parse personas: {exc}", _EMPTY_RESULTS
+        yield f"❌ Failed to parse personas: {exc}", _EMPTY_RESULTS, _EMPTY_VIDS
         return
 
     try:
@@ -181,29 +183,38 @@ def step_run_simulations(
         image_urls = []
 
     results: list[SimulationResult] = []
+    all_video_recordings: list = []
 
     if run_mode2_flag:
-        yield "⏳ Running Mode 2 – Browser Usability Simulation...", _EMPTY_RESULTS
+        yield "⏳ Running Mode 2 – Browser Usability Simulation...", _EMPTY_RESULTS, _EMPTY_VIDS
         try:
             r = _run(run_mode2(personas, url.strip()))
             results.append(r)
+            # Collect video recordings from this Mode 2 run
+            all_video_recordings.extend(r.video_recordings or [])
             conv = int(r.aggregate.get("conversion_intent_rate", 0) * 100)
-            yield f"✅ Mode 2 complete. Conversion intent: {conv}%", _EMPTY_RESULTS
+            n_vids = len(r.video_recordings or [])
+            yield (
+                f"✅ Mode 2 complete. Conversion intent: {conv}%. "
+                f"{n_vids} session recording(s) saved.",
+                _EMPTY_RESULTS,
+                _EMPTY_VIDS,
+            )
         except Exception as exc:
-            yield f"⚠️ Mode 2 error: {exc}", _EMPTY_RESULTS
+            yield f"⚠️ Mode 2 error: {exc}", _EMPTY_RESULTS, _EMPTY_VIDS
 
     if run_mode3_flag:
         if not image_urls:
-            yield "⚠️ Mode 3: No images found on the website. Skipping.", _EMPTY_RESULTS
+            yield "⚠️ Mode 3: No images found on the website. Skipping.", _EMPTY_RESULTS, _EMPTY_VIDS
         else:
-            yield f"⏳ Running Mode 3 – Visual Simulation ({len(image_urls)} images)...", _EMPTY_RESULTS
+            yield f"⏳ Running Mode 3 – Visual Simulation ({len(image_urls)} images)...", _EMPTY_RESULTS, _EMPTY_VIDS
             try:
                 r = _run(run_mode3(personas, image_urls))
                 results.append(r)
                 avg = r.aggregate.get("average_resonance", 0)
-                yield f"✅ Mode 3 complete. Average resonance: {avg}/10", _EMPTY_RESULTS
+                yield f"✅ Mode 3 complete. Average resonance: {avg}/10", _EMPTY_RESULTS, _EMPTY_VIDS
             except Exception as exc:
-                yield f"⚠️ Mode 3 error: {exc}", _EMPTY_RESULTS
+                yield f"⚠️ Mode 3 error: {exc}", _EMPTY_RESULTS, _EMPTY_VIDS
 
     if run_mode1_flag:
         content_items_text = content_items_text or ""  # guard against None
@@ -211,23 +222,28 @@ def step_run_simulations(
         if not items:
             items = [content_items_text.strip()] if content_items_text.strip() else []
         if not items:
-            yield "⚠️ Mode 1: No content items provided. Skipping.", _EMPTY_RESULTS
+            yield "⚠️ Mode 1: No content items provided. Skipping.", _EMPTY_RESULTS, _EMPTY_VIDS
         else:
-            yield f"⏳ Running Mode 1 – Content Simulation ({len(items)} items)...", _EMPTY_RESULTS
+            yield f"⏳ Running Mode 1 – Content Simulation ({len(items)} items)...", _EMPTY_RESULTS, _EMPTY_VIDS
             try:
                 rs = _run(run_mode1(personas, items))
                 results.extend(rs)
                 avg_eng = sum(r.aggregate.get("engagement_rate", 0) for r in rs) / max(len(rs), 1)
-                yield f"✅ Mode 1 complete. Avg engagement: {int(avg_eng * 100)}%", _EMPTY_RESULTS
+                yield f"✅ Mode 1 complete. Avg engagement: {int(avg_eng * 100)}%", _EMPTY_RESULTS, _EMPTY_VIDS
             except Exception as exc:
-                yield f"⚠️ Mode 1 error: {exc}", _EMPTY_RESULTS
+                yield f"⚠️ Mode 1 error: {exc}", _EMPTY_RESULTS, _EMPTY_VIDS
 
     if not results:
-        yield "⚠️ No simulation modes were run. Please select at least one mode.", _EMPTY_RESULTS
+        yield "⚠️ No simulation modes were run. Please select at least one mode.", _EMPTY_RESULTS, _EMPTY_VIDS
         return
 
     results_json = json.dumps([r.to_dict() for r in results], indent=2)
-    yield f"✅ All simulations complete. {len(results)} result set(s) ready.", results_json
+    vids_json = json.dumps(all_video_recordings, indent=2)
+    yield (
+        f"✅ All simulations complete. {len(results)} result set(s) ready.",
+        results_json,
+        vids_json,
+    )
 
 
 # ── Step 3: UX Scan ────────────────────────────────────────────────────────────
@@ -406,6 +422,57 @@ def deliver_email(report_html: str, to_email: str, url: str) -> str:
     return f"✅ {msg}" if ok else f"❌ {msg}"
 
 
+# ── Session Recordings helpers ───────────────────────────────────────────────────
+
+def _update_recordings_tab(vids_json: str):
+    """Called after simulations finish. Updates the Recordings tab controls.
+    Returns: (rec_status, rec_slider, rec_persona_label, rec_video, rec_download)
+    """
+    try:
+        recs = json.loads(vids_json or "[]")
+    except Exception:
+        recs = []
+
+    if not recs:
+        return (
+            "No recordings found. Make sure Mode 2 is selected and Playwright is installed.",
+            gr.Slider(minimum=0, maximum=0, value=0),
+            "—",
+            None,
+            None,
+        )
+
+    first = recs[0]
+    vp = first.get("video_path") or ""
+    return (
+        f"✅ {len(recs)} recording(s) available. Use the slider to switch between personas.",
+        gr.Slider(minimum=0, maximum=len(recs) - 1, step=1, value=0),
+        first.get("persona_name", "—"),
+        vp if vp and os.path.exists(vp) else None,
+        vp if vp and os.path.exists(vp) else None,
+    )
+
+
+def _select_recording(vids_json: str, idx: int):
+    """Called when the slider changes. Returns (persona_label, video, download)."""
+    try:
+        recs = json.loads(vids_json or "[]")
+    except Exception:
+        recs = []
+
+    if not recs:
+        return "—", None, None
+
+    idx = max(0, min(int(idx), len(recs) - 1))
+    rec = recs[idx]
+    vp = rec.get("video_path") or ""
+    return (
+        rec.get("persona_name", "—"),
+        vp if vp and os.path.exists(vp) else None,
+        vp if vp and os.path.exists(vp) else None,
+    )
+
+
 # ── Gradio UI ──────────────────────────────────────────────────────────────────
 
 THEME = gr.themes.Soft(
@@ -418,12 +485,14 @@ THEME = gr.themes.Soft(
 with gr.Blocks(title="OASIS UX Simulation App") as demo:
 
     # ── Shared state ───────────────────────────────────────────────────────────
-    state_personas_json   = gr.State("{}")
-    state_image_urls_json = gr.State("[]")
+    state_personas_json    = gr.State("{}")
+    state_image_urls_json  = gr.State("[]")
     state_sim_results_json = gr.State("{}")
-    state_ux_json         = gr.State("{}")
-    state_report_html     = gr.State("")
-    state_url             = gr.State("")
+    state_ux_json          = gr.State("{}")
+    state_report_html      = gr.State("")
+    state_url              = gr.State("")
+    # List of {persona_name, video_path} dicts from Mode 2 recordings
+    state_video_recordings = gr.State("[]")  # JSON string
 
     # ── Header ─────────────────────────────────────────────────────────────────
     gr.HTML("""
@@ -585,7 +654,46 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                 btn_refresh_preview = gr.Button("🔄 Refresh Preview from Editor")
 
         # ══════════════════════════════════════════════════════════════════════
-        # TAB 6 – Settings
+        # TAB 6 – Session Recordings
+        # ══════════════════════════════════════════════════════════════════════
+        with gr.Tab("6 · Session Recordings"):
+            gr.Markdown("### 🎬 Persona Browser Session Recordings")
+            gr.Markdown(
+                "Each Mode 2 browser session is recorded automatically. "
+                "Use the slider below to switch between personas. "
+                "Videos are saved as `.webm` files and can be downloaded directly."
+            )
+            with gr.Row():
+                rec_status = gr.Textbox(
+                    label="Recording Status",
+                    interactive=False,
+                    value="Run Mode 2 simulations first to generate recordings.",
+                )
+            with gr.Row():
+                rec_slider = gr.Slider(
+                    minimum=0, maximum=0, step=1, value=0,
+                    label="Persona (use slider to switch)",
+                    interactive=True,
+                )
+            with gr.Row():
+                rec_persona_label = gr.Textbox(
+                    label="Current Persona",
+                    interactive=False,
+                    value="—",
+                )
+            with gr.Row():
+                rec_video = gr.Video(
+                    label="Session Recording",
+                    interactive=False,
+                )
+            with gr.Row():
+                rec_download = gr.File(
+                    label="⬇️ Download Recording",
+                    interactive=False,
+                )
+
+        # ══════════════════════════════════════════════════════════════════════
+        # TAB 7 – Settings
         # ══════════════════════════════════════════════════════════════════════
         with gr.Tab("⚙️ Settings"):
             gr.Markdown("### API Keys & Configuration")
@@ -665,14 +773,25 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         outputs=[state_url],
     )
 
-    # Step 2: Run simulations → 2 outputs
+    # Step 2: Run simulations → 3 outputs (status, sim_results_json, video_recordings_json)
     btn_run_sims.click(
         fn=step_run_simulations,
         inputs=[
             state_url, state_personas_json, state_image_urls_json,
             mode1_flag, mode2_flag, mode3_flag, content_items,
         ],
-        outputs=[status_sims, state_sim_results_json],
+        outputs=[status_sims, state_sim_results_json, state_video_recordings],
+    ).then(
+        fn=_update_recordings_tab,
+        inputs=[state_video_recordings],
+        outputs=[rec_status, rec_slider, rec_persona_label, rec_video, rec_download],
+    )
+
+    # Recordings tab – slider change → switch video
+    rec_slider.change(
+        fn=_select_recording,
+        inputs=[state_video_recordings, rec_slider],
+        outputs=[rec_persona_label, rec_video, rec_download],
     )
 
     # Step 3: UX scan → 2 outputs

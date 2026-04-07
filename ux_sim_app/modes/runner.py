@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 
 from ux_sim_app.core.llm import chat, tool_args, text_content
 from ux_sim_app.core.personas import Persona
-from ux_sim_app.core.config import VISION_MODEL, MAX_BROWSER_SESSIONS, OPENAI_API_KEY, OPENAI_BASE_URL
+from ux_sim_app.core.config import VISION_MODEL, MAX_BROWSER_SESSIONS, OPENAI_API_KEY, OPENAI_BASE_URL, DATA_DIR
 
 HEADERS = {
     "User-Agent": (
@@ -63,6 +63,8 @@ class SimulationResult:
     aggregate: Dict[str, Any] = field(default_factory=dict)
     content_tested: Optional[str] = None
     images_analysed: List[str] = field(default_factory=list)
+    # Mode 2 video recordings — list of {persona_name, video_path} dicts
+    video_recordings: List[Dict[str, str]] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -179,10 +181,13 @@ def _aggregate_mode1(responses: List[PersonaResponse]) -> Dict:
 
 # ── Mode 2: Browser-Action Simulation ─────────────────────────────────────────
 
-async def _mode2_one(persona: Persona, url: str) -> PersonaResponse:
-    """Single persona browser session."""
+async def _mode2_one(persona: Persona, url: str, video_dir: Optional[str] = None) -> tuple:
+    """Single persona browser session. Returns (PersonaResponse, video_path_or_None)."""
+    import os
+    from pathlib import Path as _Path
     steps: List[str] = []
     page_text = ""
+    video_path: Optional[str] = None
 
     try:
         from playwright.async_api import async_playwright
@@ -191,10 +196,17 @@ async def _mode2_one(persona: Persona, url: str) -> PersonaResponse:
                 headless=True,
                 args=["--no-sandbox", "--disable-dev-shm-usage"],
             )
-            ctx = await browser.new_context(
-                user_agent=HEADERS["User-Agent"],
-                viewport={"width": 1280, "height": 800},
-            )
+            # Build context kwargs — add video recording when a dir is provided
+            ctx_kwargs: Dict[str, Any] = {
+                "user_agent": HEADERS["User-Agent"],
+                "viewport": {"width": 1280, "height": 800},
+            }
+            if video_dir:
+                _Path(video_dir).mkdir(parents=True, exist_ok=True)
+                ctx_kwargs["record_video_dir"] = video_dir
+                ctx_kwargs["record_video_size"] = {"width": 1280, "height": 800}
+
+            ctx = await browser.new_context(**ctx_kwargs)
             page = await ctx.new_page()
             await page.goto(url, wait_until="domcontentloaded", timeout=30000)
             steps.append("Navigated to homepage")
@@ -222,7 +234,27 @@ async def _mode2_one(persona: Persona, url: str) -> PersonaResponse:
             else:
                 steps.append("Could not click any menu/product link")
 
+            # MUST close context (not just browser) to flush the .webm video file
+            await ctx.close()
             await browser.close()
+
+            # Retrieve the saved video path
+            if video_dir:
+                try:
+                    vp = await page.video.path()
+                    video_path = str(vp)
+                    steps.append(f"Session video saved: {os.path.basename(video_path)}")
+                except Exception:
+                    # Find the most recently written .webm in the dir
+                    webms = sorted(
+                        _Path(video_dir).glob("*.webm"),
+                        key=lambda f: f.stat().st_mtime,
+                        reverse=True,
+                    )
+                    if webms:
+                        video_path = str(webms[0])
+                        steps.append(f"Session video saved: {webms[0].name}")
+
     except Exception as exc:
         steps.append(f"Browser error: {exc}")
         # Fallback: fetch via httpx
@@ -263,7 +295,7 @@ async def _mode2_one(persona: Persona, url: str) -> PersonaResponse:
     elif any(w in summary.lower() for w in ["would not", "wouldn't", "no, i"]):
         convert = False
 
-    return PersonaResponse(
+    pr = PersonaResponse(
         persona_name=persona.name,
         persona_type=persona.persona_type,
         mode=2,
@@ -271,26 +303,52 @@ async def _mode2_one(persona: Persona, url: str) -> PersonaResponse:
         usability_summary=summary,
         would_convert=convert,
     )
+    return pr, video_path
 
 
-async def run_mode2(personas: List[Persona], url: str) -> SimulationResult:
-    """Run Mode 2 for all personas in parallel (up to MAX_BROWSER_SESSIONS)."""
+async def run_mode2(
+    personas: List[Persona],
+    url: str,
+    record_video: bool = True,
+) -> SimulationResult:
+    """Run Mode 2 for all personas in parallel (up to MAX_BROWSER_SESSIONS).
+
+    When record_video=True, each persona's browser session is recorded to a
+    .webm file in DATA_DIR/recordings/<run_id>/ and stored in video_recordings.
+    """
+    import uuid as _uuid
+    from pathlib import Path as _Path
+
+    run_id = _uuid.uuid4().hex[:8]
+    video_dir: Optional[str] = None
+    if record_video:
+        video_dir = str(_Path(DATA_DIR) / "recordings" / run_id)
+
     sem = asyncio.Semaphore(MAX_BROWSER_SESSIONS)
 
-    async def _bounded(p: Persona) -> PersonaResponse:
+    async def _bounded(p: Persona):
         async with sem:
-            return await _mode2_one(p, url)
+            return await _mode2_one(p, url, video_dir=video_dir)
 
-    responses = await asyncio.gather(*[_bounded(p) for p in personas], return_exceptions=True)
+    raw = await asyncio.gather(*[_bounded(p) for p in personas], return_exceptions=True)
+
     clean: List[PersonaResponse] = []
-    for r in responses:
-        if isinstance(r, Exception):
+    video_recordings: List[Dict[str, str]] = []
+
+    for item in raw:
+        if isinstance(item, Exception):
             clean.append(PersonaResponse(
                 persona_name="Unknown", persona_type="Unknown", mode=2,
-                usability_summary=f"Error: {r}",
+                usability_summary=f"Error: {item}",
             ))
         else:
-            clean.append(r)
+            pr, vp = item
+            clean.append(pr)
+            if vp:
+                video_recordings.append({
+                    "persona_name": pr.persona_name,
+                    "video_path": vp,
+                })
 
     conversions = [r for r in clean if r.would_convert is True]
     return SimulationResult(
@@ -302,6 +360,7 @@ async def run_mode2(personas: List[Persona], url: str) -> SimulationResult:
             "personas_would_convert": len(conversions),
             "total_personas": len(clean),
         },
+        video_recordings=video_recordings,
     )
 
 
