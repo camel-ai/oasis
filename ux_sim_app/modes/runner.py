@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 
 from ux_sim_app.core.llm import chat, tool_args, text_content
 from ux_sim_app.core.personas import Persona
-from ux_sim_app.core.config import VISION_MODEL, MAX_BROWSER_SESSIONS, OPENAI_API_KEY, OPENAI_BASE_URL, DATA_DIR
+from ux_sim_app.core.config import VISION_MODEL, MAX_BROWSER_SESSIONS, OPENAI_API_KEY, EFFECTIVE_BASE_URL as OPENAI_BASE_URL, DATA_DIR
 
 HEADERS = {
     "User-Agent": (
@@ -179,6 +179,109 @@ def _aggregate_mode1(responses: List[PersonaResponse]) -> Dict:
     }
 
 
+# ── Mode 2: Cookie-banner dismissal ──────────────────────────────────────────
+
+# Common consent-button text patterns (case-insensitive, partial match)
+_CONSENT_TEXTS = [
+    "accept all", "accept cookies", "i accept", "agree", "allow all",
+    "allow cookies", "consent", "got it", "i understand", "ok", "okay",
+    "continue", "close", "dismiss", "decline all",  # 'decline all' still clears the banner
+    "reject all",   # some banners disappear on reject too
+    "save preferences", "save settings",
+]
+
+# CSS selectors that commonly wrap consent overlays
+_CONSENT_SELECTORS = [
+    "[id*='cookie']", "[class*='cookie']",
+    "[id*='consent']", "[class*='consent']",
+    "[id*='gdpr']", "[class*='gdpr']",
+    "[id*='banner']", "[class*='banner']",
+    "[id*='notice']", "[class*='notice']",
+    "[id*='privacy']", "[class*='privacy']",
+    "[aria-label*='cookie']", "[aria-label*='consent']",
+    ".cc-banner", ".cc-window", "#onetrust-accept-btn-handler",
+    "#CybotCookiebotDialogBodyButtonAccept",
+    "[data-testid*='cookie']", "[data-testid*='consent']",
+]
+
+
+async def _dismiss_cookie_banners(page: Any, steps: List[str]) -> None:
+    """Three-tier cookie banner dismissal strategy.
+
+    Tier 1 – JS injection: set common consent cookies directly so the banner
+             never renders on subsequent navigations.
+    Tier 2 – Playwright click on known consent button text patterns.
+    Tier 3 – Playwright click on known consent CSS selector patterns.
+    """
+    # ── Tier 1: Pre-set consent cookies via JS ─────────────────────────────────
+    try:
+        await page.evaluate("""
+            () => {
+                const pairs = [
+                    ['cookieconsent_status', 'dismiss'],
+                    ['cookie_consent', '1'],
+                    ['cookies_accepted', 'true'],
+                    ['gdpr_consent', '1'],
+                    ['CookieConsent', '{stamp:\"accepted\",necessary:true,preferences:true,statistics:true,marketing:true}'],
+                    ['OptanonAlertBoxClosed', new Date().toISOString()],
+                    ['OptanonConsent', 'isGpcEnabled=0&datestamp=&version=6.10&isIABGlobal=false&hosts=&consentId=&interactionCount=1&landingPath=NotLandingPage&groups=C0001%3A1%2CC0002%3A1%2CC0003%3A1%2CC0004%3A1'],
+                    ['__cfduid', '1'],
+                    ['_ga_consent', 'granted'],
+                ];
+                pairs.forEach(([k, v]) => {
+                    document.cookie = k + '=' + v + '; path=/; max-age=31536000; SameSite=Lax';
+                    try { localStorage.setItem(k, v); } catch(e) {}
+                });
+            }
+        """)
+        steps.append("Cookie consent: pre-set consent cookies via JS")
+    except Exception:
+        pass
+
+    # Short wait for banner to potentially render
+    await page.wait_for_timeout(800)
+
+    # ── Tier 2: Click by visible text ─────────────────────────────────────────
+    for text in _CONSENT_TEXTS:
+        try:
+            # Use Playwright's text locator with exact=False for partial match
+            btn = page.get_by_role("button", name=text)
+            if await btn.count() > 0:
+                await btn.first.click(timeout=2000)
+                await page.wait_for_timeout(500)
+                steps.append(f"Cookie consent: clicked button '{text}'")
+                return  # banner dismissed — done
+        except Exception:
+            pass
+        try:
+            # Fallback: text selector
+            loc = page.locator(f"text=/{text}/i")
+            if await loc.count() > 0:
+                await loc.first.click(timeout=2000)
+                await page.wait_for_timeout(500)
+                steps.append(f"Cookie consent: clicked text '{text}'")
+                return
+        except Exception:
+            pass
+
+    # ── Tier 3: Click by CSS selector patterns ─────────────────────────────────
+    for sel in _CONSENT_SELECTORS:
+        try:
+            loc = page.locator(sel)
+            if await loc.count() > 0:
+                # Try to find a button or link inside the banner
+                inner_btn = loc.locator("button, a, [role='button']")
+                if await inner_btn.count() > 0:
+                    await inner_btn.first.click(timeout=2000)
+                    await page.wait_for_timeout(500)
+                    steps.append(f"Cookie consent: clicked element inside '{sel}'")
+                    return
+        except Exception:
+            pass
+
+    steps.append("Cookie consent: no banner detected or already dismissed")
+
+
 # ── Mode 2: Browser-Action Simulation ─────────────────────────────────────────
 
 async def _mode2_one(persona: Persona, url: str, video_dir: Optional[str] = None) -> tuple:
@@ -210,6 +313,9 @@ async def _mode2_one(persona: Persona, url: str, video_dir: Optional[str] = None
             page = await ctx.new_page()
             await page.goto(url, wait_until="domcontentloaded", timeout=30000)
             steps.append("Navigated to homepage")
+
+            # Dismiss any cookie/GDPR banners before interacting with the page
+            await _dismiss_cookie_banners(page, steps)
 
             content = await page.content()
             soup = BeautifulSoup(content, "html.parser")

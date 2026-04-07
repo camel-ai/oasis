@@ -29,6 +29,7 @@ import gradio as gr
 # Ensure the app package is importable when run as a module
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+import ux_sim_app.core.config as cfg
 from ux_sim_app.core.config import (
     OPENAI_API_KEY, BROWSERBASE_API_KEY, REPORTS_DIR, TEXT_MODEL, VISION_MODEL
 )
@@ -696,10 +697,22 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         # TAB 7 – Settings
         # ══════════════════════════════════════════════════════════════════════
         with gr.Tab("⚙️ Settings"):
-            gr.Markdown("### API Keys & Configuration")
+            gr.Markdown("### API Keys, Provider & Model Configuration")
             gr.Markdown(
-                "These settings override the `.env` file values for the current session."
+                "These settings override the `.env` file values for the current session. "
+                "Changes take effect immediately without restarting."
             )
+
+            # ── Provider selection ──────────────────────────────────────────────
+            with gr.Row():
+                provider_radio = gr.Radio(
+                    choices=["openai", "openrouter", "custom"],
+                    value=cfg.PROVIDER,
+                    label="LLM Provider",
+                    info="Select your LLM provider. OpenRouter gives access to 200+ models.",
+                )
+
+            # ── API Keys ────────────────────────────────────────────────────────
             with gr.Row():
                 with gr.Column():
                     api_key_input = gr.Textbox(
@@ -707,16 +720,77 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                         placeholder="sk-...",
                         type="password",
                         value=OPENAI_API_KEY,
-                        info="Required for all LLM and vision calls",
+                        info="Used when provider = openai",
                     )
-                    bb_key_input = gr.Textbox(
-                        label="Browserbase API Key (optional)",
-                        placeholder="bb_live_...",
+                    openrouter_key_input = gr.Textbox(
+                        label="OpenRouter API Key",
+                        placeholder="sk-or-v1-...",
                         type="password",
-                        value=BROWSERBASE_API_KEY,
-                        info="Only needed as fallback for Mode 2 if Playwright fails",
+                        value=cfg.OPENROUTER_API_KEY,
+                        info="Used when provider = openrouter. Get one at openrouter.ai",
+                    )
+                with gr.Column():
+                    custom_api_key_input = gr.Textbox(
+                        label="Custom Provider API Key",
+                        placeholder="your-api-key",
+                        type="password",
+                        value=cfg.CUSTOM_API_KEY,
+                        info="Used when provider = custom",
+                    )
+                    custom_base_url_input = gr.Textbox(
+                        label="Custom Base URL",
+                        placeholder="https://your-provider.com/v1",
+                        value=cfg.CUSTOM_BASE_URL,
+                        info="OpenAI-compatible base URL for custom provider",
                     )
 
+            # ── Model selection ─────────────────────────────────────────────────
+            gr.Markdown("#### Model Selection")
+            gr.Markdown(
+                "**Text model** is used for persona generation, content simulation, and UX analysis. "
+                "**Vision model** is used for Mode 3 visual simulation and redesign screenshot analysis."
+            )
+            with gr.Row():
+                with gr.Column():
+                    text_model_input = gr.Dropdown(
+                        label="Text Model",
+                        choices=cfg.OPENAI_TEXT_MODELS + cfg.OPENROUTER_TEXT_MODELS,
+                        value=cfg.TEXT_MODEL,
+                        allow_custom_value=True,
+                        info="Used for all non-vision LLM calls. Type any model name for custom providers.",
+                    )
+                with gr.Column():
+                    vision_model_input = gr.Dropdown(
+                        label="Vision Model",
+                        choices=cfg.OPENAI_VISION_MODELS + cfg.OPENROUTER_VISION_MODELS,
+                        value=cfg.VISION_MODEL,
+                        allow_custom_value=True,
+                        info="Must support vision/image input. Used for Mode 3 and AI redesigns.",
+                    )
+
+            # ── OpenRouter model reference ──────────────────────────────────────
+            with gr.Accordion("📋 OpenRouter Model Reference", open=False):
+                gr.Markdown(
+                    "**Recommended text models for this app:**\n\n"
+                    + "\n".join(f"- `{m}`" for m in cfg.OPENROUTER_TEXT_MODELS)
+                    + "\n\n**Recommended vision models:**\n\n"
+                    + "\n".join(f"- `{m}`" for m in cfg.OPENROUTER_VISION_MODELS)
+                    + "\n\nFull model list: [openrouter.ai/models](https://openrouter.ai/models)"
+                )
+
+            # ── Browserbase ─────────────────────────────────────────────────────
+            with gr.Row():
+                bb_key_input = gr.Textbox(
+                    label="Browserbase API Key (optional)",
+                    placeholder="bb_live_...",
+                    type="password",
+                    value=BROWSERBASE_API_KEY,
+                    info="Only needed as fallback for Mode 2 if Playwright fails entirely",
+                )
+
+            # ── Email / SMTP ─────────────────────────────────────────────────────
+            gr.Markdown("#### Email Report Delivery (SMTP)")
+            with gr.Row():
                 with gr.Column():
                     smtp_host_input = gr.Textbox(
                         label="SMTP Host",
@@ -724,6 +798,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                         info="For email delivery of reports",
                     )
                     smtp_port_input = gr.Number(label="SMTP Port", value=587)
+                with gr.Column():
                     smtp_user_input = gr.Textbox(
                         label="SMTP Username / Email", placeholder="you@gmail.com"
                     )
@@ -731,17 +806,61 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                         label="SMTP Password / App Password", type="password"
                     )
 
-            btn_save_settings = gr.Button("💾 Save Settings", variant="secondary")
+            btn_save_settings = gr.Button("💾 Save Settings", variant="primary")
             settings_status = gr.Textbox(label="Status", interactive=False)
 
-            def save_settings(api_key, bb_key, smtp_host, smtp_port, smtp_user, smtp_pass):
+            def save_settings(
+                provider, api_key, or_key, custom_key, custom_url,
+                text_model, vision_model,
+                bb_key, smtp_host, smtp_port, smtp_user, smtp_pass
+            ):
                 import ux_sim_app.core.config as cfg
+                from ux_sim_app.core.llm import set_runtime_config
+
+                saved = []
+
+                # Provider
+                if provider:
+                    cfg.PROVIDER = provider.lower()
+                    saved.append(f"provider={provider}")
+
+                # API keys
                 if api_key and api_key.strip():
-                    os.environ["OPENAI_API_KEY"] = api_key.strip()
                     cfg.OPENAI_API_KEY = api_key.strip()
+                    os.environ["OPENAI_API_KEY"] = api_key.strip()
+                if or_key and or_key.strip():
+                    cfg.OPENROUTER_API_KEY = or_key.strip()
+                if custom_key and custom_key.strip():
+                    cfg.CUSTOM_API_KEY = custom_key.strip()
+                if custom_url and custom_url.strip():
+                    cfg.CUSTOM_BASE_URL = custom_url.strip()
+
+                # Resolve effective key/url after provider change
+                cfg.EFFECTIVE_API_KEY = cfg._resolve_api_key()
+                cfg.EFFECTIVE_BASE_URL = cfg._resolve_base_url()
+
+                # Models
+                if text_model and text_model.strip():
+                    cfg.TEXT_MODEL = text_model.strip()
+                    saved.append(f"text_model={text_model.strip()}")
+                if vision_model and vision_model.strip():
+                    cfg.VISION_MODEL = vision_model.strip()
+                    saved.append(f"vision_model={vision_model.strip()}")
+
+                # Push to llm runtime
+                set_runtime_config(
+                    provider=cfg.PROVIDER,
+                    api_key=cfg.EFFECTIVE_API_KEY,
+                    base_url=cfg.EFFECTIVE_BASE_URL,
+                    text_model=cfg.TEXT_MODEL,
+                    vision_model=cfg.VISION_MODEL,
+                )
+
+                # Browserbase
                 if bb_key and bb_key.strip():
-                    os.environ["BROWSERBASE_API_KEY"] = bb_key.strip()
                     cfg.BROWSERBASE_API_KEY = bb_key.strip()
+
+                # SMTP
                 if smtp_host and smtp_host.strip():
                     cfg.SMTP_HOST = smtp_host.strip()
                 if smtp_port:
@@ -751,12 +870,19 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                     cfg.SMTP_FROM = smtp_user.strip()
                 if smtp_pass and smtp_pass.strip():
                     cfg.SMTP_PASS = smtp_pass.strip()
-                return "✅ Settings saved for this session."
+
+                detail = ", ".join(saved) if saved else "no changes"
+                return f"✅ Settings saved for this session ({detail})."
 
             btn_save_settings.click(
                 save_settings,
-                inputs=[api_key_input, bb_key_input, smtp_host_input,
-                        smtp_port_input, smtp_user_input, smtp_pass_input],
+                inputs=[
+                    provider_radio, api_key_input, openrouter_key_input,
+                    custom_api_key_input, custom_base_url_input,
+                    text_model_input, vision_model_input,
+                    bb_key_input, smtp_host_input, smtp_port_input,
+                    smtp_user_input, smtp_pass_input,
+                ],
                 outputs=[settings_status],
             )
 

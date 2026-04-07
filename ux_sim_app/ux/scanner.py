@@ -25,7 +25,7 @@ import httpx
 from bs4 import BeautifulSoup
 
 from ux_sim_app.core.config import (
-    OPENAI_API_KEY, OPENAI_BASE_URL, VISION_MODEL, SCREENSHOTS_DIR
+    OPENAI_API_KEY, EFFECTIVE_BASE_URL as OPENAI_BASE_URL, VISION_MODEL, SCREENSHOTS_DIR
 )
 
 HEADERS = {
