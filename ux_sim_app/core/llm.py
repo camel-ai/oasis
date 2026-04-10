@@ -1,8 +1,9 @@
-"""Async LLM client supporting OpenAI, OpenRouter, and custom providers.
+"""Async LLM client supporting per-model provider selection.
 
-The active provider, base URL, and API key are resolved at import time from
-config.py but can be overridden at runtime via `set_runtime_config()` when
-the user changes settings in the Gradio UI.
+TEXT tasks  → TEXT_PROVIDER  (api key + base url resolved from config)
+VISION tasks → VISION_PROVIDER (separate api key + base url)
+
+Runtime overrides can be set from the Gradio Settings tab via set_runtime_config().
 """
 from __future__ import annotations
 import json
@@ -15,43 +16,75 @@ import ux_sim_app.core.config as _cfg
 _sem = asyncio.Semaphore(_cfg.LLM_SEMAPHORE)
 
 # ── Runtime overrides (set by Gradio Settings tab) ─────────────────────────────
-# These shadow the module-level config values when the user changes settings.
 _runtime: Dict[str, Any] = {}
 
 
 def set_runtime_config(
     *,
+    # Text provider
+    text_provider: Optional[str] = None,
+    text_api_key: Optional[str] = None,
+    text_base_url: Optional[str] = None,
+    text_model: Optional[str] = None,
+    # Vision provider
+    vision_provider: Optional[str] = None,
+    vision_api_key: Optional[str] = None,
+    vision_base_url: Optional[str] = None,
+    vision_model: Optional[str] = None,
+    # Legacy single-provider override (maps to text)
     provider: Optional[str] = None,
     api_key: Optional[str] = None,
     base_url: Optional[str] = None,
-    text_model: Optional[str] = None,
-    vision_model: Optional[str] = None,
 ) -> None:
-    """Override config at runtime from the Gradio Settings tab.
-    Pass None for any field you do not want to change.
-    """
-    if provider is not None:
-        _runtime["provider"] = provider.lower()
-    if api_key is not None:
-        _runtime["api_key"] = api_key
-    if base_url is not None:
-        _runtime["base_url"] = base_url
+    """Override config at runtime from the Gradio Settings tab."""
+    # Text provider
+    if text_provider is not None:
+        _runtime["text_provider"] = text_provider.lower()
+    if text_api_key is not None:
+        _runtime["text_api_key"] = text_api_key
+    if text_base_url is not None:
+        _runtime["text_base_url"] = text_base_url
     if text_model is not None:
         _runtime["text_model"] = text_model
+    # Vision provider
+    if vision_provider is not None:
+        _runtime["vision_provider"] = vision_provider.lower()
+    if vision_api_key is not None:
+        _runtime["vision_api_key"] = vision_api_key
+    if vision_base_url is not None:
+        _runtime["vision_base_url"] = vision_base_url
     if vision_model is not None:
         _runtime["vision_model"] = vision_model
+    # Legacy single-provider (maps to text)
+    if provider is not None:
+        _runtime["text_provider"] = provider.lower()
+    if api_key is not None:
+        _runtime["text_api_key"] = api_key
+    if base_url is not None:
+        _runtime["text_base_url"] = base_url
 
 
-def _effective_api_key() -> str:
-    if "api_key" in _runtime and _runtime["api_key"]:
-        return _runtime["api_key"]
-    return _cfg.EFFECTIVE_API_KEY
+def _resolve_provider_creds(vision: bool) -> tuple[str, str, str]:
+    """Return (provider, api_key, base_url) for text or vision tasks."""
+    _OR = "https://openrouter.ai/api/v1"
+    _OA = "https://api.openai.com/v1"
 
+    if vision:
+        provider = _runtime.get("vision_provider") or _cfg.VISION_PROVIDER
+        api_key = _runtime.get("vision_api_key") or _cfg.EFFECTIVE_VISION_API_KEY
+        base_url = _runtime.get("vision_base_url") or _cfg.EFFECTIVE_VISION_BASE_URL
+    else:
+        provider = _runtime.get("text_provider") or _cfg.TEXT_PROVIDER
+        api_key = _runtime.get("text_api_key") or _cfg.EFFECTIVE_TEXT_API_KEY
+        base_url = _runtime.get("text_base_url") or _cfg.EFFECTIVE_TEXT_BASE_URL
 
-def _effective_base_url() -> str:
-    if "base_url" in _runtime and _runtime["base_url"]:
-        return _runtime["base_url"].rstrip("/")
-    return _cfg.EFFECTIVE_BASE_URL.rstrip("/")
+    # Normalise base_url based on provider if it looks like a placeholder
+    if provider == "openrouter" and not base_url.startswith("https://openrouter"):
+        base_url = _OR
+    elif provider == "openai" and not base_url:
+        base_url = _OA
+
+    return provider, api_key, base_url.rstrip("/")
 
 
 def _effective_text_model() -> str:
@@ -62,13 +95,11 @@ def _effective_vision_model() -> str:
     return _runtime.get("vision_model") or _cfg.VISION_MODEL
 
 
-def _build_headers() -> Dict[str, str]:
+def _build_headers(provider: str, api_key: str) -> Dict[str, str]:
     headers = {
-        "Authorization": f"Bearer {_effective_api_key()}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
-    # OpenRouter requires these headers for proper attribution and routing
-    provider = _runtime.get("provider") or _cfg.PROVIDER
     if provider == "openrouter":
         headers["HTTP-Referer"] = "https://github.com/Greene-ctrl/oasis"
         headers["X-Title"] = "OASIS UX Simulation"
@@ -91,9 +122,10 @@ async def chat(
                      image_url content blocks in the user message.
         model:       Explicit model override. If None, uses VISION_MODEL when
                      vision=True, else TEXT_MODEL.
-        vision:      When True, selects the VISION_MODEL by default.
+        vision:      When True, routes to the VISION provider with VISION_MODEL.
         tools / tool_choice / max_tokens / temperature: standard OpenAI params.
     """
+    provider, api_key, base_url = _resolve_provider_creds(vision)
     resolved_model = model or (_effective_vision_model() if vision else _effective_text_model())
 
     payload: Dict[str, Any] = {
@@ -106,8 +138,7 @@ async def chat(
         payload["tools"] = tools
         payload["tool_choice"] = tool_choice or "auto"
 
-    base_url = _effective_base_url()
-    headers = _build_headers()
+    headers = _build_headers(provider, api_key)
 
     async with _sem:
         async with httpx.AsyncClient(timeout=90.0) as client:

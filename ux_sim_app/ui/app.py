@@ -40,6 +40,8 @@ from ux_sim_app.ux.scanner import scan_website
 from ux_sim_app.report.generator import generate_full_report, send_report_email
 from ux_sim_app.report.slide_generator import build_report_data, render_html, html_to_pdf, IssueSlide
 from ux_sim_app.report.redesign_client import generate_redesign, sanitise_for_embed
+from ux_sim_app.integrations import notebooklm as nlm
+from ux_sim_app.integrations.notebooklm import UX_CATEGORIES
 import logging
 logger = logging.getLogger(__name__)
 
@@ -245,6 +247,85 @@ def step_run_simulations(
         results_json,
         vids_json,
     )
+
+
+# ── NotebookLM helpers ────────────────────────────────────────────────────────
+
+def nlm_authenticate():
+    """Trigger NotebookLM OAuth in a background thread."""
+    try:
+        ok, msg = _run(nlm.authenticate_notebooklm())
+        return msg, nlm.get_state()["status"]
+    except Exception as e:
+        return f"❌ Auth error: {e}", "Error"
+
+
+def nlm_connect(notebook_id_or_title: str):
+    """Connect to or create a NotebookLM notebook."""
+    try:
+        ok, msg = _run(nlm.connect_notebook(notebook_id_or_title or "UX Best Practices"))
+        state = nlm.get_state()
+        nb_label = state.get("notebook_title") or "—"
+        return msg, nb_label
+    except Exception as e:
+        return f"❌ Connect error: {e}", "—"
+
+
+def nlm_disconnect():
+    """Disconnect from NotebookLM."""
+    try:
+        _run(nlm.disconnect())
+        return "Disconnected from NotebookLM.", "—"
+    except Exception as e:
+        return f"Error: {e}", "—"
+
+
+def nlm_run_config_loop(business_context: str, personas_json: str):
+    """Run the UX configuration loop: query NotebookLM (or built-in KB) for best practices
+    across all 15 UX categories and cache the results.
+    Yields progress updates.
+    """
+    persona_summary = ""
+    try:
+        pds = json.loads(personas_json or "[]")
+        if isinstance(pds, list) and pds:
+            names = [p.get("name", "") for p in pds[:3]]
+            ages = [str(p.get("age", "")) for p in pds[:3]]
+            persona_summary = f"Personas include: {', '.join(names)} (ages {', '.join(ages)})"
+    except Exception:
+        pass
+
+    state = nlm.get_state()
+    source = "NotebookLM" if (state["authenticated"] and state["notebook_id"]) else "built-in knowledge base"
+    total = len(UX_CATEGORIES)
+
+    yield f"⏳ Starting UX configuration loop ({total} categories) using {source}...", "{}"
+
+    results: dict = {}
+
+    def _on_progress(cat_name, idx, tot):
+        pass  # progress tracked by loop below
+
+    for i, cat in enumerate(UX_CATEGORIES):
+        yield f"⏳ [{i+1}/{total}] Querying: {cat['name']}...", json.dumps(results)
+        try:
+            bp = _run(nlm.query_category_best_practices(
+                cat,
+                business_context=business_context or "",
+                persona_summary=persona_summary,
+            ))
+            results[cat["id"]] = bp
+        except Exception as exc:
+            results[cat["id"]] = f"Error: {exc}"
+
+    # Format a readable summary
+    summary_lines = []
+    for cat in UX_CATEGORIES:
+        bp = results.get(cat["id"], "")
+        summary_lines.append(f"### {cat['name']}\n{bp[:300]}..." if len(bp) > 300 else f"### {cat['name']}\n{bp}")
+    summary_md = "\n\n".join(summary_lines)
+
+    yield f"✅ Configuration loop complete. {total} categories loaded from {source}.", json.dumps(results)
 
 
 # ── Step 3: UX Scan ────────────────────────────────────────────────────────────
@@ -605,8 +686,75 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
             gr.Markdown(
                 "This step takes multi-viewport screenshots of the website, runs heuristic "
                 "checks (alt text, headings, CTAs, navigation, accessibility), and uses "
-                "uses persona-generated critique to improve the design across 6 UX dimensions."
+                "persona-generated critique to improve the design across 15 UX dimensions."
             )
+
+            # ── NotebookLM Knowledge Enrichment Panel ──────────────────────────
+            with gr.Accordion("📓 NotebookLM Knowledge Enrichment (optional)", open=False):
+                gr.Markdown(
+                    "Connect to a Google NotebookLM notebook to enrich the UX scan with "
+                    "your own curated knowledge base. The agent will query the notebook for "
+                    "best practices across **15 UX heuristic categories** and personalise "
+                    "the scan based on your business context and personas.\n\n"
+                    "**Without a notebook**, the app uses a built-in UX best-practices knowledge base."
+                )
+
+                with gr.Row():
+                    nlm_status_box = gr.Textbox(
+                        label="NotebookLM Status",
+                        interactive=False,
+                        value="Not connected — using built-in knowledge base",
+                        scale=3,
+                    )
+                    nlm_notebook_label = gr.Textbox(
+                        label="Connected Notebook",
+                        interactive=False,
+                        value="—",
+                        scale=1,
+                    )
+
+                with gr.Row():
+                    btn_nlm_auth = gr.Button(
+                        "🔐 Authenticate with Google",
+                        variant="secondary",
+                        scale=1,
+                    )
+                    nlm_notebook_input = gr.Textbox(
+                        label="Notebook ID or Title",
+                        placeholder="UX Best Practices",
+                        info="Leave blank to create a new notebook",
+                        scale=2,
+                    )
+                    btn_nlm_connect = gr.Button(
+                        "🔗 Connect / Create Notebook",
+                        variant="secondary",
+                        scale=1,
+                    )
+                    btn_nlm_disconnect = gr.Button(
+                        "⏏️ Disconnect",
+                        variant="stop",
+                        scale=1,
+                    )
+
+                gr.Markdown("#### 🤖 Agent Configuration Loop")
+                gr.Markdown(
+                    "Run the agent loop to query the notebook (or built-in KB) for best practices "
+                    "across all 15 UX categories. Results are cached and used to personalise "
+                    "the UX scan and report."
+                )
+                btn_nlm_config_loop = gr.Button(
+                    "▶️ Run UX Configuration Loop",
+                    variant="primary",
+                )
+                nlm_loop_status = gr.Textbox(
+                    label="Configuration Loop Status",
+                    interactive=False,
+                    lines=2,
+                )
+                nlm_bp_json = gr.State("{}")
+                with gr.Accordion("📋 Best Practices Summary", open=False):
+                    nlm_bp_display = gr.Markdown("_Run the configuration loop to populate this._")
+
             btn_ux_scan = gr.Button("🔍 Run UX Scan", variant="primary", size="lg")
             status_ux = gr.Textbox(label="Status", interactive=False, lines=2)
 
@@ -703,16 +851,26 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                 "Changes take effect immediately without restarting."
             )
 
-            # ── Provider selection ──────────────────────────────────────────────
+            # ── Provider selection (separate for text and vision) ──────────────────
+            gr.Markdown("#### Provider Selection")
+            gr.Markdown("Set providers independently for **text** tasks (persona generation, content analysis) and **vision** tasks (Mode 3, AI redesigns).")
             with gr.Row():
-                provider_radio = gr.Radio(
+                text_provider_radio = gr.Radio(
                     choices=["openai", "openrouter", "custom"],
-                    value=cfg.PROVIDER,
-                    label="LLM Provider",
-                    info="Select your LLM provider. OpenRouter gives access to 200+ models.",
+                    value=cfg.TEXT_PROVIDER,
+                    label="Text Provider",
+                    info="Provider for all non-vision LLM calls.",
                 )
+                vision_provider_radio = gr.Radio(
+                    choices=["openai", "openrouter", "custom"],
+                    value=cfg.VISION_PROVIDER,
+                    label="Vision Provider",
+                    info="Provider for vision/image LLM calls (Mode 3, redesigns).",
+                )
+            # legacy single provider_radio alias for wiring compatibility
+            provider_radio = text_provider_radio
 
-            # ── API Keys ────────────────────────────────────────────────────────
+            # ── API Keys ────────────────────────────────────────────────────────────────
             with gr.Row():
                 with gr.Column():
                     api_key_input = gr.Textbox(
@@ -810,7 +968,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
             settings_status = gr.Textbox(label="Status", interactive=False)
 
             def save_settings(
-                provider, api_key, or_key, custom_key, custom_url,
+                text_provider, vision_provider, api_key, or_key, custom_key, custom_url,
                 text_model, vision_model,
                 bb_key, smtp_host, smtp_port, smtp_user, smtp_pass
             ):
@@ -819,10 +977,13 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
 
                 saved = []
 
-                # Provider
-                if provider:
-                    cfg.PROVIDER = provider.lower()
-                    saved.append(f"provider={provider}")
+                # Providers
+                if text_provider:
+                    cfg.TEXT_PROVIDER = text_provider.lower()
+                    saved.append(f"text_provider={text_provider}")
+                if vision_provider:
+                    cfg.VISION_PROVIDER = vision_provider.lower()
+                    saved.append(f"vision_provider={vision_provider}")
 
                 # API keys
                 if api_key and api_key.strip():
@@ -849,7 +1010,8 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
 
                 # Push to llm runtime
                 set_runtime_config(
-                    provider=cfg.PROVIDER,
+                    provider=cfg.TEXT_PROVIDER,
+                    vision_provider=cfg.VISION_PROVIDER,
                     api_key=cfg.EFFECTIVE_API_KEY,
                     base_url=cfg.EFFECTIVE_BASE_URL,
                     text_model=cfg.TEXT_MODEL,
@@ -877,7 +1039,8 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
             btn_save_settings.click(
                 save_settings,
                 inputs=[
-                    provider_radio, api_key_input, openrouter_key_input,
+                    text_provider_radio, vision_provider_radio,
+                    api_key_input, openrouter_key_input,
                     custom_api_key_input, custom_base_url_input,
                     text_model_input, vision_model_input,
                     bb_key_input, smtp_host_input, smtp_port_input,
@@ -920,6 +1083,38 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         outputs=[rec_persona_label, rec_video, rec_download],
     )
 
+    # NotebookLM auth
+    btn_nlm_auth.click(
+        fn=nlm_authenticate,
+        inputs=[],
+        outputs=[nlm_status_box, nlm_status_box],
+    )
+
+    # NotebookLM connect
+    btn_nlm_connect.click(
+        fn=nlm_connect,
+        inputs=[nlm_notebook_input],
+        outputs=[nlm_status_box, nlm_notebook_label],
+    )
+
+    # NotebookLM disconnect
+    btn_nlm_disconnect.click(
+        fn=nlm_disconnect,
+        inputs=[],
+        outputs=[nlm_status_box, nlm_notebook_label],
+    )
+
+    # NotebookLM config loop → yields (status, bp_json)
+    btn_nlm_config_loop.click(
+        fn=nlm_run_config_loop,
+        inputs=[business_context, state_personas_json],
+        outputs=[nlm_loop_status, nlm_bp_json],
+    ).then(
+        fn=lambda j: _format_bp_summary(j),
+        inputs=[nlm_bp_json],
+        outputs=[nlm_bp_display],
+    )
+
     # Step 3: UX scan → 2 outputs
     btn_ux_scan.click(
         fn=step_ux_scan,
@@ -954,6 +1149,23 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         inputs=[report_editor],
         outputs=[report_preview],
     )
+
+
+def _format_bp_summary(bp_json: str) -> str:
+    """Format the best practices JSON into a readable Markdown summary."""
+    try:
+        bp = json.loads(bp_json or "{}")
+    except Exception:
+        return "_No data yet._"
+    if not bp:
+        return "_No data yet._"
+    lines = []
+    for cat in UX_CATEGORIES:
+        text = bp.get(cat["id"], "")
+        if text:
+            snippet = text[:250] + "..." if len(text) > 250 else text
+            lines.append(f"**{cat['name']}**\n{snippet}")
+    return "\n\n---\n\n".join(lines) if lines else "_No data yet._"
 
 
 # ── Entry point ────────────────────────────────────────────────────────────────

@@ -310,11 +310,44 @@ async def _mode2_one(persona: Persona, url: str, video_dir: Optional[str] = None
                 ctx_kwargs["record_video_size"] = {"width": 1280, "height": 800}
 
             ctx = await browser.new_context(**ctx_kwargs)
+
+            # ── Pre-consent injection: set localStorage/cookie flags BEFORE any page loads
+            # This prevents Squarespace, OneTrust, CookieBot and similar banners from
+            # ever rendering, since they check these flags at script init time.
+            await ctx.add_init_script("""
+                (() => {
+                    const LS_CONSENT_KEYS = [
+                        ['sqs-cookie-banner-v2-accepted', 'true'],
+                        ['squarespace-cookie-banner', 'accepted'],
+                        ['squarespace-popup-overlay', JSON.stringify({version:1,dismissed:true})],
+                        ['cookieconsent_status', 'dismiss'],
+                        ['cookie_consent', '1'],
+                        ['cookies_accepted', 'true'],
+                        ['gdpr_consent', '1'],
+                        ['CookieConsent', JSON.stringify({stamp:'accepted',necessary:true,preferences:true,statistics:true,marketing:true})],
+                        ['OptanonAlertBoxClosed', new Date().toISOString()],
+                        ['OptanonConsent', 'isGpcEnabled=0&datestamp=&version=6.10&isIABGlobal=false&hosts=&consentId=&interactionCount=1&landingPath=NotLandingPage&groups=C0001%3A1%2CC0002%3A1%2CC0003%3A1%2CC0004%3A1'],
+                        ['euconsent-v2', 'CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA'],
+                        ['cmplz_functional', '1'],
+                        ['cmplz_marketing', '1'],
+                        ['cmplz_statistics', '1'],
+                        ['cmplz_preferences', '1'],
+                        ['cookieyes-consent', 'consentid:accepted,consent:yes,action:yes,necessary:yes,functional:yes,analytics:yes,performance:yes,advertisement:yes'],
+                    ];
+                    try {
+                        LS_CONSENT_KEYS.forEach(([k, v]) => {
+                            try { localStorage.setItem(k, v); } catch(e) {}
+                            document.cookie = k + '=' + encodeURIComponent(v) + '; path=/; max-age=31536000; SameSite=Lax';
+                        });
+                    } catch(e) {}
+                })();
+            """)
+
             page = await ctx.new_page()
             await page.goto(url, wait_until="domcontentloaded", timeout=30000)
             steps.append("Navigated to homepage")
 
-            # Dismiss any cookie/GDPR banners before interacting with the page
+            # Also run post-load dismissal as belt-and-braces for JS-rendered banners
             await _dismiss_cookie_banners(page, steps)
 
             content = await page.content()

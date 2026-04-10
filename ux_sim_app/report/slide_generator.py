@@ -381,15 +381,52 @@ def _bold_probability(text: str) -> str:
     return text
 
 
-def _img_tag(url: str, alt: str = "") -> str:
-    """Return an <img> tag. If url is empty, return a placeholder div."""
+def _path_to_data_uri(path_or_url: str) -> str:
+    """Convert a local file path to a base64 data URI for reliable HTML embedding.
+    If it's already a data URI or a remote URL, return as-is.
+    """
+    if not path_or_url:
+        return ""
+    if path_or_url.startswith("data:"):
+        return path_or_url
+    # Remote URL — return as-is (will be fetched by browser)
+    if path_or_url.startswith(("http://", "https://")):
+        return path_or_url
+    # Local file path — embed as base64
+    p = Path(path_or_url)
+    if p.exists() and p.is_file():
+        suffix = p.suffix.lower().lstrip(".")
+        mime_map = {
+            "png": "image/png",
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "webp": "image/webp",
+            "gif": "image/gif",
+            "svg": "image/svg+xml",
+        }
+        mime = mime_map.get(suffix, "image/png")
+        data = base64.b64encode(p.read_bytes()).decode()
+        return f"data:{mime};base64,{data}"
+    # File not found — return original so caller can handle gracefully
+    return path_or_url
+
+
+def _img_tag(url: str, alt: str = "", max_height: str = "100%") -> str:
+    """Return an <img> tag with base64-embedded src for reliable rendering.
+    If url is empty, return a placeholder div.
+    """
     if not url:
         return (
             '<div style="width:100%;height:100%;background:#ddd;border-radius:6px;'
             'display:flex;align-items:center;justify-content:center;'
-            'font-size:12px;color:#888;">No screenshot</div>'
+            'font-size:12px;color:#888;">No screenshot available</div>'
         )
-    return f'<img src="{_esc(url)}" alt="{_esc(alt)}" loading="lazy">'
+    data_uri = _path_to_data_uri(url)
+    return (
+        f'<img src="{_esc(data_uri)}" alt="{_esc(alt)}" '
+        f'style="max-height:{max_height};width:100%;object-fit:contain;border-radius:6px;" '
+        f'loading="eager">'
+    )
 
 
 # ---------------------------------------------------------------------------
