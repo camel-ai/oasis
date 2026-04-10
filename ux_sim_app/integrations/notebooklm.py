@@ -1,11 +1,18 @@
 """NotebookLM MCP Integration for the OASIS UX Simulation App.
 
 Uses the notebooklm-py library (teng-lin/notebooklm-py) to:
-  1. Authenticate with Google NotebookLM via browser-based OAuth
+  1. Authenticate with Google NotebookLM via `notebooklm login` CLI
+     (opens a browser for Google OAuth, saves Playwright storage state to
+     ~/.notebooklm/storage_state.json)
   2. Create or connect to a UX Best Practices notebook
   3. Run an agent configuration loop that queries the notebook for
      UX best practices per heuristic category, personalising the
      UX scan based on the business context and persona profiles
+
+The correct auth flow is:
+  - `notebooklm login`  →  browser OAuth  →  storage_state.json saved
+  - `NotebookLMClient.from_storage()`  →  loads auth from file
+  - `async with client:` context manager for each API call
 
 UX Heuristic Categories (based on Nielsen's 10 + extended audit):
   1.  Visibility of System Status
@@ -138,7 +145,7 @@ _state: Dict[str, Any] = {
     "authenticated": False,
     "notebook_id": None,
     "notebook_title": None,
-    "client": None,
+    "client": None,  # kept for API compatibility; not used (we use context managers)
     "best_practices_cache": {},  # category_id → best practices text
     "status": "Not connected",
 }
@@ -156,7 +163,38 @@ def _update_state(**kwargs: Any) -> None:
         _state.update(kwargs)
 
 
-# ── Auth and connection ────────────────────────────────────────────────────────
+# ── Auth helpers ───────────────────────────────────────────────────────────────
+
+def _get_storage_path(storage_path: Optional[str] = None) -> Path:
+    """Return the Playwright storage state path used by `notebooklm login`."""
+    if storage_path:
+        return Path(storage_path)
+    try:
+        from notebooklm.paths import get_storage_path as _gsp  # type: ignore
+        return _gsp()
+    except Exception:
+        return Path.home() / ".notebooklm" / "storage_state.json"
+
+
+def _is_authenticated(storage_path: Optional[str] = None) -> bool:
+    """Check if a valid storage_state.json exists from a previous `notebooklm login`."""
+    sp = _get_storage_path(storage_path)
+    if not sp.exists():
+        return False
+    try:
+        data = json.loads(sp.read_text())
+        cookies = data.get("cookies", [])
+        # Must have at least one Google auth cookie
+        return any(
+            c.get("name") in ("SID", "HSID", "SSID", "APISID", "SAPISID", "__Secure-1PSID")
+            and "google" in c.get("domain", "")
+            for c in cookies
+        )
+    except Exception:
+        return False
+
+
+# ── Package check ──────────────────────────────────────────────────────────────
 
 def check_notebooklm_installed() -> bool:
     """Check if notebooklm-py is installed."""
@@ -183,76 +221,132 @@ def install_notebooklm() -> tuple[bool, str]:
         return False, f"Install error: {e}"
 
 
-async def authenticate_notebooklm(storage_path: Optional[str] = None) -> tuple[bool, str]:
-    """Authenticate with NotebookLM via browser OAuth.
+# ── Auth and connection ────────────────────────────────────────────────────────
 
-    Returns (success, message).
-    The user must complete the OAuth flow in the browser that opens.
+async def authenticate_notebooklm(storage_path: Optional[str] = None) -> tuple[bool, str]:
+    """Authenticate with NotebookLM via `notebooklm login` CLI.
+
+    The correct auth flow is:
+      1. Run `notebooklm login` — opens a browser for Google OAuth
+      2. User completes login and presses ENTER in the terminal
+      3. Playwright storage state is saved to ~/.notebooklm/storage_state.json
+      4. Subsequent calls use `NotebookLMClient.from_storage()` to load auth
+
+    This function:
+    - Checks for an existing valid storage state first (quick path)
+    - If not found, launches `notebooklm login` in a background subprocess
+    - Returns instructions to the user to complete the browser login
+
+    Returns (already_authenticated, message).
     """
     if not check_notebooklm_installed():
         ok, msg = install_notebooklm()
         if not ok:
             return False, msg
 
-    try:
-        from notebooklm import NotebookLMClient  # type: ignore
+    sp = _get_storage_path(storage_path)
 
-        sp = storage_path or str(Path.home() / ".notebooklm" / "auth.json")
-        Path(sp).parent.mkdir(parents=True, exist_ok=True)
+    # Already authenticated — verify by loading the storage state
+    if _is_authenticated(storage_path):
+        try:
+            from notebooklm import NotebookLMClient  # type: ignore
+            async with await NotebookLMClient.from_storage(str(sp)) as client:
+                # Quick connectivity check
+                _ = await client.notebooks.list()
+            _update_state(
+                authenticated=True,
+                status="✅ Authenticated with NotebookLM (existing session)",
+            )
+            return True, (
+                "✅ Already authenticated — existing session found.\n\n"
+                "Click **Connect Notebook** to link a notebook, then "
+                "**Run Config Loop** to load best practices."
+            )
+        except Exception as e:
+            # Storage state exists but may be expired — fall through to re-login
+            logger.warning("Existing storage state invalid: %s", e)
 
-        _update_state(status="Authenticating — please complete the browser OAuth flow...")
+    # No valid session — launch `notebooklm login` in a background thread
+    # (it opens a browser window; we can't await it in Gradio's event loop)
+    _update_state(status="⏳ Launching browser login...")
 
-        # This opens a browser window for the user to log in with Google
-        client = await NotebookLMClient.from_browser(storage_path=sp)
+    def _run_login():
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "notebooklm", "login"],
+                timeout=300,
+            )
+            if result.returncode == 0 and _is_authenticated(storage_path):
+                _update_state(
+                    authenticated=True,
+                    status="✅ Login complete — session saved",
+                )
+            else:
+                _update_state(
+                    status="⚠️ Login window closed — authentication not confirmed. Try again."
+                )
+        except subprocess.TimeoutExpired:
+            _update_state(status="⚠️ Login timed out (5 min). Please try again.")
+        except Exception as exc:
+            _update_state(status=f"❌ Login error: {exc}")
 
-        _update_state(
-            authenticated=True,
-            client=client,
-            status="✅ Authenticated with NotebookLM",
-        )
-        return True, "✅ Authenticated successfully. You can now connect to a notebook."
+    t = threading.Thread(target=_run_login, daemon=True)
+    t.start()
 
-    except Exception as e:
-        msg = f"❌ Authentication failed: {e}"
-        _update_state(status=msg)
-        return False, msg
+    return False, (
+        "🌐 **A browser window has opened for Google login.**\n\n"
+        "1. Complete the Google sign-in in the browser window\n"
+        "2. Wait until you see the NotebookLM homepage\n"
+        "3. Return here and click **Authenticate** again to confirm\n\n"
+        f"Session will be saved to: `{sp}`"
+    )
 
 
 async def connect_notebook(notebook_id_or_title: str) -> tuple[bool, str]:
-    """Connect to an existing notebook by ID or title, or create a new one."""
-    state = get_state()
-    if not state["authenticated"] or not state["client"]:
-        return False, "❌ Not authenticated. Please authenticate first."
+    """Connect to an existing notebook by ID or title, or create a new one.
 
-    client = state["client"]
+    Uses `NotebookLMClient.from_storage()` as a context manager for each call.
+    Stores only the notebook_id/title in state (not the client object).
+    """
+    if not _is_authenticated():
+        return False, (
+            "❌ Not authenticated. Please click **Authenticate** first "
+            "and complete the Google login."
+        )
+
     try:
-        # Try to find existing notebook by title
-        notebooks = await client.notebooks.list()
-        matched = None
-        for nb in notebooks:
-            if (nb.id == notebook_id_or_title or
-                    nb.title.lower() == notebook_id_or_title.lower()):
-                matched = nb
-                break
+        from notebooklm import NotebookLMClient  # type: ignore
 
-        if matched:
+        async with await NotebookLMClient.from_storage() as client:
+            notebooks = await client.notebooks.list()
+            matched = None
+            search = (notebook_id_or_title or "").strip().lower()
+            for nb in notebooks:
+                if search and (
+                    search in nb.id.lower() or search in nb.title.lower()
+                ):
+                    matched = nb
+                    break
+
+            if matched:
+                _update_state(
+                    authenticated=True,
+                    notebook_id=matched.id,
+                    notebook_title=matched.title,
+                    status=f"✅ Connected to notebook: {matched.title}",
+                )
+                return True, f"✅ Connected to existing notebook: **{matched.title}**"
+
+            # Create new notebook
+            title = notebook_id_or_title.strip() if notebook_id_or_title.strip() else "UX Best Practices"
+            nb = await client.notebooks.create(title)
             _update_state(
-                notebook_id=matched.id,
-                notebook_title=matched.title,
-                status=f"✅ Connected to notebook: {matched.title}",
+                authenticated=True,
+                notebook_id=nb.id,
+                notebook_title=nb.title,
+                status=f"✅ Created new notebook: {nb.title}",
             )
-            return True, f"✅ Connected to existing notebook: **{matched.title}**"
-
-        # Create new notebook
-        nb = await client.notebooks.create(
-            notebook_id_or_title or "UX Best Practices"
-        )
-        _update_state(
-            notebook_id=nb.id,
-            notebook_title=nb.title,
-            status=f"✅ Created new notebook: {nb.title}",
-        )
-        return True, f"✅ Created new notebook: **{nb.title}**"
+            return True, f"✅ Created new notebook: **{nb.title}**"
 
     except Exception as e:
         msg = f"❌ Failed to connect to notebook: {e}"
@@ -288,15 +382,16 @@ async def query_category_best_practices(
     query = category["query"] + context_clause
 
     # Try NotebookLM first
-    if state["authenticated"] and state["notebook_id"] and state["client"]:
+    if state["authenticated"] and state["notebook_id"] and _is_authenticated():
         try:
-            client = state["client"]
-            result = await client.chat.ask(state["notebook_id"], query)
-            answer = result.answer if hasattr(result, "answer") else str(result)
-            # Cache and return
-            with _lock:
-                _state["best_practices_cache"][cache_key] = answer
-            return answer
+            from notebooklm import NotebookLMClient  # type: ignore
+            async with await NotebookLMClient.from_storage() as client:
+                result = await client.chat.ask(state["notebook_id"], query)
+                answer = result.answer if hasattr(result, "answer") else str(result)
+                # Cache and return
+                with _lock:
+                    _state["best_practices_cache"][cache_key] = answer
+                return answer
         except Exception as e:
             logger.warning("NotebookLM query failed for %s: %s", category["id"], e)
 
@@ -437,12 +532,13 @@ def _builtin_best_practices(category_id: str) -> str:
 
 async def list_notebooks() -> tuple[bool, List[Dict[str, str]]]:
     """List all notebooks in the authenticated account."""
-    state = get_state()
-    if not state["authenticated"] or not state["client"]:
+    if not _is_authenticated():
         return False, []
     try:
-        notebooks = await state["client"].notebooks.list()
-        return True, [{"id": nb.id, "title": nb.title} for nb in notebooks]
+        from notebooklm import NotebookLMClient  # type: ignore
+        async with await NotebookLMClient.from_storage() as client:
+            notebooks = await client.notebooks.list()
+            return True, [{"id": nb.id, "title": nb.title} for nb in notebooks]
     except Exception as e:
         logger.warning("Failed to list notebooks: %s", e)
         return False, []
@@ -450,12 +546,6 @@ async def list_notebooks() -> tuple[bool, List[Dict[str, str]]]:
 
 async def disconnect() -> None:
     """Disconnect from NotebookLM and clear state."""
-    state = get_state()
-    if state["client"]:
-        try:
-            await state["client"].__aexit__(None, None, None)
-        except Exception:
-            pass
     _update_state(
         authenticated=False,
         notebook_id=None,

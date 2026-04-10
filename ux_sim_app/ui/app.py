@@ -252,12 +252,19 @@ def step_run_simulations(
 # ── NotebookLM helpers ────────────────────────────────────────────────────────
 
 def nlm_authenticate():
-    """Trigger NotebookLM OAuth in a background thread."""
+    """Trigger NotebookLM OAuth in a background thread.
+
+    Returns (status_message, notebook_label).
+    The notebook_label shows the connected notebook title or auth status.
+    """
     try:
         ok, msg = _run(nlm.authenticate_notebooklm())
-        return msg, nlm.get_state()["status"]
+        state = nlm.get_state()
+        # Show notebook title if already connected, otherwise auth status
+        nb_label = state.get("notebook_title") or ("✅ Authenticated" if ok else "⏳ Awaiting login")
+        return msg, nb_label
     except Exception as e:
-        return f"❌ Auth error: {e}", "Error"
+        return f"❌ Auth error: {e}", "—"
 
 
 def nlm_connect(notebook_id_or_title: str):
@@ -1085,7 +1092,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
     btn_nlm_auth.click(
         fn=nlm_authenticate,
         inputs=[],
-        outputs=[nlm_status_box, nlm_status_box],
+        outputs=[nlm_status_box, nlm_notebook_label],
     )
 
     # NotebookLM connect
