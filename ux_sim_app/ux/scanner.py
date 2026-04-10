@@ -27,6 +27,7 @@ from bs4 import BeautifulSoup
 from ux_sim_app.core.config import (
     OPENAI_API_KEY, EFFECTIVE_BASE_URL as OPENAI_BASE_URL, VISION_MODEL, SCREENSHOTS_DIR
 )
+from ux_sim_app.integrations.notebooklm import get_best_practices_for_scan, UX_CATEGORIES
 
 HEADERS = {
     "User-Agent": (
@@ -196,9 +197,48 @@ def _heuristic_checks(html: str, url: str) -> Dict[str, Any]:
 
 # ── AI vision critique ─────────────────────────────────────────────────────────
 
-_CRITIQUE_PROMPT = """You are a senior UX designer and usability expert. Analyse the provided
-website screenshots (desktop, tablet, mobile viewports) and return a comprehensive UX critique.
+# Category IDs that map to the 6 scanner dimensions (used to pull best practices)
+_DIM_CATEGORY_MAP: Dict[str, List[str]] = {
+    "visual_design":        ["aesthetic", "consistency", "recognition"],
+    "usability":            ["user_control", "flexibility", "visibility"],
+    "accessibility":        ["accessibility", "error_prevention"],
+    "mobile_responsiveness": ["mobile"],
+    "content_quality":      ["real_world", "help_docs"],
+    "trust_credibility":    ["trust", "conversion"],
+}
 
+
+def _build_critique_prompt() -> str:
+    """Build the AI critique prompt, silently injecting best-practices context
+    from the NotebookLM cache (or built-in knowledge) for each dimension."""
+    # Gather all category IDs we need
+    all_cat_ids = [cat["id"] for cat in UX_CATEGORIES]
+    bp_context = get_best_practices_for_scan(all_cat_ids)
+
+    # Build per-dimension best-practices sections
+    dim_sections: List[str] = []
+    for dim_key, cat_ids in _DIM_CATEGORY_MAP.items():
+        dim_name = dim_key.replace("_", " ").title()
+        relevant_bp = "\n".join(
+            f"  [{cid}]: {bp_context[cid][:400]}"
+            for cid in cat_ids
+            if cid in bp_context and bp_context[cid]
+        )
+        if relevant_bp:
+            dim_sections.append(f"### {dim_name}\n{relevant_bp}")
+
+    bp_block = (
+        "\n\n--- INTERNAL BEST-PRACTICES REFERENCE (do not quote verbatim) ---\n"
+        + "\n".join(dim_sections)
+        + "\n--- END REFERENCE ---\n"
+        if dim_sections else ""
+    )
+
+    return (
+        "You are a senior UX designer and usability expert. Analyse the provided\n"
+        "website screenshots (desktop, tablet, mobile viewports) and return a comprehensive UX critique.\n"
+        + bp_block
+        + """
 Evaluate across these six dimensions:
 1. Visual Design (typography, colour, hierarchy, whitespace, brand consistency)
 2. Usability (navigation clarity, findability, task completion ease, CTA clarity)
@@ -209,7 +249,7 @@ Evaluate across these six dimensions:
 
 For each dimension provide:
 - A score 0-100
-- Detailed feedback paragraph
+- Detailed feedback paragraph grounded in established UX heuristics
 - Specific issues with severity (High/Medium/Low) and actionable recommendations
 
 Also provide:
@@ -236,11 +276,15 @@ Return ONLY valid JSON in this exact structure:
     {"priority":"High","category":"Navigation","title":"...","description":"...","impact":"...","effort":"Low"}
   ]
 }"""
+    )
 
 
 async def _ai_critique(screenshots: Dict[str, str]) -> Dict:
-    """Send screenshots to GPT-4o vision and get structured UX critique."""
-    content: List[Dict] = [{"type": "text", "text": _CRITIQUE_PROMPT}]
+    """Send screenshots to GPT-4o vision and get structured UX critique.
+    Best-practices context from the NotebookLM cache is silently injected
+    into the prompt — it is never shown to the user."""
+    prompt = _build_critique_prompt()
+    content: List[Dict] = [{"type": "text", "text": prompt}]
 
     for vp, path in screenshots.items():
         if path.startswith("ERROR"):

@@ -751,9 +751,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                     interactive=False,
                     lines=2,
                 )
-                nlm_bp_json = gr.State("{}")
-                with gr.Accordion("📋 Best Practices Summary", open=False):
-                    nlm_bp_display = gr.Markdown("_Run the configuration loop to populate this._")
+                nlm_bp_json = gr.State("{}")  # cache only — not displayed to user
 
             btn_ux_scan = gr.Button("🔍 Run UX Scan", variant="primary", size="lg")
             status_ux = gr.Textbox(label="Status", interactive=False, lines=2)
@@ -1109,10 +1107,8 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         fn=nlm_run_config_loop,
         inputs=[business_context, state_personas_json],
         outputs=[nlm_loop_status, nlm_bp_json],
-    ).then(
-        fn=lambda j: _format_bp_summary(j),
-        inputs=[nlm_bp_json],
-        outputs=[nlm_bp_display],
+        # Best practices are cached internally and silently injected into the
+        # UX scanner prompt — they are never displayed to the user.
     )
 
     # Step 3: UX scan → 2 outputs
@@ -1149,23 +1145,6 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         inputs=[report_editor],
         outputs=[report_preview],
     )
-
-
-def _format_bp_summary(bp_json: str) -> str:
-    """Format the best practices JSON into a readable Markdown summary."""
-    try:
-        bp = json.loads(bp_json or "{}")
-    except Exception:
-        return "_No data yet._"
-    if not bp:
-        return "_No data yet._"
-    lines = []
-    for cat in UX_CATEGORIES:
-        text = bp.get(cat["id"], "")
-        if text:
-            snippet = text[:250] + "..." if len(text) > 250 else text
-            lines.append(f"**{cat['name']}**\n{snippet}")
-    return "\n\n---\n\n".join(lines) if lines else "_No data yet._"
 
 
 # ── Entry point ────────────────────────────────────────────────────────────────
