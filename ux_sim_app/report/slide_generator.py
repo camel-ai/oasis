@@ -2,26 +2,31 @@
 slide_generator.py
 ==================
 Generates a slide-style HTML report (and optionally PDF via Playwright)
-that mirrors the design language of the reference "Usability Test Report"
-PDF: beige/teal palette, 16:9 slides, issue-detail 40/60 split template,
-strengths 50/50 template, and teal section/sub-section dividers.
+using the Marpit rendering engine.
 
-Data flow:
+Pipeline:
   ScrapeResult + UXReport + list[SimulationResult] + list[Persona]
   → build_report_data(...)
   → SlideReportData
-  → render_html(SlideReportData)
+  → build_markdown(SlideReportData)   # Markdown AST (string)
+  → render_html(markdown)             # calls Node.js Marpit via subprocess
   → HTML string
   → (optional) html_to_pdf(html_str, output_path)
 
-v2 improvements (per design-system review):
-  - Design token layer (--font-*, --space-*, --color-*)
-  - Strict flex/grid slide layouts (no free-form positioning)
-  - Content clamping (clamp_text) applied to all user-supplied text
-  - Clear typography hierarchy (.title / .subtitle / .body / .label)
-  - Fixed image/iframe containers (overflow:hidden, object-fit:cover)
-  - Playwright print-color-adjust fix injected before pdf()
-  - DEBUG_LAYOUT flag for layout debugging
+Marpit slide separators:
+  ---          new slide
+  <!-- _class: <name> -->   apply CSS class to the section
+
+Slide classes defined in the OASIS theme (marpit_render.js):
+  cover         front cover
+  toc           table of contents (grid layout)
+  divider       teal section divider
+  divider-light linen section divider
+  issue         40/60 split: .left panel + .right panel
+  strength      50/50 split: .left panel + .right panel
+  back          back cover
+
+v3 — Marpit rendering engine (replaces hand-crafted HTML string templates)
 """
 
 from __future__ import annotations
@@ -31,388 +36,53 @@ import base64
 import json
 import os
 import re
-import textwrap
+import subprocess
+import tempfile
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 # ---------------------------------------------------------------------------
-# Debug flag — set True to outline every element in red for layout debugging
+# Path to the Node.js Marpit render script (sibling of this file)
 # ---------------------------------------------------------------------------
-DEBUG_LAYOUT = False
+_RENDER_SCRIPT = Path(__file__).parent / "marpit_render.js"
 
 # ---------------------------------------------------------------------------
 # Content constraints
 # ---------------------------------------------------------------------------
-_TITLE_MAX      = 60
-_SUBTITLE_MAX   = 80
-_BODY_MAX       = 220
-_QUOTE_MAX      = 140
-_ANALYSIS_MAX   = 180
-_TOC_LABEL_MAX  = 50
+_TITLE_MAX     = 60
+_SUBTITLE_MAX  = 80
+_BODY_MAX      = 220
+_QUOTE_MAX     = 140
+_ANALYSIS_MAX  = 180
+_TOC_LABEL_MAX = 50
 
 
 def clamp_text(text: str, max_chars: int) -> str:
-    """Truncate text to max_chars, appending ellipsis if needed."""
+    """Truncate text to max_chars at a word boundary, appending ellipsis."""
     text = (text or "").strip()
     if len(text) <= max_chars:
         return text
-    # Try to break at a word boundary
     truncated = text[:max_chars].rsplit(" ", 1)[0]
     return truncated + "…"
 
 
 # ---------------------------------------------------------------------------
-# Design tokens (CSS)
-# ---------------------------------------------------------------------------
-_DEBUG_CSS = """
-/* DEBUG: outline every element */
-.slide * { outline: 1px solid rgba(255,0,0,0.35) !important; }
-""" if DEBUG_LAYOUT else ""
-
-CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
-
-/* ── Reset ───────────────────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-/* ── Design tokens ───────────────────────────────────────────────────────── */
-:root {
-  /* Palette */
-  --color-bg:       #E8E0D5;
-  --color-teal:     #7DD9D0;
-  --color-navy:     #1A2280;
-  --color-text:     #2B2B2B;
-  --color-muted:    #7A7A9A;
-  --color-white:    #FFFFFF;
-  --color-card:     #FAFAC8;
-  --color-panel:    #F0ECE6;
-
-  /* Typography */
-  --font-family:    'Inter', 'Segoe UI', Arial, sans-serif;
-  --font-hero:      52px;
-  --font-title:     32px;
-  --font-subtitle:  20px;
-  --font-body:      14px;
-  --font-label:     11px;
-  --font-ghost:     80px;
-
-  /* Spacing */
-  --space-xs:  6px;
-  --space-sm:  12px;
-  --space-md:  20px;
-  --space-lg:  32px;
-  --space-xl:  48px;
-
-  /* Slide dimensions */
-  --slide-w: 960px;
-  --slide-h: 540px;
-  --slide-pad: var(--space-lg);
-}
-
-/* ── Base ─────────────────────────────────────────────────────────────────── */
-body {
-  background: #999;
-  font-family: var(--font-family);
-  color: var(--color-text);
-}
-
-/* ── Typography helpers ──────────────────────────────────────────────────── */
-.title {
-  font-size: var(--font-title);
-  font-weight: 700;
-  color: var(--color-text);
-  line-height: 1.2;
-}
-.subtitle {
-  font-size: var(--font-subtitle);
-  font-weight: 600;
-  color: var(--color-muted);
-  line-height: 1.3;
-}
-.body {
-  font-size: var(--font-body);
-  font-weight: 400;
-  line-height: 1.65;
-  color: var(--color-text);
-}
-.body strong { font-weight: 700; }
-.label {
-  font-size: var(--font-label);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-navy);
-}
-.ghost {
-  font-size: var(--font-ghost);
-  font-weight: 800;
-  color: rgba(255,255,255,0.55);
-  line-height: 1;
-}
-
-/* ── Slide container ─────────────────────────────────────────────────────── */
-.slide {
-  width: var(--slide-w);
-  height: var(--slide-h);
-  overflow: hidden;
-  margin: 0 auto 24px;
-  background: var(--color-bg);
-  page-break-after: always;
-  break-after: page;
-  display: flex;
-  flex-direction: column;
-}
-
-.slide.bg-teal   { background: var(--color-teal); }
-.slide.bg-linen  { background: var(--color-bg); }
-
-/* ── Image / iframe panel ────────────────────────────────────────────────── */
-.panel {
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--color-white);
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-.panel img,
-.panel iframe {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top;
-  border: none;
-  display: block;
-}
-.panel-label {
-  font-size: var(--font-label);
-  font-weight: 600;
-  color: var(--color-navy);
-  text-align: center;
-  padding: var(--space-xs) 0 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  flex-shrink: 0;
-}
-
-/* ── COVER ───────────────────────────────────────────────────────────────── */
-.cover-inner {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: var(--space-xl) var(--space-xl) var(--space-lg);
-}
-.cover-title {
-  font-size: var(--font-hero);
-  font-weight: 800;
-  color: var(--color-text);
-  line-height: 1.1;
-  max-width: 580px;
-}
-.cover-logo-card {
-  align-self: center;
-  background: var(--color-card);
-  padding: var(--space-md) var(--space-lg);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 180px;
-  min-height: 80px;
-}
-.cover-logo-card img { max-height: 70px; max-width: 260px; object-fit: contain; }
-.cover-logo-card .brand-text {
-  font-size: 30px; font-weight: 800; color: var(--color-text);
-}
-
-/* ── TABLE OF CONTENTS ───────────────────────────────────────────────────── */
-.toc-inner {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: var(--space-lg);
-  padding: var(--space-xl);
-  align-items: start;
-}
-.toc-heading {
-  font-size: 38px;
-  font-weight: 800;
-  color: var(--color-navy);
-  line-height: 1.2;
-}
-.toc-list { display: flex; flex-direction: column; gap: 0; }
-.toc-item {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-md);
-  padding: var(--space-sm) 0;
-  border-bottom: 1px dashed #B0A89A;
-}
-.toc-item:last-child { border-bottom: none; }
-.toc-num { font-size: 13px; font-weight: 700; color: var(--color-navy); min-width: 28px; }
-.toc-label { font-size: 18px; font-weight: 600; color: var(--color-text); }
-
-/* ── SECTION DIVIDER ─────────────────────────────────────────────────────── */
-.sec-inner {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: var(--space-xl);
-  gap: var(--space-sm);
-}
-.sec-number {
-  font-size: 100px;
-  font-weight: 800;
-  color: var(--color-white);
-  line-height: 1;
-}
-.sec-title {
-  font-size: 56px;
-  font-weight: 800;
-  color: var(--color-navy);
-  line-height: 1.1;
-  max-width: 700px;
-}
-.sec-subtitle {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--color-muted);
-}
-
-/* ── INTRO TEXT SLIDE ────────────────────────────────────────────────────── */
-.intro-inner {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-lg) var(--space-xl);
-  gap: var(--space-sm);
-  overflow: hidden;
-}
-.intro-ghost { flex-shrink: 0; }
-.intro-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: var(--space-xs); }
-.focus-label { font-size: var(--font-body); font-weight: 700; text-decoration: underline; margin-top: var(--space-sm); }
-.focus-item { font-size: 13px; margin-left: var(--space-md); }
-.focus-item::before { content: "— "; }
-
-/* ── ISSUE SLIDE (40/60 split) ───────────────────────────────────────────── */
-.issue-inner {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 40% 60%;
-  min-height: 0;
-}
-.issue-left {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: var(--space-xs);
-  padding: var(--space-lg) var(--space-md) var(--space-lg) var(--space-xl);
-  overflow: hidden;
-}
-.issue-ghost { flex-shrink: 0; }
-.issue-section { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
-.issue-section + .issue-section { margin-top: var(--space-xs); }
-
-.issue-right {
-  display: flex;
-  align-items: stretch;
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-md) var(--space-lg) var(--space-xs);
-  min-height: 0;
-}
-
-/* ── PERSONA QUOTE ───────────────────────────────────────────────────────── */
-.persona-quote {
-  background: rgba(125,217,208,0.18);
-  border-left: 3px solid var(--color-teal);
-  padding: 5px 8px;
-  margin-top: 5px;
-  font-size: 11.5px;
-  font-style: italic;
-  color: #444;
-  border-radius: 0 4px 4px 0;
-  overflow: hidden;
-}
-.persona-quote .persona-name { font-weight: 700; font-style: normal; color: var(--color-navy); }
-
-/* ── STRENGTH SLIDE (50/50 split) ────────────────────────────────────────── */
-.strength-inner {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: 0;
-}
-.strength-left {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: var(--space-sm);
-  padding: var(--space-xl) var(--space-md) var(--space-xl) var(--space-xl);
-  overflow: hidden;
-}
-.strength-ghost { flex-shrink: 0; }
-.strength-right {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-md);
-  min-height: 0;
-}
-.strength-right .panel { width: 100%; }
-
-/* ── BACK COVER ──────────────────────────────────────────────────────────── */
-.back-inner {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: var(--space-xl);
-}
-.back-logo-card {
-  align-self: flex-start;
-  background: var(--color-card);
-  padding: var(--space-sm) var(--space-lg);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.back-logo-card img { max-height: 60px; max-width: 220px; object-fit: contain; }
-.back-logo-card .brand-text { font-size: 28px; font-weight: 800; color: var(--color-text); }
-.back-report-title { font-size: 18px; font-style: italic; color: var(--color-text); }
-.back-author { align-self: flex-end; font-size: 14px; color: var(--color-text); }
-
-/* ── PRINT ───────────────────────────────────────────────────────────────── */
-@media print {
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  body { background: white; }
-  .slide { margin: 0; box-shadow: none; }
-  @page { size: 960px 540px landscape; margin: 0; }
-}
-""" + _DEBUG_CSS
-
-
-# ---------------------------------------------------------------------------
-# Data structures
+# Data structures (unchanged public API)
 # ---------------------------------------------------------------------------
 
 @dataclass
 class IssueSlide:
-    number: str          # e.g. "02.1"
-    category: str        # e.g. "Navigation"
-    title: str           # e.g. "Menu Findability"
+    number: str
+    category: str
+    title: str
     issue_text: str
     root_cause: str
     recommendation: str
     screenshot_url: str = ""
     persona_quotes: list[str] = field(default_factory=list)
     persona_names: list[str] = field(default_factory=list)
-    # Redesign fields (populated by redesign_client pipeline)
     redesign_analysis: str = ""
     redesign_html: str = ""
     redesign_html_sanitised: str = ""
@@ -443,25 +113,17 @@ class SlideReportData:
 
 
 # ---------------------------------------------------------------------------
-# HTML helpers
+# Markdown helpers
 # ---------------------------------------------------------------------------
 
-def _esc(text: str) -> str:
-    """Minimal HTML escaping."""
-    return (text or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
-
-
-def _bold_probability(text: str) -> str:
-    """Bold probability qualifiers like 'might', 'likely', 'may', 'could'."""
-    for word in ("might", "likely", "may", "could", "probably", "possibly"):
-        text = re.sub(rf'\b({word})\b', r'<strong>\1</strong>', text, flags=re.IGNORECASE)
-    return text
+def _md_esc(text: str) -> str:
+    """Escape characters that are special in Markdown inline context."""
+    # Escape backtick, asterisk, underscore, pipe, angle brackets
+    return re.sub(r'([`*_|<>\\])', r'\\\1', text or "")
 
 
 def _path_to_data_uri(path_or_url: str) -> str:
-    """Convert a local file path to a base64 data URI for reliable HTML embedding.
-    If it's already a data URI or a remote URL, return as-is.
-    """
+    """Convert a local file path to a base64 data URI; remote URLs pass through."""
     if not path_or_url:
         return ""
     if path_or_url.startswith("data:"):
@@ -481,256 +143,299 @@ def _path_to_data_uri(path_or_url: str) -> str:
     return path_or_url
 
 
-def _img_tag(url: str, alt: str = "") -> str:
-    """Return an <img> tag with base64-embedded src, or a placeholder div."""
+def _img_html(url: str, alt: str = "", style: str = "") -> str:
+    """Return an HTML <img> tag with base64 src, or a placeholder div."""
     if not url:
         return (
-            '<div style="width:100%;height:100%;background:var(--color-panel);border-radius:8px;'
+            '<div style="width:100%;height:100%;background:#ddd;border-radius:8px;'
             'display:flex;align-items:center;justify-content:center;'
-            'font-size:12px;color:#888;">No screenshot available</div>'
+            'font-size:12px;color:#888;">No screenshot</div>'
         )
     data_uri = _path_to_data_uri(url)
-    return f'<img src="{_esc(data_uri)}" alt="{_esc(alt)}" loading="eager">'
+    # Escape double-quotes for HTML attribute
+    safe_src = data_uri.replace('"', "&quot;")
+    safe_alt = (alt or "").replace('"', "&quot;")
+    style_attr = f' style="{style}"' if style else ""
+    return f'<img src="{safe_src}" alt="{safe_alt}"{style_attr} loading="eager">'
 
 
-def _panel(content_html: str, label: str = "") -> str:
-    """Wrap content in a .panel container with an optional label below."""
-    label_html = f'<div class="panel-label">{_esc(label)}</div>' if label else ""
-    return f'<div class="panel">{content_html}{label_html}</div>'
+def _panel_html(content: str, label: str = "") -> str:
+    """Wrap content in a .panel div with an optional label."""
+    label_html = f'<div class="panel-label">{label}</div>' if label else ""
+    return f'<div class="panel">{content}{label_html}</div>'
 
 
-# ---------------------------------------------------------------------------
-# Slide template functions
-# ---------------------------------------------------------------------------
-
-def slide_cover(title: str, logo_url: str = "", brand_name: str = "") -> str:
-    logo_content = (
-        _img_tag(logo_url, brand_name) if logo_url
-        else f'<span class="brand-text">{_esc(clamp_text(brand_name, _TITLE_MAX))}</span>'
+def _placeholder_panel(label: str = "") -> str:
+    inner = (
+        '<div style="width:100%;height:100%;background:#f0ece6;border-radius:8px;'
+        'display:flex;align-items:center;justify-content:center;'
+        'font-size:11px;color:#999;text-align:center;padding:12px;">'
+        'Re-design mockup<br>(to be added)</div>'
     )
-    return f"""
-<div class="slide bg-linen">
-  <div class="cover-inner">
-    <div class="cover-title">{_esc(title)}</div>
-    <div class="cover-logo-card">{logo_content}</div>
-  </div>
-</div>"""
+    return _panel_html(inner, label)
 
 
-def slide_toc(sections: list[str]) -> str:
-    items_html = ""
+# ---------------------------------------------------------------------------
+# Slide Markdown builders
+# Each function returns a Markdown string for one slide (no trailing ---)
+# ---------------------------------------------------------------------------
+
+def _slide_cover(data: SlideReportData) -> str:
+    logo_html = (
+        _img_html(data.logo_url, data.brand_name,
+                  "max-height:70px;max-width:260px;object-fit:contain;")
+        if data.logo_url
+        else f'<span class="brand-text">{clamp_text(data.brand_name, _TITLE_MAX)}</span>'
+    )
+    return f"""\
+<!-- _class: cover -->
+
+# Usability Test Report
+
+<div class="logo-card">{logo_html}</div>
+"""
+
+
+def _slide_toc(sections: list[str]) -> str:
+    items = ""
     for i, s in enumerate(sections, 1):
-        items_html += f"""
-    <div class="toc-item">
-      <span class="toc-num">{i:02d}</span>
-      <span class="toc-label">{_esc(clamp_text(s, _TOC_LABEL_MAX))}</span>
-    </div>"""
-    return f"""
-<div class="slide bg-linen">
-  <div class="toc-inner">
-    <div class="toc-heading">Table of<br>contents</div>
-    <div class="toc-list">{items_html}</div>
-  </div>
-</div>"""
+        items += (
+            f'<div class="toc-item">'
+            f'<span class="toc-num">{i:02d}</span>'
+            f'<span>{clamp_text(s, _TOC_LABEL_MAX)}</span>'
+            f'</div>\n'
+        )
+    return f"""\
+<!-- _class: toc -->
+
+# Table of<br>contents
+
+<div class="toc-list">
+{items}</div>
+"""
 
 
-def slide_section_divider(number: str, title: str, subtitle: str = "", bg: str = "teal") -> str:
-    bg_class = "bg-teal" if bg == "teal" else "bg-linen"
-    sub_html = (
-        f'<div class="sec-subtitle subtitle">{_esc(clamp_text(subtitle, _SUBTITLE_MAX))}</div>'
-        if subtitle else ""
+def _slide_divider(number: str, title: str, subtitle: str = "", light: bool = False) -> str:
+    cls = "divider-light" if light else "divider"
+    sub_line = f"\n## {clamp_text(subtitle, _SUBTITLE_MAX)}" if subtitle else ""
+    return f"""\
+<!-- _class: {cls} -->
+
+<div class="sec-number ghost">{number}</div>
+
+# {clamp_text(title, _TITLE_MAX)}{sub_line}
+"""
+
+
+def _slide_intro(data: SlideReportData) -> str:
+    focus_items = "\n".join(
+        f"- {clamp_text(a, _SUBTITLE_MAX)}" for a in data.focus_areas[:6]
     )
-    return f"""
-<div class="slide {bg_class}">
-  <div class="sec-inner">
-    <div class="sec-number ghost">{_esc(number)}</div>
-    <div class="sec-title">{_esc(clamp_text(title, _TITLE_MAX))}</div>
-    {sub_html}
-  </div>
-</div>"""
+    return f"""\
+<div class="ghost">1.</div>
+
+**{clamp_text(data.website_title, _TITLE_MAX)}** — {clamp_text(data.overall_summary, _BODY_MAX)}
+
+{clamp_text(data.methodology, _BODY_MAX)}
+
+**The UX review will focus on:**
+
+{focus_items}
+"""
 
 
-def slide_intro(
-    website_title: str,
-    methodology: str,
-    focus_areas: list[str],
-    overall_summary: str,
-) -> str:
-    focus_items = "".join(
-        f'<div class="focus-item body">{_esc(clamp_text(a, _SUBTITLE_MAX))}</div>'
-        for a in focus_areas[:6]
-    )
-    return f"""
-<div class="slide bg-linen">
-  <div class="intro-inner">
-    <div class="intro-ghost ghost">1.</div>
-    <div class="intro-body">
-      <p class="body"><strong>{_esc(clamp_text(website_title, _TITLE_MAX))}</strong> — {_esc(clamp_text(overall_summary, _BODY_MAX))}</p>
-      <p class="body">{_esc(clamp_text(methodology, _BODY_MAX))}</p>
-      <div class="focus-label">The UX review will focus on:</div>
-      {focus_items}
-    </div>
-  </div>
-</div>"""
-
-
-def slide_issue(issue: IssueSlide) -> str:
-    # Persona quote callouts (max 2, clamped)
+def _slide_issue(issue: IssueSlide) -> str:
+    # Persona quotes
     quotes_html = ""
     for name, quote in zip(issue.persona_names[:2], issue.persona_quotes[:2]):
-        quotes_html += f"""
-      <div class="persona-quote">
-        <span class="persona-name">{_esc(clamp_text(name, 40))}</span>: "{_esc(clamp_text(quote, _QUOTE_MAX))}"
-      </div>"""
-
-    issue_body = _bold_probability(_esc(clamp_text(issue.issue_text, _BODY_MAX)))
-    root_body  = _bold_probability(_esc(clamp_text(issue.root_cause, _BODY_MAX)))
-    rec_body   = _esc(clamp_text(issue.recommendation, _BODY_MAX))
-
-    # Right panel: Current | AI Redesign split, or single screenshot
-    if issue.redesign_html_sanitised:
-        _srcdoc = issue.redesign_html_sanitised.replace('"', '&quot;')
-        right_panel = f"""
-  <div class="issue-right">
-    {_panel(_img_tag(issue.screenshot_url, 'Current design'), 'Current Design')}
-    {_panel(f'<iframe srcdoc="{_srcdoc}" sandbox="allow-same-origin" loading="lazy"></iframe>', 'AI Redesign')}
-    {f'<div style="position:absolute;bottom:var(--space-xs);left:40%;right:0;font-size:9.5px;color:#777;font-style:italic;padding:0 var(--space-md);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">{_esc(clamp_text(issue.redesign_analysis, _ANALYSIS_MAX))}</div>' if issue.redesign_analysis else ''}
-  </div>"""
-    else:
-        placeholder = (
-            '<div style="width:100%;height:100%;background:var(--color-panel);border-radius:8px;'
-            'display:flex;align-items:center;justify-content:center;'
-            'font-size:11px;color:#999;text-align:center;padding:12px;">'
-            'Re-design mockup<br>(to be added)</div>'
+        quotes_html += (
+            f'<div class="quote"><strong>{clamp_text(name, 40)}:</strong> '
+            f'"{clamp_text(quote, _QUOTE_MAX)}"</div>\n'
         )
-        right_panel = f"""
-  <div class="issue-right">
-    {_panel(_img_tag(issue.screenshot_url, 'Current design'), 'Current Design')}
-    {_panel(placeholder, 'Re-design')}
-  </div>"""
 
-    return f"""
-<div class="slide bg-linen" style="position:relative;">
-  <div class="issue-inner">
-    <div class="issue-left">
-      <div class="issue-ghost ghost">{_esc(clamp_text(issue.title, _TITLE_MAX))}</div>
-      <div class="issue-section">
-        <div class="label">Predicted User Issue</div>
-        <div class="body">{issue_body}{quotes_html}</div>
-      </div>
-      <div class="issue-section">
-        <div class="label">Root Cause Analysis</div>
-        <div class="body">{root_body}</div>
-      </div>
-      <div class="issue-section">
-        <div class="label">Recommendations</div>
-        <div class="body">{rec_body}</div>
-      </div>
-    </div>
-    {right_panel}
-  </div>
-</div>"""
+    issue_body = clamp_text(issue.issue_text, _BODY_MAX)
+    root_body  = clamp_text(issue.root_cause, _BODY_MAX)
+    rec_body   = clamp_text(issue.recommendation, _BODY_MAX)
+
+    # Right panel: Current Design | AI Redesign (or placeholder)
+    current_panel = _panel_html(
+        _img_html(issue.screenshot_url, "Current design"),
+        "Current Design",
+    )
+    if issue.redesign_html_sanitised:
+        srcdoc = issue.redesign_html_sanitised.replace('"', "&quot;")
+        redesign_content = (
+            f'<iframe srcdoc="{srcdoc}" sandbox="allow-same-origin" loading="lazy"'
+            f' style="width:100%;height:100%;border:none;"></iframe>'
+        )
+        redesign_panel = _panel_html(redesign_content, "AI Redesign")
+        analysis_strip = ""
+        if issue.redesign_analysis:
+            analysis_strip = (
+                f'<div style="font-size:9.5px;color:#777;font-style:italic;'
+                f'padding:4px 0 0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">'
+                f'{clamp_text(issue.redesign_analysis, _ANALYSIS_MAX)}</div>\n'
+            )
+    else:
+        redesign_panel = _placeholder_panel("Re-design")
+        analysis_strip = ""
+
+    return f"""\
+<!-- _class: issue -->
+
+<div class="left">
+<div class="ghost">{clamp_text(issue.title, _TITLE_MAX)}</div>
+
+### Predicted User Issue
+{issue_body}
+{quotes_html}
+### Root Cause Analysis
+{root_body}
+
+### Recommendations
+{rec_body}
+</div>
+<div class="right">
+{current_panel}
+{redesign_panel}
+{analysis_strip}</div>
+"""
 
 
-def slide_strength(s: StrengthSlide) -> str:
+def _slide_strength(s: StrengthSlide) -> str:
     body = (
-        f"<strong>{_esc(clamp_text(s.brand_name, 40))}</strong> {_esc(clamp_text(s.description, _BODY_MAX))}"
-        if s.brand_name else _esc(clamp_text(s.description, _BODY_MAX))
+        f"**{clamp_text(s.brand_name, 40)}** {clamp_text(s.description, _BODY_MAX)}"
+        if s.brand_name else clamp_text(s.description, _BODY_MAX)
     )
-    return f"""
-<div class="slide bg-linen">
-  <div class="strength-inner">
-    <div class="strength-left">
-      <div class="strength-ghost ghost">{_esc(clamp_text(s.title, _TITLE_MAX))}</div>
-      <div class="body">{body}</div>
-    </div>
-    <div class="strength-right">
-      {_panel(_img_tag(s.screenshot_url, s.title))}
-    </div>
-  </div>
-</div>"""
+    img_panel = _panel_html(_img_html(s.screenshot_url, s.title))
+    return f"""\
+<!-- _class: strength -->
+
+<div class="left">
+<div class="ghost">{clamp_text(s.title, _TITLE_MAX)}</div>
+
+{body}
+</div>
+<div class="right">
+{img_panel}
+</div>
+"""
 
 
-def slide_back_cover(logo_url: str, brand_name: str, report_title: str, author: str, year: str) -> str:
-    logo_content = (
-        _img_tag(logo_url, brand_name) if logo_url
-        else f'<span class="brand-text">{_esc(clamp_text(brand_name, _TITLE_MAX))}</span>'
+def _slide_back_cover(data: SlideReportData) -> str:
+    logo_html = (
+        _img_html(data.logo_url, data.brand_name,
+                  "max-height:60px;max-width:220px;object-fit:contain;")
+        if data.logo_url
+        else f'<span class="brand-text">{clamp_text(data.brand_name, _TITLE_MAX)}</span>'
     )
-    return f"""
-<div class="slide bg-linen">
-  <div class="back-inner">
-    <div class="back-logo-card">{logo_content}</div>
-    <div class="back-report-title">{_esc(report_title)}</div>
-    <div class="back-author">By {_esc(author)} — {_esc(year)}</div>
-  </div>
-</div>"""
+    return f"""\
+<!-- _class: back -->
+
+<div class="logo-card">{logo_html}</div>
+
+*Usability Test Report*
+
+By {data.generated_by} — {data.generated_date}
+"""
 
 
 # ---------------------------------------------------------------------------
-# Full report renderer
+# Markdown AST builder
 # ---------------------------------------------------------------------------
 
-def render_html(data: SlideReportData) -> str:
-    """Render all slides into a single self-contained HTML document."""
+def build_markdown(data: SlideReportData) -> str:
+    """
+    Convert a SlideReportData into a Marpit-compatible Markdown string.
+
+    Each slide is separated by `---` (Marpit horizontal rule = new slide).
+    Slide classes are set via Marpit's `<!-- _class: name -->` directive.
+    Raw HTML is used for complex layout elements (panels, iframes, etc.)
+    because Marpit passes html:true to markdown-it.
+    """
     slides: list[str] = []
 
     # 1. Cover
-    slides.append(slide_cover("Usability Test Report", data.logo_url, data.brand_name))
+    slides.append(_slide_cover(data))
 
     # 2. Table of Contents
     toc_sections = ["Introduction", "Predicted User Issues"]
     if data.strengths:
         toc_sections.append("Elements to Preserve")
-    slides.append(slide_toc(toc_sections))
+    slides.append(_slide_toc(toc_sections))
 
     # 3. Section 01 – Introduction
-    slides.append(slide_section_divider("01", "Introduction", bg="linen"))
-    slides.append(slide_intro(
-        website_title=data.website_title,
-        methodology=data.methodology,
-        focus_areas=data.focus_areas,
-        overall_summary=data.overall_summary,
-    ))
+    slides.append(_slide_divider("01", "Introduction", light=True))
+    slides.append(_slide_intro(data))
 
     # 4. Section 02 – Predicted User Issues
-    slides.append(slide_section_divider("02", "Predicted User Issues"))
+    slides.append(_slide_divider("02", "Predicted User Issues"))
 
     seen_categories: list[str] = []
     for issue in data.issues:
         if issue.category not in seen_categories:
             seen_categories.append(issue.category)
             sub_num = f"02.{len(seen_categories)}"
-            slides.append(slide_section_divider(sub_num, issue.title, subtitle=issue.category))
-        slides.append(slide_issue(issue))
+            slides.append(_slide_divider(sub_num, issue.title, subtitle=issue.category))
+        slides.append(_slide_issue(issue))
 
     # 5. Section 03 – Elements to Preserve
     if data.strengths:
-        slides.append(slide_section_divider("03", "Elements to preserve"))
+        slides.append(_slide_divider("03", "Elements to preserve"))
         for s in data.strengths:
-            slides.append(slide_strength(s))
+            slides.append(_slide_strength(s))
 
     # 6. Back Cover
-    slides.append(slide_back_cover(
-        logo_url=data.logo_url,
-        brand_name=data.brand_name,
-        report_title="Usability Test Report",
-        author=data.generated_by,
-        year=data.generated_date,
-    ))
+    slides.append(_slide_back_cover(data))
 
-    body = "\n".join(slides)
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Usability Test Report — {_esc(data.website_title)}</title>
-  <style>{CSS}</style>
-</head>
-<body>
-{body}
-</body>
-</html>"""
+    return "\n\n---\n\n".join(slides)
+
+
+# ---------------------------------------------------------------------------
+# Marpit renderer (calls Node.js script)
+# ---------------------------------------------------------------------------
+
+def render_html(data: SlideReportData) -> str:
+    """
+    Full pipeline:
+      SlideReportData → Markdown → Node.js Marpit → self-contained HTML string
+
+    The Node.js script (marpit_render.js) is a sibling of this file.
+    It reads Markdown from a temp file and writes the full HTML to stdout.
+    """
+    markdown = build_markdown(data)
+
+    # Write Markdown to a temp file (avoids shell escaping issues)
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".md", delete=False, encoding="utf-8"
+    ) as tmp:
+        tmp.write(markdown)
+        tmp_path = tmp.name
+
+    try:
+        result = subprocess.run(
+            ["node", str(_RENDER_SCRIPT), tmp_path],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Marpit render failed (exit {result.returncode}):\n{result.stderr}"
+        )
+
+    if result.stderr:
+        # Non-fatal warnings (e.g. unknown directives) — log but continue
+        import logging
+        logging.getLogger(__name__).warning("Marpit stderr: %s", result.stderr.strip())
+
+    return result.stdout
 
 
 # ---------------------------------------------------------------------------
@@ -811,7 +516,10 @@ def build_report_data(
 
     focus_areas = [d.get("name", "") for d in dimensions if d.get("name")]
     if not focus_areas:
-        focus_areas = ["Navigation", "Visual Design", "Accessibility", "Content Clarity", "Mobile Responsiveness"]
+        focus_areas = [
+            "Navigation", "Visual Design", "Accessibility",
+            "Content Clarity", "Mobile Responsiveness",
+        ]
 
     methodology = clamp_text(
         f"This report was generated by the OASIS UX Simulation App using {len(personas)} "
@@ -833,9 +541,15 @@ def build_report_data(
                 number=f"02.{issue_counter}",
                 category="Heuristic Check",
                 title=clamp_text(check_name.replace("_", " ").title(), _TITLE_MAX),
-                issue_text=clamp_text(f"Users might encounter difficulties because: {detail}", _BODY_MAX),
-                root_cause=clamp_text(f"The page {check_name.replace('_', ' ')} check failed. {detail}", _BODY_MAX),
-                recommendation=clamp_text(check_data.get("recommendation", "Review and fix this element."), _BODY_MAX),
+                issue_text=clamp_text(
+                    f"Users might encounter difficulties because: {detail}", _BODY_MAX
+                ),
+                root_cause=clamp_text(
+                    f"The page {check_name.replace('_', ' ')} check failed. {detail}", _BODY_MAX
+                ),
+                recommendation=clamp_text(
+                    check_data.get("recommendation", "Review and fix this element."), _BODY_MAX
+                ),
                 screenshot_url=desktop_ss,
             ))
             issue_counter += 1
@@ -877,7 +591,9 @@ def build_report_data(
                 for issue in issues:
                     if len(issue.persona_quotes) < 2:
                         issue.persona_quotes.append(clamp_text(pain_points[0], _QUOTE_MAX))
-                        issue.persona_names.append(clamp_text(resp.get("persona_name", "Persona"), 40))
+                        issue.persona_names.append(
+                            clamp_text(resp.get("persona_name", "Persona"), 40)
+                        )
                         break
 
     # ── Build Strength slides ───────────────────────────────────────────────
