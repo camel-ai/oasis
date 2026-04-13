@@ -47,8 +47,8 @@ const OASIS_THEME = `
   --color-bg:     #E8E0D5;
   --color-teal:   #7DD9D0;
   --color-navy:   #1A2280;
-  --color-text:   #2B2B2B;
-  --color-muted:  #7A7A9A;
+  --color-text:   #000000;
+  --color-muted:  #444444;
   --color-white:  #FFFFFF;
   --color-card:   #FAFAC8;
   --color-panel:  #F0ECE6;
@@ -62,51 +62,52 @@ section {
   background: var(--color-bg);
   font-family: var(--font);
   color: var(--color-text);
-  padding: 40px 56px;
+  padding: 32px 48px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   overflow: hidden;
   box-sizing: border-box;
-  font-size: 16px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 /* ── Typography ─────────────────────────────────────────────────────────────── */
 h1 {
-  font-size: 40px;
+  font-size: 32px;
   font-weight: 800;
   color: var(--color-navy);
   line-height: 1.15;
-  margin: 0 0 12px;
-}
-h2 {
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--color-navy);
-  margin: 0 0 10px;
-}
-h3 {
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-navy);
-  margin: 10px 0 4px;
-}
-p {
-  font-size: 14px;
   margin: 0 0 8px;
 }
-strong { font-weight: 700; }
+h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-navy);
+  margin: 0 0 8px;
+}
+h3 {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-navy);
+  margin: 8px 0 3px;
+}
+p {
+  font-size: 13px;
+  margin: 0 0 6px;
+  color: #000;
+}
+strong { font-weight: 700; color: #000; }
 em { font-style: italic; color: var(--color-muted); }
 
 ul, ol {
-  font-size: 14px;
-  padding-left: 20px;
-  margin: 0 0 8px;
+  font-size: 13px;
+  padding-left: 18px;
+  margin: 0 0 6px;
 }
-li { margin-bottom: 4px; }
+li { margin-bottom: 3px; color: #000; }
 
 /* ── Slide variants (via _class directive) ──────────────────────────────────── */
 
@@ -116,10 +117,10 @@ section.cover {
   justify-content: space-between;
 }
 section.cover h1 {
-  font-size: 52px;
+  font-size: 42px;
   font-weight: 800;
-  color: var(--color-text);
-  max-width: 600px;
+  color: #000;
+  max-width: 580px;
 }
 
 /* Section divider — teal */
@@ -129,16 +130,16 @@ section.divider {
   gap: 8px;
 }
 section.divider h1 {
-  font-size: 56px;
+  font-size: 44px;
   color: var(--color-navy);
 }
 section.divider h2 {
-  font-size: 20px;
-  color: var(--color-muted);
+  font-size: 17px;
+  color: #333;
   font-weight: 600;
 }
 section.divider .sec-number {
-  font-size: 100px;
+  font-size: 80px;
   font-weight: 800;
   color: rgba(255,255,255,0.55);
   line-height: 1;
@@ -151,8 +152,8 @@ section.divider-light {
   justify-content: center;
   gap: 8px;
 }
-section.divider-light h1 { font-size: 56px; color: var(--color-navy); }
-section.divider-light h2 { font-size: 20px; color: var(--color-muted); font-weight: 600; }
+section.divider-light h1 { font-size: 44px; color: var(--color-navy); }
+section.divider-light h2 { font-size: 17px; color: #333; font-weight: 600; }
 
 /* Issue slide — 40/60 split via CSS grid on the section */
 section.issue {
@@ -163,18 +164,18 @@ section.issue {
   gap: 0;
 }
 section.issue .left {
-  padding: 32px 20px 32px 48px;
+  padding: 24px 16px 24px 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   overflow: hidden;
 }
 section.issue .right {
   display: flex;
   align-items: stretch;
-  gap: 12px;
-  padding: 20px 20px 40px 8px;
+  gap: 10px;
+  padding: 16px 16px 32px 6px;
   min-height: 0;
 }
 
@@ -187,18 +188,18 @@ section.strength {
   gap: 0;
 }
 section.strength .left {
-  padding: 48px 20px 48px 48px;
+  padding: 36px 16px 36px 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   overflow: hidden;
 }
 section.strength .right {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
 }
 
 /* Image / iframe panel */
@@ -233,23 +234,26 @@ section.strength .right {
 }
 
 /* Ghost text (large watermark-style heading) */
+/* On teal dividers: white ghost; on linen slides: use a dark-tinted ghost */
 .ghost {
-  font-size: 72px;
+  font-size: 56px;
   font-weight: 800;
-  color: rgba(255,255,255,0.55);
+  color: rgba(26,34,128,0.12);
   line-height: 1;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
+section.divider .ghost,
+section.divider .sec-number { color: rgba(255,255,255,0.45); }
 
 /* Persona quote callout */
 .quote {
   background: rgba(125,217,208,0.18);
   border-left: 3px solid var(--color-teal);
-  padding: 5px 8px;
-  margin-top: 5px;
-  font-size: 11.5px;
+  padding: 4px 7px;
+  margin-top: 4px;
+  font-size: 10.5px;
   font-style: italic;
-  color: #444;
+  color: #000;
   border-radius: 0 4px 4px 0;
   overflow: hidden;
 }
@@ -265,7 +269,7 @@ section.strength .right {
   justify-content: center;
 }
 .logo-card img { max-height: 70px; max-width: 260px; object-fit: contain; }
-.logo-card .brand-text { font-size: 28px; font-weight: 800; color: var(--color-text); }
+.logo-card .brand-text { font-size: 24px; font-weight: 800; color: #000; }
 
 /* TOC */
 section.toc {
@@ -276,7 +280,7 @@ section.toc {
   align-items: start;
 }
 section.toc h1 {
-  font-size: 38px;
+  font-size: 30px;
   color: var(--color-navy);
   line-height: 1.2;
 }
@@ -284,14 +288,15 @@ section.toc h1 {
 .toc-item {
   display: flex;
   align-items: baseline;
-  gap: 16px;
-  padding: 12px 0;
+  gap: 14px;
+  padding: 9px 0;
   border-bottom: 1px dashed #B0A89A;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
+  color: #000;
 }
 .toc-item:last-child { border-bottom: none; }
-.toc-num { font-size: 13px; font-weight: 700; color: var(--color-navy); min-width: 28px; }
+.toc-num { font-size: 11px; font-weight: 700; color: var(--color-navy); min-width: 24px; }
 
 /* Back cover */
 section.back {

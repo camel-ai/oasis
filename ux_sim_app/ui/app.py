@@ -466,6 +466,9 @@ def step_generate_report(
                             rd.get("html_sanitised")
                             or sanitise_for_embed(issue.redesign_html)
                         )
+                        # Store the rendered screenshot of the redesign for the slide panel
+                        if rd.get("redesign_screenshot"):
+                            issue.redesign_screenshot_url = rd["redesign_screenshot"]
                     else:
                         logger.warning("Redesign failed for %s: %s", issue.title, rd.get("error"))
                 except Exception as exc:

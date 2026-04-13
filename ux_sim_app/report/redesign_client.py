@@ -127,18 +127,39 @@ async def _call_vision(
     return resp.json()["choices"][0]["message"]["content"].strip()
 
 
+async def _screenshot_html(html_code: str) -> Optional[bytes]:
+    """
+    Render a self-contained HTML string in a headless Playwright browser
+    and return a JPEG screenshot (960×540, matching the slide canvas).
+    Returns None on failure.
+    """
+    try:
+        from playwright.async_api import async_playwright  # type: ignore
+        async with async_playwright() as pw:
+            browser = await pw.chromium.launch(args=["--no-sandbox", "--disable-dev-shm-usage"])
+            page = await browser.new_page(viewport={"width": 960, "height": 540})
+            await page.set_content(html_code, wait_until="domcontentloaded")
+            await page.wait_for_timeout(800)
+            data = await page.screenshot(type="jpeg", quality=80, clip={"x": 0, "y": 0, "width": 960, "height": 540})
+            await browser.close()
+            return data
+    except Exception as exc:
+        logger.warning("Redesign screenshot failed: %s", exc)
+        return None
+
+
 async def _generate_redesign_async(
     screenshot_url: str,
     openai_key: str,
     vision_model: str = "gpt-4o",
     ux_context: str = "",
-) -> Tuple[str, str]:
+) -> Tuple[str, str, Optional[str]]:
     """
     Core async pipeline.
 
     Returns
     -------
-    (analysis_text, html_code)
+    (analysis_text, html_code, redesign_screenshot_data_uri | None)
     """
     # 1. Obtain screenshot bytes
     screenshot_bytes: Optional[bytes] = None
@@ -196,7 +217,17 @@ async def _generate_redesign_async(
     except Exception as exc:
         logger.debug("Analysis call failed (non-fatal): %s", exc)
 
-    return analysis, html_code
+    # 5. Render redesign HTML to a screenshot for the slide panel
+    redesign_screenshot_uri: Optional[str] = None
+    try:
+        shot_bytes = await _screenshot_html(html_code)
+        if shot_bytes:
+            b64 = base64.b64encode(shot_bytes).decode()
+            redesign_screenshot_uri = f"data:image/jpeg;base64,{b64}"
+    except Exception as exc:
+        logger.debug("Redesign screenshot step failed (non-fatal): %s", exc)
+
+    return analysis, html_code, redesign_screenshot_uri
 
 
 # ---------------------------------------------------------------------------
@@ -275,6 +306,7 @@ def generate_redesign(
         "analysis": "",
         "html_code": "",
         "html_sanitised": "",
+        "redesign_screenshot": "",   # base64 data URI of the rendered redesign
         "error": None,
     }
 
@@ -292,7 +324,7 @@ def generate_redesign(
     ux_context = "; ".join(ux_issues[:3]) if ux_issues else ""
 
     try:
-        analysis, html_code = asyncio.run(
+        analysis, html_code, redesign_screenshot = asyncio.run(
             _generate_redesign_async(
                 screenshot_url=screenshot_url,
                 openai_key=key,
@@ -303,6 +335,7 @@ def generate_redesign(
         result["analysis"] = analysis
         result["html_code"] = html_code
         result["html_sanitised"] = sanitise_for_embed(html_code)
+        result["redesign_screenshot"] = redesign_screenshot or ""
     except Exception as exc:
         result["error"] = str(exc)
         logger.error("Redesign generation failed: %s", exc)

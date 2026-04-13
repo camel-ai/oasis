@@ -86,6 +86,7 @@ class IssueSlide:
     redesign_analysis: str = ""
     redesign_html: str = ""
     redesign_html_sanitised: str = ""
+    redesign_screenshot_url: str = ""  # base64 data URI of the rendered redesign screenshot
 
 
 @dataclass
@@ -262,7 +263,21 @@ def _slide_issue(issue: IssueSlide) -> str:
         _img_html(issue.screenshot_url, "Current design"),
         "Current Design",
     )
-    if issue.redesign_html_sanitised:
+
+    # Prefer a rendered screenshot of the redesign; fall back to iframe; then placeholder
+    if issue.redesign_screenshot_url:
+        redesign_panel = _panel_html(
+            _img_html(issue.redesign_screenshot_url, "AI Redesign"),
+            "AI Redesign",
+        )
+        analysis_strip = ""
+        if issue.redesign_analysis:
+            analysis_strip = (
+                f'<div style="font-size:9.5px;color:#555;font-style:italic;'
+                f'padding:4px 0 0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">'
+                f'{clamp_text(issue.redesign_analysis, _ANALYSIS_MAX)}</div>\n'
+            )
+    elif issue.redesign_html_sanitised:
         srcdoc = issue.redesign_html_sanitised.replace('"', "&quot;")
         redesign_content = (
             f'<iframe srcdoc="{srcdoc}" sandbox="allow-same-origin" loading="lazy"'
@@ -272,7 +287,7 @@ def _slide_issue(issue: IssueSlide) -> str:
         analysis_strip = ""
         if issue.redesign_analysis:
             analysis_strip = (
-                f'<div style="font-size:9.5px;color:#777;font-style:italic;'
+                f'<div style="font-size:9.5px;color:#555;font-style:italic;'
                 f'padding:4px 0 0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">'
                 f'{clamp_text(issue.redesign_analysis, _ANALYSIS_MAX)}</div>\n'
             )
