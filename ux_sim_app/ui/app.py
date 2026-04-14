@@ -42,6 +42,7 @@ from ux_sim_app.report.slide_generator import build_report_data, render_html, ht
 from ux_sim_app.report.redesign_client import generate_redesign, sanitise_for_embed
 from ux_sim_app.integrations import notebooklm as nlm
 from ux_sim_app.integrations.notebooklm import UX_CATEGORIES
+from ux_sim_app.integrations.real_world_data import gather_and_synthesize
 import logging
 logger = logging.getLogger(__name__)
 
@@ -71,9 +72,11 @@ def step_scrape_and_generate(
     customer_profile: str,
     num_personas: int,
     api_key_override: str,
+    rwd_briefing: str = "",
 ):
     """Scrape the website and generate personas.
     MUST yield exactly 4 values on every yield (matches outputs wiring).
+    rwd_briefing: optional real-world community briefing from Tab 2.
     """
     _EMPTY = ("{}", "", "[]")  # personas_json, personas_display, image_urls_json
 
@@ -114,6 +117,7 @@ def step_scrape_and_generate(
             business_context=business_context,
             customer_profile=customer_profile,
             num_personas=int(num_personas),
+            real_world_context=(rwd_briefing or "").strip(),
         ))
 
         personas_json = json.dumps([p.to_dict() for p in personas], indent=2)
@@ -585,6 +589,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
     state_url              = gr.State("")
     # List of {persona_name, video_path} dicts from Mode 2 recordings
     state_video_recordings = gr.State("[]")  # JSON string
+    state_rwd_briefing     = gr.State("")    # synthesized real-world briefing text
 
     # ── Header ─────────────────────────────────────────────────────────────────
     gr.HTML("""
@@ -610,6 +615,21 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                 "and generate a realistic customer focus group. You can add your own context "
                 "to guide persona creation."
             )
+            gr.HTML("""
+            <div style="background:#e8f4fd;border:1px solid #aed6f1;border-radius:8px;
+                 padding:12px 18px;margin-bottom:4px;display:flex;align-items:center;gap:12px;">
+              <span style="font-size:1.4em;">&#127758;</span>
+              <div>
+                <strong>Tip: Run Real-World Data Gathering first (Tab 2)</strong><br>
+                <span style="font-size:0.9em;color:#555;">
+                  Before generating personas you can optionally gather live community signals
+                  from Reddit, Hacker News, X, Bluesky, TikTok and more. The synthesized briefing
+                  is automatically injected into persona generation so your personas reflect what
+                  real people are saying about the brand right now. This step is entirely optional.
+                </span>
+              </div>
+            </div>
+            """)
             with gr.Row():
                 with gr.Column(scale=2):
                     url_input = gr.Textbox(
@@ -653,9 +673,140 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
             personas_display = gr.Markdown(label="Generated Personas")
 
         # ══════════════════════════════════════════════════════════════════════
+        # TAB 2 – Real World Data (optional)
+        # ══════════════════════════════════════════════════════════════════════
+        with gr.Tab("2 · Real World Data (optional)"):
+            gr.Markdown("### Real-World Community Signal Gathering")
+            gr.Markdown(
+                "Gather live signals from Reddit, Hacker News, GitHub and optional social sources "
+                "about your brand or topic. The synthesized briefing is automatically injected into "
+                "persona generation (Tab 1) so your personas reflect what real people are saying right now.\n\n"
+                "**This entire tab is optional.** You can run Tab 1 without it at any time."
+            )
+
+            with gr.Row():
+                rwd_topic = gr.Textbox(
+                    label="Research Topic",
+                    placeholder="e.g. Tootgarook Bistro parma night, or the brand name from your URL",
+                    info="Brand name, product, or topic to research across social platforms",
+                    scale=3,
+                )
+                rwd_max_items = gr.Slider(
+                    minimum=3, maximum=15, value=5, step=1,
+                    label="Max items per source",
+                    scale=1,
+                )
+
+            # ── Free sources (always on) ───────────────────────────────────────
+            gr.HTML("""
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;
+                 padding:10px 16px;margin:6px 0;">
+              <strong>&#9989; Free sources (always active)</strong> &mdash;
+              Reddit (posts + comments), Hacker News, GitHub repositories
+            </div>""")
+
+            # ── Optional keyed sources ─────────────────────────────────────────
+            with gr.Accordion("&#128273; Optional Sources — Bring Your Own Keys", open=False):
+                gr.Markdown(
+                    "Add API keys or tokens below to unlock additional sources. "
+                    "All fields are optional — leave blank to skip that source."
+                )
+
+                with gr.Row():
+                    with gr.Column():
+                        gr.Markdown("#### X / Twitter")
+                        gr.Markdown(
+                            "Log into [x.com](https://x.com) in any browser, open DevTools "
+                            "→ Application → Cookies → find `auth_token` and paste it here. "
+                            "**Free** — no API subscription needed."
+                        )
+                        rwd_x_token = gr.Textbox(
+                            label="X auth_token cookie",
+                            placeholder="Paste your auth_token cookie value",
+                            type="password",
+                        )
+
+                    with gr.Column():
+                        gr.Markdown("#### Bluesky")
+                        gr.Markdown(
+                            "Create an App Password at [bsky.app](https://bsky.app) → Settings "
+                            "→ App Passwords. **Free**."
+                        )
+                        rwd_bsky_handle = gr.Textbox(
+                            label="Bluesky handle",
+                            placeholder="yourname.bsky.social",
+                        )
+                        rwd_bsky_pass = gr.Textbox(
+                            label="Bluesky App Password",
+                            placeholder="xxxx-xxxx-xxxx-xxxx",
+                            type="password",
+                        )
+
+                with gr.Row():
+                    with gr.Column():
+                        gr.Markdown("#### ScrapeCreators")
+                        gr.Markdown(
+                            "Unlocks TikTok, Instagram, Threads, Pinterest and YouTube comments. "
+                            "Get a key at [scrapecreators.com](https://scrapecreators.com) — "
+                            "**10,000 free calls** included."
+                        )
+                        rwd_sc_key = gr.Textbox(
+                            label="ScrapeCreators API Key",
+                            placeholder="sc_live_...",
+                            type="password",
+                        )
+
+                    with gr.Column():
+                        gr.Markdown("#### Brave Search")
+                        gr.Markdown(
+                            "Web search across the open internet. Get a key at "
+                            "[brave.com/search/api](https://brave.com/search/api) — "
+                            "**2,000 free queries/month**."
+                        )
+                        rwd_brave_key = gr.Textbox(
+                            label="Brave Search API Key",
+                            placeholder="BSA...",
+                            type="password",
+                        )
+
+                with gr.Row():
+                    with gr.Column():
+                        gr.Markdown("#### Perplexity Sonar (via OpenRouter)")
+                        gr.Markdown(
+                            "Uses the Perplexity Sonar model via OpenRouter for a deep "
+                            "synthesized web search. Requires an "
+                            "[OpenRouter](https://openrouter.ai) key. Pay-as-you-go."
+                        )
+                        rwd_or_key = gr.Textbox(
+                            label="OpenRouter API Key (for Perplexity Sonar)",
+                            placeholder="sk-or-v1-...",
+                            type="password",
+                        )
+
+            btn_gather_rwd = gr.Button(
+                "&#127758; Gather & Synthesize Real-World Data",
+                variant="primary",
+                size="lg",
+            )
+            rwd_status = gr.Textbox(label="Status", interactive=False, lines=2)
+
+            with gr.Accordion("&#128196; Synthesized Briefing (injected into persona generation)", open=True):
+                rwd_briefing_display = gr.Textbox(
+                    label="Real-World Briefing",
+                    interactive=True,
+                    lines=6,
+                    placeholder="The synthesized briefing will appear here after gathering. "
+                                "You can edit it before generating personas.",
+                    info="This text is automatically passed to persona generation. Edit freely.",
+                )
+
+            with gr.Accordion("&#128202; Raw Gathered Items", open=False):
+                rwd_raw_display = gr.JSON(label="Raw items by source")
+
+        # ══════════════════════════════════════════════════════════════════════
         # TAB 2 – Content (Mode 1)
         # ══════════════════════════════════════════════════════════════════════
-        with gr.Tab("2 · Content to Test (Mode 1)"):
+        with gr.Tab("3 · Content to Test (Mode 1)"):
             gr.Markdown("### Social Media / Marketing Content")
             gr.Markdown(
                 "Enter the marketing copy, social media posts, or website text you want "
@@ -678,7 +829,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         # ══════════════════════════════════════════════════════════════════════
         # TAB 3 – Run Simulations
         # ══════════════════════════════════════════════════════════════════════
-        with gr.Tab("3 · Run Simulations"):
+        with gr.Tab("4 · Run Simulations"):
             gr.Markdown("### Run Selected Simulation Modes")
             gr.Markdown(
                 "This step runs the browser usability simulation (Mode 2), "
@@ -691,7 +842,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         # ══════════════════════════════════════════════════════════════════════
         # TAB 4 – UX Scan
         # ══════════════════════════════════════════════════════════════════════
-        with gr.Tab("4 · UX Scan"):
+        with gr.Tab("5 · UX Scan"):
             gr.Markdown("### Full UX / Usability Scan")
             gr.Markdown(
                 "This step takes multi-viewport screenshots of the website, runs heuristic "
@@ -769,7 +920,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         # ══════════════════════════════════════════════════════════════════════
         # TAB 5 – Report
         # ══════════════════════════════════════════════════════════════════════
-        with gr.Tab("5 · Report"):
+        with gr.Tab("6 · Report"):
             gr.Markdown("### Generate & Deliver Report")
             gr.Markdown(
                 "Generates a **slide-style HTML + PDF report** (16:9, matching the reference design) "
@@ -813,7 +964,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         # ══════════════════════════════════════════════════════════════════════
         # TAB 6 – Session Recordings
         # ══════════════════════════════════════════════════════════════════════
-        with gr.Tab("6 · Session Recordings"):
+        with gr.Tab("7 · Session Recordings"):
             gr.Markdown("### 🎬 Persona Browser Session Recordings")
             gr.Markdown(
                 "Each Mode 2 browser session is recorded automatically. "
@@ -852,7 +1003,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         # ══════════════════════════════════════════════════════════════════════
         # TAB 7 – Settings
         # ══════════════════════════════════════════════════════════════════════
-        with gr.Tab("⚙️ Settings"):
+        with gr.Tab("8 · ⚙️ Settings"):
             gr.Markdown("### API Keys, Provider & Model Configuration")
             gr.Markdown(
                 "These settings override the `.env` file values for the current session. "
@@ -1057,12 +1208,95 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                 outputs=[settings_status],
             )
 
+    # ── Real World Data step function ──────────────────────────────────────────
+
+    def step_gather_rwd(
+        topic: str,
+        max_items: int,
+        x_token: str,
+        bsky_handle: str,
+        bsky_pass: str,
+        sc_key: str,
+        brave_key: str,
+        or_key: str,
+        api_key_override: str,
+    ):
+        """Gather real-world signals and synthesize a persona briefing.
+        Yields (status, briefing_text, raw_items_json).
+        """
+        topic = (topic or "").strip()
+        if not topic:
+            yield "\u274c Please enter a research topic.", "", []
+            return
+
+        yield "\u23f3 Gathering signals from Reddit, Hacker News, GitHub and optional sources...", "", []
+
+        effective_key = (api_key_override or "").strip() or os.environ.get("OPENAI_API_KEY", "")
+        keys = {
+            "x_auth_token": (x_token or "").strip(),
+            "bluesky_handle": (bsky_handle or "").strip(),
+            "bluesky_app_password": (bsky_pass or "").strip(),
+            "scrapecreators_key": (sc_key or "").strip(),
+            "brave_key": (brave_key or "").strip(),
+            "openrouter_key": (or_key or "").strip(),
+        }
+
+        try:
+            result = gather_and_synthesize(
+                topic=topic,
+                keys=keys,
+                max_items_per_source=int(max_items),
+                openai_key=effective_key,
+                text_model=cfg.TEXT_MODEL,
+            )
+
+            if result.get("error"):
+                yield f"\u26a0\ufe0f Gather warning: {result['error']}", "", []
+                return
+
+            briefing = result.get("briefing", "")
+            items = result.get("items", [])
+            sources = result.get("sources_used", [])
+            n = len(items)
+            src_str = ", ".join(sources) if sources else "none"
+            yield (
+                f"\u2705 Gathered {n} items from: {src_str}. Briefing synthesized.",
+                briefing,
+                items,
+            )
+        except Exception as exc:
+            import traceback
+            yield f"\u274c Error: {exc}\n{traceback.format_exc()}", "", []
+
+    # Wire RWD gather button
+    btn_gather_rwd.click(
+        fn=step_gather_rwd,
+        inputs=[
+            rwd_topic, rwd_max_items,
+            rwd_x_token, rwd_bsky_handle, rwd_bsky_pass,
+            rwd_sc_key, rwd_brave_key, rwd_or_key,
+            api_key_input,
+        ],
+        outputs=[rwd_status, rwd_briefing_display, rwd_raw_display],
+    ).then(
+        fn=lambda b: b,
+        inputs=[rwd_briefing_display],
+        outputs=[state_rwd_briefing],
+    )
+
+    # Sync briefing edits back to state
+    rwd_briefing_display.change(
+        fn=lambda b: b,
+        inputs=[rwd_briefing_display],
+        outputs=[state_rwd_briefing],
+    )
+
     # ── Wiring ─────────────────────────────────────────────────────────────────
 
     # Step 1: Scrape + personas → 4 outputs
     btn_generate.click(
         fn=step_scrape_and_generate,
-        inputs=[url_input, business_context, customer_profile, num_personas, api_key_input],
+        inputs=[url_input, business_context, customer_profile, num_personas, api_key_input, state_rwd_briefing],
         outputs=[status_personas, state_personas_json, personas_display, state_image_urls_json],
     ).then(
         fn=lambda u: u,

@@ -95,14 +95,30 @@ async def generate_personas(
     business_context: str = "",
     customer_profile: str = "",
     num_personas: int = 5,
+    real_world_context: str = "",
 ) -> List[Persona]:
-    """Generate a focus group of personas from website content + optional user context."""
+    """Generate a focus group of personas from website content + optional user context.
+
+    Parameters
+    ----------
+    real_world_context : str, optional
+        A synthesized briefing of live community signals (Reddit, HN, X, etc.)
+        gathered by the Real World Data tab. When provided, personas will reflect
+        current public sentiment about the brand or topic.
+    """
 
     user_context_block = ""
     if business_context.strip():
         user_context_block += f"\n\nAdditional business context from the owner:\n{business_context}"
     if customer_profile.strip():
         user_context_block += f"\n\nOwner's description of their ideal customer:\n{customer_profile}"
+    if real_world_context.strip():
+        user_context_block += (
+            f"\n\nReal-world community signals (gathered live from Reddit, Hacker News, "
+            f"social media and other sources):\n{real_world_context}\n"
+            f"Use these signals to shape the opinions, frustrations, and attitudes of the "
+            f"personas so they reflect what real people are currently saying about this brand."
+        )
 
     prompt = f"""You are a UX research specialist. Based on the following website content,
 generate {num_personas} distinct, realistic customer personas who would visit this website.
