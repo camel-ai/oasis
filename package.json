@@ -1,0 +1,28 @@
+{
+  "name": "oasis_compare",
+  "version": "1.0.0",
+  "description": "<div align=\"center\">   <a href=\"https://www.camel-ai.org/\">     <img src=\"assets/banner.png\" alt=banner>   </a> </div>",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Greene-ctrl/oasis.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Greene-ctrl/oasis/issues"
+  },
+  "homepage": "https://github.com/Greene-ctrl/oasis#readme",
+  "dependencies": {
+    "@marp-team/marpit": "^3.2.1"
+  }
+}
