@@ -21,6 +21,7 @@ import sqlite3
 import pytest
 
 from oasis.social_platform.platform import Platform
+from oasis.social_platform.typing import ActionType
 
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test_tiktok.db")
@@ -42,7 +43,7 @@ class MockTikTokChannel:
                       "sign_up")),
             # Creator uploads a video
             ("id_2", (0, ("Dance video #trending", 15, "dance", '["dance"]',
-                          0.8, 0.9, False, None), "upload_video")),
+                          0.8, 0.9), "upload_video")),
             # Viewer watches the video (80% completion)
             ("id_3", (1, (1, 0.8), "watch_video")),
             # Viewer shares the video
@@ -59,10 +60,6 @@ class MockTikTokChannel:
             ("id_9", (1, 1, "exit_livestream")),
             # Creator ends the livestream
             ("id_10", (0, 1, "end_livestream")),
-            # Viewer views a product
-            ("id_11", (1, (1, "video", 1), "view_product")),
-            # Viewer adds to cart
-            ("id_12", (1, 1, "add_to_cart")),
             # Exit
             ("id_exit", (None, None, "exit")),
         ]
@@ -110,21 +107,19 @@ async def test_tiktok_upload_and_watch(setup_tiktok_platform):
         videos = cursor.fetchall()
         assert len(videos) == 1
         # Schema: post_id=0, duration=1, category=2, topic_tags=3,
-        # quality_score=4, hook_strength=5, has_product_link=6,
-        # product_id=7, traffic_pool_level=8, pool_enter_time=9,
-        # total_impressions=10, view_count=11, total_watch_ratio=12,
-        # share_count=13, negative_count=14
+        # quality_score=4, hook_strength=5, traffic_pool_level=6,
+        # pool_enter_time=7, total_impressions=8, view_count=9,
+        # total_watch_ratio=10, share_count=11, negative_count=12
         assert videos[0][1] == 15  # duration_seconds
         assert videos[0][2] == "dance"  # category
-        assert videos[0][6] == 0  # has_product_link = False
-        assert videos[0][8] == 1  # traffic_pool_level = 1
+        assert videos[0][6] == 1  # traffic_pool_level = 1
 
         # Verify watch recorded
         cursor.execute(
             "SELECT * FROM video WHERE post_id = 1")
         video = cursor.fetchone()
-        assert video[11] == 1  # view_count
-        assert video[12] == 0.8  # total_watch_ratio
+        assert video[9] == 1  # view_count
+        assert video[10] == 0.8  # total_watch_ratio
 
         # Verify share recorded
         cursor.execute("SELECT num_shares FROM post WHERE post_id = 1")
@@ -165,7 +160,6 @@ async def test_tiktok_upload_and_watch(setup_tiktok_platform):
             "sign_up", "upload_video", "watch_video", "share_video",
             "not_interested", "start_livestream", "enter_livestream",
             "send_gift", "exit_livestream", "end_livestream",
-            "view_product", "add_to_cart",
         }
         assert expected.issubset(actions), (
             f"Missing traces: {expected - actions}")

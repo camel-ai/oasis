@@ -6,8 +6,6 @@ CREATE TABLE IF NOT EXISTS video (
     topic_tags TEXT DEFAULT '[]',
     quality_score REAL DEFAULT 0.5,
     hook_strength REAL DEFAULT 0.5,
-    has_product_link BOOLEAN DEFAULT 0,
-    product_id INTEGER,
     traffic_pool_level INTEGER DEFAULT 1,
     pool_enter_time DATETIME,
     total_impressions INTEGER DEFAULT 0,
@@ -15,6 +13,5 @@ CREATE TABLE IF NOT EXISTS video (
     total_watch_ratio REAL DEFAULT 0.0,
     share_count INTEGER DEFAULT 0,
     negative_count INTEGER DEFAULT 0,
-    FOREIGN KEY(post_id) REFERENCES post(post_id),
-    FOREIGN KEY(product_id) REFERENCES product(product_id)
+    FOREIGN KEY(post_id) REFERENCES post(post_id)
 );

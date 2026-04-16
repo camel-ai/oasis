@@ -36,6 +36,10 @@ class SocialEnvironment(Environment):
 
     posts_env_template = Template(
         "After refreshing, you see some posts $posts")
+    short_video_posts_env_template = Template(
+        "After refreshing your short-video feed, you see these videos $posts")
+    livestream_env_template = Template(
+        "There are active livestream rooms right now $streams")
 
     groups_env_template = Template(
         "And there are many group chat channels $all_groups\n"
@@ -47,23 +51,45 @@ class SocialEnvironment(Environment):
         "You must make sure you can only send messages to the group you "
         "are already in")
     env_template = Template(
+        "$followers_env\n"
+        "$follows_env\n"
         "$groups_env\n"
+        "$livestream_env\n"
         "$posts_env\npick one you want to perform action that best "
         "reflects your current inclination based on your profile and "
         "posts content. Do not limit your action in just `like` to like posts")
+    short_video_env_template = Template(
+        "$followers_env\n"
+        "$follows_env\n"
+        "$livestream_env\n"
+        "$posts_env\npick one action that best reflects how you would behave "
+        "in a short-video platform. Consider actions such as watch_video, "
+        "share_video, follow, not_interested, duet, stitch, and livestream "
+        "interactions when they fit your interests and the feed context.")
 
     def __init__(self, action: SocialAction):
         self.action = action
 
-    async def get_posts_env(self) -> str:
+    def _is_short_video_posts(self, posts: list[dict]) -> bool:
+        return any(
+            post.get("content_format") == "short_video"
+            or "traffic_pool_level" in post
+            or "avg_watch_ratio" in post for post in posts)
+
+    async def get_posts_env(self) -> tuple[str, bool]:
         posts = await self.action.refresh()
         # TODO: Replace posts json format string to other formats
         if posts["success"]:
-            posts_env = json.dumps(posts["posts"], indent=4)
-            posts_env = self.posts_env_template.substitute(posts=posts_env)
+            post_list = posts["posts"]
+            posts_env = json.dumps(post_list, indent=4)
+            is_short_video = self._is_short_video_posts(post_list)
+            template = (self.short_video_posts_env_template
+                        if is_short_video else self.posts_env_template)
+            posts_env = template.substitute(posts=posts_env)
         else:
             posts_env = "After refreshing, there are no existing posts."
-        return posts_env
+            is_short_video = False
+        return posts_env, is_short_video
 
     async def get_followers_env(self) -> str:
         # TODO: Implement followers env
@@ -115,6 +141,41 @@ class SocialEnvironment(Environment):
             groups_env = "No groups."
         return groups_env
 
+    async def get_livestream_env(self, include_livestreams: bool) -> str:
+        if not include_livestreams:
+            return ""
+        try:
+            db_path = get_db_path()
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' "
+                "AND name='livestream'"
+            )
+            if cursor.fetchone() is None:
+                conn.close()
+                return ""
+            cursor.execute(
+                "SELECT stream_id, host_id, current_viewers, peak_viewers, "
+                "total_comments, total_gifts_value FROM livestream "
+                "WHERE status = 'live' ORDER BY current_viewers DESC LIMIT 3"
+            )
+            live_streams = [{
+                "stream_id": row[0],
+                "host_id": row[1],
+                "current_viewers": row[2],
+                "peak_viewers": row[3],
+                "total_comments": row[4],
+                "total_gifts_value": row[5],
+            } for row in cursor.fetchall()]
+            conn.close()
+            if not live_streams:
+                return "There are no active livestream rooms right now."
+            return self.livestream_env_template.substitute(
+                streams=json.dumps(live_streams))
+        except Exception:
+            return ""
+
     async def to_text_prompt(
         self,
         include_posts: bool = True,
@@ -125,11 +186,18 @@ class SocialEnvironment(Environment):
                          if include_follows else "No followers.")
         follows_env = (await self.get_follows_env()
                        if include_followers else "No follows.")
-        posts_env = await self.get_posts_env() if include_posts else ""
+        if include_posts:
+            posts_env, is_short_video = await self.get_posts_env()
+        else:
+            posts_env, is_short_video = "", False
+        livestream_env = await self.get_livestream_env(is_short_video)
 
-        return self.env_template.substitute(
+        template = (self.short_video_env_template
+                    if is_short_video else self.env_template)
+        return template.substitute(
             followers_env=followers_env,
             follows_env=follows_env,
             posts_env=posts_env,
             groups_env=await self.get_group_env(),
+            livestream_env=livestream_env,
         )

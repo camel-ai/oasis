@@ -25,9 +25,24 @@ from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType, DefaultPlatformType
 from oasis.testing.show_db import print_db_contents
 
+# Keep package import resilient when optional analysis module is not shipped.
+try:
+    from oasis.analysis import get_short_video_observability_report
+    from oasis.analysis import get_short_video_time_series_report
+    _HAS_SHORT_VIDEO_ANALYSIS = True
+except ImportError:
+    _HAS_SHORT_VIDEO_ANALYSIS = False
+
 __all__ = [
     "make", "Platform", "ActionType", "DefaultPlatformType", "ManualAction",
-    "LLMAction", "print_db_contents", "AgentGraph", "SocialAgent", "UserInfo",
+    "LLMAction", "print_db_contents",
+    "AgentGraph", "SocialAgent", "UserInfo",
     "generate_reddit_agent_graph", "generate_tiktok_agent_graph",
     "generate_twitter_agent_graph"
 ]
+
+if _HAS_SHORT_VIDEO_ANALYSIS:
+    __all__.extend([
+        "get_short_video_observability_report",
+        "get_short_video_time_series_report",
+    ])

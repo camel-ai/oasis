@@ -11,7 +11,5 @@ CREATE TABLE IF NOT EXISTS livestream (
     total_comments INTEGER DEFAULT 0,
     total_likes INTEGER DEFAULT 0,
     total_gifts_value REAL DEFAULT 0.0,
-    total_orders INTEGER DEFAULT 0,
-    total_gmv REAL DEFAULT 0.0,
     FOREIGN KEY(host_id) REFERENCES user(user_id)
 );

@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import random
@@ -255,11 +256,16 @@ class Platform:
         # Record the action in the trace table
         action_info = {
             "product_name": product_name,
-            "purchase_num": purchase_num
+            "purchase_num": purchase_num,
+            "product_id": product_id,
         }
         self.pl_utils._record_trace(user_id, ActionType.PURCHASE_PRODUCT.value,
                                     action_info, current_time)
-        return {"success": True, "product_id": product_id}
+        return {
+            "success": True,
+            "product_id": product_id,
+            "purchase_num": purchase_num,
+        }
         # except Exception as e:
         #     return {"success": False, "error": str(e)}
 
@@ -338,6 +344,7 @@ class Platform:
         twitter_log.info("Starting to refresh recommendation system cache...")
         user_table = fetch_table_from_db(self.db_cursor, "user")
         post_table = fetch_table_from_db(self.db_cursor, "post")
+        comment_table = fetch_table_from_db(self.db_cursor, "comment")
         trace_table = fetch_table_from_db(self.db_cursor, "trace")
         rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
 
@@ -388,7 +395,8 @@ class Platform:
             video_table = fetch_table_from_db(self.db_cursor, "video")
             tiktok_params = getattr(self, "tiktok_recsys_params", {})
             new_rec_matrix = rec_sys_tiktok(
-                user_table, post_table, video_table, trace_table,
+                user_table, post_table, video_table, comment_table,
+                trace_table,
                 rec_matrix, self.max_rec_post_len,
                 self.refresh_rec_post_count, **tiktok_params)
             # Persist traffic pool level changes to DB
@@ -1085,6 +1093,9 @@ class Platform:
                 }
             results_with_comments = self.pl_utils._add_comments_to_posts(
                 results)
+            if self.recsys_type == RecsysType.TIKTOK:
+                results_with_comments = self._enrich_tiktok_posts(
+                    results_with_comments)
 
             action_info = {"posts": results_with_comments}
             self.pl_utils._record_trace(user_id, ActionType.TREND.value,
@@ -1664,6 +1675,56 @@ class Platform:
     def _get_tiktok_time(self):
         return self.sandbox_clock.get_time_step()
 
+    def _enrich_tiktok_posts(self, posts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        if not posts:
+            return posts
+
+        post_ids = [post["post_id"] for post in posts]
+        placeholders = ", ".join("?" for _ in post_ids)
+        query = (
+            "SELECT post_id, duration_seconds, category, topic_tags, "
+            "quality_score, hook_strength, traffic_pool_level, "
+            "total_impressions, view_count, total_watch_ratio, "
+            "share_count, negative_count "
+            f"FROM video WHERE post_id IN ({placeholders})"
+        )
+        self.pl_utils._execute_db_command(query, post_ids)
+        video_rows = self.db_cursor.fetchall()
+
+        video_lookup = {}
+        for row in video_rows:
+            (post_id, duration_seconds, category, topic_tags, quality_score,
+             hook_strength, traffic_pool_level, total_impressions, view_count,
+             total_watch_ratio, share_count, negative_count) = row
+            try:
+                parsed_tags = json.loads(topic_tags) if topic_tags else []
+            except (TypeError, json.JSONDecodeError):
+                parsed_tags = []
+            avg_watch_ratio = (
+                total_watch_ratio / view_count if view_count else 0.0)
+            video_lookup[post_id] = {
+                "content_format": "short_video",
+                "duration_seconds": duration_seconds,
+                "category": category,
+                "topic_tags": parsed_tags,
+                "quality_score": quality_score,
+                "hook_strength": hook_strength,
+                "traffic_pool_level": traffic_pool_level,
+                "total_impressions": total_impressions,
+                "view_count": view_count,
+                "avg_watch_ratio": avg_watch_ratio,
+                "share_count": share_count,
+                "negative_count": negative_count,
+            }
+
+        enriched_posts = []
+        for post in posts:
+            enriched = dict(post)
+            if post["post_id"] in video_lookup:
+                enriched.update(video_lookup[post["post_id"]])
+            enriched_posts.append(enriched)
+        return enriched_posts
+
     def _persist_traffic_pool_levels(self, video_table,
                                      max_level: int = 7):
         """Write traffic pool promote/demote decisions back to DB.
@@ -1704,8 +1765,7 @@ class Platform:
         try:
             user_id = agent_id
             (content, duration_seconds, category, topic_tags,
-             quality_score, hook_strength,
-             has_product_link, product_id) = upload_message
+             quality_score, hook_strength) = upload_message
 
             post_insert_query = (
                 "INSERT INTO post (user_id, content, created_at, num_likes, "
@@ -1717,20 +1777,18 @@ class Platform:
 
             video_insert_query = (
                 "INSERT INTO video (post_id, duration_seconds, category, "
-                "topic_tags, quality_score, hook_strength, has_product_link, "
-                "product_id, traffic_pool_level, pool_enter_time) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)")
+                "topic_tags, quality_score, hook_strength, "
+                "traffic_pool_level, pool_enter_time) "
+                "VALUES (?, ?, ?, ?, ?, ?, 1, ?)")
             self.pl_utils._execute_db_command(
                 video_insert_query,
                 (post_id, duration_seconds, category, topic_tags,
-                 quality_score, hook_strength, has_product_link,
-                 product_id, current_time),
+                 quality_score, hook_strength, current_time),
                 commit=True)
 
             action_info = {
                 "post_id": post_id, "content": content,
                 "category": category, "duration": duration_seconds,
-                "has_product": has_product_link,
             }
             self.pl_utils._record_trace(
                 user_id, ActionType.UPLOAD_VIDEO.value,
@@ -2029,34 +2087,5 @@ class Platform:
                 action_info, current_time)
             return {"success": True, "stream_id": stream_id,
                     "gift_value": gift_value}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-
-    async def view_product(self, agent_id: int, view_message):
-        current_time = self._get_tiktok_time()
-        try:
-            user_id = agent_id
-            product_id, source_type, source_id = view_message
-            action_info = {
-                "product_id": product_id,
-                "source_type": source_type,
-                "source_id": source_id,
-            }
-            self.pl_utils._record_trace(
-                user_id, ActionType.VIEW_PRODUCT.value,
-                action_info, current_time)
-            return {"success": True, "product_id": product_id}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-
-    async def add_to_cart(self, agent_id: int, product_id: int):
-        current_time = self._get_tiktok_time()
-        try:
-            user_id = agent_id
-            action_info = {"product_id": product_id}
-            self.pl_utils._record_trace(
-                user_id, ActionType.ADD_TO_CART.value,
-                action_info, current_time)
-            return {"success": True, "product_id": product_id}
         except Exception as e:
             return {"success": False, "error": str(e)}

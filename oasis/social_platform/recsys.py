@@ -940,6 +940,7 @@ def rec_sys_tiktok(
     user_table: List[Dict[str, Any]],
     post_table: List[Dict[str, Any]],
     video_table: List[Dict[str, Any]],
+    comment_table: List[Dict[str, Any]],
     trace_table: List[Dict[str, Any]],
     rec_matrix: List[List[int]],
     max_rec_post_len: int,
@@ -978,10 +979,17 @@ def rec_sys_tiktok(
 
     post_lookup = {p["post_id"]: p for p in post_table}
 
+    comment_count_by_post: Dict[int, int] = {}
+    for comment in comment_table or []:
+        post_id = comment.get("post_id")
+        if post_id is not None:
+            comment_count_by_post[post_id] = (
+                comment_count_by_post.get(post_id, 0) + 1)
+
     for v in video_table:
         post = post_lookup.get(v["post_id"], {})
         v["num_likes"] = post.get("num_likes", 0)
-        v["num_comments"] = post.get("num_comments", 0)
+        v["num_comments"] = comment_count_by_post.get(v["post_id"], 0)
         v.setdefault("share_count", 0)
         v.setdefault("negative_count", 0)
 

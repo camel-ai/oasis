@@ -62,8 +62,6 @@ def test_transfer_to_openai_function():
             SocialAction.send_gift,
             SocialAction.start_livestream,
             SocialAction.end_livestream,
-            SocialAction.view_product,
-            SocialAction.add_to_cart,
         ]
     ]
     assert action_funcs is not None

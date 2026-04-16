@@ -220,3 +220,8 @@ The Reddit recommendation system is highly time-sensitive. Currently, one time s
 ## 🚢 More Tutorials
 
 To discover how to create profiles for large-scale users, as well as how to visualize and analyze social simulation data once your experiment concludes, please refer to [Addtional Tutorials](user_generation_visualization.md) for detailed guidance.
+
+## 🧪 Short-Video Experiment Template
+
+For a deterministic, paper-style short-video experiment focused on recommendation dynamics, see [short_video_negative_feedback](short_video_negative_feedback/README.md).
+This template studies how stronger `not_interested` feedback changes the reach of a low-quality video in the TikTok-style traffic-pool recommender.

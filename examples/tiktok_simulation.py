@@ -148,8 +148,6 @@ async def main():
                 "topic_tags": '["dance", "challenge", "trending"]',
                 "quality_score": 0.85,
                 "hook_strength": 0.90,
-                "has_product_link": False,
-                "product_id": None,
             },
         )
     })

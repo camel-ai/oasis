@@ -126,8 +126,6 @@ OASIS provides a comprehensive set of actions that simulate real social media be
 | `SEND_GIFT` | Send a virtual gift to a livestream host (TikTok) |
 | `START_LIVESTREAM` | Start a new livestream session (TikTok) |
 | `END_LIVESTREAM` | End a livestream session (TikTok) |
-| `VIEW_PRODUCT` | View product details from video or livestream (TikTok) |
-| `ADD_TO_CART` | Add a product to shopping cart (TikTok) |
 
 ### Platform-Specific Actions
 
@@ -188,8 +186,6 @@ The TikTok action set includes:
 - `LIVESTREAM_COMMENT` — Send bullet comments in livestream
 - `SEND_GIFT` — Send virtual gifts
 - `START_LIVESTREAM` / `END_LIVESTREAM` — Start/end live sessions
-- `VIEW_PRODUCT` / `ADD_TO_CART` — E-commerce actions
-- `PURCHASE_PRODUCT` — Complete a purchase
 - `SEARCH_POSTS` / `TREND` / `DO_NOTHING`
 
 TikTok uses a **traffic pool racing recommendation algorithm** with configurable parameters. See the [example script](https://github.com/camel-ai/oasis/blob/main/examples/tiktok_simulation.py) for usage.
@@ -375,14 +371,6 @@ action = ManualAction(
 )
 ```
 
-#### PURCHASE_PRODUCT
-```python
-action = ManualAction(
-    action=ActionType.PURCHASE_PRODUCT,
-    args={"product_name": "Premium Subscription", "purchase_num": 1}
-)
-```
-
 #### INTERVIEW
 ```python
 action = ManualAction(
@@ -442,8 +430,6 @@ action = ManualAction(
         "topic_tags": '["dance", "challenge"]',
         "quality_score": 0.8,
         "hook_strength": 0.9,
-        "has_product_link": False,
-        "product_id": None,
     }
 )
 ```

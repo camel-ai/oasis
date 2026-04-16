@@ -70,8 +70,6 @@ class SocialAction:
                 self.send_gift,
                 self.start_livestream,
                 self.end_livestream,
-                self.view_product,
-                self.add_to_cart,
             ]
         ]
 
@@ -775,8 +773,7 @@ class SocialAction:
     # ==================== TikTok Actions ====================
 
     async def upload_video(self, content: str, duration_seconds: int = 15,
-                           category: str = "general", topic_tags: str = "[]",
-                           has_product_link: bool = False):
+                           category: str = "general", topic_tags: str = "[]"):
         r"""Upload a short video to TikTok.
 
         Args:
@@ -784,13 +781,12 @@ class SocialAction:
             duration_seconds (int): Video duration in seconds (default 15).
             category (str): Content category (e.g. comedy, food, dance).
             topic_tags (str): JSON array of topic hashtags.
-            has_product_link (bool): Whether the video has a shopping cart.
 
         Returns:
             dict: {'success': True, 'post_id': 123}
         """
         message = (content, duration_seconds, category, topic_tags,
-                   0.5, 0.5, has_product_link, None)
+                   0.5, 0.5)
         return await self.perform_action(
             message, ActionType.UPLOAD_VIDEO.value)
 
@@ -933,33 +929,3 @@ class SocialAction:
         """
         return await self.perform_action(
             stream_id, ActionType.END_LIVESTREAM.value)
-
-    async def view_product(self, product_id: int,
-                           source_type: str = "video",
-                           source_id: int = 0):
-        r"""View product details from a video shopping cart or livestream.
-
-        Args:
-            product_id (int): The ID of the product to view.
-            source_type (str): Where the product was found ('video' or
-                'livestream').
-            source_id (int): The video or livestream ID.
-
-        Returns:
-            dict: {'success': True, 'product_id': 1}
-        """
-        message = (product_id, source_type, source_id)
-        return await self.perform_action(
-            message, ActionType.VIEW_PRODUCT.value)
-
-    async def add_to_cart(self, product_id: int):
-        r"""Add a product to shopping cart.
-
-        Args:
-            product_id (int): The ID of the product to add.
-
-        Returns:
-            dict: {'success': True, 'product_id': 1}
-        """
-        return await self.perform_action(
-            product_id, ActionType.ADD_TO_CART.value)

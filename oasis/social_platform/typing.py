@@ -61,8 +61,6 @@ class ActionType(Enum):
     SEND_GIFT = "send_gift"
     START_LIVESTREAM = "start_livestream"
     END_LIVESTREAM = "end_livestream"
-    VIEW_PRODUCT = "view_product"
-    ADD_TO_CART = "add_to_cart"
 
     @classmethod
     def get_default_twitter_actions(cls):
@@ -111,9 +109,6 @@ class ActionType(Enum):
             cls.SEND_GIFT,
             cls.START_LIVESTREAM,
             cls.END_LIVESTREAM,
-            cls.VIEW_PRODUCT,
-            cls.ADD_TO_CART,
-            cls.PURCHASE_PRODUCT,
             cls.SEARCH_POSTS,
             cls.TREND,
             cls.DO_NOTHING,

@@ -706,7 +706,9 @@ async def generate_tiktok_agent_graph(
             bio = f"{bio} [interests: {', '.join(topics)}]"
 
         user_info = UserInfo(
-            name=agent_info[i].get("username", f"user_{i}"),
+            user_name=agent_info[i].get("username", f"user_{i}"),
+            name=agent_info[i].get("name", agent_info[i].get(
+                "username", f"user_{i}")),
             description=bio,
             profile=profile,
             recsys_type="tiktok",
