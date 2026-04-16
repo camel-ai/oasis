@@ -53,16 +53,21 @@ class OasisEnv:
         platform: Union[DefaultPlatformType, Platform],
         database_path: str = None,
         semaphore: int = 128,
+        **kwargs,
     ) -> None:
         r"""Init the oasis environment.
 
         Args:
             agent_graph: The AgentGraph to use in the simulation.
             platform: The platform type to use. Including
-                `DefaultPlatformType.TWITTER` or `DefaultPlatformType.REDDIT`.
+                `DefaultPlatformType.TWITTER`, `DefaultPlatformType.REDDIT`,
+                or `DefaultPlatformType.TIKTOK`.
                 Or you can pass a custom `Platform` instance.
             database_path: The path to create a sqlite3 database. The file
                 extension must be `.db` such as `twitter_simulation.db`.
+            **kwargs: Additional keyword arguments. For TikTok platform,
+                pass `tiktok_recsys_params` dict to configure the traffic
+                pool recommendation algorithm parameters.
         """
         # Initialize the agent graph
         self.agent_graph = agent_graph
@@ -96,10 +101,25 @@ class OasisEnv:
                     refresh_rec_post_count=5,
                 )
                 self.platform_type = DefaultPlatformType.REDDIT
+            elif platform == DefaultPlatformType.TIKTOK:
+                self.channel = Channel()
+                self.platform = Platform(
+                    db_path=database_path,
+                    channel=self.channel,
+                    recsys_type="tiktok",
+                    refresh_rec_post_count=8,
+                    max_rec_post_len=30,
+                    following_post_count=2,
+                    show_score=False,
+                )
+                # Store TikTok recsys params for configurable algorithm
+                self.platform.tiktok_recsys_params = kwargs.get(
+                    "tiktok_recsys_params", {})
+                self.platform_type = DefaultPlatformType.TIKTOK
             else:
-                raise ValueError(f"Invalid platform: {platform}. Only "
-                                 "DefaultPlatformType.TWITTER or "
-                                 "DefaultPlatformType.REDDIT are supported.")
+                raise ValueError(
+                    f"Invalid platform: {platform}. Supported: "
+                    "DefaultPlatformType.TWITTER, .REDDIT, or .TIKTOK.")
         elif isinstance(platform, Platform):
             if database_path != platform.db_path:
                 env_log.warning("database_path is not the same as the "
@@ -108,6 +128,8 @@ class OasisEnv:
             self.channel = platform.channel
             if platform.recsys_type == RecsysType.REDDIT:
                 self.platform_type = DefaultPlatformType.REDDIT
+            elif platform.recsys_type == RecsysType.TIKTOK:
+                self.platform_type = DefaultPlatformType.TIKTOK
             else:
                 self.platform_type = DefaultPlatformType.TWITTER
         else:
@@ -194,7 +216,8 @@ class OasisEnv:
         env_log.info("performed all actions.")
         # # Control some agents to perform actions
         # Update the clock
-        if self.platform_type == DefaultPlatformType.TWITTER:
+        if self.platform_type in (DefaultPlatformType.TWITTER,
+                                   DefaultPlatformType.TIKTOK):
             self.platform.sandbox_clock.time_step += 1
 
     async def close(self) -> None:

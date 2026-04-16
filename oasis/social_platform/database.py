@@ -16,6 +16,7 @@ from __future__ import annotations
 import os
 import os.path as osp
 import sqlite3
+from datetime import datetime
 from typing import Any, Dict, List
 
 SCHEMA_DIR = "social_platform/schema"
@@ -38,6 +39,9 @@ PRODUCT_SCHEMA_SQL = "product.sql"
 GROUP_SCHEMA_SQL = "chat_group.sql"
 GROUP_MEMBER_SCHEMA_SQL = "group_member.sql"
 GROUP_MESSAGE_SCHEMA_SQL = "group_message.sql"
+VIDEO_SCHEMA_SQL = "video.sql"
+LIVESTREAM_SCHEMA_SQL = "livestream.sql"
+LIVESTREAM_VIEWER_SCHEMA_SQL = "livestream_viewer.sql"
 
 TABLE_NAMES = {
     "user",
@@ -56,7 +60,25 @@ TABLE_NAMES = {
     "group",
     "group_member",
     "group_message",
+    "video",
+    "livestream",
+    "livestream_viewer",
 }
+
+
+def _register_sqlite_datetime_adapter() -> None:
+    r"""Register explicit datetime adapter for Python 3.12+ compatibility.
+
+    Python's implicit sqlite3 datetime adapter is deprecated. We normalize
+    datetime values to an ISO-like text format to keep current DB behavior.
+    """
+    sqlite3.register_adapter(
+        datetime,
+        lambda value: value.isoformat(sep=" ", timespec="microseconds"),
+    )
+
+
+_register_sqlite_datetime_adapter()
 
 
 def get_db_path() -> str:
@@ -81,7 +103,7 @@ def get_schema_dir_path() -> str:
     return schema_dir
 
 
-def create_db(db_path: str | None = None):
+def create_db(db_path: str | None = None, platform: str | None = None):
     r"""Create the database if it does not exist. A :obj:`twitter.db`
     file will be automatically created  in the :obj:`data` directory.
     """
@@ -191,6 +213,14 @@ def create_db(db_path: str | None = None):
         with open(group_message_sql_path, "r") as sql_file:
             group_message_sql_script = sql_file.read()
         cursor.executescript(group_message_sql_script)
+
+        # TikTok-specific tables (only created when platform is tiktok)
+        if platform == "tiktok":
+            for sql_file_name in [VIDEO_SCHEMA_SQL, LIVESTREAM_SCHEMA_SQL,
+                                  LIVESTREAM_VIEWER_SCHEMA_SQL]:
+                sql_path = osp.join(schema_dir, sql_file_name)
+                with open(sql_path, "r") as sql_file:
+                    cursor.executescript(sql_file.read())
 
         # Commit the changes:
         conn.commit()

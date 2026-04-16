@@ -162,3 +162,42 @@ python visualization/dynamic_follow_network/code/vis_neo4j_twitter.py
 Use the explore page of the [https://console.neo4j.io/](https://console.neo4j.io/) dashboard. In the search bar, select `user-follow-user`. For the slicer, choose `follow-timestamp` to visualize changes in follow relationships. Like this,
 
 https://github.com/user-attachments/assets/b0628bcc-f29c-4da6-a061-6c3c0487aea3
+
+### 🎬 Short-Video Simulation Analysis
+
+- Step 1:
+
+Run a short-video simulation and make sure you have a SQLite database such as `tiktok_simulation.db`.
+
+- Step 2:
+
+Generate feed and livestream charts:
+
+```bash
+python visualization/short_video_simulation/code/plot_metrics.py \
+  ./data/tiktok_simulation.db \
+  --output-dir ./visualization/short_video_simulation/output
+```
+
+- Step 3:
+
+Generate a markdown report:
+
+```bash
+python visualization/short_video_simulation/code/generate_report.py \
+  ./data/tiktok_simulation.db \
+  --output ./visualization/short_video_simulation/output/report.md
+```
+
+- Step 4:
+
+Compare multiple runs:
+
+```bash
+python visualization/short_video_simulation/code/compare_runs.py \
+  baseline=./data/tiktok_baseline.db \
+  experiment=./data/tiktok_experiment.db \
+  --output-dir ./visualization/short_video_simulation/output/comparison
+```
+
+These scripts are designed for creator-growth analysis, traffic-pool mobility tracking, and livestream retention studies.

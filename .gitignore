@@ -99,3 +99,7 @@ models/
 *.sqlite
 
 tmp
+
+# Paper and experiment local non-submission artifacts
+docs/paper/short_video_negative_feedback/non_submission/
+examples/experiment/short_video_negative_feedback/non_submission_outputs/

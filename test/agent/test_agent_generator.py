@@ -17,8 +17,6 @@ import os
 import os.path as osp
 
 import pytest
-from camel.models import ModelFactory
-from camel.types import ModelPlatformType
 
 from oasis.social_agent.agents_generator import (generate_agents,
                                                  generate_controllable_agents)
@@ -31,13 +29,9 @@ if osp.exists(test_db_filepath):
     os.remove(test_db_filepath)
 
 
-async def running():
+async def running(model):
     agent_info_path = "./test/test_data/user_all_id_time.csv"
     twitter_channel = Channel()
-    model = ModelFactory.create(
-        model_platform=ModelPlatformType.OPENAI,
-        model_type='gpt-4o-mini',
-    )
     infra = Platform(test_db_filepath, twitter_channel)
     task = asyncio.create_task(infra.running())
     os.environ["SANDBOX_TIME"] = "0"
@@ -51,8 +45,8 @@ async def running():
     assert agent_graph.get_num_nodes() == 111
 
 
-def test_agent_generator():
-    asyncio.run(running())
+def test_agent_generator(llm_test_model):
+    asyncio.run(running(llm_test_model))
 
 
 @pytest.mark.skip(reason="Now controllable agent is not supported")

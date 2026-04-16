@@ -40,7 +40,7 @@
 <p align="left">
   <img src='assets/intro.png'>
 
-🏝️ OASIS is a scalable, open-source social media simulator that incorporates large language model agents to realistically mimic the behavior of up to one million users on platforms like Twitter and Reddit. It's designed to facilitate the study of complex social phenomena such as information spread, group polarization, and herd behavior, offering a versatile tool for exploring diverse social dynamics and user interactions in digital environments.
+🏝️ OASIS is a scalable, open-source social media simulator that incorporates large language model agents to realistically mimic the behavior of up to one million users across Twitter-like, Reddit-like, and short-video social platforms. It's designed to facilitate the study of complex social phenomena such as information spread, group polarization, creator-audience dynamics, and herd behavior, offering a versatile tool for exploring diverse social interactions in digital environments.
 
 </p>
 
@@ -67,15 +67,15 @@ OASIS supports simulations of up to ***one million agents***, enabling studies o
 
 ### 📲 Dynamic Environments
 
-Adapts to real-time changes in social networks and content, mirroring the fluid dynamics of platforms like **Twitter** and **Reddit** for authentic simulation experiences.
+Adapts to real-time changes in social networks and content, mirroring the fluid dynamics of **Twitter-like**, **Reddit-like**, and **short-video** platforms for authentic simulation experiences.
 
 ### 👍🏼 Diverse Action Spaces
 
-Agents can perform **23 actions**, such as following, commenting, and reposting, allowing for rich, multi-faceted interactions.
+Agents can perform a rich set of platform-native actions, such as following, commenting, reposting, uploading videos, and joining livestreams.
 
 ### 🔥 Integrated Recommendation Systems
 
-Features **interest-based** and **hot-score-based recommendation algorithms**, simulating how users discover content and interact within social media platforms.
+Features platform-specific recommendation algorithms, including **interest-based**, **hot-score-based**, and **traffic-pool-style** feed ranking for short-video simulations.
 
 <br>
 
@@ -301,6 +301,23 @@ If your research is based on OASIS, we'd be happy to feature your work here—fe
 > We greatly appreciate your interest in contributing to our open-source initiative. To ensure a smooth collaboration and the success of contributions, we adhere to a set of contributing guidelines similar to those established by CAMEL. For a comprehensive understanding of the steps involved in contributing to our project, please refer to the OASIS [contributing guidelines](https://github.com/camel-ai/oasis/blob/master/CONTRIBUTING.md). 🤝🚀
 >
 > An essential part of contributing involves not only submitting new features with accompanying tests (and, ideally, examples) but also ensuring that these contributions pass our automated pytest suite. This approach helps us maintain the project's quality and reliability by verifying compatibility and functionality.
+
+### Automated Test Commands
+
+You can run all automated test stages locally with:
+
+```bash
+bash scripts/ci/run_all_tests.sh
+```
+
+This command orchestrates:
+
+- deterministic pytest suites (no external model dependency),
+- short-video experiment/report/compare smoke checks,
+- optional LLM-dependent tests (auto-skipped when both
+  `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` are absent),
+- optional online model tests (OpenAI/HuggingFace-dependent, auto-skipped
+  when both OpenAI and Anthropic credentials are absent).
 
 ## 📬 Community & Contact
 

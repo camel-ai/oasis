@@ -46,6 +46,18 @@ agent_graph = await generate_reddit_agent_graph(
 )
 ```
 
+- Short-video user profile style
+
+```python
+from oasis import generate_tiktok_agent_graph
+
+agent_graph = await generate_tiktok_agent_graph(
+    profile_path="./data/tiktok/user_data.json",
+    model=openai_model,
+    available_actions=available_actions,
+)
+```
+
 ## Option 2: Create an empty `AgentGraph` and customize each agent
 
 ### Step 1: Create an empty `AgentGraph`
