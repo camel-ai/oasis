@@ -873,6 +873,13 @@ def _evaluate_traffic_pools(
         pools.setdefault(level, []).append(v)
 
     for level, videos in pools.items():
+        # Level 0 videos are considered out of circulation and should not
+        # re-enter the promotion race in later refresh cycles.
+        if level <= 0:
+            for v in videos:
+                v["_pool_action"] = "stay"
+            continue
+
         if len(videos) < 2:
             for v in videos:
                 v["_pool_action"] = "stay"
@@ -942,6 +949,7 @@ def rec_sys_tiktok(
     video_table: List[Dict[str, Any]],
     comment_table: List[Dict[str, Any]],
     trace_table: List[Dict[str, Any]],
+    follow_table: List[Dict[str, Any]],
     rec_matrix: List[List[int]],
     max_rec_post_len: int,
     refresh_rec_post_count: int = 8,
@@ -1002,23 +1010,19 @@ def rec_sys_tiktok(
         and v.get("traffic_pool_level", 1) > 0  # level 0 = previously demoted
     ]
 
-    # Build follow graph from trace (follow action stores followee_id)
+    # Build follow graph from current follow table state so unfollow actions
+    # are reflected immediately in recommendation behavior.
     follow_map: Dict[int, set] = {}
-    for trace in trace_table:
-        if trace.get("action") == ActionType.FOLLOW.value:
-            uid = trace["user_id"]
-            try:
-                info = trace.get("info", "{}")
-                if isinstance(info, str):
-                    info = json.loads(info)
-                # Platform.follow() stores followee_id in action_info
-                followed = (info.get("followee_id")
-                            or info.get("user_id")
-                            or info.get("follow_id"))
-                if followed is not None:
-                    follow_map.setdefault(uid, set()).add(int(followed))
-            except (json.JSONDecodeError, AttributeError, ValueError):
-                pass
+    for relation in follow_table or []:
+        follower_id = relation.get("follower_id")
+        followee_id = relation.get("followee_id")
+        if follower_id is None or followee_id is None:
+            continue
+        try:
+            follow_map.setdefault(int(follower_id), set()).add(
+                int(followee_id))
+        except (TypeError, ValueError):
+            continue
 
     post_creator = {p["post_id"]: p["user_id"] for p in post_table}
 

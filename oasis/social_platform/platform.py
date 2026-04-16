@@ -346,6 +346,7 @@ class Platform:
         post_table = fetch_table_from_db(self.db_cursor, "post")
         comment_table = fetch_table_from_db(self.db_cursor, "comment")
         trace_table = fetch_table_from_db(self.db_cursor, "trace")
+        follow_table = fetch_table_from_db(self.db_cursor, "follow")
         rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
 
         if self.recsys_type == RecsysType.RANDOM:
@@ -396,7 +397,7 @@ class Platform:
             tiktok_params = getattr(self, "tiktok_recsys_params", {})
             new_rec_matrix = rec_sys_tiktok(
                 user_table, post_table, video_table, comment_table,
-                trace_table,
+                trace_table, follow_table,
                 rec_matrix, self.max_rec_post_len,
                 self.refresh_rec_post_count, **tiktok_params)
             # Persist traffic pool level changes to DB
@@ -1749,7 +1750,7 @@ class Platform:
             self.pl_utils._execute_many_db_command(
                 "UPDATE video SET traffic_pool_level = "
                 f"MIN(traffic_pool_level + 1, {max_level}) "
-                "WHERE post_id = ?",
+                "WHERE post_id = ? AND traffic_pool_level > 0",
                 promote_list, commit=False)
 
         if demote_list:
