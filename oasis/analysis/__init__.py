@@ -12,9 +12,7 @@
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 from oasis.analysis.short_video_metrics import (
-    get_short_video_observability_report,
-    get_short_video_time_series_report,
-)
+    get_short_video_observability_report, get_short_video_time_series_report)
 
 __all__ = [
     "get_short_video_observability_report",

@@ -27,8 +27,9 @@ from oasis.testing.show_db import print_db_contents
 
 # Keep package import resilient when optional analysis module is not shipped.
 try:
-    from oasis.analysis import get_short_video_observability_report
-    from oasis.analysis import get_short_video_time_series_report
+    from oasis.analysis import (  # noqa: F401
+        get_short_video_observability_report,
+        get_short_video_time_series_report)
     _HAS_SHORT_VIDEO_ANALYSIS = True
 except ImportError:
     _HAS_SHORT_VIDEO_ANALYSIS = False

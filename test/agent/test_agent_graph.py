@@ -44,7 +44,8 @@ def graph_plotting_available() -> bool:
 
 def test_agent_graph(tmp_path, llm_test_model):
     if not graph_plotting_available():
-        pytest.skip("igraph plotting backend not available (pycairo/cairocffi)")
+        pytest.skip(
+            "igraph plotting backend not available (pycairo/cairocffi)")
 
     twitter_channel = Channel()
     graph = AgentGraph()

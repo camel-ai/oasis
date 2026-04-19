@@ -1,12 +1,12 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the “License”);
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an “AS IS” BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -85,7 +85,10 @@ def _write_batch_outputs(
         writer.writeheader()
         writer.writerows(rows)
 
-    ranked = sorted(rows, key=lambda r: (r["comedy_pool_pvalue"], r["comedy_pool_diff_mean"]))
+    ranked = sorted(
+        rows,
+        key=lambda r: (r["comedy_pool_pvalue"], r["comedy_pool_diff_mean"]),
+    )
     report_lines = [
         "# Batch Experiment Summary",
         "",
@@ -93,27 +96,34 @@ def _write_batch_outputs(
         "",
         "## Top Configs by comedy pool suppression significance",
         "",
-        "| rank | config_id | comedy_pool_diff_mean | comedy_pool_pvalue | comedy_negative_diff_mean | watch_ratio_diff_mean |",
+        "| rank | config_id | comedy_pool_diff_mean | comedy_pool_pvalue"
+        " | comedy_negative_diff_mean | watch_ratio_diff_mean |",
         "| --- | --- | ---: | ---: | ---: | ---: |",
     ]
     for i, row in enumerate(ranked[:10], start=1):
         report_lines.append(
-            f"| {i} | {row['config_id']} | {row['comedy_pool_diff_mean']:.4f} | "
-            f"{row['comedy_pool_pvalue']:.6f} | {row['comedy_negative_diff_mean']:.4f} | "
-            f"{row['watch_ratio_diff_mean']:.6f} |"
+            f"| {i} | {row['config_id']}"
+            f" | {row['comedy_pool_diff_mean']:.4f}"
+            f" | {row['comedy_pool_pvalue']:.6f}"
+            f" | {row['comedy_negative_diff_mean']:.4f}"
+            f" | {row['watch_ratio_diff_mean']:.6f} |"
         )
     report_lines.append("")
     report_lines.append(f"- Full CSV: `{csv_path}`")
-    (output_dir / "batch_report.md").write_text("\n".join(report_lines), encoding="utf-8")
+    (output_dir / "batch_report.md").write_text(
+        "\n".join(report_lines), encoding="utf-8")
 
 
 async def main(args: argparse.Namespace) -> None:
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    watch_jitter_values = [float(x) for x in args.watch_jitter_values.split(",")]
-    behavior_flip_values = [float(x) for x in args.behavior_flip_values.split(",")]
-    treatment_neg_values = [float(x) for x in args.treatment_extra_neg_values.split(",")]
+    watch_jitter_values = [
+        float(x) for x in args.watch_jitter_values.split(",")]
+    behavior_flip_values = [
+        float(x) for x in args.behavior_flip_values.split(",")]
+    treatment_neg_values = [
+        float(x) for x in args.treatment_extra_neg_values.split(",")]
 
     configs = [
         {
@@ -190,11 +200,16 @@ async def main(args: argparse.Namespace) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Run a batch matrix of short-video negative-feedback experiments and aggregate results.",
+        description=(
+            "Run a batch matrix of short-video negative-feedback"
+            " experiments and aggregate results."
+        ),
     )
     parser.add_argument(
         "--output-dir",
-        default="examples/experiment/short_video_negative_feedback/batch_output",
+        default=(
+            "examples/experiment/short_video_negative_feedback/batch_output"
+        ),
         help="Directory for per-config outputs and batch summary files.",
     )
     parser.add_argument(
@@ -222,7 +237,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--treatment-extra-neg-values",
         default="0.70,0.85,1.00",
-        help="Comma-separated treatment_extra_neg_prob values for grid search.",
+        help=(
+            "Comma-separated treatment_extra_neg_prob values"
+            " for grid search."
+        ),
     )
     parser.add_argument(
         "--save-all-dbs",

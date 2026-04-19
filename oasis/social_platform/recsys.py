@@ -14,13 +14,13 @@
 '''Note that you need to check if it exceeds max_rec_post_len when writing
 into rec_matrix'''
 import heapq
+import json
 import logging
+import math
 import random
 import time
 from ast import literal_eval
 from datetime import datetime
-import json
-import math
 from math import log
 from typing import Any, Dict, List
 
@@ -983,7 +983,8 @@ def rec_sys_tiktok(
     if not post_table or not user_table:
         return rec_matrix
 
-    video_lookup = {v["post_id"]: v for v in video_table} if video_table else {}
+    video_lookup = (
+        {v["post_id"]: v for v in video_table} if video_table else {})
 
     post_lookup = {p["post_id"]: p for p in post_table}
 
@@ -1043,7 +1044,8 @@ def rec_sys_tiktok(
             post = post_lookup.get(pid, {})
             td = _time_decay_72h(post.get("created_at"), max_step,
                                  decay_half_life)
-            video_base_scores[pid] = pool_weight * pool_score + time_weight * td
+            video_base_scores[pid] = (
+                pool_weight * pool_score + time_weight * td)
 
     # Build video topic lookup for personalization
     video_topics: Dict[int, set] = {}

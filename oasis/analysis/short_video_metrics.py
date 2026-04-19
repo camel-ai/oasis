@@ -56,8 +56,8 @@ def _compute_retention_3s_rate(
 
         post_id = info.get("post_id")
         watch_ratio = info.get("watch_ratio")
-        if not isinstance(post_id, int) or not isinstance(watch_ratio,
-                                                           (int, float)):
+        if not isinstance(post_id, int) or not isinstance(
+                watch_ratio, (int, float)):
             continue
 
         duration = duration_by_post_id.get(post_id)
@@ -85,7 +85,8 @@ def get_short_video_observability_report(db_path: str) -> dict[str, Any]:
 
     try:
         if not _table_exists(cursor, "video"):
-            raise ValueError("The database does not contain short-video tables.")
+            raise ValueError(
+                "The database does not contain short-video tables.")
 
         summary_query = """
             SELECT
@@ -93,7 +94,8 @@ def get_short_video_observability_report(db_path: str) -> dict[str, Any]:
                 COALESCE(SUM(view_count), 0) AS total_views,
                 COALESCE(SUM(share_count), 0) AS total_shares,
                 COALESCE(SUM(negative_count), 0) AS total_negative_feedback,
-                COALESCE(AVG(traffic_pool_level), 0.0) AS avg_traffic_pool_level,
+                COALESCE(AVG(traffic_pool_level), 0.0)
+                    AS avg_traffic_pool_level,
                 COALESCE(SUM(total_watch_ratio), 0.0) AS total_watch_ratio,
                 COALESCE(SUM(view_count), 0) AS total_view_rows
             FROM video
@@ -211,7 +213,8 @@ def get_short_video_observability_report(db_path: str) -> dict[str, Any]:
         top_videos = []
         for row in video_rows:
             try:
-                topic_tags = json.loads(row["topic_tags"]) if row["topic_tags"] else []
+                topic_tags = (json.loads(row["topic_tags"])
+                              if row["topic_tags"] else [])
             except (TypeError, json.JSONDecodeError):
                 topic_tags = []
             top_videos.append({
@@ -244,8 +247,10 @@ def get_short_video_observability_report(db_path: str) -> dict[str, Any]:
                     l.total_viewers,
                     l.total_comments,
                     l.total_gifts_value,
-                    COALESCE(AVG(lv.total_stay_seconds), 0.0) AS avg_stay_seconds,
-                    COALESCE(AVG(lv.interactions), 0.0) AS avg_interactions
+                    COALESCE(AVG(lv.total_stay_seconds), 0.0)
+                        AS avg_stay_seconds,
+                    COALESCE(AVG(lv.interactions), 0.0)
+                        AS avg_interactions
                 FROM livestream l
                 LEFT JOIN livestream_viewer lv ON lv.stream_id = l.stream_id
                 GROUP BY
@@ -282,7 +287,8 @@ def get_short_video_time_series_report(db_path: str) -> dict[str, Any]:
 
     try:
         if not _table_exists(cursor, "video"):
-            raise ValueError("The database does not contain short-video tables.")
+            raise ValueError(
+                "The database does not contain short-video tables.")
 
         video_time_series_query = """
             SELECT
@@ -290,8 +296,10 @@ def get_short_video_time_series_report(db_path: str) -> dict[str, Any]:
                 COUNT(*) AS uploaded_videos,
                 COALESCE(SUM(view_count), 0) AS cumulative_views,
                 COALESCE(SUM(share_count), 0) AS cumulative_shares,
-                COALESCE(SUM(negative_count), 0) AS cumulative_negative_feedback,
-                COALESCE(AVG(traffic_pool_level), 0.0) AS avg_traffic_pool_level,
+                COALESCE(SUM(negative_count), 0)
+                    AS cumulative_negative_feedback,
+                COALESCE(AVG(traffic_pool_level), 0.0)
+                    AS avg_traffic_pool_level,
                 COALESCE(SUM(total_watch_ratio), 0.0) AS total_watch_ratio,
                 COALESCE(SUM(view_count), 0) AS total_view_rows
             FROM video
@@ -335,7 +343,8 @@ def get_short_video_time_series_report(db_path: str) -> dict[str, Any]:
                     COUNT(*) AS livestreams_started,
                     COALESCE(AVG(peak_viewers), 0.0) AS avg_peak_viewers,
                     COALESCE(AVG(total_comments), 0.0) AS avg_total_comments,
-                    COALESCE(AVG(total_gifts_value), 0.0) AS avg_total_gifts_value
+                    COALESCE(AVG(total_gifts_value), 0.0)
+                        AS avg_total_gifts_value
                 FROM livestream
                 GROUP BY start_time
                 ORDER BY step

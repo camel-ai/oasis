@@ -204,7 +204,8 @@ class AgentGraph:
 
     def add_agent(self, agent: SocialAgent):
         if self.backend == "igraph":
-            self.graph.add_vertex(name=self._vertex_name(agent.social_agent_id))
+            self.graph.add_vertex(
+                name=self._vertex_name(agent.social_agent_id))
         else:
             self.graph.create_agent(agent.social_agent_id)
         self.agent_mappings[agent.social_agent_id] = agent
@@ -222,7 +223,8 @@ class AgentGraph:
 
     def remove_agent(self, agent: SocialAgent):
         if self.backend == "igraph":
-            self.graph.delete_vertices(self._vertex_name(agent.social_agent_id))
+            self.graph.delete_vertices(
+                self._vertex_name(agent.social_agent_id))
         else:
             self.graph.delete_agent(agent.social_agent_id)
         del self.agent_mappings[agent.social_agent_id]

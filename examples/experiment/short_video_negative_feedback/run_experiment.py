@@ -1,12 +1,12 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the “License”);
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an “AS IS” BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -19,12 +19,12 @@ import csv
 import logging
 import math
 import os
-from pathlib import Path
 import random
 import sqlite3
 import statistics
 import sys
 import tempfile
+from pathlib import Path
 from typing import Any
 
 _MPL_CONFIG_DIR = Path(tempfile.gettempdir()) / "oasis-mpl-cache"
@@ -37,11 +37,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from oasis.analysis.short_video_metrics import (  # noqa: E402
-    get_short_video_observability_report,
-)
+from oasis.analysis.short_video_metrics import \
+    get_short_video_observability_report  # noqa: E402
 from oasis.social_platform.platform import Platform  # noqa: E402
-
 
 RECSYS_DEFAULT_PARAMS = {
     "score_weights": {
@@ -237,11 +235,13 @@ def _build_scaled_scenario(
             creator_clone_ids = creator_map[creator_base_id]
             creator_id = creator_clone_ids[v_idx % len(creator_clone_ids)]
             viewer_plan: list[tuple[int, float, bool, bool, bool]] = []
-            for base_viewer_id, watch_ratio, should_share, should_comment, dislikes in base_blueprint[
-                    "viewer_plan"]:
+            for (base_viewer_id, watch_ratio,
+                 should_share, should_comment, dislikes
+                 ) in base_blueprint["viewer_plan"]:
                 for clone_id in viewer_map[base_viewer_id]:
                     viewer_plan.append(
-                        (clone_id, watch_ratio, should_share, should_comment, dislikes))
+                        (clone_id, watch_ratio,
+                         should_share, should_comment, dislikes))
 
             content = str(base_blueprint["content"])
             if video_multiplier > 1:
@@ -353,7 +353,8 @@ async def _simulate_round(
             if rng is not None and watch_jitter > 0:
                 sampled_watch_ratio = max(
                     0.05,
-                    min(0.99, watch_ratio + rng.uniform(-watch_jitter, watch_jitter)),
+                    min(0.99, watch_ratio + rng.uniform(
+                        -watch_jitter, watch_jitter)),
                 )
 
             sampled_share = should_share
@@ -391,13 +392,15 @@ async def _simulate_round(
             if feedback_mode == "none":
                 should_negative = False
             elif feedback_mode == "random":
-                random_source = rng or random.Random(2026 + post_id * 17 + viewer_id)
+                random_source = rng or random.Random(
+                    2026 + post_id * 17 + viewer_id)
                 should_negative = random_source.random() < random_negative_prob
 
             if should_negative:
                 result = await platform.not_interested(viewer_id, post_id)
                 if not result["success"]:
-                    raise RuntimeError(f"Failed to record negative feedback: {result}")
+                    raise RuntimeError(
+                        f"Failed to record negative feedback: {result}")
                 negative_feedback_viewers.add(viewer_id)
 
         if feedback_mode == "treatment" and blueprint["category"] == "comedy":
@@ -411,10 +414,12 @@ async def _simulate_round(
                 if (rng is not None and treatment_extra_neg_prob < 1
                         and rng.random() > treatment_extra_neg_prob):
                     continue
-                result = await platform.not_interested(extra_viewer_id, post_id)
+                result = await platform.not_interested(
+                    extra_viewer_id, post_id)
                 if not result["success"]:
                     raise RuntimeError(
-                        f"Failed to record treatment negative feedback: {result}")
+                        "Failed to record treatment negative"
+                        f" feedback: {result}")
                 negative_feedback_viewers.add(extra_viewer_id)
 
         _advance_step(platform)
@@ -439,7 +444,8 @@ async def _simulate_livestream(
         if not result["success"]:
             raise RuntimeError(f"Failed to enter livestream: {result}")
 
-    result = await platform.livestream_comment(audience[0], (stream_id, "The live choreography is great."))
+    result = await platform.livestream_comment(
+        audience[0], (stream_id, "The live choreography is great."))
     if not result["success"]:
         raise RuntimeError(f"Failed to comment in livestream: {result}")
 
@@ -541,7 +547,8 @@ async def run_condition(
             viewers=scenario_data["viewers"],
         )
         _advance_step(platform)
-        await _seed_social_graph(platform, follow_edges=scenario_data["follow_edges"])
+        await _seed_social_graph(
+            platform, follow_edges=scenario_data["follow_edges"])
         post_ids = await _upload_videos(
             platform,
             video_blueprints=scenario_data["video_blueprints"],
@@ -580,10 +587,13 @@ async def run_condition(
     }
 
 
-def _extract_condition_metrics(result: dict[str, object]) -> dict[str, float | int]:
+def _extract_condition_metrics(
+        result: dict[str, object]) -> dict[str, float | int]:
     summary = result["observability"]["summary"]
-    comedy = next(row for row in result["videos"] if row["category"] == "comedy")
-    lifestyle = next(row for row in result["videos"] if row["category"] == "lifestyle")
+    comedy = next(
+        row for row in result["videos"] if row["category"] == "comedy")
+    lifestyle = next(
+        row for row in result["videos"] if row["category"] == "lifestyle")
     return {
         "total_views": int(summary["total_views"]),
         "total_shares": int(summary["total_shares"]),
@@ -688,9 +698,12 @@ def _write_multirun_outputs(
             treatment_values = [float(r[metric]) for r in treatment_rows]
             baseline_stats = _mean_std_ci95(baseline_values)
             treatment_stats = _mean_std_ci95(treatment_values)
-            diffs = [treatment_values[i] - baseline_values[i] for i in range(n_runs)]
+            diffs = [
+                treatment_values[i] - baseline_values[i]
+                for i in range(n_runs)]
             diff_stats = _mean_std_ci95(diffs)
-            p_value = _paired_sign_flip_pvalue(diffs, rng_seed=2026 + len(metric))
+            p_value = _paired_sign_flip_pvalue(
+                diffs, rng_seed=2026 + len(metric))
             writer.writerow({
                 "metric": metric,
                 "baseline_mean": f"{baseline_stats['mean']:.6f}",
@@ -712,7 +725,8 @@ def _write_multirun_outputs(
         "# Short-Video Negative Feedback Multi-Run Summary",
         "",
         f"- Runs per condition: {n_runs}",
-        "- Pairing: each baseline run is paired with treatment run at the same seed.",
+        "- Pairing: each baseline run is paired with treatment run"
+        " at the same seed.",
         "- Significance: paired randomization (sign-flip) test, two-sided.",
         "",
         "## Output Files",
@@ -722,11 +736,14 @@ def _write_multirun_outputs(
         "",
         "## Notes",
         "",
-        "- This report is intended to increase experimental robustness beyond a single deterministic run.",
-        "- Keep the deterministic single-run artifacts for figure-level qualitative interpretation.",
+        "- This report is intended to increase experimental robustness"
+        " beyond a single deterministic run.",
+        "- Keep the deterministic single-run artifacts for figure-level"
+        " qualitative interpretation.",
         "",
     ]
-    (output_dir / "MULTIRUN_REPORT.md").write_text("\n".join(report_lines), encoding="utf-8")
+    (output_dir / "MULTIRUN_REPORT.md").write_text(
+        "\n".join(report_lines), encoding="utf-8")
 
 
 def _write_strategy_multirun_outputs(
@@ -804,7 +821,9 @@ def _write_strategy_multirun_outputs(
                     rid = int(row["run_id"])
                     if rid not in baseline_by_run:
                         continue
-                    diffs.append(float(row[metric]) - float(baseline_by_run[rid][metric]))
+                    diffs.append(
+                        float(row[metric])
+                        - float(baseline_by_run[rid][metric]))
                 if len(diffs) != n_runs:
                     continue
                 stats = _mean_std_ci95(diffs)
@@ -821,7 +840,8 @@ def _write_strategy_multirun_outputs(
                 })
 
 
-def _render_condition_summary(name: str, result: dict[str, object]) -> list[str]:
+def _render_condition_summary(
+        name: str, result: dict[str, object]) -> list[str]:
     summary = result["observability"]["summary"]
     video_rows = result["videos"]
     lines = [
@@ -835,9 +855,11 @@ def _render_condition_summary(name: str, result: dict[str, object]) -> list[str]
         f"- Average watch ratio: {summary['avg_watch_ratio']:.3f}",
         f"- Retention 3s rate: {summary['retention_3s_rate']:.4f}",
         f"- Creator coverage: {summary['creator_coverage']:.4f}",
-        f"- Average traffic pool level: {summary['avg_traffic_pool_level']:.3f}",
+        f"- Average traffic pool level:"
+        f" {summary['avg_traffic_pool_level']:.3f}",
         "",
-        "| post_id | category | view_count | share_count | negative_count | traffic_pool_level |",
+        "| post_id | category | view_count | share_count"
+        " | negative_count | traffic_pool_level |",
         "| --- | --- | --- | --- | --- | --- |",
     ]
     for row in video_rows:
@@ -856,20 +878,26 @@ def _write_readme(
     treatment_result: dict[str, object],
 ) -> None:
     baseline_bad_video = next(
-        row for row in baseline_result["videos"] if row["category"] == "comedy")
+        row for row in baseline_result["videos"]
+        if row["category"] == "comedy")
     treatment_bad_video = next(
-        row for row in treatment_result["videos"] if row["category"] == "comedy")
+        row for row in treatment_result["videos"]
+        if row["category"] == "comedy")
 
     lines = [
         "# Short-Video Negative Feedback Experiment",
         "",
-        "This experiment is a deterministic template for a paper-style short-video study in OASIS.",
+        "This experiment is a deterministic template for a paper-style"
+        " short-video study in OASIS.",
         "It compares two otherwise identical TikTok-style runs:",
         "",
-        "- `baseline`: weak negative feedback against a low-quality comedy video",
-        "- `treatment`: stronger `not_interested` signals against that same low-quality video",
+        "- `baseline`: weak negative feedback against a low-quality"
+        " comedy video",
+        "- `treatment`: stronger `not_interested` signals against that"
+        " same low-quality video",
         "",
-        "The intended research question is whether explicit negative feedback suppresses reach in a traffic-pool recommender.",
+        "The intended research question is whether explicit negative"
+        " feedback suppresses reach in a traffic-pool recommender.",
         "",
     ]
     lines.extend(_render_condition_summary("Baseline", baseline_result))
@@ -877,16 +905,20 @@ def _write_readme(
     lines.extend([
         "## Key Contrast",
         "",
-        f"- Baseline low-quality comedy video traffic pool level: {baseline_bad_video['traffic_pool_level']}",
-        f"- Treatment low-quality comedy video traffic pool level: {treatment_bad_video['traffic_pool_level']}",
-        f"- Baseline low-quality comedy video negative feedback: {baseline_bad_video['negative_count']}",
-        f"- Treatment low-quality comedy video negative feedback: {treatment_bad_video['negative_count']}",
+        f"- Baseline low-quality comedy video traffic pool level:"
+        f" {baseline_bad_video['traffic_pool_level']}",
+        f"- Treatment low-quality comedy video traffic pool level:"
+        f" {treatment_bad_video['traffic_pool_level']}",
+        f"- Baseline low-quality comedy video negative feedback:"
+        f" {baseline_bad_video['negative_count']}",
+        f"- Treatment low-quality comedy video negative feedback:"
+        f" {treatment_bad_video['negative_count']}",
         "",
         "## Suggested Analysis Commands",
         "",
         "```bash",
-        f"python visualization/short_video_simulation/code/generate_report.py {baseline_result['db_path']} --output {output_dir / 'baseline_report.md'}",
-        f"python visualization/short_video_simulation/code/generate_report.py {treatment_result['db_path']} --output {output_dir / 'treatment_report.md'}",
+        f"python visualization/short_video_simulation/code/generate_report.py {baseline_result['db_path']} --output {output_dir / 'baseline_report.md'}",  # noqa: E501
+        f"python visualization/short_video_simulation/code/generate_report.py {treatment_result['db_path']} --output {output_dir / 'treatment_report.md'}",  # noqa: E501
         "python visualization/short_video_simulation/code/compare_runs.py "
         f"baseline={baseline_result['db_path']} "
         f"treatment={treatment_result['db_path']} "
@@ -962,14 +994,18 @@ async def main(
         lines = ["", "## Additional Single-Run Controls", ""]
         for condition_name, result in extra_single_results.items():
             summary = result["observability"]["summary"]
-            comedy = next(row for row in result["videos"] if row["category"] == "comedy")
+            comedy = next(
+                row for row in result["videos"]
+                if row["category"] == "comedy")
             lines.extend([
                 f"### {condition_name}",
                 "",
                 f"- Database: `{result['db_path']}`",
                 f"- Total views: {summary['total_views']}",
-                f"- Total negative feedback: {summary['total_negative_feedback']}",
-                f"- Negative feedback rate: {summary['negative_feedback_rate']:.4f}",
+                f"- Total negative feedback:"
+                f" {summary['total_negative_feedback']}",
+                f"- Negative feedback rate:"
+                f" {summary['negative_feedback_rate']:.4f}",
                 f"- Retention 3s rate: {summary['retention_3s_rate']:.4f}",
                 f"- Creator coverage: {summary['creator_coverage']:.4f}",
                 f"- Comedy negative_count: {comedy['negative_count']}",
@@ -1034,7 +1070,9 @@ async def main(
             if not save_all_dbs:
                 Path(db_file).unlink(missing_ok=True)
 
-    paired_rows = [r for r in run_rows if r["condition"] in ("baseline", "treatment")]
+    paired_rows = [
+        r for r in run_rows
+        if r["condition"] in ("baseline", "treatment")]
     _write_multirun_outputs(
         output_dir=output_path,
         run_rows=paired_rows,
@@ -1052,7 +1090,9 @@ async def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Run a deterministic short-video negative-feedback experiment.",
+        description=(
+            "Run a deterministic short-video negative-feedback experiment."
+        ),
     )
     parser.add_argument(
         "--output-dir",
@@ -1063,7 +1103,10 @@ if __name__ == "__main__":
         "--n-runs",
         type=int,
         default=1,
-        help="Number of paired baseline/treatment runs for statistical summary.",
+        help=(
+            "Number of paired baseline/treatment runs for"
+            " statistical summary."
+        ),
     )
     parser.add_argument(
         "--seed-start",
@@ -1075,19 +1118,28 @@ if __name__ == "__main__":
         "--watch-jitter",
         type=float,
         default=0.0,
-        help="Uniform perturbation radius for watch ratio in each run (0 to 0.4).",
+        help=(
+            "Uniform perturbation radius for watch ratio in each run"
+            " (0 to 0.4)."
+        ),
     )
     parser.add_argument(
         "--behavior-flip-prob",
         type=float,
         default=0.0,
-        help="Probability of flipping share/comment/dislike boolean decisions.",
+        help=(
+            "Probability of flipping share/comment/dislike"
+            " boolean decisions."
+        ),
     )
     parser.add_argument(
         "--treatment-extra-neg-prob",
         type=float,
         default=1.0,
-        help="Probability of applying each extra treatment negative feedback event.",
+        help=(
+            "Probability of applying each extra treatment negative"
+            " feedback event."
+        ),
     )
     parser.add_argument(
         "--save-all-dbs",
@@ -1098,13 +1150,19 @@ if __name__ == "__main__":
         "--strategy-set",
         choices=["baseline_treatment", "four_arm"],
         default="baseline_treatment",
-        help="Experiment arms: baseline/treatment only, or add none/random controls.",
+        help=(
+            "Experiment arms: baseline/treatment only, or add"
+            " none/random controls."
+        ),
     )
     parser.add_argument(
         "--random-negative-prob",
         type=float,
         default=0.35,
-        help="Per-watch negative-feedback probability when strategy mode is random.",
+        help=(
+            "Per-watch negative-feedback probability when strategy"
+            " mode is random."
+        ),
     )
     parser.add_argument(
         "--creator-multiplier",
@@ -1128,7 +1186,10 @@ if __name__ == "__main__":
         "--recsys-profile",
         choices=sorted(RECSYS_PROFILES.keys()),
         default="default",
-        help="Recommendation sensitivity profile for short-video traffic-pool scoring.",
+        help=(
+            "Recommendation sensitivity profile for short-video"
+            " traffic-pool scoring."
+        ),
     )
     args = parser.parse_args()
     asyncio.run(

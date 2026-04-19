@@ -16,9 +16,9 @@ from __future__ import annotations
 import argparse
 import logging
 import os
-from pathlib import Path
 import sys
 import tempfile
+from pathlib import Path
 
 _MPL_CONFIG_DIR = Path(tempfile.gettempdir()) / "oasis-mpl-cache"
 _MPL_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -26,14 +26,15 @@ os.environ.setdefault("MPLCONFIGDIR", str(_MPL_CONFIG_DIR))
 logging.getLogger("matplotlib").setLevel(logging.ERROR)
 logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
 
-import matplotlib.pyplot as plt
-import pandas as pd
+import matplotlib.pyplot as plt  # noqa: E402
+import pandas as pd  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from oasis.analysis.short_video_metrics import get_short_video_time_series_report  # noqa: E402
+from oasis.analysis.short_video_metrics import \
+    get_short_video_time_series_report  # noqa: E402
 
 
 def _parse_run(value: str) -> tuple[str, str]:

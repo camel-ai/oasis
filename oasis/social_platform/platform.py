@@ -89,7 +89,8 @@ class Platform:
             _platform_hint = "tiktok"
         elif hasattr(recsys_type, 'value') and recsys_type.value == "tiktok":
             _platform_hint = "tiktok"
-        self.db, self.db_cursor = create_db(self.db_path, platform=_platform_hint)
+        self.db, self.db_cursor = create_db(
+            self.db_path, platform=_platform_hint)
         self.db.execute("PRAGMA synchronous = OFF")
 
         self.channel = channel or Channel()
@@ -1676,7 +1677,8 @@ class Platform:
     def _get_tiktok_time(self):
         return self.sandbox_clock.get_time_step()
 
-    def _enrich_tiktok_posts(self, posts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _enrich_tiktok_posts(
+            self, posts: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if not posts:
             return posts
 

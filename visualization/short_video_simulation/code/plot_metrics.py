@@ -16,9 +16,9 @@ from __future__ import annotations
 import argparse
 import logging
 import os
-from pathlib import Path
 import sys
 import tempfile
+from pathlib import Path
 
 _MPL_CONFIG_DIR = Path(tempfile.gettempdir()) / "oasis-mpl-cache"
 _MPL_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -26,17 +26,15 @@ os.environ.setdefault("MPLCONFIGDIR", str(_MPL_CONFIG_DIR))
 logging.getLogger("matplotlib").setLevel(logging.ERROR)
 logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
 
-import matplotlib.pyplot as plt
-import pandas as pd
+import matplotlib.pyplot as plt  # noqa: E402
+import pandas as pd  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from oasis.analysis.short_video_metrics import (
-    get_short_video_observability_report,
-    get_short_video_time_series_report,
-)
+from oasis.analysis.short_video_metrics import (  # noqa: E402
+    get_short_video_observability_report, get_short_video_time_series_report)
 
 
 def _plot_video_metrics(time_series: pd.DataFrame, output_dir: Path) -> None:
@@ -124,7 +122,8 @@ def main(db_path: str, output_dir: str) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Plot short-video simulation observability metrics.")
-    parser.add_argument("db_path", help="Path to the simulation SQLite database")
+    parser.add_argument("db_path",
+                        help="Path to the simulation SQLite database")
     parser.add_argument(
         "--output-dir",
         default="visualization/short_video_simulation/output",

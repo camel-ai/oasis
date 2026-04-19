@@ -16,9 +16,9 @@ from __future__ import annotations
 import argparse
 import logging
 import os
-from pathlib import Path
 import sys
 import tempfile
+from pathlib import Path
 
 _MPL_CONFIG_DIR = Path(tempfile.gettempdir()) / "oasis-mpl-cache"
 _MPL_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -31,9 +31,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from oasis.analysis.short_video_metrics import (  # noqa: E402
-    get_short_video_observability_report,
-    get_short_video_time_series_report,
-)
+    get_short_video_observability_report, get_short_video_time_series_report)
 
 
 def _format_table(rows: list[dict], columns: list[str]) -> str:
@@ -61,6 +59,30 @@ def generate_markdown_report(db_path: str) -> str:
         if time_series["video_time_series"] else {}
     )
 
+    creators_table = _format_table(
+        creators,
+        ["user_id", "user_name", "uploaded_videos",
+         "total_views", "total_shares", "avg_watch_ratio"],
+    )
+    videos_table = _format_table(
+        top_videos,
+        ["post_id", "creator_id", "category", "view_count",
+         "avg_watch_ratio", "share_count", "negative_count",
+         "traffic_pool_level"],
+    )
+    livestreams_table = _format_table(
+        livestreams,
+        ["stream_id", "host_id", "status", "peak_viewers",
+         "total_comments", "total_gifts_value",
+         "avg_stay_seconds", "avg_interactions"],
+    )
+    feed_rows = [latest_video_step] if latest_video_step else []
+    feed_table = _format_table(
+        feed_rows,
+        ["step", "uploaded_videos", "cumulative_views",
+         "cumulative_shares", "cumulative_negative_feedback",
+         "avg_watch_ratio", "avg_traffic_pool_level"],
+    )
     return f"""# Short-Video Simulation Report
 
 ## Summary
@@ -76,16 +98,16 @@ def generate_markdown_report(db_path: str) -> str:
 
 ## Top Creators
 
-{_format_table(creators, ["user_id", "user_name", "uploaded_videos", "total_views", "total_shares", "avg_watch_ratio"])}
+{creators_table}
 ## Top Videos
 
-{_format_table(top_videos, ["post_id", "creator_id", "category", "view_count", "avg_watch_ratio", "share_count", "negative_count", "traffic_pool_level"])}
+{videos_table}
 ## Livestream Overview
 
-{_format_table(livestreams, ["stream_id", "host_id", "status", "peak_viewers", "total_comments", "total_gifts_value", "avg_stay_seconds", "avg_interactions"])}
+{livestreams_table}
 ## Latest Feed Step Snapshot
 
-{_format_table([latest_video_step] if latest_video_step else [], ["step", "uploaded_videos", "cumulative_views", "cumulative_shares", "cumulative_negative_feedback", "avg_watch_ratio", "avg_traffic_pool_level"])}
+{feed_table}
 """
 
 
@@ -98,7 +120,8 @@ def main(db_path: str, output_path: str) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Generate a markdown report for a short-video simulation.")
-    parser.add_argument("db_path", help="Path to the simulation SQLite database")
+    parser.add_argument(
+        "db_path", help="Path to the simulation SQLite database")
     parser.add_argument(
         "--output",
         default="visualization/short_video_simulation/output/report.md",

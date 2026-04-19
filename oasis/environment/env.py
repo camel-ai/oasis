@@ -217,7 +217,7 @@ class OasisEnv:
         # # Control some agents to perform actions
         # Update the clock
         if self.platform_type in (DefaultPlatformType.TWITTER,
-                                   DefaultPlatformType.TIKTOK):
+                                  DefaultPlatformType.TIKTOK):
             self.platform.sandbox_clock.time_step += 1
 
     async def close(self) -> None:
