@@ -43,8 +43,14 @@ from ux_sim_app.report.redesign_client import generate_redesign, sanitise_for_em
 from ux_sim_app.integrations import notebooklm as nlm
 from ux_sim_app.integrations.notebooklm import UX_CATEGORIES
 from ux_sim_app.integrations.real_world_data import gather_and_synthesize
+from ux_sim_app.core.captcha_guard import preflight_check, CaptchaGuardResult
 import logging
 logger = logging.getLogger(__name__)
+
+# ── CAPTCHA session registry ───────────────────────────────────────────────────
+# Maps URL → storage_state_path (Playwright JSON) from the pre-flight check.
+# Downstream Mode 2 and UX scan look up this dict to inherit cleared sessions.
+_captcha_sessions: dict = {}
 
 
 # ── Async helper ───────────────────────────────────────────────────────────────
@@ -97,9 +103,31 @@ def step_scrape_and_generate(
         return
 
     try:
-        yield "⏳ Scraping website...", *_EMPTY
+        # ── Pre-flight CAPTCHA check ───────────────────────────────────────────
+        yield "⏳ Running pre-flight CAPTCHA check...", *_EMPTY
+        guard: CaptchaGuardResult = _run(preflight_check(url.strip()))
 
-        scrape_result = _run(scrape(url.strip(), follow_links=2))
+        if guard.status == "aborted":
+            yield f"{guard.message}", *_EMPTY
+            return
+
+        # Store the session state path in a module-level dict keyed by URL
+        # so downstream Mode 2 and UX scan can inherit the cleared session.
+        _captcha_sessions[url.strip()] = guard.storage_state_path
+
+        status_prefix = ""
+        if guard.status == "solved":
+            status_prefix = f"✅ CAPTCHA solved ({guard.captcha_type}). "
+        elif guard.status == "clear":
+            status_prefix = "✅ No CAPTCHA detected. "
+
+        yield f"{status_prefix}⏳ Scraping website...", *_EMPTY
+
+        scrape_result = _run(scrape(
+            url.strip(),
+            follow_links=2,
+            storage_state_path=guard.storage_state_path,
+        ))
         if scrape_result.error:
             yield f"⚠️ Scrape warning: {scrape_result.error}. Continuing with partial data.", *_EMPTY
 
@@ -195,7 +223,9 @@ def step_run_simulations(
     if run_mode2_flag:
         yield "⏳ Running Mode 2 – Browser Usability Simulation...", _EMPTY_RESULTS, _EMPTY_VIDS
         try:
-            r = _run(run_mode2(personas, url.strip()))
+            # Inherit CAPTCHA-cleared session if available from pre-flight check
+            _ss_path = _captcha_sessions.get(url.strip())
+            r = _run(run_mode2(personas, url.strip(), storage_state_path=_ss_path))
             results.append(r)
             # Collect video recordings from this Mode 2 run
             all_video_recordings.extend(r.video_recordings or [])

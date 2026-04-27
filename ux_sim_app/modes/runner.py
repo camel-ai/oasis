@@ -284,8 +284,18 @@ async def _dismiss_cookie_banners(page: Any, steps: List[str]) -> None:
 
 # ── Mode 2: Browser-Action Simulation ─────────────────────────────────────────
 
-async def _mode2_one(persona: Persona, url: str, video_dir: Optional[str] = None) -> tuple:
-    """Single persona browser session. Returns (PersonaResponse, video_path_or_None)."""
+async def _mode2_one(
+    persona: Persona,
+    url: str,
+    video_dir: Optional[str] = None,
+    storage_state_path: Optional[str] = None,
+) -> tuple:
+    """Single persona browser session. Returns (PersonaResponse, video_path_or_None).
+
+    storage_state_path: optional Playwright storage state JSON from captcha_guard.
+    When provided the browser context inherits the cleared CAPTCHA session so the
+    simulation does not hit the challenge again.
+    """
     import os
     from pathlib import Path as _Path
     steps: List[str] = []
@@ -304,6 +314,8 @@ async def _mode2_one(persona: Persona, url: str, video_dir: Optional[str] = None
                 "user_agent": HEADERS["User-Agent"],
                 "viewport": {"width": 1280, "height": 800},
             }
+            if storage_state_path and os.path.isfile(storage_state_path):
+                ctx_kwargs["storage_state"] = storage_state_path
             if video_dir:
                 _Path(video_dir).mkdir(parents=True, exist_ok=True)
                 ctx_kwargs["record_video_dir"] = video_dir
@@ -449,11 +461,15 @@ async def run_mode2(
     personas: List[Persona],
     url: str,
     record_video: bool = True,
+    storage_state_path: Optional[str] = None,
 ) -> SimulationResult:
     """Run Mode 2 for all personas in parallel (up to MAX_BROWSER_SESSIONS).
 
     When record_video=True, each persona's browser session is recorded to a
     .webm file in DATA_DIR/recordings/<run_id>/ and stored in video_recordings.
+
+    storage_state_path: optional Playwright storage state JSON from captcha_guard.
+    Passed to each persona session so they inherit the CAPTCHA-cleared session.
     """
     import uuid as _uuid
     from pathlib import Path as _Path
@@ -467,7 +483,11 @@ async def run_mode2(
 
     async def _bounded(p: Persona):
         async with sem:
-            return await _mode2_one(p, url, video_dir=video_dir)
+            return await _mode2_one(
+                p, url,
+                video_dir=video_dir,
+                storage_state_path=storage_state_path,
+            )
 
     raw = await asyncio.gather(*[_bounded(p) for p in personas], return_exceptions=True)
 

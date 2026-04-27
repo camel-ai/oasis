@@ -41,121 +41,215 @@ try {
 // ── OASIS theme CSS ───────────────────────────────────────────────────────────
 const OASIS_THEME = `
 /* @theme oasis */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap');
 
+/*
+  OASIS Type Scale  (960x540 canvas)
+  ====================================
+  --fs-hero     : cover / divider h1         42px
+  --fs-title    : content slide h1           26px
+  --fs-subtitle : h2 subheadings             16px
+  --fs-label    : h3 eyebrow / ALL-CAPS tag   9px
+  --fs-body     : p, li, default             12px
+  --fs-small    : quotes, panel labels       10px
+  --fs-ghost    : decorative watermark       52px
+  --fs-toc-h    : TOC heading                28px
+  --fs-toc-i    : TOC item                   13px
+  --fs-brand    : logo-card brand name       22px
+*/
 :root {
+  /* Palette */
   --color-bg:     #E8E0D5;
   --color-teal:   #7DD9D0;
   --color-navy:   #1A2280;
   --color-text:   #000000;
-  --color-muted:  #444444;
+  --color-muted:  #333333;
   --color-white:  #FFFFFF;
   --color-card:   #FAFAC8;
   --color-panel:  #F0ECE6;
-  --font:         'Inter', 'Segoe UI', Arial, sans-serif;
+
+  /* Font */
+  --font: 'Inter', 'Segoe UI', Arial, sans-serif;
+
+  /* Type scale */
+  --fs-hero:     42px;
+  --fs-title:    26px;
+  --fs-subtitle: 16px;
+  --fs-label:     9px;
+  --fs-body:     12px;
+  --fs-small:    10px;
+  --fs-ghost:    52px;
+  --fs-toc-h:    28px;
+  --fs-toc-i:    13px;
+  --fs-brand:    22px;
+
+  /* Line heights */
+  --lh-tight:  1.15;
+  --lh-normal: 1.45;
+  --lh-loose:  1.6;
+
+  /* Spacing */
+  --sp-xs:  4px;
+  --sp-sm:  8px;
+  --sp-md: 16px;
+  --sp-lg: 28px;
+  --sp-xl: 44px;
 }
 
-/* ── Base slide ─────────────────────────────────────────────────────────────── */
+/* =========================================================
+   BASE SLIDE
+   ========================================================= */
 section {
   width: 960px;
   height: 540px;
   background: var(--color-bg);
   font-family: var(--font);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
   color: var(--color-text);
-  padding: 32px 48px;
+  padding: 28px 44px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   overflow: hidden;
   box-sizing: border-box;
-  font-size: 13px;
-  line-height: 1.5;
 }
 
-/* ── Typography ─────────────────────────────────────────────────────────────── */
+/* =========================================================
+   GLOBAL TYPOGRAPHY
+   Every element has an explicit rule so Marpit's CSS
+   scoping cannot silently override them.
+   ========================================================= */
 h1 {
-  font-size: 32px;
+  font-size: var(--fs-title);
   font-weight: 800;
+  line-height: var(--lh-tight);
   color: var(--color-navy);
-  line-height: 1.15;
-  margin: 0 0 8px;
+  margin: 0 0 var(--sp-sm);
+  letter-spacing: -0.01em;
 }
 h2 {
-  font-size: 20px;
+  font-size: var(--fs-subtitle);
   font-weight: 700;
+  line-height: var(--lh-tight);
   color: var(--color-navy);
-  margin: 0 0 8px;
+  margin: 0 0 var(--sp-sm);
 }
 h3 {
-  font-size: 10px;
+  font-size: var(--fs-label);
   font-weight: 700;
+  line-height: 1.2;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.09em;
   color: var(--color-navy);
-  margin: 8px 0 3px;
+  margin: var(--sp-sm) 0 var(--sp-xs);
 }
 p {
-  font-size: 13px;
-  margin: 0 0 6px;
-  color: #000;
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  color: var(--color-text);
+  margin: 0 0 var(--sp-xs);
 }
-strong { font-weight: 700; color: #000; }
-em { font-style: italic; color: var(--color-muted); }
-
+strong {
+  font-weight: 700;
+  color: var(--color-text);
+}
+em {
+  font-style: italic;
+  color: var(--color-muted);
+}
 ul, ol {
-  font-size: 13px;
-  padding-left: 18px;
-  margin: 0 0 6px;
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  color: var(--color-text);
+  padding-left: 16px;
+  margin: 0 0 var(--sp-xs);
 }
-li { margin-bottom: 3px; color: #000; }
+li {
+  margin-bottom: 2px;
+  color: var(--color-text);
+}
 
-/* ── Slide variants (via _class directive) ──────────────────────────────────── */
-
-/* Cover */
+/* =========================================================
+   COVER SLIDE
+   ========================================================= */
 section.cover {
   background: var(--color-bg);
   justify-content: space-between;
+  padding: 36px 52px;
 }
 section.cover h1 {
-  font-size: 42px;
+  font-size: var(--fs-hero);
   font-weight: 800;
-  color: #000;
-  max-width: 580px;
+  line-height: var(--lh-tight);
+  color: var(--color-text);
+  max-width: 560px;
+  letter-spacing: -0.02em;
+}
+section.cover h2 {
+  font-size: var(--fs-subtitle);
+  font-weight: 400;
+  color: var(--color-muted);
+  margin: var(--sp-sm) 0 0;
 }
 
-/* Section divider — teal */
+/* =========================================================
+   SECTION DIVIDER — teal
+   ========================================================= */
 section.divider {
   background: var(--color-teal);
   justify-content: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: var(--sp-sm);
+  padding: 36px 52px;
 }
 section.divider h1 {
-  font-size: 44px;
+  font-size: var(--fs-hero);
+  font-weight: 800;
   color: var(--color-navy);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.02em;
 }
 section.divider h2 {
-  font-size: 17px;
-  color: #333;
+  font-size: var(--fs-subtitle);
   font-weight: 600;
+  color: #1a1a1a;
+  line-height: var(--lh-normal);
 }
 section.divider .sec-number {
-  font-size: 80px;
+  font-size: var(--fs-ghost);
   font-weight: 800;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.40);
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: var(--sp-xs);
 }
 
-/* Section divider — linen (light) */
+/* =========================================================
+   SECTION DIVIDER — linen (light)
+   ========================================================= */
 section.divider-light {
   background: var(--color-bg);
   justify-content: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: var(--sp-sm);
+  padding: 36px 52px;
 }
-section.divider-light h1 { font-size: 44px; color: var(--color-navy); }
-section.divider-light h2 { font-size: 17px; color: #333; font-weight: 600; }
+section.divider-light h1 {
+  font-size: var(--fs-hero);
+  font-weight: 800;
+  color: var(--color-navy);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.02em;
+}
+section.divider-light h2 {
+  font-size: var(--fs-subtitle);
+  font-weight: 600;
+  color: var(--color-muted);
+}
 
-/* Issue slide — 40/60 split via CSS grid on the section */
+/* =========================================================
+   ISSUE SLIDE — 40 / 60 grid
+   ========================================================= */
 section.issue {
   display: grid;
   grid-template-columns: 40% 60%;
@@ -164,22 +258,43 @@ section.issue {
   gap: 0;
 }
 section.issue .left {
-  padding: 24px 16px 24px 40px;
+  padding: 24px 14px 24px 36px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
+  gap: var(--sp-xs);
   overflow: hidden;
+}
+section.issue .left h1 {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--color-navy);
+  margin: 0 0 var(--sp-xs);
+}
+section.issue .left h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-muted);
+  margin: 0 0 var(--sp-xs);
+}
+section.issue .left p,
+section.issue .left li {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--color-text);
 }
 section.issue .right {
   display: flex;
   align-items: stretch;
-  gap: 10px;
-  padding: 16px 16px 32px 6px;
+  gap: 8px;
+  padding: 14px 14px 28px 6px;
   min-height: 0;
 }
 
-/* Strength slide — 50/50 split */
+/* =========================================================
+   STRENGTH SLIDE — 50 / 50 grid
+   ========================================================= */
 section.strength {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -188,21 +303,40 @@ section.strength {
   gap: 0;
 }
 section.strength .left {
-  padding: 36px 16px 36px 40px;
+  padding: 32px 14px 32px 36px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 10px;
+  gap: var(--sp-sm);
   overflow: hidden;
+}
+section.strength .left h1 {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--color-navy);
+}
+section.strength .left h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+section.strength .left p,
+section.strength .left li {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--color-text);
 }
 section.strength .right {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 14px;
 }
 
-/* Image / iframe panel */
+/* =========================================================
+   IMAGE / IFRAME PANEL
+   ========================================================= */
 .panel {
   border-radius: 8px;
   overflow: hidden;
@@ -211,6 +345,7 @@ section.strength .right {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
 }
 .panel img,
 .panel iframe {
@@ -223,87 +358,146 @@ section.strength .right {
   flex: 1;
 }
 .panel-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--fs-small);
+  font-weight: 700;
   color: var(--color-navy);
   text-align: center;
-  padding: 4px 0 0;
+  padding: 3px 0 0;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   flex-shrink: 0;
+  background: var(--color-panel);
 }
 
-/* Ghost text (large watermark-style heading) */
-/* On teal dividers: white ghost; on linen slides: use a dark-tinted ghost */
+/* =========================================================
+   GHOST / WATERMARK TEXT
+   ========================================================= */
 .ghost {
-  font-size: 56px;
+  font-size: var(--fs-ghost);
   font-weight: 800;
-  color: rgba(26,34,128,0.12);
+  color: rgba(26,34,128,0.10);
   line-height: 1;
-  margin-bottom: 8px;
+  margin-bottom: var(--sp-sm);
+  letter-spacing: -0.02em;
 }
 section.divider .ghost,
-section.divider .sec-number { color: rgba(255,255,255,0.45); }
+section.divider .sec-number {
+  color: rgba(255,255,255,0.38);
+}
 
-/* Persona quote callout */
+/* =========================================================
+   PERSONA QUOTE CALLOUT
+   ========================================================= */
 .quote {
-  background: rgba(125,217,208,0.18);
+  background: rgba(125,217,208,0.15);
   border-left: 3px solid var(--color-teal);
-  padding: 4px 7px;
-  margin-top: 4px;
-  font-size: 10.5px;
+  padding: 4px 8px;
+  margin-top: var(--sp-xs);
+  font-size: var(--fs-small);
   font-style: italic;
-  color: #000;
+  line-height: var(--lh-loose);
+  color: var(--color-text);
   border-radius: 0 4px 4px 0;
   overflow: hidden;
 }
-.quote strong { font-weight: 700; font-style: normal; color: var(--color-navy); }
+.quote strong {
+  font-weight: 700;
+  font-style: normal;
+  color: var(--color-navy);
+}
 
-/* Logo card (cover / back cover) */
+/* =========================================================
+   LOGO CARD (cover / back cover)
+   ========================================================= */
 .logo-card {
   background: var(--color-card);
-  padding: 16px 28px;
+  padding: 14px 24px;
   border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-.logo-card img { max-height: 70px; max-width: 260px; object-fit: contain; }
-.logo-card .brand-text { font-size: 24px; font-weight: 800; color: #000; }
+.logo-card img { max-height: 64px; max-width: 240px; object-fit: contain; }
+.logo-card .brand-text {
+  font-size: var(--fs-brand);
+  font-weight: 800;
+  color: var(--color-text);
+}
 
-/* TOC */
+/* =========================================================
+   TABLE OF CONTENTS
+   ========================================================= */
 section.toc {
   display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 32px;
-  padding: 48px 56px;
+  grid-template-columns: 240px 1fr;
+  gap: 28px;
+  padding: 40px 52px;
   align-items: start;
 }
 section.toc h1 {
-  font-size: 30px;
+  font-size: var(--fs-toc-h);
+  font-weight: 800;
   color: var(--color-navy);
-  line-height: 1.2;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
 }
 .toc-list { display: flex; flex-direction: column; }
 .toc-item {
   display: flex;
   align-items: baseline;
-  gap: 14px;
-  padding: 9px 0;
+  gap: 12px;
+  padding: 7px 0;
   border-bottom: 1px dashed #B0A89A;
-  font-size: 15px;
+  font-size: var(--fs-toc-i);
   font-weight: 600;
-  color: #000;
+  line-height: var(--lh-normal);
+  color: var(--color-text);
 }
 .toc-item:last-child { border-bottom: none; }
-.toc-num { font-size: 11px; font-weight: 700; color: var(--color-navy); min-width: 24px; }
-
-/* Back cover */
-section.back {
-  justify-content: space-between;
+.toc-num {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-navy);
+  min-width: 22px;
+  flex-shrink: 0;
 }
 
-/* Print */
+/* =========================================================
+   BACK COVER
+   ========================================================= */
+section.back {
+  justify-content: space-between;
+  padding: 36px 52px;
+}
+section.back h1 {
+  font-size: var(--fs-title);
+  font-weight: 800;
+  color: var(--color-navy);
+}
+section.back p {
+  font-size: var(--fs-body);
+  color: var(--color-muted);
+}
+
+/* =========================================================
+   INTRO / METHODOLOGY SLIDE
+   ========================================================= */
+section.intro h1 {
+  font-size: var(--fs-title);
+  font-weight: 800;
+  color: var(--color-navy);
+  margin-bottom: var(--sp-md);
+}
+section.intro p {
+  font-size: var(--fs-body);
+  line-height: var(--lh-loose);
+  color: var(--color-text);
+  max-width: 720px;
+}
+
+/* =========================================================
+   PRINT — preserve backgrounds in PDF
+   ========================================================= */
 @media print {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
@@ -351,7 +545,7 @@ const fullHtml = `<!DOCTYPE html>
   <title>${title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #999; font-family: 'Inter', sans-serif; }
+    body { background: #888; font-family: 'Inter', sans-serif; }
     .marpit { display: block; }
     .marpit > svg,
     .marpit > section {
