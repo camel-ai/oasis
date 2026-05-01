@@ -11,8 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
+import random
+
 from oasis.social_platform.recsys import (rec_sys_personalized,
                                           rec_sys_personalized_twh,
+                                          rec_sys_personalized_with_trace,
                                           rec_sys_random, rec_sys_reddit,
                                           reset_globals)
 
@@ -242,6 +245,49 @@ def test_rec_sys_personalized_sample_posts():
 
         if i == 1:
             assert result[i] == ["1", "2"]
+
+
+def test_rec_sys_personalized_with_trace_ignores_trace_rows_without_post_id():
+    user_table = [{
+        "user_id": 1,
+        "bio": "I like cats",
+    }]
+    post_table = [
+        {
+            "post_id": 1,
+            "user_id": 2,
+            "content": "Cats are great",
+        },
+        {
+            "post_id": 2,
+            "user_id": 3,
+            "content": "Dogs are great",
+        },
+        {
+            "post_id": 3,
+            "user_id": 4,
+            "content": "Birds are great",
+        },
+    ]
+    trace_table = [{
+        "user_id": 1,
+        "created_at": 1,
+        "action": "refresh",
+        "info": '{"content": "timeline refreshed"}',
+    }]
+    rec_matrix = [[], []]
+
+    random.seed(0)
+    result = rec_sys_personalized_with_trace(user_table,
+                                             post_table,
+                                             trace_table,
+                                             rec_matrix,
+                                             max_rec_post_len=2,
+                                             swap_rate=0.5)
+
+    assert len(result) == 1
+    assert len(result[0]) == 2
+    assert set(result[0]).issubset({1, 2, 3})
 
 
 def test_rec_sys_personalized_twhin_sample_posts():
