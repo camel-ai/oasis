@@ -1,0 +1,18 @@
+# OASIS UX Simulation App – Python dependencies
+# Install with: pip install -r requirements.txt
+# Then: playwright install chromium
+
+# Core
+gradio>=4.20.0
+httpx>=0.27.0
+beautifulsoup4>=4.12.0
+python-dotenv>=1.0.0
+
+# Image handling (for visual analysis)
+pillow>=10.0.0
+
+# Browser automation (Mode 2 + UX screenshots)
+playwright>=1.44.0
+
+# Async utilities
+anyio>=4.0.0
