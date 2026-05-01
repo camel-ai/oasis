@@ -114,6 +114,18 @@ OASIS provides a comprehensive set of actions that simulate real social media be
 | `LEAVE_GROUP`  | Leave a group by group ID                                        |
 | `SEND_TO_GROUP`  | Send a message to a group                                        |
 | `LISTEN_FROM_GROUP`  | Listen for messages from groups                                  |
+| `UPLOAD_VIDEO` | Upload a short video (TikTok) |
+| `WATCH_VIDEO` | Watch a video with completion tracking (TikTok) |
+| `SHARE_VIDEO` | Share a video to friends or other platforms (TikTok) |
+| `DUET` | Create a side-by-side duet with another video (TikTok) |
+| `STITCH` | Stitch part of another user's video into yours (TikTok) |
+| `NOT_INTERESTED` | Mark a video as not interested / negative feedback (TikTok) |
+| `ENTER_LIVESTREAM` | Enter a live streaming room (TikTok) |
+| `EXIT_LIVESTREAM` | Exit a live streaming room (TikTok) |
+| `LIVESTREAM_COMMENT` | Send a bullet comment in a livestream (TikTok) |
+| `SEND_GIFT` | Send a virtual gift to a livestream host (TikTok) |
+| `START_LIVESTREAM` | Start a new livestream session (TikTok) |
+| `END_LIVESTREAM` | End a livestream session (TikTok) |
 
 ### Platform-Specific Actions
 
@@ -153,6 +165,30 @@ The Twitter action set includes:
 - `FOLLOW`
 - `DO_NOTHING`
 - `QUOTE_POST`
+
+#### TikTok Actions
+```python
+# Get all TikTok-specific actions, return a list of ActionType
+available_actions = ActionType.get_default_tiktok_actions()
+```
+
+The TikTok action set includes:
+- `UPLOAD_VIDEO` — Upload a short video
+- `WATCH_VIDEO` — Watch a video (generates completion rate data)
+- `LIKE_POST` — Like a video
+- `CREATE_COMMENT` — Comment on a video
+- `SHARE_VIDEO` — Share a video
+- `FOLLOW` — Follow a creator
+- `DUET` — Create a duet response
+- `STITCH` — Stitch another video
+- `NOT_INTERESTED` — Negative feedback signal
+- `ENTER_LIVESTREAM` / `EXIT_LIVESTREAM` — Enter/exit live rooms
+- `LIVESTREAM_COMMENT` — Send bullet comments in livestream
+- `SEND_GIFT` — Send virtual gifts
+- `START_LIVESTREAM` / `END_LIVESTREAM` — Start/end live sessions
+- `SEARCH_POSTS` / `TREND` / `DO_NOTHING`
+
+TikTok uses a **traffic pool racing recommendation algorithm** with configurable parameters. See the [example script](https://github.com/camel-ai/oasis/blob/main/examples/tiktok_simulation.py) for usage.
 
 ## Arguments for `ManualAction`
 
@@ -335,14 +371,6 @@ action = ManualAction(
 )
 ```
 
-#### PURCHASE_PRODUCT
-```python
-action = ManualAction(
-    action=ActionType.PURCHASE_PRODUCT,
-    args={"product_name": "Premium Subscription", "purchase_num": 1}
-)
-```
-
 #### INTERVIEW
 ```python
 action = ManualAction(
@@ -388,5 +416,50 @@ action = ManualAction(
 action = ManualAction(
     action=ActionType.LISTEN_FROM_GROUP,
     args={}
+)
+```
+
+#### UPLOAD_VIDEO (TikTok)
+```python
+action = ManualAction(
+    action=ActionType.UPLOAD_VIDEO,
+    args={
+        "content": "Dance challenge #trending",
+        "duration_seconds": 15,
+        "category": "dance",
+        "topic_tags": '["dance", "challenge"]',
+    }
+)
+```
+
+#### WATCH_VIDEO (TikTok)
+```python
+action = ManualAction(
+    action=ActionType.WATCH_VIDEO,
+    args={"post_id": 1, "watch_ratio": 0.85}
+)
+```
+
+#### SHARE_VIDEO (TikTok)
+```python
+action = ManualAction(
+    action=ActionType.SHARE_VIDEO,
+    args={"post_id": 1}
+)
+```
+
+#### ENTER_LIVESTREAM (TikTok)
+```python
+action = ManualAction(
+    action=ActionType.ENTER_LIVESTREAM,
+    args={"stream_id": 1}
+)
+```
+
+#### SEND_GIFT (TikTok)
+```python
+action = ManualAction(
+    action=ActionType.SEND_GIFT,
+    args={"stream_id": 1, "gift_value": 50.0}
 )
 ```

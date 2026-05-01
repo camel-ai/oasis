@@ -27,6 +27,11 @@ from oasis.social_platform.platform import Platform
 parent_folder = osp.dirname(osp.abspath(__file__))
 test_db_filepath = osp.join(parent_folder, "test_multi.db")
 
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("OPENAI_API_KEY"),
+    reason="OPENAI_API_KEY not set; skipping LLM-backed tests",
+)
+
 
 @pytest.fixture
 def setup_platform():

@@ -30,6 +30,7 @@ The available recommendation system types are:
 | `TWITTER` | Standard Twitter-like recommendation system |
 | `TWHIN` | TWHINBert-based recommendation system for Twitter-like platforms |
 | `REDDIT` | Reddit-style recommendation system |
+| `TIKTOK` | Traffic-pool-style recommendation system for short-video platforms |
 | `RANDOM` | Random content recommendation (for baseline testing) |
 
 ## Configuring Recommendation Parameters
@@ -58,8 +59,8 @@ platform = Platform(
 | Parameter | Type | Description | Default |
 |-----------|------|-------------|---------|
 | `recsys_type` | `RecsysType` | The recommendation system algorithm | `"reddit"` |
-| `refresh_rec_post_count` | `int` | Number of posts returned per refresh | `1` for Twitter, `5` for Reddit |
-| `max_rec_post_len` | `int` | Maximum number of posts in the recommendation table (buffer) | `2` for Twitter, `100` for Reddit |
+| `refresh_rec_post_count` | `int` | Number of posts returned per refresh | `1` for Twitter, `5` for Reddit, `8` for short-video |
+| `max_rec_post_len` | `int` | Maximum number of posts in the recommendation table (buffer) | `2` for Twitter, `100` for Reddit, `30` for short-video |
 | `following_post_count` | `int` | Number of posts from followed users to show | `3` |
 | `use_openai_embedding` | `bool` | Whether to use OpenAI embeddings for content matching | `False` |
 | `rec_prob` | `float` | Probability balance between random and personalized recommendations | `0.7` |
@@ -100,6 +101,35 @@ platform = Platform(
 ```
 
 Reddit-style recommendations prioritize posts with higher scores (upvotes minus downvotes).
+
+### Short-Video Platform
+
+For short-video simulations, OASIS provides a traffic-pool-style recommendation system inspired by modern algorithmic feeds:
+
+```python
+platform = Platform(
+    db_path="./data/tiktok_simulation.db",
+    channel=channel,
+    recsys_type=RecsysType.TIKTOK,
+    refresh_rec_post_count=8,
+    max_rec_post_len=30,
+    following_post_count=2,
+)
+```
+
+This recommendation system combines engagement signals such as watch completion, sharing, and negative feedback with interest matching and time decay.
+
+### Short-Video Research Signals
+
+When studying short-video platforms, the most important ranking and analysis signals are:
+
+- `view_count`: How many completed feed impressions turned into actual views
+- `avg_watch_ratio`: Average watch completion per view
+- `share_count`: Strong positive engagement that can help promotion
+- `negative_count`: Explicit negative feedback that can suppress distribution
+- `traffic_pool_level`: Current distribution tier in the traffic-pool ladder
+
+These metrics are especially useful for studying creator growth, content fatigue, recommendation feedback loops, and the interaction between personalization and platform-level distribution rules.
 
 ## Content Visibility Settings
 
