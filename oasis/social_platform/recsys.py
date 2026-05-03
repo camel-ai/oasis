@@ -781,12 +781,15 @@ def rec_sys_personalized_with_trace(
 
             if swap_rate > 0:
                 # swap the recommended posts with random posts
+                traced_post_ids = {
+                    literal_eval(trace['info']).get('post_id')
+                    for trace in trace_table
+                    if trace.get('user_id')
+                }
                 swap_free_ids = [
                     post_id for post_id in post_ids
-                    if post_id not in rec_post_ids and post_id not in [
-                        trace['post_id']
-                        for trace in trace_table if trace['user_id']
-                    ]
+                    if post_id not in rec_post_ids
+                    and post_id not in traced_post_ids
                 ]
                 rec_post_ids = swap_random_posts(rec_post_ids, swap_free_ids,
                                                  swap_rate)
