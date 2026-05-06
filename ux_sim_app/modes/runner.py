@@ -15,9 +15,10 @@ from typing import Any, Dict, List, Optional
 import httpx
 from bs4 import BeautifulSoup
 
+from ux_sim_app.core import llm as _llm
 from ux_sim_app.core.llm import chat, tool_args, text_content
 from ux_sim_app.core.personas import Persona
-from ux_sim_app.core.config import VISION_MODEL, MAX_BROWSER_SESSIONS, OPENAI_API_KEY, EFFECTIVE_BASE_URL as OPENAI_BASE_URL, DATA_DIR
+from ux_sim_app.core.config import MAX_BROWSER_SESSIONS, DATA_DIR
 
 HEADERS = {
     "User-Agent": (
@@ -534,28 +535,17 @@ async def _mode3_one(persona: Persona, image_urls: List[str]) -> PersonaResponse
     for url in image_urls[:3]:
         content.append({"type": "image_url", "image_url": {"url": url, "detail": "low"}})
 
-    async with httpx.AsyncClient(timeout=90.0) as client:
-        r = await client.post(
-            f"{OPENAI_BASE_URL}/chat/completions",
-            json={
-                "model": VISION_MODEL,
-                "messages": [
-                    {"role": "system", "content": persona.system_prompt("visual")},
-                    {"role": "user", "content": content},
-                ],
-                "tools": [_VISUAL_FEEDBACK_TOOL],
-                "tool_choice": {"type": "function", "function": {"name": "visual_feedback"}},
-                "max_tokens": 800,
-                "temperature": 0.7,
-            },
-            headers={
-                "Authorization": f"Bearer {OPENAI_API_KEY}",
-                "Content-Type": "application/json",
-            },
-        )
-        r.raise_for_status()
-
-    resp = r.json()
+    resp = await _llm.chat(
+        messages=[
+            {"role": "system", "content": persona.system_prompt("visual")},
+            {"role": "user", "content": content},
+        ],
+        tools=[_VISUAL_FEEDBACK_TOOL],
+        tool_choice={"type": "function", "function": {"name": "visual_feedback"}},
+        max_tokens=800,
+        temperature=0.7,
+        vision=True,
+    )
     tc = resp["choices"][0]["message"].get("tool_calls", [])
     if tc:
         args = json.loads(tc[0]["function"]["arguments"])

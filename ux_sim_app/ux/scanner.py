@@ -24,9 +24,8 @@ from urllib.parse import urlparse
 import httpx
 from bs4 import BeautifulSoup
 
-from ux_sim_app.core.config import (
-    OPENAI_API_KEY, EFFECTIVE_BASE_URL as OPENAI_BASE_URL, VISION_MODEL, SCREENSHOTS_DIR
-)
+from ux_sim_app.core.config import SCREENSHOTS_DIR
+from ux_sim_app.core import llm as _llm
 from ux_sim_app.integrations.notebooklm import get_best_practices_for_scan, UX_CATEGORIES
 
 HEADERS = {
@@ -306,23 +305,13 @@ async def _ai_critique(screenshots: Dict[str, str]) -> Dict:
     if len(content) == 1:
         return {"error": "No screenshots available for AI critique"}
 
-    async with httpx.AsyncClient(timeout=120.0) as client:
-        r = await client.post(
-            f"{OPENAI_BASE_URL}/chat/completions",
-            json={
-                "model": VISION_MODEL,
-                "messages": [{"role": "user", "content": content}],
-                "max_tokens": 3000,
-                "temperature": 0.3,
-            },
-            headers={
-                "Authorization": f"Bearer {OPENAI_API_KEY}",
-                "Content-Type": "application/json",
-            },
-        )
-        r.raise_for_status()
-
-    raw = r.json()["choices"][0]["message"]["content"]
+    response = await _llm.chat(
+        messages=[{"role": "user", "content": content}],
+        max_tokens=3000,
+        temperature=0.3,
+        vision=True,
+    )
+    raw = _llm.text_content(response)
     # Strip markdown code fences if present
     match = re.search(r"\{[\s\S]*\}", raw)
     if match:

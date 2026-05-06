@@ -457,25 +457,16 @@ Write it as a factual summary, not as a list. Cite specific sources (e.g. "Reddi
 Do not invent information not present in the data above."""
 
     try:
-        payload = {
-            "model": text_model,
-            "messages": [
+        from ux_sim_app.core import llm as _llm
+        response = await _llm.chat(
+            messages=[
                 {"role": "system", "content": "You are a concise UX research analyst. Synthesise data into clear briefings."},
                 {"role": "user", "content": prompt},
             ],
-            "max_tokens": 400,
-        }
-        async with httpx.AsyncClient(timeout=30) as client:
-            r = await client.post(
-                "https://api.openai.com/v1/chat/completions",
-                json=payload,
-                headers={
-                    "Authorization": f"Bearer {openai_key}",
-                    "Content-Type": "application/json",
-                },
-            )
-            r.raise_for_status()
-        return r.json()["choices"][0]["message"]["content"].strip()
+            max_tokens=400,
+            temperature=0.4,
+        )
+        return _llm.text_content(response).strip()
     except Exception as exc:
         logger.warning("Synthesis LLM call failed: %s", exc)
         # Fallback: return a plain concatenation of top items

@@ -24,6 +24,7 @@ import re
 from typing import Optional, Tuple
 
 import httpx
+from ux_sim_app.core import llm as _llm
 
 logger = logging.getLogger(__name__)
 
@@ -92,39 +93,31 @@ async def _call_vision(
     model: str,
     max_tokens: int,
 ) -> str:
-    """Send an image + text prompt to an OpenAI vision model and return the text response."""
+    """Send an image + text prompt via the LLM fallback chain and return the text response."""
     img_b64 = base64.b64encode(image_bytes).decode()
-    payload = {
-        "model": model,
-        "max_tokens": max_tokens,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{img_b64}",
-                            "detail": "low",
-                        },
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{img_b64}",
+                        "detail": "low",
                     },
-                    {"type": "text", "text": user_prompt},
-                ],
-            },
-        ],
-    }
-    async with httpx.AsyncClient(timeout=90) as client:
-        resp = await client.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-        )
-        resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"].strip()
+                },
+                {"type": "text", "text": user_prompt},
+            ],
+        },
+    ]
+    response = await _llm.chat(
+        messages=messages,
+        max_tokens=max_tokens,
+        temperature=0.7,
+        vision=True,
+    )
+    return _llm.text_content(response).strip()
 
 
 async def _screenshot_html(html_code: str) -> Optional[bytes]:

@@ -121,6 +121,35 @@ OPENROUTER_VISION_MODELS: list[str] = [
     "x-ai/grok-2-vision-1212",
 ]
 
+# ── Helmholtz AI endpoint ─────────────────────────────────────────────────────
+# Helmholtz Blablador / HAICORE OpenAI-compatible endpoint.
+# Set HELMHOLTZ_API_KEY and optionally HELMHOLTZ_BASE_URL in .env.
+HELMHOLTZ_API_KEY: str = os.environ.get("HELMHOLTZ_API_KEY", "")
+HELMHOLTZ_BASE_URL: str = os.environ.get(
+    "HELMHOLTZ_BASE_URL",
+    "https://helmholtz-blablador.fz-juelich.de:8000/v1",
+)
+
+# ── Model fallback hierarchy ───────────────────────────────────────────────────
+# Ordered from best to worst.  The LLM client tries each in sequence and
+# falls through to the next on any proxy / gateway / 5xx error.
+#
+# Each entry: (model_id, api_key, base_url)
+# "__openai__" is a sentinel that resolves to OPENAI_API_KEY / api.openai.com.
+#
+# Helmholtz multimodal models (primary tier)
+HELMHOLTZ_MODELS: list[str] = [
+    "alias-qwen36-35b",      # Qwen3.6-35B-A3B-FP8  — best, April 2026
+    "alias-qwen36-27b",      # Qwen3.6-27B-FP8       — April 2026
+    "alias-qwen35-35b-a3b",  # Qwen3.5-35B-A3B       — Feb 2026
+]
+
+# OpenAI fallback models (last resort)
+OPENAI_FALLBACK_MODELS: list[str] = [
+    "gpt-4o",
+    "gpt-4o-mini",
+]
+
 # ── Browserbase (optional Mode 2 fallback) ────────────────────────────────────
 BROWSERBASE_API_KEY: str = os.environ.get("BROWSERBASE_API_KEY", "")
 
