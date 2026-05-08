@@ -784,7 +784,7 @@ def rec_sys_personalized_with_trace(
                 traced_post_ids = {
                     literal_eval(trace['info']).get('post_id')
                     for trace in trace_table
-                    if trace.get('user_id')
+                    if trace.get('user_id') is not None
                 }
                 swap_free_ids = [
                     post_id for post_id in post_ids
