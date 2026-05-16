@@ -37,7 +37,7 @@ def setup_platform():
 
 
 @pytest.mark.asyncio
-async def test_agents_posting(setup_platform):
+async def test_agents_posting(setup_platform, llm_test_model):
     N = 5  # number of agents(users)
     M = 3  # Number of posts each user wants to send
 
@@ -65,7 +65,10 @@ async def test_agents_posting(setup_platform):
         user_info = UserInfo(name=real_name,
                              description=description,
                              profile=profile)
-        agent = SocialAgent(agent_id=i, user_info=user_info, channel=channel)
+        agent = SocialAgent(agent_id=i,
+                            user_info=user_info,
+                            channel=channel,
+                            model=llm_test_model)
         await agent.env.action.sign_up(f"user{i}0101", f"User{i}", "A bio.")
         agents.append(agent)
 
