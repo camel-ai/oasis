@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usability Test Report — https://www.berlin-buehnen.de/en/schedule?date=2026-04-07</title>
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --bg-linen:    #E8E0D5;
+    --bg-teal:     #7DD9D0;
+    --navy:        #1A2280;
+    --charcoal:    #2B2B2B;
+    --white:       #FFFFFF;
+    --grey-sub:    #7A7A9A;
+    --yellow-card: #FAFAC8;
+    --font:        'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+    background: #999;
+    font-family: var(--font);
+    color: var(--charcoal);
+}
+
+/* ── Slide container ─────────────────────────────────────────────────────── */
+.slide {
+    width: 960px;
+    height: 540px;
+    position: relative;
+    overflow: hidden;
+    margin: 0 auto 24px;
+    background: var(--bg-linen);
+    page-break-after: always;
+    break-after: page;
+}
+
+/* ── Backgrounds ─────────────────────────────────────────────────────────── */
+.slide.bg-teal   { background: var(--bg-teal); }
+.slide.bg-linen  { background: var(--bg-linen); }
+
+/* ── COVER ───────────────────────────────────────────────────────────────── */
+.cover-title {
+    position: absolute;
+    top: 60px; left: 60px;
+    font-size: 52px;
+    font-weight: 800;
+    color: var(--charcoal);
+    line-height: 1.15;
+    max-width: 600px;
+}
+.cover-logo-card {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--yellow-card);
+    padding: 24px 36px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 200px;
+    min-height: 100px;
+}
+.cover-logo-card img { max-height: 80px; max-width: 280px; object-fit: contain; }
+.cover-logo-card .brand-text {
+    font-size: 36px; font-weight: 800; color: var(--charcoal);
+}
+
+/* ── TABLE OF CONTENTS ───────────────────────────────────────────────────── */
+.toc-left {
+    position: absolute;
+    top: 60px; left: 60px;
+    font-size: 38px; font-weight: 800; color: var(--navy);
+    line-height: 1.2; max-width: 260px;
+}
+.toc-right {
+    position: absolute;
+    top: 60px; left: 360px; right: 60px;
+}
+.toc-item {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px dashed #B0A89A;
+}
+.toc-item:last-child { border-bottom: none; }
+.toc-num { font-size: 13px; font-weight: 700; color: var(--navy); min-width: 28px; }
+.toc-label { font-size: 18px; font-weight: 600; color: var(--charcoal); }
+
+/* ── SECTION DIVIDER ─────────────────────────────────────────────────────── */
+.sec-number {
+    position: absolute;
+    top: 50px; left: 60px;
+    font-size: 100px; font-weight: 800; color: var(--white);
+    line-height: 1;
+}
+.sec-title {
+    position: absolute;
+    top: 170px; left: 60px;
+    font-size: 56px; font-weight: 800; color: var(--navy);
+    line-height: 1.1; max-width: 700px;
+}
+.sec-subtitle {
+    position: absolute;
+    top: 280px; left: 60px;
+    font-size: 20px; font-weight: 600; color: var(--grey-sub);
+}
+
+/* ── INTRO TEXT SLIDE ────────────────────────────────────────────────────── */
+.intro-ghost {
+    position: absolute;
+    top: 30px; left: 50px;
+    font-size: 80px; font-weight: 800;
+    color: rgba(255,255,255,0.55);
+    line-height: 1;
+}
+.intro-body {
+    position: absolute;
+    top: 110px; left: 60px; right: 60px; bottom: 40px;
+    overflow: hidden;
+}
+.intro-body p { font-size: 15px; line-height: 1.65; margin-bottom: 12px; }
+.intro-body .focus-label {
+    font-size: 15px; font-weight: 700; text-decoration: underline; margin-top: 14px; margin-bottom: 6px;
+}
+.intro-body .focus-item { font-size: 14px; margin-left: 16px; margin-bottom: 4px; }
+.intro-body .focus-item::before { content: "— "; }
+
+/* ── ISSUE DETAIL (40/60 split) ──────────────────────────────────────────── */
+.issue-left {
+    position: absolute;
+    top: 0; left: 0;
+    width: 40%; height: 100%;
+    padding: 40px 36px 40px 56px;
+    display: flex; flex-direction: column; justify-content: center;
+}
+.issue-ghost-title {
+    font-size: 48px; font-weight: 800;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.1; margin-bottom: 18px;
+}
+.issue-section-label {
+    font-size: 13px; font-weight: 700; color: var(--navy);
+    margin-bottom: 5px; margin-top: 14px;
+}
+.issue-section-label:first-of-type { margin-top: 0; }
+.issue-section-body {
+    font-size: 13px; line-height: 1.6; color: var(--charcoal);
+}
+.issue-section-body strong { font-weight: 700; }
+
+.issue-right {
+    position: absolute;
+    top: 0; left: 40%; right: 0; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; padding: 24px 24px 50px 16px;
+}
+.screenshot-box {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center;
+    height: 100%;
+}
+.screenshot-box img {
+    flex: 1;
+    width: 100%; object-fit: contain; object-position: top;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+.screenshot-label {
+    font-size: 12px; font-weight: 500; color: var(--charcoal);
+    margin-top: 8px; text-align: center;
+}
+
+/* ── STRENGTH / PRESERVE (50/50 split) ───────────────────────────────────── */
+.strength-left {
+    position: absolute;
+    top: 0; left: 0;
+    width: 50%; height: 100%;
+    padding: 50px 36px 50px 56px;
+    display: flex; flex-direction: column; justify-content: center;
+}
+.strength-ghost-title {
+    font-size: 52px; font-weight: 800;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.1; margin-bottom: 24px;
+}
+.strength-body {
+    font-size: 15px; line-height: 1.7; color: var(--charcoal);
+}
+.strength-body strong { font-weight: 700; }
+
+.strength-right {
+    position: absolute;
+    top: 0; left: 50%; right: 0; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+}
+.strength-right img {
+    max-height: 100%; max-width: 100%;
+    object-fit: contain; object-position: center;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+/* ── BACK COVER ──────────────────────────────────────────────────────────── */
+.back-logo-card {
+    position: absolute;
+    top: 80px; left: 60px;
+    background: var(--yellow-card);
+    padding: 20px 30px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+}
+.back-logo-card img { max-height: 70px; max-width: 240px; object-fit: contain; }
+.back-logo-card .brand-text { font-size: 30px; font-weight: 800; color: var(--charcoal); }
+.back-report-title {
+    position: absolute;
+    top: 230px; left: 60px;
+    font-size: 18px; font-style: italic; color: var(--charcoal);
+}
+.back-author {
+    position: absolute;
+    bottom: 50px; right: 60px;
+    font-size: 14px; color: var(--charcoal);
+}
+
+/* ── PERSONA QUOTE CALLOUT (used inside issue slides) ────────────────────── */
+.persona-quote {
+    background: rgba(125,217,208,0.18);
+    border-left: 3px solid var(--bg-teal);
+    padding: 6px 10px;
+    margin-top: 8px;
+    font-size: 11.5px;
+    font-style: italic;
+    color: #444;
+    border-radius: 0 4px 4px 0;
+}
+.persona-quote .persona-name { font-weight: 700; font-style: normal; color: var(--navy); }
+
+/* ── REDESIGN SPLIT (screenshot left | HTML iframe right) ──────────────── */
+.redesign-slide {
+    display: flex;
+    width: 100%; height: 100%;
+}
+.redesign-old {
+    width: 50%; height: 100%;
+    display: flex; flex-direction: column;
+    padding: 20px 12px 20px 24px;
+}
+.redesign-old img {
+    flex: 1;
+    width: 100%; object-fit: cover; object-position: top;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+.redesign-new {
+    width: 50%; height: 100%;
+    display: flex; flex-direction: column;
+    padding: 20px 24px 20px 12px;
+}
+.redesign-new iframe {
+    flex: 1;
+    width: 100%; border: none;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    background: #fff;
+}
+.redesign-label {
+    font-size: 11px; font-weight: 600;
+    color: var(--navy); text-align: center;
+    margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.redesign-analysis {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(26,34,128,0.08);
+    padding: 6px 24px;
+    font-size: 10.5px; color: #555;
+    border-top: 1px solid rgba(26,34,128,0.1);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── PRINT ───────────────────────────────────────────────────────────────── */
+@media print {
+    body { background: white; }
+    .slide { margin: 0; box-shadow: none; }
+    @page { size: 960px 540px landscape; margin: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="slide bg-linen">
+  <div class="cover-title">Usability Test Report</div>
+  <div class="cover-logo-card"><span class="brand-text">https://www.berlin</span></div>
+</div>
+
+<div class="slide bg-linen">
+  <div class="toc-left">Table of<br>contents</div>
+  <div class="toc-right">
+    <div class="toc-item">
+      <span class="toc-num">01</span>
+      <span class="toc-label">Introduction</span>
+    </div>
+    <div class="toc-item">
+      <span class="toc-num">02</span>
+      <span class="toc-label">Predicted User Issues</span>
+    </div>
+    <div class="toc-item">
+      <span class="toc-num">03</span>
+      <span class="toc-label">Elements to Preserve</span>
+    </div></div>
+</div>
+
+<div class="slide bg-linen">
+  <div class="sec-number">01</div>
+  <div class="sec-title">Introduction</div>
+  
+</div>
+
+<div class="slide bg-linen">
+  <div class="intro-ghost">1.</div>
+  <div class="intro-body">
+    <p><strong>https://www.berlin-buehnen.de/en/schedule?date=2026-04-07</strong> — The website demonstrates a strong visual design and trustworthiness, with room for improvement in usability and accessibility. Mobile responsiveness is generally good, but some adjustments are needed for optimal user experience.</p>
+    <p>This report was generated by the OASIS UX Simulation App using 2 AI personas who browsed https://www.berlin-buehnen.de/en/schedule?date=2026-04-07 and provided usability feedback. The analysis combines automated heuristic checks, AI visual critique, and simulated persona interactions to predict real user issues.</p>
+    <div class="focus-label">The UX review will focus on:</div>
+    <div class="focus-item">Visual Design</div><div class="focus-item">Usability</div><div class="focus-item">Accessibility</div><div class="focus-item">Mobile Responsiveness</div><div class="focus-item">Content Quality</div><div class="focus-item">Trust Credibility</div>
+  </div>
+</div>
+
+<div class="slide bg-teal">
+  <div class="sec-number">02</div>
+  <div class="sec-title">Predicted User Issues</div>
+  
+</div>
+
+<div class="slide bg-teal">
+  <div class="sec-number">02.1</div>
+  <div class="sec-title">Visual Design: Some text elements have low contrast aga</div>
+  <div class="sec-subtitle">Visual Design</div>
+</div>
+
+<div class="slide bg-linen">
+  <div class="issue-left">
+    <div class="issue-ghost-title">Visual Design: Some text elements have low contrast aga</div>
+    <div class="issue-section-label">Predicted User Issue</div>
+    <div class="issue-section-body">Users <strong>might</strong> struggle because Some text elements have low contrast against the background.</div>
+    <div class="issue-section-label">Root Cause Analysis</div>
+    <div class="issue-section-body">The Visual Design dimension scored 85/10. Some text elements have low contrast against the background.</div>
+    <div class="issue-section-label">Recommendations: Design Solutions</div>
+    <div class="issue-section-body">Review and improve this aspect.</div>
+  </div>
+  
+  <div class="issue-right">
+    <div class="screenshot-box">
+      <img src="/home/ubuntu/oasis_compare/ux_sim_app/data/screenshots/20260407_103945_33d440_desktop.png" alt="Current design" loading="lazy">
+      <div class="screenshot-label">Current design</div>
+    </div>
+    <div class="screenshot-box">
+      <div style="width:100%;height:100%;background:#f0ece6;border-radius:6px;
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:11px;color:#999;text-align:center;padding:12px;">
+        Re-design mockup<br>(to be added)
+      </div>
+      <div class="screenshot-label">Re-design</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide bg-teal">
+  <div class="sec-number">02.2</div>
+  <div class="sec-title">Usability: Navigation elements are not immediately </div>
+  <div class="sec-subtitle">Usability</div>
+</div>
+
+<div class="slide bg-linen">
+  <div class="issue-left">
+    <div class="issue-ghost-title">Usability: Navigation elements are not immediately </div>
+    <div class="issue-section-label">Predicted User Issue</div>
+    <div class="issue-section-body">Users <strong>might</strong> struggle because Navigation elements are not immediately obvious.</div>
+    <div class="issue-section-label">Root Cause Analysis</div>
+    <div class="issue-section-body">The Usability dimension scored 70/10. Navigation elements are not immediately obvious.</div>
+    <div class="issue-section-label">Recommendations: Design Solutions</div>
+    <div class="issue-section-body">Review and improve this aspect.</div>
+  </div>
+  
+  <div class="issue-right">
+    <div class="screenshot-box">
+      <img src="/home/ubuntu/oasis_compare/ux_sim_app/data/screenshots/20260407_103945_33d440_desktop.png" alt="Current design" loading="lazy">
+      <div class="screenshot-label">Current design</div>
+    </div>
+    <div class="screenshot-box">
+      <div style="width:100%;height:100%;background:#f0ece6;border-radius:6px;
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:11px;color:#999;text-align:center;padding:12px;">
+        Re-design mockup<br>(to be added)
+      </div>
+      <div class="screenshot-label">Re-design</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide bg-teal">
+  <div class="sec-number">02.3</div>
+  <div class="sec-title">Accessibility: Touch targets are small on mobile device</div>
+  <div class="sec-subtitle">Accessibility</div>
+</div>
+
+<div class="slide bg-linen">
+  <div class="issue-left">
+    <div class="issue-ghost-title">Accessibility: Touch targets are small on mobile device</div>
+    <div class="issue-section-label">Predicted User Issue</div>
+    <div class="issue-section-body">Users <strong>might</strong> struggle because Touch targets are small on mobile devices.</div>
+    <div class="issue-section-label">Root Cause Analysis</div>
+    <div class="issue-section-body">The Accessibility dimension scored 65/10. Touch targets are small on mobile devices.</div>
+    <div class="issue-section-label">Recommendations: Design Solutions</div>
+    <div class="issue-section-body">Review and improve this aspect.</div>
+  </div>
+  
+  <div class="issue-right">
+    <div class="screenshot-box">
+      <img src="/home/ubuntu/oasis_compare/ux_sim_app/data/screenshots/20260407_103945_33d440_desktop.png" alt="Current design" loading="lazy">
+      <div class="screenshot-label">Current design</div>
+    </div>
+    <div class="screenshot-box">
+      <div style="width:100%;height:100%;background:#f0ece6;border-radius:6px;
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:11px;color:#999;text-align:center;padding:12px;">
+        Re-design mockup<br>(to be added)
+      </div>
+      <div class="screenshot-label">Re-design</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide bg-teal">
+  <div class="sec-number">02.4</div>
+  <div class="sec-title">Mobile Responsiveness: Some buttons are small on mobile.</div>
+  <div class="sec-subtitle">Mobile Responsiveness</div>
+</div>
+
+<div class="slide bg-linen">
+  <div class="issue-left">
+    <div class="issue-ghost-title">Mobile Responsiveness: Some buttons are small on mobile.</div>
+    <div class="issue-section-label">Predicted User Issue</div>
+    <div class="issue-section-body">Users <strong>might</strong> struggle because Some buttons are small on mobile.</div>
+    <div class="issue-section-label">Root Cause Analysis</div>
+    <div class="issue-section-body">The Mobile Responsiveness dimension scored 80/10. Some buttons are small on mobile.</div>
+    <div class="issue-section-label">Recommendations: Design Solutions</div>
+    <div class="issue-section-body">Review and improve this aspect.</div>
+  </div>
+  
+  <div class="issue-right">
+    <div class="screenshot-box">
+      <img src="/home/ubuntu/oasis_compare/ux_sim_app/data/screenshots/20260407_103945_33d440_desktop.png" alt="Current design" loading="lazy">
+      <div class="screenshot-label">Current design</div>
+    </div>
+    <div class="screenshot-box">
+      <div style="width:100%;height:100%;background:#f0ece6;border-radius:6px;
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:11px;color:#999;text-align:center;padding:12px;">
+        Re-design mockup<br>(to be added)
+      </div>
+      <div class="screenshot-label">Re-design</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide bg-teal">
+  <div class="sec-number">02.5</div>
+  <div class="sec-title">Content Quality: Important content is not always prioriti</div>
+  <div class="sec-subtitle">Content Quality</div>
+</div>
+
+<div class="slide bg-linen">
+  <div class="issue-left">
+    <div class="issue-ghost-title">Content Quality: Important content is not always prioriti</div>
+    <div class="issue-section-label">Predicted User Issue</div>
+    <div class="issue-section-body">Users <strong>might</strong> struggle because Important content is not always prioritized.</div>
+    <div class="issue-section-label">Root Cause Analysis</div>
+    <div class="issue-section-body">The Content Quality dimension scored 80/10. Important content is not always prioritized.</div>
+    <div class="issue-section-label">Recommendations: Design Solutions</div>
+    <div class="issue-section-body">Review and improve this aspect.</div>
+  </div>
+  
+  <div class="issue-right">
+    <div class="screenshot-box">
+      <img src="/home/ubuntu/oasis_compare/ux_sim_app/data/screenshots/20260407_103945_33d440_desktop.png" alt="Current design" loading="lazy">
+      <div class="screenshot-label">Current design</div>
+    </div>
+    <div class="screenshot-box">
+      <div style="width:100%;height:100%;background:#f0ece6;border-radius:6px;
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:11px;color:#999;text-align:center;padding:12px;">
+        Re-design mockup<br>(to be added)
+      </div>
+      <div class="screenshot-label">Re-design</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide bg-teal">
+  <div class="sec-number">02.6</div>
+  <div class="sec-title">Trust Credibility: Limited visibility of social proof eleme</div>
+  <div class="sec-subtitle">Trust Credibility</div>
+</div>
+
+<div class="slide bg-linen">
+  <div class="issue-left">
+    <div class="issue-ghost-title">Trust Credibility: Limited visibility of social proof eleme</div>
+    <div class="issue-section-label">Predicted User Issue</div>
+    <div class="issue-section-body">Users <strong>might</strong> struggle because Limited visibility of social proof elements.</div>
+    <div class="issue-section-label">Root Cause Analysis</div>
+    <div class="issue-section-body">The Trust Credibility dimension scored 90/10. Limited visibility of social proof elements.</div>
+    <div class="issue-section-label">Recommendations: Design Solutions</div>
+    <div class="issue-section-body">Review and improve this aspect.</div>
+  </div>
+  
+  <div class="issue-right">
+    <div class="screenshot-box">
+      <img src="/home/ubuntu/oasis_compare/ux_sim_app/data/screenshots/20260407_103945_33d440_desktop.png" alt="Current design" loading="lazy">
+      <div class="screenshot-label">Current design</div>
+    </div>
+    <div class="screenshot-box">
+      <div style="width:100%;height:100%;background:#f0ece6;border-radius:6px;
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:11px;color:#999;text-align:center;padding:12px;">
+        Re-design mockup<br>(to be added)
+      </div>
+      <div class="screenshot-label">Re-design</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide bg-teal">
+  <div class="sec-number">03</div>
+  <div class="sec-title">Elements to preserve</div>
+  
+</div>
+
+<div class="slide bg-linen">
+  <div class="strength-left">
+    <div class="strength-ghost-title">Consistent visual design across devices</div>
+    <div class="strength-body"><strong>https://www.berlin</strong> Consistent visual design across devices</div>
+  </div>
+  <div class="strength-right">
+    <img src="/home/ubuntu/oasis_compare/ux_sim_app/data/screenshots/20260407_103945_33d440_desktop.png" alt="Consistent visual design across devices" loading="lazy">
+  </div>
+</div>
+
+<div class="slide bg-linen">
+  <div class="strength-left">
+    <div class="strength-ghost-title">Clear brand identity</div>
+    <div class="strength-body"><strong>https://www.berlin</strong> Clear brand identity</div>
+  </div>
+  <div class="strength-right">
+    <img src="/home/ubuntu/oasis_compare/ux_sim_app/data/screenshots/20260407_103945_33d440_desktop.png" alt="Clear brand identity" loading="lazy">
+  </div>
+</div>
+
+<div class="slide bg-linen">
+  <div class="strength-left">
+    <div class="strength-ghost-title">Professional and credible presentation</div>
+    <div class="strength-body"><strong>https://www.berlin</strong> Professional and credible presentation</div>
+  </div>
+  <div class="strength-right">
+    <img src="/home/ubuntu/oasis_compare/ux_sim_app/data/screenshots/20260407_103945_33d440_desktop.png" alt="Professional and credible presentation" loading="lazy">
+  </div>
+</div>
+
+<div class="slide bg-linen">
+  <div class="back-logo-card"><span class="brand-text">https://www.berlin</span></div>
+  <div class="back-report-title">Usability Test Report</div>
+  <div class="back-author">By OASIS UX Simulation App — 2026</div>
+</div>
+</body>
+</html>
