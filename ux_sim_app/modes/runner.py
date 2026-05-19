@@ -304,13 +304,59 @@ async def _mode2_one(
     video_path: Optional[str] = None
 
     try:
-        from playwright.async_api import async_playwright
-        async with async_playwright() as pw:
-            browser = await pw.chromium.launch(
+        # ── CloakBrowser (stealth Chromium) — passes Cloudflare Turnstile, reCAPTCHA v3,
+        # FingerprintJS, and BrowserScan via source-level C++ fingerprint patches.
+        # Falls back to standard Playwright if cloakbrowser is not installed.
+        try:
+            from cloakbrowser import launch_context_async as _cloak_ctx
+            _has_cloak = True
+        except ImportError:
+            _has_cloak = False
+
+        # Deterministic fingerprint seed per persona: same persona = same device
+        # across multiple page visits, making it look like a returning visitor.
+        _persona_seed = abs(hash(getattr(persona, 'name', str(persona)))) % 90000 + 10000
+
+        from ux_sim_app.core.config import (
+            CLOAKBROWSER_PROXY,
+            CLOAKBROWSER_GEOIP,
+            CLOAKBROWSER_HUMANIZE,
+            CLOAKBROWSER_HUMAN_PRESET,
+        )
+
+        if _has_cloak:
+            # Build CloakBrowser context kwargs
+            cloak_kwargs: Dict[str, Any] = {
+                "viewport": {"width": 1280, "height": 800},
+                "locale": "en-US",
+                "args": [f"--fingerprint={_persona_seed}"],
+            }
+            if CLOAKBROWSER_HUMANIZE:
+                cloak_kwargs["humanize"] = True
+                cloak_kwargs["human_preset"] = CLOAKBROWSER_HUMAN_PRESET
+            if CLOAKBROWSER_PROXY:
+                cloak_kwargs["proxy"] = CLOAKBROWSER_PROXY
+                if CLOAKBROWSER_GEOIP:
+                    cloak_kwargs["geoip"] = True
+            else:
+                cloak_kwargs["timezone"] = "America/New_York"
+            if storage_state_path and os.path.isfile(storage_state_path):
+                cloak_kwargs["storage_state"] = storage_state_path
+            if video_dir:
+                _Path(video_dir).mkdir(parents=True, exist_ok=True)
+                cloak_kwargs["record_video_dir"] = video_dir
+                cloak_kwargs["record_video_size"] = {"width": 1280, "height": 800}
+
+            ctx = await _cloak_ctx(**cloak_kwargs)
+            browser = None  # CloakBrowser manages the browser internally
+        else:
+            # Fallback: standard Playwright
+            from playwright.async_api import async_playwright
+            _pw_instance = await async_playwright().__aenter__()
+            browser = await _pw_instance.chromium.launch(
                 headless=True,
                 args=["--no-sandbox", "--disable-dev-shm-usage"],
             )
-            # Build context kwargs — add video recording when a dir is provided
             ctx_kwargs: Dict[str, Any] = {
                 "user_agent": HEADERS["User-Agent"],
                 "viewport": {"width": 1280, "height": 800},
@@ -321,7 +367,6 @@ async def _mode2_one(
                 _Path(video_dir).mkdir(parents=True, exist_ok=True)
                 ctx_kwargs["record_video_dir"] = video_dir
                 ctx_kwargs["record_video_size"] = {"width": 1280, "height": 800}
-
             ctx = await browser.new_context(**ctx_kwargs)
 
             # ── Pre-consent injection: set localStorage/cookie flags BEFORE any page loads
@@ -388,7 +433,8 @@ async def _mode2_one(
 
             # MUST close context (not just browser) to flush the .webm video file
             await ctx.close()
-            await browser.close()
+            if browser is not None:
+                await browser.close()
 
             # Retrieve the saved video path
             if video_dir:

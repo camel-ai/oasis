@@ -153,6 +153,24 @@ OPENAI_FALLBACK_MODELS: list[str] = [
 # ── Browserbase (optional Mode 2 fallback) ────────────────────────────────────
 BROWSERBASE_API_KEY: str = os.environ.get("BROWSERBASE_API_KEY", "")
 
+# ── CloakBrowser (stealth Chromium for CAPTCHA bypass) ────────────────────────
+# CloakBrowser replaces standard Playwright in captcha_guard.py and runner.py
+# Mode 2. It uses source-level C++ fingerprint patches to pass Cloudflare
+# Turnstile, reCAPTCHA v3, FingerprintJS, and BrowserScan without CAPTCHA
+# solving services.
+#
+# CLOAKBROWSER_PROXY      — optional HTTP or SOCKS5 proxy for all sessions
+#                           e.g. "http://user:pass@proxy:8080"
+#                                "socks5://user:pass@proxy:1080"
+# CLOAKBROWSER_GEOIP      — auto-detect timezone/locale from proxy exit IP
+#                           requires: pip install cloakbrowser[geoip]
+# CLOAKBROWSER_HUMANIZE   — enable human-like mouse/keyboard/scroll behavior
+# CLOAKBROWSER_HUMAN_PRESET — "default" (normal) or "careful" (slower)
+CLOAKBROWSER_PROXY: str = os.environ.get("CLOAKBROWSER_PROXY", "")
+CLOAKBROWSER_GEOIP: bool = os.environ.get("CLOAKBROWSER_GEOIP", "false").lower() == "true"
+CLOAKBROWSER_HUMANIZE: bool = os.environ.get("CLOAKBROWSER_HUMANIZE", "true").lower() != "false"
+CLOAKBROWSER_HUMAN_PRESET: str = os.environ.get("CLOAKBROWSER_HUMAN_PRESET", "default")
+
 # ── Email ──────────────────────────────────────────────────────────────────────
 SMTP_HOST: str = os.environ.get("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT: int = int(os.environ.get("SMTP_PORT", "587"))
