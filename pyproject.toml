@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "camel-oasis"
-version = "0.2.5"
-description = "Open Agents Social Interaction Simulations on a Large Scale"
+version = "0.3.0"
+description = "Open Agents Social Interaction Simulations on a Large Scale — with UX Simulation App extension"
 authors = ["CAMEL-AI.org"]
 readme = "README.md"
 license = "Apache License 2.0"
@@ -15,11 +15,17 @@ keywords = [
     "multi-agent-systems",
     "natural-language-processing",
     "large-language-models",
+    "ux-testing",
+    "user-experience",
+    "persona-simulation",
+    "captcha-bypass",
+    "marpit",
 ]
 packages = [
     { include = "oasis" },
+    { include = "ux_sim_app" },
 ]
-repository = "https://github.com/camel-ai/oasis.git"
+repository = "https://github.com/Greene-ctrl/oasis.git"
 
 [tool.poetry.dependencies]
 python = ">=3.10.0,<3.12"
