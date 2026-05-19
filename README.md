@@ -128,7 +128,7 @@ The OASIS UX Simulation App builds upon and adapts several outstanding open-sour
 | **Quarkdown** | Markdown-to-HTML slide rendering engine with reveal.js output. Replaced the legacy Marpit pipeline to support advanced design kit injection and theming. | MIT | [iamgio/quarkdown](https://github.com/iamgio/quarkdown) |
 | **frontend-slides** | Curated visual styles and layout presets (e.g., Bold Signal, Electric Studio) integrated into the design chooser for slide generation. | MIT | [zarazhangrui/frontend-slides](https://github.com/zarazhangrui/frontend-slides) |
 | **designkits.sh** | Official and community brand-inspired design kits (e.g., Stripe, Vercel, Notion) parsed into CSS custom properties for slide theming. | Apache 2.0 / MIT | [designkits.sh](https://designkits.sh) |
-| **markdown-presentation** | Inspired the initial approach to converting markdown ASTs into presentation slides before the migration to Quarkdown. | MIT | [markdown-presentation](https://github.com/markdown-presentation) |
+| **slides-in-markdown** | Inspired the initial approach to converting Markdown ASTs into presentation slides before the migration to Quarkdown. A remark.js-based slide deck tool with presenter console, speaker notes, and timer. | MIT | [technopagan/slides-in-markdown](https://github.com/technopagan/slides-in-markdown) |
 
 ### Web UI
 
@@ -176,8 +176,8 @@ The OASIS UX Simulation App builds upon and adapts several outstanding open-sour
 |---|---|
 | **last30days** (mvanhorn) | Inspired the Real World Data tab architecture — parallel multi-source social signal gathering synthesized into persona context. | [mvanhorn/last30days-skill](https://github.com/mvanhorn/last30days-skill) |
 | **CAMEL-AI / OASIS** | The original OASIS social simulation research framework that this UX simulation app extends and adapts for practical product design. | [camel-ai/oasis](https://github.com/camel-ai/oasis) |
-| **UX Testing Engine** | Core inspiration for the automated heuristic scanning and AI-driven redesign pipeline. | [ux-testing-engine](https://github.com/ux-testing-engine) |
-| **Vercel Agent Browser** | Inspired the stealth browser automation and visual testing approach used in Mode 2 and Mode 3 simulations. | [vercel/agent-browser](https://github.com/vercel/agent-browser) |
+| **Agent-Lens / AgentReviewHub** | Core inspiration for the automated heuristic scanning and AI-driven redesign pipeline — AI persona simulation for website UX evaluation with multi-perspective analysis and professional reports. | [reynoldw/Agent-Lens](https://github.com/reynoldw/Agent-Lens) |
+| **Vercel Agent Browser** | Inspired the stealth browser automation and visual testing approach used in Mode 2 and Mode 3 simulations — a browser automation CLI for AI agents with CDP, screenshot, and navigation primitives. | [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) |
 
 ---
 
