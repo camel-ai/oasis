@@ -29,6 +29,11 @@ from ux_sim_app.core.personas import generate_personas, Persona
 from ux_sim_app.modes.runner import run_mode1, run_mode2, run_mode3, SimulationResult
 from ux_sim_app.ux.scanner import scan_website
 from ux_sim_app.report.slide_generator import build_report_data, render_html, html_to_pdf, IssueSlide
+from ux_sim_app.report.quarkdown_generator import (
+    render_html_quarkdown, html_dir_to_pdf, build_qd_source, compile_qd, inject_design_kit,
+    OASIS_DEFAULT_KIT,
+)
+from ux_sim_app.report.design_chooser import get_kit, list_kits, KIT_CHOICES
 from ux_sim_app.report.redesign_client import generate_redesign, sanitise_for_embed
 from ux_sim_app.integrations import notebooklm as nlm
 from ux_sim_app.integrations.notebooklm import UX_CATEGORIES

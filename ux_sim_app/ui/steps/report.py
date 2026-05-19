@@ -1,17 +1,43 @@
-"""steps/report.py — Step 4: Generate slide report + email delivery."""
+"""steps/report.py — Step 4: Generate slide report + email delivery.
+
+Slide engine: Quarkdown (iamgio/quarkdown) with design kit injection.
+Design kits: frontend-slides presets + designkits.sh official/community kits.
+Fallback: Marpit (Node.js) if Quarkdown binary is unavailable.
+"""
 from __future__ import annotations
 
 import json
 import os
+import shutil
+import tempfile
 import traceback
 import uuid
+from pathlib import Path
 
 from .shared import (
     cfg, REPORTS_DIR,
-    build_report_data, render_html, html_to_pdf, IssueSlide,
+    # Quarkdown pipeline
+    build_report_data, render_html_quarkdown, html_dir_to_pdf,
+    get_kit, OASIS_DEFAULT_KIT,
+    # Marpit fallback
+    render_html as render_html_marpit, html_to_pdf as html_to_pdf_marpit,
+    IssueSlide,
     generate_redesign, sanitise_for_embed,
     logger,
 )
+
+# Check whether Quarkdown is available at startup
+import subprocess as _sp
+_QD_AVAILABLE = False
+try:
+    _r = _sp.run(
+        ["/usr/local/bin/quarkdown", "--version"],
+        capture_output=True, text=True, timeout=10,
+        env={**os.environ, "JAVA_HOME": "/opt/jdk17"},
+    )
+    _QD_AVAILABLE = _r.returncode == 0
+except Exception:
+    pass
 
 
 def step_generate_report(
@@ -20,8 +46,17 @@ def step_generate_report(
     sim_results_json: str,
     ux_json: str,
     generate_redesigns: bool,
+    design_kit_id: str = "oasis-default",
 ):
-    """Generate the Marpit slide-style HTML + PDF report with optional AI redesigns.
+    """Generate the Quarkdown slide-style HTML + PDF report with optional AI redesigns.
+
+    Parameters
+    ----------
+    design_kit_id : str
+        ID of the design kit to use for slide styling.
+        Comes from the Gradio dropdown (KIT_CHOICES).
+        Falls back to "oasis-default" if not found.
+
     MUST yield exactly 3 values on every yield.
     """
     _EMPTY_REPORT = (None, "")  # report_file, state_report_html
@@ -36,7 +71,9 @@ def step_generate_report(
         yield "❌ Please run the UX scan (Tab 4) first.", *_EMPTY_REPORT
         return
 
-    yield "⏳ Building slide-style report...", *_EMPTY_REPORT
+    kit = get_kit(design_kit_id or "oasis-default")
+    engine = "Quarkdown" if _QD_AVAILABLE else "Marpit (fallback)"
+    yield f"⏳ Building slide report ({engine}, design: {kit.name})...", *_EMPTY_REPORT
 
     try:
         persona_dicts = json.loads(personas_json)
@@ -81,11 +118,54 @@ def step_generate_report(
                 except Exception as exc:
                     logger.warning("Redesign exception for %s: %s", issue.title, exc)
 
-        yield "⏳ Rendering Marpit slides...", *_EMPTY_REPORT
-
-        html = render_html(report_data)
-
         run_id = ux_data.get("run_id", uuid.uuid4().hex[:8])
+
+        # ── Quarkdown path ────────────────────────────────────────────────────
+        if _QD_AVAILABLE:
+            yield f"⏳ Rendering Quarkdown slides (design: {kit.name})...", *_EMPTY_REPORT
+
+            qd_out_dir = REPORTS_DIR / f"qd_{run_id}"
+            try:
+                html, compiled_dir = render_html_quarkdown(
+                    report_data, kit=kit, out_dir=qd_out_dir
+                )
+            except Exception as qd_err:
+                logger.warning("Quarkdown render failed, falling back to Marpit: %s", qd_err)
+                yield f"⚠️ Quarkdown failed ({qd_err}), falling back to Marpit...", *_EMPTY_REPORT
+                _use_marpit = True
+            else:
+                _use_marpit = False
+
+            if not _use_marpit:
+                # Save the HTML preview copy
+                html_path = REPORTS_DIR / f"report_{run_id}.html"
+                html_path.write_text(html, encoding="utf-8")
+
+                yield "⏳ Exporting PDF via Playwright...", *_EMPTY_REPORT
+                pdf_path = REPORTS_DIR / f"report_{run_id}.pdf"
+                try:
+                    html_dir_to_pdf(compiled_dir, str(pdf_path))
+                    download_path = str(pdf_path)
+                    status_msg = (
+                        f"✅ Slide report generated with Quarkdown + {kit.name} design "
+                        f"({len(report_data.issues)} issues, {len(report_data.strengths)} strengths). "
+                        f"PDF ready."
+                    )
+                except Exception as pdf_err:
+                    download_path = str(html_path)
+                    status_msg = (
+                        f"✅ Report generated (PDF export failed: {pdf_err}). "
+                        f"Downloading HTML instead."
+                    )
+
+                yield status_msg, download_path, html
+                return
+
+        # ── Marpit fallback path ──────────────────────────────────────────────
+        yield "⏳ Rendering Marpit slides (fallback)...", *_EMPTY_REPORT
+
+        html = render_html_marpit(report_data)
+
         html_path = REPORTS_DIR / f"report_{run_id}.html"
         html_path.write_text(html, encoding="utf-8")
 
@@ -93,11 +173,12 @@ def step_generate_report(
 
         pdf_path = REPORTS_DIR / f"report_{run_id}.pdf"
         try:
-            html_to_pdf(html, str(pdf_path))
+            html_to_pdf_marpit(html, str(pdf_path))
             download_path = str(pdf_path)
             status_msg = (
-                f"✅ Slide report generated ({len(report_data.issues)} issues, "
-                f"{len(report_data.strengths)} strengths). PDF ready."
+                f"✅ Slide report generated with Marpit "
+                f"({len(report_data.issues)} issues, {len(report_data.strengths)} strengths). "
+                f"PDF ready."
             )
         except Exception as pdf_err:
             download_path = str(html_path)

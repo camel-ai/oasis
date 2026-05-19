@@ -125,7 +125,10 @@ The OASIS UX Simulation App builds upon and adapts several outstanding open-sour
 
 | Project | Role in OASIS | License | Repository |
 |---|---|---|---|
-| **Marpit** | Markdown-to-HTML slide rendering engine. We built a custom Node.js pipeline (`SlideReportData → Markdown → Marpit → HTML → Playwright PDF`) to replace legacy Python HTML string concatenation. | MIT | [@marp-team/marpit](https://github.com/marp-team/marpit) |
+| **Quarkdown** | Markdown-to-HTML slide rendering engine with reveal.js output. Replaced the legacy Marpit pipeline to support advanced design kit injection and theming. | MIT | [iamgio/quarkdown](https://github.com/iamgio/quarkdown) |
+| **frontend-slides** | Curated visual styles and layout presets (e.g., Bold Signal, Electric Studio) integrated into the design chooser for slide generation. | MIT | [zarazhangrui/frontend-slides](https://github.com/zarazhangrui/frontend-slides) |
+| **designkits.sh** | Official and community brand-inspired design kits (e.g., Stripe, Vercel, Notion) parsed into CSS custom properties for slide theming. | Apache 2.0 / MIT | [designkits.sh](https://designkits.sh) |
+| **markdown-presentation** | Inspired the initial approach to converting markdown ASTs into presentation slides before the migration to Quarkdown. | MIT | [markdown-presentation](https://github.com/markdown-presentation) |
 
 ### Web UI
 
@@ -173,6 +176,8 @@ The OASIS UX Simulation App builds upon and adapts several outstanding open-sour
 |---|---|
 | **last30days** (mvanhorn) | Inspired the Real World Data tab architecture — parallel multi-source social signal gathering synthesized into persona context. | [mvanhorn/last30days-skill](https://github.com/mvanhorn/last30days-skill) |
 | **CAMEL-AI / OASIS** | The original OASIS social simulation research framework that this UX simulation app extends and adapts for practical product design. | [camel-ai/oasis](https://github.com/camel-ai/oasis) |
+| **UX Testing Engine** | Core inspiration for the automated heuristic scanning and AI-driven redesign pipeline. | [ux-testing-engine](https://github.com/ux-testing-engine) |
+| **Vercel Agent Browser** | Inspired the stealth browser automation and visual testing approach used in Mode 2 and Mode 3 simulations. | [vercel/agent-browser](https://github.com/vercel/agent-browser) |
 
 ---
 

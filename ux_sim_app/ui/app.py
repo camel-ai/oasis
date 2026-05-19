@@ -39,6 +39,7 @@ from ux_sim_app.modes.runner import run_mode1, run_mode2, run_mode3, SimulationR
 from ux_sim_app.ux.scanner import scan_website
 from ux_sim_app.report.slide_generator import build_report_data, render_html, html_to_pdf, IssueSlide
 from ux_sim_app.report.redesign_client import generate_redesign, sanitise_for_embed
+from ux_sim_app.report.design_chooser import KIT_CHOICES as _KIT_CHOICES
 from ux_sim_app.integrations import notebooklm as nlm
 from ux_sim_app.integrations.notebooklm import UX_CATEGORIES
 from ux_sim_app.integrations.real_world_data import gather_and_synthesize
@@ -490,107 +491,12 @@ def step_ux_scan(url: str):
 
 # ── Step 4: Generate report ────────────────────────────────────────────────────
 # Outputs (3): status_report, report_file, state_report_html
+# Delegates to ux_sim_app.ui.steps.report which uses Quarkdown + design kit.
 
-def step_generate_report(
-    url: str,
-    personas_json: str,
-    sim_results_json: str,
-    ux_json: str,
-    generate_redesigns: bool,
-):
-    """Generate the slide-style HTML + PDF report with optional AI redesigns.
-    MUST yield exactly 3 values on every yield.
-    """
-    _EMPTY_REPORT = (None, "")  # report_file, state_report_html
-
-    if not personas_json or personas_json in ("{}", ""):
-        yield "❌ Please complete Step 1 (generate personas) first.", *_EMPTY_REPORT
-        return
-    if not sim_results_json or sim_results_json in ("{}", ""):
-        yield "❌ Please run at least one simulation mode (Tab 3) first.", *_EMPTY_REPORT
-        return
-    if not ux_json or ux_json in ("{}", ""):
-        yield "❌ Please run the UX scan (Tab 4) first.", *_EMPTY_REPORT
-        return
-
-    yield "⏳ Building slide-style report...", *_EMPTY_REPORT
-
-    try:
-        import ux_sim_app.core.config as cfg
-
-        persona_dicts = json.loads(personas_json)
-        sim_dicts = json.loads(sim_results_json)
-        ux_data = json.loads(ux_json)
-        scrape_data = ux_data  # ux_data already contains title, screenshots, etc.
-
-        # Build the structured slide data
-        report_data = build_report_data(
-            url=url or "",
-            scrape_data=scrape_data,
-            ux_data=ux_data,
-            sim_results=sim_dicts,
-            personas=persona_dicts,
-        )
-
-        # Optionally enrich each issue slide with an AI HTML redesign (OpenAI GPT-4o Vision)
-        effective_openai = (os.environ.get("OPENAI_API_KEY") or "").strip()
-        if generate_redesigns:
-            total = len(report_data.issues)
-            for idx, issue in enumerate(report_data.issues):
-                yield (
-                    f"⏳ Generating redesign {idx + 1}/{total}: {issue.title[:40]}...",
-                    *_EMPTY_REPORT,
-                )
-                try:
-                    rd = generate_redesign(
-                        screenshot_url=issue.screenshot_url,
-                        ux_issues=[issue.issue_text, issue.recommendation],
-                        openai_key=effective_openai,
-                        vision_model=cfg.VISION_MODEL,
-                    )
-                    if not rd.get("error"):
-                        issue.redesign_analysis = rd.get("analysis", "")
-                        issue.redesign_html = rd.get("html_code", "")
-                        issue.redesign_html_sanitised = (
-                            rd.get("html_sanitised")
-                            or sanitise_for_embed(issue.redesign_html)
-                        )
-                        # Store the rendered screenshot of the redesign for the slide panel
-                        if rd.get("redesign_screenshot"):
-                            issue.redesign_screenshot_url = rd["redesign_screenshot"]
-                    else:
-                        logger.warning("Redesign failed for %s: %s", issue.title, rd.get("error"))
-                except Exception as exc:
-                    logger.warning("Redesign exception for %s: %s", issue.title, exc)
-
-        yield "\u23f3 Rendering Marpit slides...", *_EMPTY_REPORT
-
-        # Render HTML via Marpit
-        html = render_html(report_data)
-
-        # Save HTML report
-        run_id = ux_data.get("run_id", uuid.uuid4().hex[:8])
-        html_path = REPORTS_DIR / f"report_{run_id}.html"
-        html_path.write_text(html, encoding="utf-8")
-
-        yield "\u23f3 Exporting PDF via Playwright (this may take 10-15 seconds)...", *_EMPTY_REPORT
-
-        # Export PDF via Playwright
-        pdf_path = REPORTS_DIR / f"report_{run_id}.pdf"
-        try:
-            html_to_pdf(html, str(pdf_path))
-            download_path = str(pdf_path)
-            status_msg = f"\u2705 Slide report generated ({len(report_data.issues)} issues, {len(report_data.strengths)} strengths). PDF ready."
-        except Exception as pdf_err:
-            # PDF failed - fall back to HTML download
-            download_path = str(html_path)
-            status_msg = f"\u2705 Report generated (PDF export failed: {pdf_err}). Downloading HTML instead."
-
-        yield status_msg, download_path, html
-
-    except Exception as exc:
-        import traceback
-        yield f"❌ Report generation error: {exc}\n{traceback.format_exc()}", None, ""
+from ux_sim_app.ui.steps.report import (
+    step_generate_report,
+    deliver_email as _deliver_email_from_steps,
+)
 
 
 # ── Step 5: Deliver report by email ─────────────────────────────────────────
@@ -1014,8 +920,8 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         with gr.Tab("6 · Report"):
             gr.Markdown("### Generate & Deliver Report")
             gr.Markdown(
-                "Generates a **slide-style HTML + PDF report** (16:9, matching the reference design) "
-                "combining the UX audit and persona simulation results. "
+                "Generates a **slide-style HTML + PDF report** (16:9) powered by "
+                "[Quarkdown](https://github.com/iamgio/quarkdown) with reveal.js output. "
                 "Each issue slide shows the current design screenshot alongside an **AI-generated HTML redesign** "
                 "powered by GPT-4o Vision. "
                 "Persona feedback is highlighted in teal callout boxes."
@@ -1025,6 +931,18 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
                     label="🎨 Generate AI HTML Redesigns (GPT-4o Vision)",
                     value=False,
                     info="For each issue, captures a screenshot and uses GPT-4o Vision to generate a side-by-side improved HTML redesign.",
+                )
+            with gr.Row():
+                design_kit_dropdown = gr.Dropdown(
+                    label="🎨 Slide Design Kit",
+                    choices=_KIT_CHOICES,
+                    value="oasis-default",
+                    info=(
+                        "Choose a visual theme for the report slides. "
+                        "Presets from frontend-slides (zarazhangrui/frontend-slides) and "
+                        "designkits.sh brand kits are available."
+                    ),
+                    allow_custom_value=False,
                 )
             btn_gen_report = gr.Button("📄 Generate Slide Report + PDF", variant="primary", size="lg")
             status_report = gr.Textbox(label="Status", interactive=False, lines=2)
@@ -1458,7 +1376,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
         fn=step_generate_report,
         inputs=[
             state_url, state_personas_json, state_sim_results_json, state_ux_json,
-            generate_redesigns_flag,
+            generate_redesigns_flag, design_kit_dropdown,
         ],
         outputs=[status_report, report_file, state_report_html],
     ).then(
