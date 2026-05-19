@@ -342,6 +342,72 @@ We would like to thank Douglas for designing the logo of our project.
 
 The source code is licensed under Apache 2.0.
 
+---
+
+## 🧩 Open Source Projects & References
+
+The OASIS UX Simulation App builds on the following open source projects. We are grateful to their authors and communities.
+
+### Browser Automation & Stealth
+
+| Project | Role in OASIS | License | Repository |
+|---|---|---|---|
+| **Playwright** | Headless browser automation for Mode 2 persona simulations, UX screenshots, and PDF export | Apache 2.0 | [microsoft/playwright](https://github.com/microsoft/playwright) |
+| **CloakBrowser** | Stealth Chromium binary (49 C++ patches) that bypasses Cloudflare Turnstile, reCAPTCHA v3, FingerprintJS, and BrowserScan bot detection | Proprietary (free tier) | [CloakHQ/CloakBrowser](https://github.com/CloakHQ/CloakBrowser) |
+
+### Slide & Report Generation
+
+| Project | Role in OASIS | License | Repository |
+|---|---|---|---|
+| **Marpit** | Markdown-to-HTML slide rendering engine; powers the OASIS PDF report pipeline (`SlideReportData → Markdown → Marpit → HTML → Playwright PDF`) | MIT | [@marp-team/marpit](https://github.com/marp-team/marpit) |
+
+### Web UI
+
+| Project | Role in OASIS | License | Repository |
+|---|---|---|---|
+| **Gradio** | Interactive web UI framework; all tabs, state management, and streaming status outputs | Apache 2.0 | [gradio-app/gradio](https://github.com/gradio-app/gradio) |
+
+### HTTP & Scraping
+
+| Project | Role in OASIS | License | Repository |
+|---|---|---|---|
+| **httpx** | Async HTTP client used for website scraping, Reddit/HN/GitHub API calls, and LLM endpoint requests | BSD 3-Clause | [encode/httpx](https://github.com/encode/httpx) |
+| **Beautiful Soup 4** | HTML parsing and structured content extraction from scraped pages | MIT | [beautifulsoup4](https://www.crummy.com/software/BeautifulSoup/) |
+
+### AI & LLM Integration
+
+| Project | Role in OASIS | License | Repository / Docs |
+|---|---|---|---|
+| **OpenAI Python SDK** (compatible) | LLM API client used for persona generation, UX critique, and AI redesign; supports any OpenAI-compatible endpoint including Helmholtz Blablador | MIT | [openai/openai-python](https://github.com/openai/openai-python) |
+| **NotebookLM Python Client** | Optional integration that queries a user's Google NotebookLM notebook for UX best-practice context | MIT | [notebooklm-py](https://pypi.org/project/notebooklm/) |
+
+### Real World Data Sources (optional, API-key gated)
+
+| Source | What OASIS uses it for | Docs |
+|---|---|---|
+| **Reddit JSON API** | Top posts + comments for a topic (free, no key required) | [reddit.com/dev/api](https://www.reddit.com/dev/api/) |
+| **Hacker News Algolia API** | Top HN stories matching a topic (free, no key required) | [hn.algolia.com/api](https://hn.algolia.com/api) |
+| **GitHub REST API** | Top repositories by star count for a topic (free, 60 req/hr unauthenticated) | [docs.github.com/rest](https://docs.github.com/en/rest) |
+| **Bluesky AT Protocol** | Posts from Bluesky matching a topic (requires App Password) | [docs.bsky.app](https://docs.bsky.app/) |
+| **ScrapeCreators** | TikTok, Instagram, Threads, and Pinterest content (10,000 free calls) | [scrapecreators.com](https://scrapecreators.com) |
+| **Brave Search API** | Web search results (2,000 free queries/month) | [brave.com/search/api](https://brave.com/search/api/) |
+| **Perplexity Sonar** (via OpenRouter) | AI-grounded web search synthesis (pay-as-you-go) | [openrouter.ai](https://openrouter.ai/) |
+
+### Async & Utilities
+
+| Project | Role in OASIS | License | Repository |
+|---|---|---|---|
+| **anyio** | Async backend abstraction used by Gradio and the persistent background event loop | MIT | [agronholm/anyio](https://github.com/agronholm/anyio) |
+| **python-dotenv** | Loads `.env` configuration at startup | BSD 3-Clause | [theskumar/python-dotenv](https://github.com/theskumar/python-dotenv) |
+| **Pillow** | Image processing for screenshots and report assets | HPND | [python-pillow/Pillow](https://github.com/python-pillow/Pillow) |
+
+### Inspiration & Related Work
+
+| Project | Relationship |
+|---|---|
+| **last30days** (mvanhorn) | Inspired the Real World Data tab architecture — parallel multi-source social signal gathering synthesized into persona context | [mvanhorn/last30days-skill](https://github.com/mvanhorn/last30days-skill) |
+| **CAMEL-AI / OASIS** | Original OASIS social simulation research this UX simulation app extends | [camel-ai/oasis](https://github.com/camel-ai/oasis) |
+
 [discord-image]: https://img.shields.io/discord/1082486657678311454?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb
 [discord-url]: https://discord.camel-ai.org/
 [docs-image]: https://img.shields.io/badge/Documentation-EB3ECC
