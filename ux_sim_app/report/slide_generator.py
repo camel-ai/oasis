@@ -60,12 +60,29 @@ _TOC_LABEL_MAX = 50
 
 
 def clamp_text(text: str, max_chars: int) -> str:
-    """Truncate text to max_chars at a word boundary, appending ellipsis."""
+    """Truncate text to max_chars, preferring sentence boundaries.
+
+    Priority:
+      1. Return text unchanged if it fits.
+      2. Cut at the last sentence-ending punctuation (. ! ?) within max_chars.
+      3. Fall back to the last word boundary within max_chars.
+      4. Hard-cut at max_chars as a last resort.
+    """
     text = (text or "").strip()
     if len(text) <= max_chars:
         return text
-    truncated = text[:max_chars].rsplit(" ", 1)[0]
-    return truncated + "…"
+    window = text[:max_chars]
+    # Try sentence boundary first
+    for punct in (". ", "! ", "? ", ".\n", "!\n", "?\n"):
+        idx = window.rfind(punct)
+        if idx > max_chars // 3:  # at least 1/3 of the budget used
+            return text[:idx + 1].rstrip()
+    # Fall back to word boundary
+    word_cut = window.rsplit(" ", 1)[0]
+    if word_cut:
+        return word_cut + "\u2026"
+    # Hard cut
+    return window + "\u2026"
 
 
 # ---------------------------------------------------------------------------

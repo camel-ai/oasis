@@ -37,7 +37,6 @@ from ux_sim_app.core.scraper import scrape
 from ux_sim_app.core.personas import generate_personas, Persona
 from ux_sim_app.modes.runner import run_mode1, run_mode2, run_mode3, SimulationResult
 from ux_sim_app.ux.scanner import scan_website
-from ux_sim_app.report.generator import generate_full_report, send_report_email
 from ux_sim_app.report.slide_generator import build_report_data, render_html, html_to_pdf, IssueSlide
 from ux_sim_app.report.redesign_client import generate_redesign, sanitise_for_embed
 from ux_sim_app.integrations import notebooklm as nlm
@@ -54,19 +53,44 @@ _captcha_sessions: dict = {}
 
 
 # ── Async helper ───────────────────────────────────────────────────────────────
+# A single background thread hosts a persistent event loop that is reused for
+# every _run() call. This avoids spawning a new thread + loop per LLM call
+# (previously 20-40 thread spawns per full pipeline run).
+
+import threading
+
+_bg_loop: asyncio.AbstractEventLoop | None = None
+_bg_thread: threading.Thread | None = None
+_bg_lock = threading.Lock()
+
+
+def _get_bg_loop() -> asyncio.AbstractEventLoop:
+    """Return the shared background event loop, creating it on first call."""
+    global _bg_loop, _bg_thread
+    with _bg_lock:
+        if _bg_loop is None or not _bg_loop.is_running():
+            _bg_loop = asyncio.new_event_loop()
+
+            def _run_forever():
+                asyncio.set_event_loop(_bg_loop)
+                _bg_loop.run_forever()
+
+            _bg_thread = threading.Thread(target=_run_forever, daemon=True, name="oasis-bg-loop")
+            _bg_thread.start()
+    return _bg_loop
+
 
 def _run(coro):
-    """Run an async coroutine safely from a sync Gradio callback.
+    """Submit a coroutine to the shared background event loop and block until done.
 
     Gradio 6 runs inside an async event loop (uvicorn/anyio). We must NOT call
-    loop.run_until_complete() on the running loop. Instead we always spin up a
-    fresh thread with its own loop.
+    loop.run_until_complete() on the running loop. Using a persistent background
+    loop avoids the overhead of spawning a new thread + loop for every call.
     """
     import concurrent.futures
-    def _worker():
-        return asyncio.run(coro)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-        return pool.submit(_worker).result()
+    loop = _get_bg_loop()
+    future = asyncio.run_coroutine_threadsafe(coro, loop)
+    return future.result()
 
 
 # ── Step 1: Scrape & generate personas ────────────────────────────────────────
@@ -220,64 +244,84 @@ def step_run_simulations(
     results: list[SimulationResult] = []
     all_video_recordings: list = []
 
+    # ── Build the list of coroutines to run in parallel ───────────────────────
+    coros = {}
+    _ss_path = _captcha_sessions.get(url.strip())
+
     if run_mode2_flag:
-        yield "⏳ Running Mode 2 – Browser Usability Simulation...", _EMPTY_RESULTS, _EMPTY_VIDS
-        try:
-            # Inherit CAPTCHA-cleared session if available from pre-flight check
-            _ss_path = _captcha_sessions.get(url.strip())
-            r = _run(run_mode2(personas, url.strip(), storage_state_path=_ss_path))
-            results.append(r)
-            # Collect video recordings from this Mode 2 run
-            all_video_recordings.extend(r.video_recordings or [])
-            conv = int(r.aggregate.get("conversion_intent_rate", 0) * 100)
-            n_vids = len(r.video_recordings or [])
-            yield (
-                f"✅ Mode 2 complete. Conversion intent: {conv}%. "
-                f"{n_vids} session recording(s) saved.",
-                _EMPTY_RESULTS,
-                _EMPTY_VIDS,
-            )
-        except Exception as exc:
-            yield f"⚠️ Mode 2 error: {exc}", _EMPTY_RESULTS, _EMPTY_VIDS
+        coros["mode2"] = run_mode2(personas, url.strip(), storage_state_path=_ss_path)
 
     if run_mode3_flag:
         if not image_urls:
             yield "⚠️ Mode 3: No images found on the website. Skipping.", _EMPTY_RESULTS, _EMPTY_VIDS
         else:
-            yield f"⏳ Running Mode 3 – Visual Simulation ({len(image_urls)} images)...", _EMPTY_RESULTS, _EMPTY_VIDS
-            try:
-                r = _run(run_mode3(personas, image_urls))
-                results.append(r)
-                avg = r.aggregate.get("average_resonance", 0)
-                yield f"✅ Mode 3 complete. Average resonance: {avg}/10", _EMPTY_RESULTS, _EMPTY_VIDS
-            except Exception as exc:
-                yield f"⚠️ Mode 3 error: {exc}", _EMPTY_RESULTS, _EMPTY_VIDS
+            coros["mode3"] = run_mode3(personas, image_urls)
 
     if run_mode1_flag:
-        content_items_text = content_items_text or ""  # guard against None
+        content_items_text = content_items_text or ""
         items = [c.strip() for c in content_items_text.strip().split("\n---\n") if c.strip()]
         if not items:
             items = [content_items_text.strip()] if content_items_text.strip() else []
         if not items:
             yield "⚠️ Mode 1: No content items provided. Skipping.", _EMPTY_RESULTS, _EMPTY_VIDS
         else:
-            yield f"⏳ Running Mode 1 – Content Simulation ({len(items)} items)...", _EMPTY_RESULTS, _EMPTY_VIDS
-            try:
-                rs = _run(run_mode1(personas, items))
-                results.extend(rs)
-                avg_eng = sum(r.aggregate.get("engagement_rate", 0) for r in rs) / max(len(rs), 1)
-                yield f"✅ Mode 1 complete. Avg engagement: {int(avg_eng * 100)}%", _EMPTY_RESULTS, _EMPTY_VIDS
-            except Exception as exc:
-                yield f"⚠️ Mode 1 error: {exc}", _EMPTY_RESULTS, _EMPTY_VIDS
+            coros["mode1"] = run_mode1(personas, items)
+
+    if not coros:
+        yield "⚠️ No simulation modes were run. Please select at least one mode.", _EMPTY_RESULTS, _EMPTY_VIDS
+        return
+
+    mode_labels = {
+        "mode1": "Mode 1 – Content Simulation",
+        "mode2": "Mode 2 – Browser Usability Simulation",
+        "mode3": "Mode 3 – Visual Simulation",
+    }
+    running = ", ".join(mode_labels[k] for k in coros)
+    yield f"⏳ Running in parallel: {running}...", _EMPTY_RESULTS, _EMPTY_VIDS
+
+    async def _run_all():
+        keys = list(coros.keys())
+        raw = await asyncio.gather(*[coros[k] for k in keys], return_exceptions=True)
+        return dict(zip(keys, raw))
+
+    try:
+        mode_results = _run(_run_all())
+    except Exception as exc:
+        yield f"❌ Simulation error: {exc}", _EMPTY_RESULTS, _EMPTY_VIDS
+        return
+
+    summaries = []
+    for key, r in mode_results.items():
+        if isinstance(r, Exception):
+            summaries.append(f"⚠️ {mode_labels[key]} error: {r}")
+            continue
+        if key == "mode2":
+            results.append(r)
+            all_video_recordings.extend(r.video_recordings or [])
+            conv = int(r.aggregate.get("conversion_intent_rate", 0) * 100)
+            n_vids = len(r.video_recordings or [])
+            summaries.append(f"✅ Mode 2: Conversion intent {conv}%, {n_vids} recording(s)")
+        elif key == "mode3":
+            results.append(r)
+            avg = r.aggregate.get("average_resonance", 0)
+            summaries.append(f"✅ Mode 3: Avg resonance {avg}/10")
+        elif key == "mode1":
+            if isinstance(r, list):
+                results.extend(r)
+                avg_eng = sum(x.aggregate.get("engagement_rate", 0) for x in r) / max(len(r), 1)
+            else:
+                results.append(r)
+                avg_eng = r.aggregate.get("engagement_rate", 0)
+            summaries.append(f"✅ Mode 1: Avg engagement {int(avg_eng * 100)}%")
 
     if not results:
-        yield "⚠️ No simulation modes were run. Please select at least one mode.", _EMPTY_RESULTS, _EMPTY_VIDS
+        yield "⚠️ All simulation modes failed. Check logs for details.", _EMPTY_RESULTS, _EMPTY_VIDS
         return
 
     results_json = json.dumps([r.to_dict() for r in results], indent=2)
     vids_json = json.dumps(all_video_recordings, indent=2)
     yield (
-        f"✅ All simulations complete. {len(results)} result set(s) ready.",
+        "\n".join(summaries),
         results_json,
         vids_json,
     )
@@ -379,14 +423,25 @@ def step_ux_scan(url: str):
     _EMPTY_UX = "{}"
 
     if not url or not url.strip():
-        yield "❌ Please enter a URL first (Tab 1).", _EMPTY_UX
+        yield "\u274c Please enter a URL first (Tab 1).", _EMPTY_UX
         return
 
-    yield "⏳ Running UX scan (screenshots + heuristics + AI critique)...", _EMPTY_UX
+    # Show which knowledge source will be used for the AI critique
+    _nlm_state = nlm.get_state()
+    _nlm_connected = bool(_nlm_state.get("notebook_id"))
+    _nb_title = _nlm_state.get("notebook_title", "")
+    _kb_source = (
+        f"\U0001f4d3 NotebookLM: {_nb_title}"
+        if _nlm_connected
+        else "\U0001f4da Built-in knowledge base"
+    )
+    yield f"\u23f3 Running UX scan \u2014 knowledge source: {_kb_source}...", _EMPTY_UX
 
     try:
         run_id = datetime.utcnow().strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
-        ux_report = _run(scan_website(url.strip(), run_id))
+        # Inherit CAPTCHA-cleared session for screenshots + HTML fetch
+        _ss_path = _captcha_sessions.get(url.strip())
+        ux_report = _run(scan_website(url.strip(), run_id, storage_state_path=_ss_path))
 
         ux_json = json.dumps({
             "url": ux_report.url,
@@ -508,9 +563,9 @@ def step_generate_report(
                 except Exception as exc:
                     logger.warning("Redesign exception for %s: %s", issue.title, exc)
 
-        yield "⏳ Rendering slides and exporting PDF...", *_EMPTY_REPORT
+        yield "\u23f3 Rendering Marpit slides...", *_EMPTY_REPORT
 
-        # Render HTML
+        # Render HTML via Marpit
         html = render_html(report_data)
 
         # Save HTML report
@@ -518,16 +573,18 @@ def step_generate_report(
         html_path = REPORTS_DIR / f"report_{run_id}.html"
         html_path.write_text(html, encoding="utf-8")
 
+        yield "\u23f3 Exporting PDF via Playwright (this may take 10-15 seconds)...", *_EMPTY_REPORT
+
         # Export PDF via Playwright
         pdf_path = REPORTS_DIR / f"report_{run_id}.pdf"
         try:
             html_to_pdf(html, str(pdf_path))
             download_path = str(pdf_path)
-            status_msg = f"✅ Slide report generated ({len(report_data.issues)} issues, {len(report_data.strengths)} strengths). PDF ready."
+            status_msg = f"\u2705 Slide report generated ({len(report_data.issues)} issues, {len(report_data.strengths)} strengths). PDF ready."
         except Exception as pdf_err:
-            # PDF failed — fall back to HTML download
+            # PDF failed - fall back to HTML download
             download_path = str(html_path)
-            status_msg = f"✅ Report generated (PDF export failed: {pdf_err}). Downloading HTML instead."
+            status_msg = f"\u2705 Report generated (PDF export failed: {pdf_err}). Downloading HTML instead."
 
         yield status_msg, download_path, html
 
@@ -536,16 +593,20 @@ def step_generate_report(
         yield f"❌ Report generation error: {exc}\n{traceback.format_exc()}", None, ""
 
 
-# ── Step 5: Deliver report by email ───────────────────────────────────────────
+# ── Step 5: Deliver report by email ─────────────────────────────────────────
 
 def deliver_email(report_html: str, to_email: str, url: str) -> str:
     if not report_html:
-        return "❌ No report to send. Generate the report first (Tab 5)."
+        return "\u274c No report to send. Generate the report first (Tab 5)."
     if not to_email or not to_email.strip():
-        return "❌ Please enter a recipient email address."
+        return "\u274c Please enter a recipient email address."
     run_id = uuid.uuid4().hex[:8]
-    ok, msg = send_report_email(report_html, to_email.strip(), url or "", run_id)
-    return f"✅ {msg}" if ok else f"❌ {msg}"
+    try:
+        from ux_sim_app.report.generator import send_report_email as _send_email
+        ok, msg = _send_email(report_html, to_email.strip(), url or "", run_id)
+        return f"\u2705 {msg}" if ok else f"\u274c {msg}"
+    except ImportError:
+        return "\u274c Email delivery is not available (generator module not installed)."
 
 
 # ── Session Recordings helpers ───────────────────────────────────────────────────

@@ -58,11 +58,42 @@ import json
 import logging
 import os
 import re
+import time
 from typing import Optional
 
 import httpx
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# TTL cache — avoids redundant API calls when the same topic is researched
+# multiple times in a session. Default TTL: 30 minutes.
+# ---------------------------------------------------------------------------
+_RWD_CACHE: dict[str, tuple[dict, float]] = {}
+_RWD_CACHE_TTL: int = int(os.environ.get("RWD_CACHE_TTL", "1800"))  # seconds
+
+# Public alias used by tests and external callers
+_BRIEFING_CACHE = _RWD_CACHE
+
+
+def _cache_key(topic: str, keys: dict = None, max_items: int = 5) -> str:  # type: ignore[assignment]
+    """Deterministic cache key for a gather_and_synthesize call."""
+    import hashlib
+    payload = json.dumps({"topic": topic.strip().lower(), "keys": sorted((keys or {}).keys()), "max": max_items})
+    return hashlib.sha256(payload.encode()).hexdigest()[:16]
+
+
+def _get_cached(topic: str, keys: dict = None, max_items: int = 5) -> str | None:
+    """Return the cached briefing string for a topic, or None if not cached / expired."""
+    import time
+    ck = _cache_key(topic, keys or {}, max_items)
+    if ck in _BRIEFING_CACHE:
+        cached_result, cached_at = _BRIEFING_CACHE[ck]
+        age = time.monotonic() - cached_at
+        if age < _RWD_CACHE_TTL:
+            return cached_result.get("briefing") if isinstance(cached_result, dict) else cached_result
+        del _BRIEFING_CACHE[ck]
+    return None
 
 # ---------------------------------------------------------------------------
 # Data container
@@ -485,10 +516,15 @@ def gather_and_synthesize(
     max_items_per_source: int = 5,
     openai_key: str = "",
     text_model: str = "gpt-4.1-mini",
+    force_refresh: bool = False,
 ) -> dict:
     """
     Gather real-world signals for *topic* from all configured sources,
     then synthesize them into a compact briefing paragraph.
+
+    Results are cached for RWD_CACHE_TTL seconds (default 30 min) to avoid
+    redundant API calls when the same topic is researched multiple times.
+    Pass force_refresh=True to bypass the cache.
 
     Parameters
     ----------
@@ -504,6 +540,8 @@ def gather_and_synthesize(
         OpenAI API key for the synthesis step. Falls back to OPENAI_API_KEY env var.
     text_model : str
         Text model to use for synthesis.
+    force_refresh : bool
+        If True, ignore the cache and re-fetch all sources.
 
     Returns
     -------
@@ -512,12 +550,14 @@ def gather_and_synthesize(
         items          – list of raw item dicts [{source, title, body, score, url}]
         sources_used   – list of source names that returned data
         error          – error message or None
+        cached         – True if result was served from cache
     """
-    result = {
+    result: dict = {
         "briefing": "",
         "items": [],
         "sources_used": [],
         "error": None,
+        "cached": False,
     }
 
     if not topic or not topic.strip():
@@ -526,6 +566,17 @@ def gather_and_synthesize(
 
     effective_key = (openai_key or "").strip() or os.environ.get("OPENAI_API_KEY", "")
     keys = keys or {}
+
+    # ── TTL cache check ───────────────────────────────────────────────────────────────
+    ck = _cache_key(topic, keys, max_items_per_source)
+    if not force_refresh and ck in _RWD_CACHE:
+        cached_result, cached_at = _RWD_CACHE[ck]
+        age = time.monotonic() - cached_at
+        if age < _RWD_CACHE_TTL:
+            logger.info("RWD cache hit for topic '%s' (age %.0fs)", topic, age)
+            return {**cached_result, "cached": True}
+        else:
+            del _RWD_CACHE[ck]
 
     try:
         import concurrent.futures
@@ -556,6 +607,9 @@ def gather_and_synthesize(
             for i in items
         ]
         result["sources_used"] = list({i.source for i in items})
+
+        # Store in cache
+        _RWD_CACHE[ck] = (dict(result), time.monotonic())
 
     except Exception as exc:
         logger.error("gather_and_synthesize failed: %s", exc)

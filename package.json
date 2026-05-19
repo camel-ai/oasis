@@ -9,7 +9,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node ux_sim_app/report/marpit_smoke_test.js",
+    "smoke": "node ux_sim_app/report/marpit_smoke_test.js",
+    "lint": "node --check ux_sim_app/report/marpit_render.js && node --check ux_sim_app/report/marpit_smoke_test.js"
   },
   "repository": {
     "type": "git",

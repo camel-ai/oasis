@@ -77,9 +77,57 @@ VIEWPORTS = {
 }
 
 
-async def _take_screenshots(url: str, run_id: str) -> Dict[str, str]:
-    """Take screenshots at three viewports. Returns {viewport: local_path}."""
+async def _take_screenshots(
+    url: str,
+    run_id: str,
+    storage_state_path: Optional[str] = None,
+) -> Dict[str, str]:
+    """Take screenshots at three viewports using CloakBrowser (stealth) when available.
+
+    *storage_state_path* inherits the CAPTCHA-cleared session from the pre-flight
+    check so the scanner never re-encounters a bot-detection wall.
+    """
     paths: Dict[str, str] = {}
+
+    async def _screenshot_one(vp_name: str, vp_size: dict, ctx) -> Tuple[str, str]:
+        page = await ctx.new_page()
+        out_path = SCREENSHOTS_DIR / f"{run_id}_{vp_name}.png"
+        try:
+            await page.goto(url, wait_until="domcontentloaded", timeout=60_000)
+            await page.wait_for_timeout(2000)
+            await page.set_viewport_size(vp_size)
+            await page.screenshot(path=str(out_path), full_page=False)
+            return vp_name, str(out_path)
+        except Exception as exc:
+            return vp_name, f"ERROR:{exc}"
+        finally:
+            await page.close()
+
+    # Try CloakBrowser first
+    try:
+        from cloakbrowser import launch_context_async  # type: ignore
+        ctx = await launch_context_async(
+            humanize=False,
+            storage_state=storage_state_path,
+            viewport=VIEWPORTS["desktop"],
+        )
+        tasks = [_screenshot_one(vp, sz, ctx) for vp, sz in VIEWPORTS.items()]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        await ctx.close()
+        for item in results:
+            if isinstance(item, Exception):
+                continue
+            vp_name, path = item
+            paths[vp_name] = path
+        return paths
+    except ImportError:
+        pass
+    except Exception as exc:
+        for vp in VIEWPORTS:
+            paths[vp] = f"ERROR:CloakBrowser screenshot failed: {exc}"
+        return paths
+
+    # Fallback: standard Playwright
     try:
         from playwright.async_api import async_playwright
         async with async_playwright() as pw:
@@ -87,23 +135,18 @@ async def _take_screenshots(url: str, run_id: str) -> Dict[str, str]:
                 headless=True,
                 args=["--no-sandbox", "--disable-dev-shm-usage"],
             )
-            for vp_name, vp_size in VIEWPORTS.items():
-                ctx = await browser.new_context(
-                    viewport=vp_size,
-                    user_agent=HEADERS["User-Agent"],
-                )
-                page = await ctx.new_page()
-                try:
-                    await page.goto(url, wait_until="domcontentloaded", timeout=30000)
-                    await page.wait_for_timeout(2000)
-                    out_path = SCREENSHOTS_DIR / f"{run_id}_{vp_name}.png"
-                    await page.screenshot(path=str(out_path), full_page=False)
-                    paths[vp_name] = str(out_path)
-                except Exception as exc:
-                    paths[vp_name] = f"ERROR:{exc}"
-                finally:
-                    await ctx.close()
+            ctx_kwargs = {"user_agent": HEADERS["User-Agent"]}
+            if storage_state_path:
+                ctx_kwargs["storage_state"] = storage_state_path
+            ctx = await browser.new_context(**ctx_kwargs)
+            tasks = [_screenshot_one(vp, sz, ctx) for vp, sz in VIEWPORTS.items()]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
             await browser.close()
+        for item in results:
+            if isinstance(item, Exception):
+                continue
+            vp_name, path = item
+            paths[vp_name] = path
     except Exception as exc:
         for vp in VIEWPORTS:
             paths[vp] = f"ERROR:{exc}"
@@ -321,21 +364,35 @@ async def _ai_critique(screenshots: Dict[str, str]) -> Dict:
 
 # ── Main entry point ───────────────────────────────────────────────────────────
 
-async def scan_website(url: str, run_id: str) -> UXReport:
-    """Full UX scan: screenshots + heuristics + AI critique."""
+async def scan_website(
+    url: str,
+    run_id: str,
+    storage_state_path: Optional[str] = None,
+) -> UXReport:
+    """Full UX scan: screenshots + heuristics + AI critique.
+
+    *storage_state_path* is passed from the CAPTCHA guard so the scanner
+    inherits the cleared session and never re-encounters bot-detection walls.
+    """
     report = UXReport(url=url)
 
-    # 1. Fetch HTML for heuristics
+    # 1. Fetch HTML for heuristics (use CloakBrowser session when available)
     try:
-        async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
-            r = await client.get(url, headers=HEADERS)
-            html = r.text
+        if storage_state_path:
+            from ux_sim_app.core.scraper import _playwright_fetch
+            html = await _playwright_fetch(url, storage_state_path)
+            if html.startswith("ERROR:"):
+                raise RuntimeError(html[6:])
+        else:
+            async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
+                r = await client.get(url, headers=HEADERS)
+                html = r.text
         report.heuristic_checks = _heuristic_checks(html, url)
     except Exception as exc:
         report.heuristic_checks = {"error": str(exc)}
 
-    # 2. Screenshots
-    report.screenshots = await _take_screenshots(url, run_id)
+    # 2. Screenshots — pass cleared session so CloakBrowser is used
+    report.screenshots = await _take_screenshots(url, run_id, storage_state_path=storage_state_path)
 
     # 3. AI critique
     try:
