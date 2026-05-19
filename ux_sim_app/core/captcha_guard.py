@@ -194,7 +194,7 @@ async def _run_with_cloakbrowser(url: str, storage_path: str, launch_ctx) -> Cap
         page = await ctx.new_page()
 
         try:
-            await page.goto(url, wait_until="domcontentloaded", timeout=30_000)
+            await page.goto(url, wait_until="domcontentloaded", timeout=60_000)
             # Give JS challenges time to render (Cloudflare Turnstile takes ~1.5s)
             await page.wait_for_timeout(2500)
         except PWTimeout:
@@ -202,7 +202,7 @@ async def _run_with_cloakbrowser(url: str, storage_path: str, launch_ctx) -> Cap
             os.unlink(storage_path)
             return CaptchaGuardResult(
                 status="aborted",
-                message="❌ Analysis aborted: the website did not respond within 30 seconds.",
+                message="❌ Analysis aborted: the website did not respond within 60 seconds.",
             )
         except Exception as exc:
             await ctx.close()
@@ -332,14 +332,14 @@ async def _run_with_playwright(url: str, storage_path: str, async_playwright) ->
         page = await ctx.new_page()
 
         try:
-            await page.goto(url, wait_until="domcontentloaded", timeout=30_000)
+            await page.goto(url, wait_until="domcontentloaded", timeout=60_000)
             await page.wait_for_timeout(2000)
         except PWTimeout:
-            await browser.close()
+            await ctx.close()
             os.unlink(storage_path)
             return CaptchaGuardResult(
                 status="aborted",
-                message="❌ Analysis aborted: the website did not respond within 30 seconds.",
+                message="❌ Analysis aborted: the website did not respond within 60 seconds.",
             )
         except Exception as exc:
             await browser.close()
