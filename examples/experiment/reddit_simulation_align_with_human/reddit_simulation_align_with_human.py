@@ -74,6 +74,12 @@ DEFAULT_EXP_PATH = os.path.join(DATA_DIR, "reddit", "exp_info.json")
 ROUND_POST_NUM = 20
 
 
+def ensure_parent_dir(path: str) -> None:
+    parent_dir = os.path.dirname(os.path.abspath(path))
+    if parent_dir:
+        os.makedirs(parent_dir, exist_ok=True)
+
+
 async def running(
     db_path: str | None = DEFAULT_DB_PATH,
     user_path: str | None = DEFAULT_USER_PATH,
@@ -99,16 +105,19 @@ async def running(
     pair_path = DEFAULT_PAIR_PATH if pair_path is None else pair_path
     exp_info_filename = (DEFAULT_EXP_PATH
                          if exp_info_filename is None else exp_info_filename)
+    ensure_parent_dir(db_path)
+    ensure_parent_dir(exp_info_filename)
     if os.path.exists(db_path):
         os.remove(db_path)
 
     start_time = datetime(2024, 8, 6, 8, 0)
     clock = Clock(k=clock_factor)
-    twitter_channel = Channel()
+    reddit_channel = Channel()
 
+    # NOTE: initialize Platform(reddit/reddit)
     infra = Platform(
         db_path,
-        twitter_channel,
+        reddit_channel,
         clock,
         start_time,
         allow_self_rating=allow_self_rating,
@@ -127,19 +136,22 @@ async def running(
         ) for url in model_urls
     ]
 
-    twitter_task = asyncio.create_task(infra.running())
+    # NOTE: schedule platform consuming logic
+    reddit_task = asyncio.create_task(infra.running())
 
     if not controllable_user:
         raise ValueError("Uncontrollable user is not supported")
     else:
+        # NOTE: genrate the system agents, store them in agent_graph
         agent_graph, id_mapping = await gen_control_agents_with_data(
-            twitter_channel,
+            reddit_channel,
             2,
             models,
         )
+        # NOTE: genrate user agents, also store them in agent_graph
         agent_graph = await generate_reddit_agents(
             agent_info_path=user_path,
-            channel=twitter_channel,
+            channel=reddit_channel,
             agent_graph=agent_graph,
             agent_user_id_mapping=id_mapping,
             follow_post_agent=follow_post_agent,
@@ -156,6 +168,7 @@ async def running(
         "control_comment_id": []
     }
 
+    # NOTE: timestep loop
     for timestep in range(num_timesteps):
         os.environ["TIME_STAMP"] = str(timestep + 1)
         if timestep == 0:
@@ -163,10 +176,12 @@ async def running(
         # print(Back.GREEN + f"timestep:{timestep}" + Back.RESET)
         social_log.info(f"timestep:{timestep + 1}.")
 
+        # NOTE: system agents
         post_agent = agent_graph.get_agent(0)
         rate_agent = agent_graph.get_agent(1)
 
         async def export_data(i):
+            # NOTE: the total index of post
             rs_rc_index = i + timestep * round_post_num
             if rs_rc_index >= len(pairs):
                 return
@@ -174,14 +189,17 @@ async def running(
                 title = pairs[rs_rc_index]["RS"]["title"]
                 content = pairs[rs_rc_index]["RS"]["selftext"]
                 formatted_content = f"Title: {title}.\nContent: {content}"
-
+                # NOTE: post the post (only involves platform)
                 response = await post_agent.perform_action_by_data(
                     "create_post", content=formatted_content)
                 post_id = response["post_id"]
+
+                # NOTE: play with the comments
                 for i in range(1, 11):
                     key_name = f"RC_{i}"
                     if key_name not in pairs[rs_rc_index]:
                         break
+                    # NOTE: post the comments (only involves platform)
                     response = await post_agent.perform_action_by_data(
                         "create_comment",
                         post_id=post_id,
@@ -189,6 +207,7 @@ async def running(
                     )
                     comment_id = response["comment_id"]
 
+                    # NOTE: rate the comments (only involves platform)
                     if pairs[rs_rc_index][key_name]["group"] == "up":
                         await rate_agent.perform_action_by_data(
                             "like_comment", comment_id)
@@ -202,11 +221,14 @@ async def running(
                     else:
                         raise ValueError("Unsupported value of 'group'")
 
+        # NOTE: post the new posts set for this round
         tasks = [export_data(i) for i in range(round_post_num)]
         await asyncio.gather(*tasks)
+        # NOTE: update rec_table
         await infra.update_rec_table()
         social_log.info("update rec table.")
         tasks = []
+        # NOTE: each agent infer and try to do smth
         for _, agent in agent_graph.get_agents():
             if agent.user_info.is_controllable is False:
                 if random.random() < activate_prob:
@@ -227,8 +249,10 @@ async def running(
             clock.k = clock_factor
             social_log.info(f"clock_factor: {clock_factor}")
 
-    await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
-    await twitter_task
+    # NOTE: end of loop, cleanup
+    await reddit_channel.write_to_receive_queue((None, None, ActionType.EXIT))
+    await reddit_task
+    ensure_parent_dir(exp_info_filename)
     with open(exp_info_filename, "w") as f:
         json.dump(exp_info, f, indent=4)
     social_log.info("Simulation finish!")
@@ -240,6 +264,7 @@ if __name__ == "__main__":
     if os.path.exists(args.config_path):
         with open(args.config_path, "r") as f:
             cfg = safe_load(f)
+        # NOTE: load config
         data_params = cfg.get("data")
         simulation_params = cfg.get("simulation")
         inference_params = cfg.get("inference")

@@ -78,6 +78,12 @@ DEFAULT_PAIR_PATH = os.path.join(DATA_DIR, "reddit", "RS-RC-pairs.json")
 ROUND_POST_NUM = 20
 
 
+def ensure_parent_dir(path: str) -> None:
+    parent_dir = os.path.dirname(os.path.abspath(path))
+    if parent_dir:
+        os.makedirs(parent_dir, exist_ok=True)
+
+
 async def running(
     db_path: str | None = DEFAULT_DB_PATH,
     user_path: str | None = DEFAULT_USER_PATH,
@@ -101,6 +107,7 @@ async def running(
     db_path = DEFAULT_DB_PATH if db_path is None else db_path
     user_path = DEFAULT_USER_PATH if user_path is None else user_path
     pair_path = DEFAULT_PAIR_PATH if pair_path is None else pair_path
+    ensure_parent_dir(db_path)
     if os.path.exists(db_path):
         os.remove(db_path)
 
