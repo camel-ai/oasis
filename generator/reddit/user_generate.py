@@ -12,6 +12,7 @@
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import json
+import os
 import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -236,13 +237,11 @@ def prepare_output_path(output_path):
             f"Output directory is not writable: {output_dir}"
         )
 
-    return abs_output_path
-
 
 if __name__ == "__main__":
     N = 10000  # Target user number
-    user_data = generate_user_data(N)
     output_path = 'experiment_dataset/user_data/user_data_10000.json'
     prepare_output_path(output_path)
+    user_data = generate_user_data(N)
     save_user_data(user_data, output_path)
     print(f"Generated {N} user profiles and saved to {output_path}")
