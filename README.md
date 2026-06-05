@@ -231,7 +231,7 @@ if __name__ == "__main__":
 
 ### Using MiniMax as the LLM Provider
 
-OASIS supports [MiniMax](https://www.minimaxi.com/) models via the built-in `create_minimax_model()` helper.  MiniMax offers an OpenAI-compatible API with models such as **MiniMax-M2.7** (1M context window) and **MiniMax-M2.7-highspeed** (faster variant).
+OASIS supports [MiniMax](https://www.minimaxi.com/) models via the built-in `create_minimax_model()` helper.  MiniMax offers an OpenAI-compatible API with models such as **MiniMax-M3** (default, 512K context, up to 128K output, image input support), **MiniMax-M2.7**, and **MiniMax-M2.7-highspeed**.
 
 1. Set your MiniMax API key:
 
@@ -244,7 +244,7 @@ export MINIMAX_API_KEY=<your MiniMax API key>
 ```python
 from oasis.minimax import create_minimax_model
 
-minimax_model = create_minimax_model("MiniMax-M2.7")
+minimax_model = create_minimax_model("MiniMax-M3")
 # Use minimax_model the same way as any other CAMEL model backend
 ```
 

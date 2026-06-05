@@ -19,14 +19,17 @@ type. MiniMax offers an OpenAI-compatible API at ``https://api.minimax.io/v1``.
 
 Available models:
 
-* **MiniMax-M2.7** -- Latest flagship model with 1M context window.
-* **MiniMax-M2.7-highspeed** -- Faster variant for latency-sensitive workloads.
+* **MiniMax-M3** -- Latest flagship model with 512K context window, up to 128K
+  output, and image input support (default).
+* **MiniMax-M2.7** -- Previous-generation flagship model.
+* **MiniMax-M2.7-highspeed** -- Previous-generation faster variant for
+  latency-sensitive workloads.
 
 Usage::
 
     from oasis.models import create_minimax_model
 
-    model = create_minimax_model("MiniMax-M2.7")
+    model = create_minimax_model("MiniMax-M3")
 
 The ``MINIMAX_API_KEY`` environment variable must be set.
 """
@@ -42,19 +45,29 @@ from camel.types import ModelPlatformType
 MINIMAX_API_BASE_URL = "https://api.minimax.io/v1"
 
 MINIMAX_MODELS: Dict[str, Dict[str, Any]] = {
+    "MiniMax-M3": {
+        "description": (
+            "Flagship model with 512K context window, up to 128K output, "
+            "and image input support"
+        ),
+        "context_length": 512_000,
+    },
     "MiniMax-M2.7": {
-        "description": "Flagship model with 1M context window",
-        "context_length": 1_000_000,
+        "description": "Previous-generation flagship model",
+        "context_length": 192_000,
     },
     "MiniMax-M2.7-highspeed": {
-        "description": "Faster variant for latency-sensitive workloads",
-        "context_length": 1_000_000,
+        "description": (
+            "Previous-generation faster variant for latency-sensitive "
+            "workloads"
+        ),
+        "context_length": 192_000,
     },
 }
 
 
 def create_minimax_model(
-    model_type: str = "MiniMax-M2.7",
+    model_type: str = "MiniMax-M3",
     api_key: Optional[str] = None,
     url: Optional[str] = None,
     model_config_dict: Optional[Dict[str, Any]] = None,
@@ -66,8 +79,8 @@ def create_minimax_model(
     ``ModelPlatformType.OPENAI_COMPATIBLE_MODEL`` under the hood.
 
     Args:
-        model_type: MiniMax model identifier. Defaults to ``"MiniMax-M2.7"``.
-            Supported values: ``"MiniMax-M2.7"``,
+        model_type: MiniMax model identifier. Defaults to ``"MiniMax-M3"``.
+            Supported values: ``"MiniMax-M3"``, ``"MiniMax-M2.7"``,
             ``"MiniMax-M2.7-highspeed"``.
         api_key: MiniMax API key. If *None*, reads from the
             ``MINIMAX_API_KEY`` environment variable.

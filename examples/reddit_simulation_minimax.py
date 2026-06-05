@@ -14,7 +14,7 @@
 """Reddit simulation powered by MiniMax LLM.
 
 This example demonstrates how to run an OASIS Reddit simulation using
-MiniMax's ``MiniMax-M2.7`` model via the OpenAI-compatible API.
+MiniMax's ``MiniMax-M3`` model via the OpenAI-compatible API.
 
 Prerequisites:
     1. ``pip install camel-oasis``
@@ -34,7 +34,7 @@ from oasis.minimax import create_minimax_model
 async def main():
     # Create a MiniMax model for all agents.
     # The MINIMAX_API_KEY environment variable must be set.
-    minimax_model = create_minimax_model("MiniMax-M2.7")
+    minimax_model = create_minimax_model("MiniMax-M3")
 
     # Define the available actions for the agents
     available_actions = ActionType.get_default_reddit_actions()

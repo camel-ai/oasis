@@ -36,8 +36,13 @@ class TestMiniMaxModels:
     """Tests for the MiniMax model constants."""
 
     def test_models_dict_has_expected_models(self):
+        assert "MiniMax-M3" in MINIMAX_MODELS
         assert "MiniMax-M2.7" in MINIMAX_MODELS
         assert "MiniMax-M2.7-highspeed" in MINIMAX_MODELS
+
+    def test_m3_is_first_in_dict(self):
+        # Ordering convention: the default model is listed first.
+        assert next(iter(MINIMAX_MODELS)) == "MiniMax-M3"
 
     def test_models_have_description(self):
         for model_name, info in MINIMAX_MODELS.items():
@@ -67,7 +72,7 @@ class TestCreateMiniMaxModelValidation:
         env.pop("MINIMAX_API_KEY", None)
         with patch.dict(os.environ, env, clear=True):
             with pytest.raises(ValueError, match="API key is required"):
-                create_minimax_model("MiniMax-M2.7")
+                create_minimax_model("MiniMax-M3")
 
     def test_api_key_from_env(self):
         with patch.dict(os.environ, {"MINIMAX_API_KEY": "env-key"}):
@@ -75,7 +80,7 @@ class TestCreateMiniMaxModelValidation:
                 "oasis.minimax.ModelFactory.create"
             ) as mock_create:
                 mock_create.return_value = MagicMock(spec=BaseModelBackend)
-                model = create_minimax_model("MiniMax-M2.7")
+                model = create_minimax_model("MiniMax-M3")
                 mock_create.assert_called_once()
                 call_kwargs = mock_create.call_args
                 assert call_kwargs.kwargs["api_key"] == "env-key"
@@ -87,7 +92,7 @@ class TestCreateMiniMaxModelValidation:
                 "oasis.minimax.ModelFactory.create"
             ) as mock_create:
                 mock_create.return_value = MagicMock(spec=BaseModelBackend)
-                create_minimax_model("MiniMax-M2.7", api_key="explicit-key")
+                create_minimax_model("MiniMax-M3", api_key="explicit-key")
                 call_kwargs = mock_create.call_args
                 assert call_kwargs.kwargs["api_key"] == "explicit-key"
 
@@ -101,11 +106,18 @@ class TestCreateMiniMaxModelFactory:
         create_minimax_model(api_key="test-key")
         mock_create.assert_called_once_with(
             model_platform=ModelPlatformType.OPENAI_COMPATIBLE_MODEL,
-            model_type="MiniMax-M2.7",
+            model_type="MiniMax-M3",
             api_key="test-key",
             url=MINIMAX_API_BASE_URL,
             model_config_dict=None,
         )
+
+    @patch("oasis.minimax.ModelFactory.create")
+    def test_m2_7_model(self, mock_create):
+        mock_create.return_value = MagicMock(spec=BaseModelBackend)
+        create_minimax_model("MiniMax-M2.7", api_key="test-key")
+        call_kwargs = mock_create.call_args
+        assert call_kwargs.kwargs["model_type"] == "MiniMax-M2.7"
 
     @patch("oasis.minimax.ModelFactory.create")
     def test_highspeed_model(self, mock_create):
@@ -209,7 +221,7 @@ class TestSocialAgentWithMiniMax:
     @patch("oasis.minimax.ModelFactory.create")
     def test_agent_accepts_minimax_model(self, mock_create):
         mock_backend = MagicMock(spec=BaseModelBackend)
-        mock_backend.model_type = "MiniMax-M2.7"
+        mock_backend.model_type = "MiniMax-M3"
         mock_create.return_value = mock_backend
 
         from oasis import SocialAgent, ActionType
@@ -245,6 +257,10 @@ class TestMiniMaxIntegration:
     """Integration tests that call the real MiniMax API."""
 
     def test_create_model_real(self):
+        model = create_minimax_model("MiniMax-M3")
+        assert isinstance(model, BaseModelBackend)
+
+    def test_create_m2_7_model_real(self):
         model = create_minimax_model("MiniMax-M2.7")
         assert isinstance(model, BaseModelBackend)
 
@@ -261,7 +277,7 @@ class TestMiniMaxIntegration:
         from oasis.social_platform.channel import Channel
         from oasis.social_platform.platform import Platform
 
-        model = create_minimax_model("MiniMax-M2.7")
+        model = create_minimax_model("MiniMax-M3")
         channel = Channel()
 
         test_db = os.path.join(
@@ -281,7 +297,7 @@ class TestMiniMaxIntegration:
                 user_info=UserInfo(
                     user_name="minimax_user",
                     name="MiniMax Tester",
-                    description="An agent using MiniMax M2.7",
+                    description="An agent using MiniMax M3",
                     profile=None,
                     recsys_type="reddit",
                 ),
@@ -297,7 +313,7 @@ class TestMiniMaxIntegration:
                 "minimax_user", "MiniMax Tester", "Testing MiniMax."
             )
             await agent.env.action.create_post(
-                "Hello from MiniMax-M2.7!"
+                "Hello from MiniMax-M3!"
             )
 
             await channel.write_to_receive_queue((None, None, "exit"))
