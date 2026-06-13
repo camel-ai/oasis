@@ -1,5 +1,5 @@
 """
-UX / Usability scanner — Python reimplementation of the eyeson ux-analyst-ai approach.
+AUX Usability Scanner — Automated heuristic scanning and AI-driven UX critique.
 
 Performs:
   1. Multi-viewport screenshots (desktop, tablet, mobile) via Playwright

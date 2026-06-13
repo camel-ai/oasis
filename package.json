@@ -1,7 +1,7 @@
 {
-  "name": "oasis_compare",
+  "name": "aux-ux",
   "version": "1.0.0",
-  "description": "<div align=\"center\">   <a href=\"https://www.camel-ai.org/\">     <img src=\"assets/banner.png\" alt=banner>   </a> </div>",
+  "description": "AUX: AI-Powered Usability Testing Suite",
   "main": "index.js",
   "directories": {
     "doc": "docs",
@@ -15,15 +15,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Greene-ctrl/oasis.git"
+    "url": "git+https://github.com/Greene-ctrl/aux.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Greene-ctrl/oasis/issues"
+    "url": "https://github.com/Greene-ctrl/aux/issues"
   },
-  "homepage": "https://github.com/Greene-ctrl/oasis#readme",
+  "homepage": "https://github.com/Greene-ctrl/aux#readme",
   "dependencies": {
     "@marp-team/marpit": "^3.2.1"
   }

@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "camel-oasis"
-version = "0.3.0"
-description = "Open Agents Social Interaction Simulations on a Large Scale — with UX Simulation App extension"
-authors = ["CAMEL-AI.org"]
+name = "aux-ux"
+version = "1.0.0"
+description = "AUX: AI-Powered Usability Testing Suite & Persona Simulation Platform"
+authors = ["Greene-ctrl"]
 readme = "README.md"
 license = "Apache License 2.0"
 keywords = [
@@ -25,7 +25,7 @@ packages = [
     { include = "oasis" },
     { include = "ux_sim_app" },
 ]
-repository = "https://github.com/Greene-ctrl/oasis.git"
+repository = "https://github.com/Greene-ctrl/aux.git"
 
 [tool.poetry.dependencies]
 python = ">=3.10.0,<3.12"

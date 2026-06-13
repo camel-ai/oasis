@@ -1,5 +1,5 @@
 """
-OASIS UX Simulation App – Gradio Interface
+AUX: Usability Testing Suite – Gradio Interface
 ==========================================
 A no-code interface for running multi-mode persona simulations + UX audits.
 
@@ -76,7 +76,7 @@ def _get_bg_loop() -> asyncio.AbstractEventLoop:
                 asyncio.set_event_loop(_bg_loop)
                 _bg_loop.run_forever()
 
-            _bg_thread = threading.Thread(target=_run_forever, daemon=True, name="oasis-bg-loop")
+            _bg_thread = threading.Thread(target=_run_forever, daemon=True, name="aux-bg-loop")
             _bg_thread.start()
     return _bg_loop
 
@@ -575,7 +575,7 @@ THEME = gr.themes.Soft(
     font=[gr.themes.GoogleFont("Inter"), "sans-serif"],
 )
 
-with gr.Blocks(title="OASIS UX Simulation App") as demo:
+with gr.Blocks(title="AUX: Usability Testing Suite") as demo:
 
     # ── Shared state ───────────────────────────────────────────────────────────
     state_personas_json    = gr.State("{}")
@@ -592,7 +592,7 @@ with gr.Blocks(title="OASIS UX Simulation App") as demo:
     gr.HTML("""
     <div style="background:linear-gradient(135deg,#2c3e50 0%,#3498db 100%);
          padding:28px 32px;border-radius:12px;margin-bottom:8px;color:#fff">
-      <h1 style="margin:0;font-size:1.9em">🧠 OASIS UX Simulation App</h1>
+      <h1 style="margin:0;font-size:1.9em">🔊 AUX: Usability Testing Suite</h1>
       <p style="margin:6px 0 0 0;color:#aed6f1;font-size:1em">
         Automated persona generation &middot; Browser usability &middot;
         Visual branding &middot; Content simulation &middot; UX audit
