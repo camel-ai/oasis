@@ -12,6 +12,7 @@
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import json
+import os
 import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -214,9 +215,33 @@ def save_user_data(user_data, filename):
         json.dump(user_data, f, ensure_ascii=False, indent=2)
 
 
+def prepare_output_path(output_path):
+    abs_output_path = os.path.abspath(output_path)
+    if os.path.isdir(abs_output_path):
+        raise IsADirectoryError(
+            f"Output path points to a directory, not a file: {output_path}"
+        )
+
+    output_dir = os.path.dirname(abs_output_path)
+    if output_dir and not os.path.exists(output_dir):
+        try:
+            os.makedirs(output_dir, exist_ok=True)
+            print(f"Created output directory: {output_dir}")
+        except PermissionError as e:
+            raise PermissionError(
+                f"Cannot create output directory due to permissions: {output_dir}"
+            ) from e
+
+    if output_dir and not os.access(output_dir, os.W_OK):
+        raise PermissionError(
+            f"Output directory is not writable: {output_dir}"
+        )
+
+
 if __name__ == "__main__":
     N = 10000  # Target user number
-    user_data = generate_user_data(N)
     output_path = 'experiment_dataset/user_data/user_data_10000.json'
+    prepare_output_path(output_path)
+    user_data = generate_user_data(N)
     save_user_data(user_data, output_path)
     print(f"Generated {N} user profiles and saved to {output_path}")

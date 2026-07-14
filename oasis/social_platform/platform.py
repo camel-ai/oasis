@@ -39,15 +39,15 @@ if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
 if "sphinx" not in sys.modules:
-    twitter_log = logging.getLogger(name="social.twitter")
-    twitter_log.setLevel("DEBUG")
+    platform_log = logging.getLogger(name="social.twitter")
+    platform_log.setLevel("DEBUG")
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     file_handler = logging.FileHandler(f"./log/social.twitter-{now}.log")
     file_handler.setLevel("DEBUG")
     file_handler.setFormatter(
         logging.Formatter(
             "%(levelname)s - %(asctime)s - %(name)s - %(message)s"))
-    twitter_log.addHandler(file_handler)
+    platform_log.addHandler(file_handler)
 
 
 class Platform:
@@ -327,7 +327,7 @@ class Platform:
 
     async def update_rec_table(self):
         # Recsys(trace/user/post table), refresh rec table
-        twitter_log.info("Starting to refresh recommendation system cache...")
+        platform_log.info("Starting to refresh recommendation system cache...")
         user_table = fetch_table_from_db(self.db_cursor, "user")
         post_table = fetch_table_from_db(self.db_cursor, "post")
         trace_table = fetch_table_from_db(self.db_cursor, "trace")
@@ -370,7 +370,7 @@ class Platform:
                     use_openai_embedding=self.use_openai_embedding,
                 )
             except Exception as e:
-                twitter_log.error(e)
+                platform_log.error(e)
                 # If no post in the platform, skip updating the rec table
                 return
         elif self.recsys_type == RecsysType.REDDIT:
