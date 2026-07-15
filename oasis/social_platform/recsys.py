@@ -375,7 +375,7 @@ def get_like_post_id(user_id, action, trace_table):
     recently liked post. Only take IDs, not content, because calculating
     embeddings for all posts again is very time-consuming, especially when the
     number of agents is large"""
-    if len(trace_post_ids) < 5 and len(trace_post_ids) > 0:
+    if len(trace_post_ids) <= 5 and len(trace_post_ids) > 0:
         trace_post_ids += [trace_post_ids[-1]] * (5 - len(trace_post_ids))
     elif len(trace_post_ids) > 5:
         trace_post_ids = trace_post_ids[-5:]

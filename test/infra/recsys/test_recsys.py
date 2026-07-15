@@ -11,7 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-from oasis.social_platform.recsys import (rec_sys_personalized,
+from oasis.social_platform.recsys import (get_like_post_id,
+                                          rec_sys_personalized,
                                           rec_sys_personalized_twh,
                                           rec_sys_random, rec_sys_reddit,
                                           reset_globals)
@@ -39,6 +40,20 @@ def test_rec_sys_reddit_all_posts():
     expected = [["1", "2"], ["1", "2"]]
     result = rec_sys_reddit(post_table, rec_matrix, max_rec_post_len)
     assert result == expected
+
+
+def test_get_like_post_id_exactly_five():
+    # A user with exactly 5 liked posts must get those 5 ids back (last-5,
+    # padded when fewer). Regression: the len==5 boundary previously fell
+    # through to the empty-case placeholder [0], discarding the likes.
+    action = "like_post"
+    trace_table = [{
+        "user_id": 1,
+        "action": action,
+        "info": str({"post_id": pid}),
+    } for pid in [101, 102, 103, 104, 105]]
+
+    assert get_like_post_id(1, action, trace_table) == [101, 102, 103, 104, 105]
 
 
 def test_rec_sys_personalized_all_posts():
