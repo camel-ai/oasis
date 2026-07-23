@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import random
@@ -30,7 +31,8 @@ from oasis.social_platform.database import (create_db,
 from oasis.social_platform.platform_utils import PlatformUtils
 from oasis.social_platform.recsys import (rec_sys_personalized_twh,
                                           rec_sys_personalized_with_trace,
-                                          rec_sys_random, rec_sys_reddit)
+                                          rec_sys_random, rec_sys_reddit,
+                                          rec_sys_tiktok)
 from oasis.social_platform.typing import ActionType, RecsysType
 
 # Create log directory if it doesn't exist
@@ -80,7 +82,15 @@ class Platform:
         self.start_time = start_time
         self.sandbox_clock = sandbox_clock
 
-        self.db, self.db_cursor = create_db(self.db_path)
+        # Pass recsys_type to create_db so TikTok tables are only created
+        # when the platform is TikTok
+        _platform_hint = None
+        if isinstance(recsys_type, str) and recsys_type == "tiktok":
+            _platform_hint = "tiktok"
+        elif hasattr(recsys_type, 'value') and recsys_type.value == "tiktok":
+            _platform_hint = "tiktok"
+        self.db, self.db_cursor = create_db(
+            self.db_path, platform=_platform_hint)
         self.db.execute("PRAGMA synchronous = OFF")
 
         self.channel = channel or Channel()
@@ -247,11 +257,16 @@ class Platform:
         # Record the action in the trace table
         action_info = {
             "product_name": product_name,
-            "purchase_num": purchase_num
+            "purchase_num": purchase_num,
+            "product_id": product_id,
         }
         self.pl_utils._record_trace(user_id, ActionType.PURCHASE_PRODUCT.value,
                                     action_info, current_time)
-        return {"success": True, "product_id": product_id}
+        return {
+            "success": True,
+            "product_id": product_id,
+            "purchase_num": purchase_num,
+        }
         # except Exception as e:
         #     return {"success": False, "error": str(e)}
 
@@ -330,7 +345,9 @@ class Platform:
         twitter_log.info("Starting to refresh recommendation system cache...")
         user_table = fetch_table_from_db(self.db_cursor, "user")
         post_table = fetch_table_from_db(self.db_cursor, "post")
+        comment_table = fetch_table_from_db(self.db_cursor, "comment")
         trace_table = fetch_table_from_db(self.db_cursor, "trace")
+        follow_table = fetch_table_from_db(self.db_cursor, "follow")
         rec_matrix = fetch_rec_table_as_matrix(self.db_cursor)
 
         if self.recsys_type == RecsysType.RANDOM:
@@ -376,6 +393,17 @@ class Platform:
         elif self.recsys_type == RecsysType.REDDIT:
             new_rec_matrix = rec_sys_reddit(post_table, rec_matrix,
                                             self.max_rec_post_len)
+        elif self.recsys_type == RecsysType.TIKTOK:
+            video_table = fetch_table_from_db(self.db_cursor, "video")
+            tiktok_params = getattr(self, "tiktok_recsys_params", {})
+            new_rec_matrix = rec_sys_tiktok(
+                user_table, post_table, video_table, comment_table,
+                trace_table, follow_table,
+                rec_matrix, self.max_rec_post_len,
+                self.refresh_rec_post_count, **tiktok_params)
+            # Persist traffic pool level changes to DB
+            max_level = tiktok_params.get("max_pool_level", 7)
+            self._persist_traffic_pool_levels(video_table, max_level)
         else:
             raise ValueError("Unsupported recommendation system type, please "
                              "check the `RecsysType`.")
@@ -902,7 +930,7 @@ class Platform:
                                               commit=True)
 
             # Record the operation in the trace table
-            action_info = {"follow_id": follow_id}
+            action_info = {"follow_id": follow_id, "followee_id": followee_id}
             self.pl_utils._record_trace(user_id, ActionType.FOLLOW.value,
                                         action_info, current_time)
             # twitter_log.info(f"Trace inserted: user_id={user_id}, "
@@ -1067,6 +1095,9 @@ class Platform:
                 }
             results_with_comments = self.pl_utils._add_comments_to_posts(
                 results)
+            if self.recsys_type == RecsysType.TIKTOK:
+                results_with_comments = self._enrich_tiktok_posts(
+                    results_with_comments)
 
             action_info = {"posts": results_with_comments}
             self.pl_utils._record_trace(user_id, ActionType.TREND.value,
@@ -1638,5 +1669,426 @@ class Platform:
                 "joined_groups": joined_group_ids,
                 "messages": messages
             }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    # ==================== TikTok Actions ====================
+
+    def _get_tiktok_time(self):
+        return self.sandbox_clock.get_time_step()
+
+    def _enrich_tiktok_posts(
+            self, posts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        if not posts:
+            return posts
+
+        post_ids = [post["post_id"] for post in posts]
+        placeholders = ", ".join("?" for _ in post_ids)
+        query = (
+            "SELECT post_id, duration_seconds, category, topic_tags, "
+            "quality_score, hook_strength, traffic_pool_level, "
+            "total_impressions, view_count, total_watch_ratio, "
+            "share_count, negative_count "
+            f"FROM video WHERE post_id IN ({placeholders})"
+        )
+        self.pl_utils._execute_db_command(query, post_ids)
+        video_rows = self.db_cursor.fetchall()
+
+        video_lookup = {}
+        for row in video_rows:
+            (post_id, duration_seconds, category, topic_tags, quality_score,
+             hook_strength, traffic_pool_level, total_impressions, view_count,
+             total_watch_ratio, share_count, negative_count) = row
+            try:
+                parsed_tags = json.loads(topic_tags) if topic_tags else []
+            except (TypeError, json.JSONDecodeError):
+                parsed_tags = []
+            avg_watch_ratio = (
+                total_watch_ratio / view_count if view_count else 0.0)
+            video_lookup[post_id] = {
+                "content_format": "short_video",
+                "duration_seconds": duration_seconds,
+                "category": category,
+                "topic_tags": parsed_tags,
+                "quality_score": quality_score,
+                "hook_strength": hook_strength,
+                "traffic_pool_level": traffic_pool_level,
+                "total_impressions": total_impressions,
+                "view_count": view_count,
+                "avg_watch_ratio": avg_watch_ratio,
+                "share_count": share_count,
+                "negative_count": negative_count,
+            }
+
+        enriched_posts = []
+        for post in posts:
+            enriched = dict(post)
+            if post["post_id"] in video_lookup:
+                enriched.update(video_lookup[post["post_id"]])
+            enriched_posts.append(enriched)
+        return enriched_posts
+
+    def _persist_traffic_pool_levels(self, video_table,
+                                     max_level: int = 7):
+        """Write traffic pool promote/demote decisions back to DB.
+
+        Called after rec_sys_tiktok() which sets _pool_action on each
+        video dict. Promoted videos move up one level, demoted videos
+        are marked level 0 (stopped).
+        """
+        promote_list = []
+        demote_list = []
+        for v in video_table:
+            action = v.get("_pool_action")
+            post_id = v.get("post_id")
+            if post_id is None:
+                continue
+            if action == "promote":
+                promote_list.append((post_id,))
+            elif action == "demote":
+                demote_list.append((post_id,))
+
+        if promote_list:
+            self.pl_utils._execute_many_db_command(
+                "UPDATE video SET traffic_pool_level = "
+                f"MIN(traffic_pool_level + 1, {max_level}) "
+                "WHERE post_id = ? AND traffic_pool_level > 0",
+                promote_list, commit=False)
+
+        if demote_list:
+            self.pl_utils._execute_many_db_command(
+                "UPDATE video SET traffic_pool_level = 0 WHERE post_id = ?",
+                demote_list, commit=False)
+
+        if promote_list or demote_list:
+            self.db.commit()
+
+    async def upload_video(self, agent_id: int, upload_message):
+        current_time = self._get_tiktok_time()
+        try:
+            user_id = agent_id
+            (content, duration_seconds, category, topic_tags,
+             quality_score, hook_strength) = upload_message
+
+            post_insert_query = (
+                "INSERT INTO post (user_id, content, created_at, num_likes, "
+                "num_dislikes, num_shares) VALUES (?, ?, ?, ?, ?, ?)")
+            self.pl_utils._execute_db_command(
+                post_insert_query, (user_id, content, current_time, 0, 0, 0),
+                commit=True)
+            post_id = self.db_cursor.lastrowid
+
+            video_insert_query = (
+                "INSERT INTO video (post_id, duration_seconds, category, "
+                "topic_tags, quality_score, hook_strength, "
+                "traffic_pool_level, pool_enter_time) "
+                "VALUES (?, ?, ?, ?, ?, ?, 1, ?)")
+            self.pl_utils._execute_db_command(
+                video_insert_query,
+                (post_id, duration_seconds, category, topic_tags,
+                 quality_score, hook_strength, current_time),
+                commit=True)
+
+            action_info = {
+                "post_id": post_id, "content": content,
+                "category": category, "duration": duration_seconds,
+            }
+            self.pl_utils._record_trace(
+                user_id, ActionType.UPLOAD_VIDEO.value,
+                action_info, current_time)
+            return {"success": True, "post_id": post_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def watch_video(self, agent_id: int, watch_message):
+        current_time = self._get_tiktok_time()
+        try:
+            user_id = agent_id
+            post_id, watch_ratio = watch_message
+
+            video_update_query = (
+                "UPDATE video SET view_count = view_count + 1, "
+                "total_impressions = total_impressions + 1, "
+                "total_watch_ratio = total_watch_ratio + ? "
+                "WHERE post_id = ?")
+            self.pl_utils._execute_db_command(
+                video_update_query, (watch_ratio, post_id), commit=True)
+
+            action_info = {"post_id": post_id, "watch_ratio": watch_ratio}
+            self.pl_utils._record_trace(
+                user_id, ActionType.WATCH_VIDEO.value,
+                action_info, current_time)
+            return {"success": True, "post_id": post_id,
+                    "watch_ratio": watch_ratio}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def share_video(self, agent_id: int, post_id: int):
+        current_time = self._get_tiktok_time()
+        try:
+            user_id = agent_id
+            share_update_query = (
+                "UPDATE post SET num_shares = num_shares + 1 "
+                "WHERE post_id = ?")
+            self.pl_utils._execute_db_command(
+                share_update_query, (post_id,), commit=True)
+            video_update_query = (
+                "UPDATE video SET share_count = share_count + 1 "
+                "WHERE post_id = ?")
+            self.pl_utils._execute_db_command(
+                video_update_query, (post_id,), commit=True)
+
+            action_info = {"post_id": post_id}
+            self.pl_utils._record_trace(
+                user_id, ActionType.SHARE_VIDEO.value,
+                action_info, current_time)
+            return {"success": True, "post_id": post_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def duet(self, agent_id: int, duet_message):
+        current_time = self._get_tiktok_time()
+        try:
+            user_id = agent_id
+            original_post_id, content = duet_message
+
+            post_insert_query = (
+                "INSERT INTO post (user_id, original_post_id, content, "
+                "created_at, num_likes, num_dislikes, num_shares) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)")
+            self.pl_utils._execute_db_command(
+                post_insert_query,
+                (user_id, original_post_id, content, current_time, 0, 0, 0),
+                commit=True)
+            new_post_id = self.db_cursor.lastrowid
+
+            video_insert_query = (
+                "INSERT INTO video (post_id, category, "
+                "traffic_pool_level, pool_enter_time) "
+                "VALUES (?, 'duet', 1, ?)")
+            self.pl_utils._execute_db_command(
+                video_insert_query, (new_post_id, current_time), commit=True)
+
+            post_share_query = (
+                "UPDATE post SET num_shares = num_shares + 1 "
+                "WHERE post_id = ?")
+            self.pl_utils._execute_db_command(
+                post_share_query, (original_post_id,), commit=True)
+
+            action_info = {
+                "original_post_id": original_post_id,
+                "new_post_id": new_post_id,
+            }
+            self.pl_utils._record_trace(
+                user_id, ActionType.DUET.value, action_info, current_time)
+            return {"success": True, "post_id": new_post_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def stitch(self, agent_id: int, stitch_message):
+        current_time = self._get_tiktok_time()
+        try:
+            user_id = agent_id
+            original_post_id, content = stitch_message
+
+            post_insert_query = (
+                "INSERT INTO post (user_id, original_post_id, content, "
+                "created_at, num_likes, num_dislikes, num_shares) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)")
+            self.pl_utils._execute_db_command(
+                post_insert_query,
+                (user_id, original_post_id, content, current_time, 0, 0, 0),
+                commit=True)
+            new_post_id = self.db_cursor.lastrowid
+
+            video_insert_query = (
+                "INSERT INTO video (post_id, category, "
+                "traffic_pool_level, pool_enter_time) "
+                "VALUES (?, 'stitch', 1, ?)")
+            self.pl_utils._execute_db_command(
+                video_insert_query, (new_post_id, current_time), commit=True)
+
+            post_share_query = (
+                "UPDATE post SET num_shares = num_shares + 1 "
+                "WHERE post_id = ?")
+            self.pl_utils._execute_db_command(
+                post_share_query, (original_post_id,), commit=True)
+
+            action_info = {
+                "original_post_id": original_post_id,
+                "new_post_id": new_post_id,
+            }
+            self.pl_utils._record_trace(
+                user_id, ActionType.STITCH.value, action_info, current_time)
+            return {"success": True, "post_id": new_post_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def not_interested(self, agent_id: int, post_id: int):
+        current_time = self._get_tiktok_time()
+        try:
+            user_id = agent_id
+            video_update_query = (
+                "UPDATE video SET negative_count = negative_count + 1 "
+                "WHERE post_id = ?")
+            self.pl_utils._execute_db_command(
+                video_update_query, (post_id,), commit=True)
+
+            action_info = {"post_id": post_id}
+            self.pl_utils._record_trace(
+                user_id, ActionType.NOT_INTERESTED.value,
+                action_info, current_time)
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def start_livestream(self, agent_id: int):
+        current_time = self._get_tiktok_time()
+        try:
+            host_id = agent_id
+            stream_insert_query = (
+                "INSERT INTO livestream (host_id, status, start_time) "
+                "VALUES (?, 'live', ?)")
+            self.pl_utils._execute_db_command(
+                stream_insert_query, (host_id, current_time), commit=True)
+            stream_id = self.db_cursor.lastrowid
+
+            action_info = {"stream_id": stream_id}
+            self.pl_utils._record_trace(
+                host_id, ActionType.START_LIVESTREAM.value,
+                action_info, current_time)
+            return {"success": True, "stream_id": stream_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def end_livestream(self, agent_id: int, stream_id: int):
+        current_time = self._get_tiktok_time()
+        try:
+            host_id = agent_id
+            stream_update_query = (
+                "UPDATE livestream SET status = 'ended', end_time = ? "
+                "WHERE stream_id = ? AND host_id = ?")
+            self.pl_utils._execute_db_command(
+                stream_update_query, (current_time, stream_id, host_id),
+                commit=True)
+
+            action_info = {"stream_id": stream_id}
+            self.pl_utils._record_trace(
+                host_id, ActionType.END_LIVESTREAM.value,
+                action_info, current_time)
+            return {"success": True, "stream_id": stream_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def enter_livestream(self, agent_id: int, stream_id: int):
+        current_time = self._get_tiktok_time()
+        try:
+            viewer_id = agent_id
+            viewer_insert_query = (
+                "INSERT INTO livestream_viewer "
+                "(stream_id, viewer_id, enter_time) VALUES (?, ?, ?)")
+            self.pl_utils._execute_db_command(
+                viewer_insert_query, (stream_id, viewer_id, current_time),
+                commit=True)
+
+            stream_update_query = (
+                "UPDATE livestream SET current_viewers = current_viewers + 1, "
+                "total_viewers = total_viewers + 1 WHERE stream_id = ?")
+            self.pl_utils._execute_db_command(
+                stream_update_query, (stream_id,), commit=True)
+
+            # Update peak viewers
+            peak_query = (
+                "UPDATE livestream SET peak_viewers = MAX(peak_viewers, "
+                "current_viewers) WHERE stream_id = ?")
+            self.pl_utils._execute_db_command(
+                peak_query, (stream_id,), commit=True)
+
+            action_info = {"stream_id": stream_id}
+            self.pl_utils._record_trace(
+                viewer_id, ActionType.ENTER_LIVESTREAM.value,
+                action_info, current_time)
+            return {"success": True, "stream_id": stream_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def exit_livestream(self, agent_id: int, stream_id: int):
+        current_time = self._get_tiktok_time()
+        try:
+            viewer_id = agent_id
+            # Update exit time and calculate stay duration
+            # For step-based time, total_stay = exit_step - enter_step
+            viewer_update_query = (
+                "UPDATE livestream_viewer "
+                "SET exit_time = ?, total_stay_seconds = ? - enter_time "
+                "WHERE stream_id = ? AND viewer_id = ? AND exit_time IS NULL")
+            self.pl_utils._execute_db_command(
+                viewer_update_query,
+                (current_time, current_time, stream_id, viewer_id),
+                commit=True)
+
+            stream_update_query = (
+                "UPDATE livestream SET current_viewers = "
+                "MAX(0, current_viewers - 1) WHERE stream_id = ?")
+            self.pl_utils._execute_db_command(
+                stream_update_query, (stream_id,), commit=True)
+
+            action_info = {"stream_id": stream_id}
+            self.pl_utils._record_trace(
+                viewer_id, ActionType.EXIT_LIVESTREAM.value,
+                action_info, current_time)
+            return {"success": True, "stream_id": stream_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def livestream_comment(self, agent_id: int, comment_message):
+        current_time = self._get_tiktok_time()
+        try:
+            user_id = agent_id
+            stream_id, content = comment_message
+            stream_update_query = (
+                "UPDATE livestream SET total_comments = total_comments + 1 "
+                "WHERE stream_id = ?")
+            self.pl_utils._execute_db_command(
+                stream_update_query, (stream_id,), commit=True)
+
+            # Update viewer interaction count
+            viewer_update_query = (
+                "UPDATE livestream_viewer SET interactions = interactions + 1 "
+                "WHERE stream_id = ? AND viewer_id = ? AND exit_time IS NULL")
+            self.pl_utils._execute_db_command(
+                viewer_update_query, (stream_id, user_id), commit=True)
+
+            action_info = {"stream_id": stream_id, "content": content}
+            self.pl_utils._record_trace(
+                user_id, ActionType.LIVESTREAM_COMMENT.value,
+                action_info, current_time)
+            return {"success": True, "stream_id": stream_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def send_gift(self, agent_id: int, gift_message):
+        current_time = self._get_tiktok_time()
+        try:
+            user_id = agent_id
+            stream_id, gift_value = gift_message
+            stream_update_query = (
+                "UPDATE livestream SET total_gifts_value = "
+                "total_gifts_value + ? WHERE stream_id = ?")
+            self.pl_utils._execute_db_command(
+                stream_update_query, (gift_value, stream_id), commit=True)
+
+            viewer_update_query = (
+                "UPDATE livestream_viewer SET interactions = interactions + 1 "
+                "WHERE stream_id = ? AND viewer_id = ? AND exit_time IS NULL")
+            self.pl_utils._execute_db_command(
+                viewer_update_query, (stream_id, user_id), commit=True)
+
+            action_info = {"stream_id": stream_id, "gift_value": gift_value}
+            self.pl_utils._record_trace(
+                user_id, ActionType.SEND_GIFT.value,
+                action_info, current_time)
+            return {"success": True, "stream_id": stream_id,
+                    "gift_value": gift_value}
         except Exception as e:
             return {"success": False, "error": str(e)}

@@ -152,6 +152,23 @@ For Reddit-like platforms, agent profiles are typically stored in JSON format:
 ]
 ```
 
+### Short-Video Agent Profiles (JSON format)
+
+For short-video platforms, agent profiles are typically stored in JSON format with creator/viewer metadata and interest tags:
+
+```json
+[
+  {
+    "username": "creator_001",
+    "name": "Creator One",
+    "bio": "Dance creator",
+    "persona": "Energetic short-video creator",
+    "role": "creator",
+    "interested_topics": ["dance", "music"]
+  }
+]
+```
+
 ## Limiting Concurrent LLM Requests
 
 To prevent overloading the LLM service, you can limit concurrent requests using the `semaphore` parameter:

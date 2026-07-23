@@ -14,6 +14,28 @@
 import os
 import sys
 
+import pytest
+
 # Add the project root directory to sys.path
 root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
 sys.path.insert(0, root_path)
+
+
+@pytest.fixture
+def llm_test_model():
+    """Shared LLM model fixture for agent tests.
+
+    Skips the test when ``OPENAI_API_KEY`` is not configured so forks and
+    local environments without credentials can still run the rest of the
+    suite.
+    """
+    if not os.environ.get("OPENAI_API_KEY"):
+        pytest.skip("OPENAI_API_KEY not set; skipping LLM-backed test")
+
+    from camel.models import ModelFactory
+    from camel.types import ModelPlatformType, ModelType
+
+    return ModelFactory.create(
+        model_platform=ModelPlatformType.OPENAI,
+        model_type=ModelType.GPT_5_MINI,
+    )

@@ -29,23 +29,43 @@ def neo4j_vars_set() -> bool:
             and os.getenv("NEO4J_PASSWORD") is not None)
 
 
-def test_agent_graph(tmp_path):
+def graph_plotting_available() -> bool:
+    # igraph plotting requires either pycairo or cairocffi.
+    try:
+        import cairo  # type: ignore  # noqa: F401
+        return True
+    except ImportError:
+        try:
+            import cairocffi  # type: ignore  # noqa: F401
+            return True
+        except ImportError:
+            return False
+
+
+def test_agent_graph(tmp_path, llm_test_model):
+    if not graph_plotting_available():
+        pytest.skip(
+            "igraph plotting backend not available (pycairo/cairocffi)")
+
     twitter_channel = Channel()
     graph = AgentGraph()
     agent_0 = SocialAgent(
         agent_id=0,
         user_info=UserInfo(name="0"),
         channel=twitter_channel,
+        model=llm_test_model,
     )
     agent_1 = SocialAgent(
         agent_id=1,
         user_info=UserInfo(name="1"),
         channel=twitter_channel,
+        model=llm_test_model,
     )
     agent_2 = SocialAgent(
         agent_id=2,
         user_info=UserInfo(name="2"),
         channel=twitter_channel,
+        model=llm_test_model,
     )
 
     graph.add_agent(agent_0)
@@ -92,7 +112,7 @@ def test_agent_graph(tmp_path):
     not neo4j_vars_set(),
     reason="One or more neo4j env variables are not set",
 )
-def test_agent_neo4j_graph():
+def test_agent_neo4j_graph(llm_test_model):
     channel = Channel()
     graph = AgentGraph(
         backend="neo4j",
@@ -106,16 +126,19 @@ def test_agent_neo4j_graph():
         agent_id=0,
         user_info=UserInfo(name="0", ),
         channel=channel,
+        model=llm_test_model,
     )
     agent_1 = SocialAgent(
         agent_id=1,
         user_info=UserInfo(name="1", ),
         channel=channel,
+        model=llm_test_model,
     )
     agent_2 = SocialAgent(
         agent_id=2,
         user_info=UserInfo(name="2", ),
         channel=channel,
+        model=llm_test_model,
     )
     graph.add_agent(agent_0)
     graph.add_agent(agent_1)

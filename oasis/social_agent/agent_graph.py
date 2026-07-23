@@ -189,6 +189,12 @@ class AgentGraph:
             self.graph = Neo4jHandler(neo4j_config)
         self.agent_mappings: dict[int, SocialAgent] = {}
 
+    def _vertex_name(self, agent_id: int) -> str:
+        return str(agent_id)
+
+    def _vertex_index(self, agent_id: int) -> int:
+        return self.graph.vs.find(name=self._vertex_name(agent_id)).index
+
     def reset(self):
         if self.backend == "igraph":
             self.graph = ig.Graph(directed=True)
@@ -198,28 +204,37 @@ class AgentGraph:
 
     def add_agent(self, agent: SocialAgent):
         if self.backend == "igraph":
-            self.graph.add_vertex(agent.social_agent_id)
+            self.graph.add_vertex(
+                name=self._vertex_name(agent.social_agent_id))
         else:
             self.graph.create_agent(agent.social_agent_id)
         self.agent_mappings[agent.social_agent_id] = agent
 
     def add_edge(self, agent_id_0: int, agent_id_1: int):
         try:
-            self.graph.add_edge(agent_id_0, agent_id_1)
+            if self.backend == "igraph":
+                src_vertex = self._vertex_index(agent_id_0)
+                dst_vertex = self._vertex_index(agent_id_1)
+                self.graph.add_edge(src_vertex, dst_vertex)
+            else:
+                self.graph.add_edge(agent_id_0, agent_id_1)
         except Exception:
             pass
 
     def remove_agent(self, agent: SocialAgent):
         if self.backend == "igraph":
-            self.graph.delete_vertices(agent.social_agent_id)
+            self.graph.delete_vertices(
+                self._vertex_name(agent.social_agent_id))
         else:
             self.graph.delete_agent(agent.social_agent_id)
         del self.agent_mappings[agent.social_agent_id]
 
     def remove_edge(self, agent_id_0: int, agent_id_1: int):
         if self.backend == "igraph":
-            if self.graph.are_connected(agent_id_0, agent_id_1):
-                self.graph.delete_edges([(agent_id_0, agent_id_1)])
+            src_vertex = self._vertex_index(agent_id_0)
+            dst_vertex = self._vertex_index(agent_id_1)
+            if self.graph.are_connected(src_vertex, dst_vertex):
+                self.graph.delete_edges([(src_vertex, dst_vertex)])
         else:
             self.graph.remove_edge(agent_id_0, agent_id_1)
 
@@ -233,7 +248,7 @@ class AgentGraph:
             return [(agent_id, self.get_agent(agent_id))
                     for agent_id in agent_ids]
         if self.backend == "igraph":
-            return [(node.index, self.agent_mappings[node.index])
+            return [(int(node["name"]), self.agent_mappings[int(node["name"])])
                     for node in self.graph.vs]
         else:
             return [(agent_id, self.agent_mappings[agent_id])
@@ -241,7 +256,10 @@ class AgentGraph:
 
     def get_edges(self) -> list[tuple[int, int]]:
         if self.backend == "igraph":
-            return [(edge.source, edge.target) for edge in self.graph.es]
+            return [(
+                int(self.graph.vs[edge.source]["name"]),
+                int(self.graph.vs[edge.target]["name"]),
+            ) for edge in self.graph.es]
         else:
             return self.graph.get_all_edges()
 

@@ -135,6 +135,44 @@ This visualization provides an interactive way to explore user follow relationsh
    - In the search bar, select `user-follow-user`
    - For the slicer, choose `follow-timestamp` to visualize changes in follow relationships over time
 
+## Short-Video Simulation Analysis
+
+OASIS also supports short-video analysis workflows for TikTok-style simulations.
+
+### Available Outputs
+
+- feed-level metric charts
+- livestream attention and retention charts
+- markdown research reports
+- multi-run comparison plots
+
+### Generate Feed and Livestream Charts
+
+```bash
+python visualization/short_video_simulation/code/plot_metrics.py \
+  ./data/tiktok_simulation.db \
+  --output-dir ./visualization/short_video_simulation/output
+```
+
+### Generate a Markdown Report
+
+```bash
+python visualization/short_video_simulation/code/generate_report.py \
+  ./data/tiktok_simulation.db \
+  --output ./visualization/short_video_simulation/output/report.md
+```
+
+### Compare Experimental Runs
+
+```bash
+python visualization/short_video_simulation/code/compare_runs.py \
+  baseline=./data/tiktok_baseline.db \
+  experiment=./data/tiktok_experiment.db \
+  --output-dir ./visualization/short_video_simulation/output/comparison
+```
+
+These tools are useful for studying creator growth, traffic-pool mobility, negative-feedback suppression, and livestream retention over time.
+
 ## Additional Visualization Options
 
 Beyond the core visualization techniques described above, the Oasis platform supports customized visualizations based on specific simulation needs. Developers can extend existing visualization modules or create new ones for specialized analysis requirements.
