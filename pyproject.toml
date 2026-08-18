@@ -22,21 +22,21 @@ packages = [
 repository = "https://github.com/camel-ai/oasis.git"
 
 [tool.poetry.dependencies]
-python = ">=3.10.0,<3.12"
+python = ">=3.10.0,<3.15"
 pandas = "2.2.2"
 igraph = "0.11.6"
 cairocffi = "1.7.1"
-pytest = "8.2.0"
+pytest = ">=8.4.0"
 pytest-asyncio = "0.23.6"
-pillow = "10.3.0"
-unstructured = "0.13.7"
-sentence-transformers = "3.0.0"
+pillow = ">=11.0.0"
+unstructured = ">=0.18.0"
+sentence-transformers = ">=4.0.0"
 pre-commit = "3.7.1"
 prance = "23.6.21.0"
 openapi-spec-validator = "0.7.1"
 slack_sdk = "3.31.0"
 neo4j = "5.23.0"
-camel-ai = "0.2.78"
+camel-ai = ">=0.2.90"
 requests_oauthlib = "2.0.0"
 
 [build-system]
