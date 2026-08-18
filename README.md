@@ -318,7 +318,13 @@ If you're keen on exploring new research opportunities or discoveries with our p
 
 ## 🌟 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=camel-ai/oasis&type=Date)](https://star-history.com/#camel-ai/oasis&Date)
+<a href="https://www.star-history.com/?type=date&repos=camel-ai%2Foasis">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=camel-ai/oasis&type=date&theme=dark&legend=top-left&sealed_token=w1Kva2kRIlGmgiRwmwmjPY-_U_1BJTCB1AY9JJLs5EfdwC0RFsbOuryIBUDzZvT4jqgtnIWkRzjEmEkpu2HK_HSaHAOxkzjY-rcaxToC8MnN8pMNYIBd7w" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=camel-ai/oasis&type=date&legend=top-left&sealed_token=w1Kva2kRIlGmgiRwmwmjPY-_U_1BJTCB1AY9JJLs5EfdwC0RFsbOuryIBUDzZvT4jqgtnIWkRzjEmEkpu2HK_HSaHAOxkzjY-rcaxToC8MnN8pMNYIBd7w" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=camel-ai/oasis&type=date&legend=top-left&sealed_token=w1Kva2kRIlGmgiRwmwmjPY-_U_1BJTCB1AY9JJLs5EfdwC0RFsbOuryIBUDzZvT4jqgtnIWkRzjEmEkpu2HK_HSaHAOxkzjY-rcaxToC8MnN8pMNYIBd7w" />
+ </picture>
+</a>
 
 ## 🔗 Citation
 
