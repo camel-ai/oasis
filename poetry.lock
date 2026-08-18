@@ -136,28 +136,30 @@ xcb = ["xcffib (>=1.4.0)"]
 
 [[package]]
 name = "camel-ai"
-version = "0.2.78"
+version = "0.2.90"
 description = "Communicative Agents for AI Society Study"
 optional = false
 python-versions = "<3.13,>=3.10"
 groups = ["main"]
 files = [
-    {file = "camel_ai-0.2.78-py3-none-any.whl", hash = "sha256:356624da13dfe0c55ef43dc509c18ce029f67fe3997966495a4ce9be931078d5"},
-    {file = "camel_ai-0.2.78.tar.gz", hash = "sha256:24745da225da7da96dcd85f72d143c6104569c17f14280c369d7e82b86851284"},
+    {file = "camel_ai-0.2.90-py3-none-any.whl", hash = "sha256:9998c434779a1a847d9ccddce1c069f22fb9667b19ba06a2452c479882169082"},
+    {file = "camel_ai-0.2.90.tar.gz", hash = "sha256:43f11673390cc8d4451d6b1bb2913ddef6131f411f47da02d16a3989c8096d02"},
 ]
 
 [package.dependencies]
 astor = ">=0.8.1"
 colorama = ">=0.4.6,<0.5"
 docstring-parser = ">=0.17.0,<0.18"
+google-search-results = ">=2.4.2"
 httpx = ">=0.28.0,<1.0.0dev"
 jsonschema = ">=4,<5"
 mcp = ">=1.3.0"
-openai = ">=1.86.0,<2"
-pillow = ">=10.1.0,<11.0.0"
+openai = ">=1.86.0"
+pillow = ">=10.0.0"
 psutil = ">=5.9.8,<6"
-pydantic = ">=2.10.6"
-tiktoken = ">=0.7.0,<0.8"
+pydantic = ">=2.10.6,<=2.12.0"
+pyyaml = ">=6.0.3"
+tiktoken = ">=0.7.0,<=0.12"
 websockets = ">=13.0,<15.1"
 
 [package.extras]
@@ -642,6 +644,17 @@ test = ["aiohttp (!=4.0.0a0,!=4.0.0a1)", "numpy", "pytest", "pytest-asyncio (!=0
 test-downstream = ["aiobotocore (>=2.5.4,<3.0.0)", "dask[dataframe,test]", "moto[server] (>4,<5)", "pytest-timeout", "xarray"]
 test-full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "cloudpickle", "dask", "distributed", "dropbox", "dropboxdrivefs", "fastparquet", "fusepy", "gcsfs", "jinja2", "kerchunk", "libarchive-c", "lz4", "notebook", "numpy", "ocifs", "pandas", "panel", "paramiko", "pyarrow", "pyarrow (>=1)", "pyftpdlib", "pygit2", "pytest", "pytest-asyncio (!=0.22.0)", "pytest-benchmark", "pytest-cov", "pytest-mock", "pytest-recording", "pytest-rerunfailures", "python-snappy", "requests", "smbprotocol", "tqdm", "urllib3", "zarr", "zstandard"]
 tqdm = ["tqdm"]
+
+[[package]]
+name = "google-search-results"
+version = "2.4.2"
+description = "SERP API client for Python"
+optional = false
+python-versions = ">=3.5"
+groups = ["main"]
+files = [
+    {file = "google_search_results-2.4.2.tar.gz", hash = "sha256:603a30ecae2af8e600b22635757a6df275dad4b934f975e67878ccd640b78245"},
+]
 
 [[package]]
 name = "h11"
@@ -4219,4 +4232,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10.0,<3.12"
-content-hash = "7e91ebeb0e7434a440c65b1631da4b910575303d537a7e073fca702297ea876f"
+content-hash = "34d63b8206f9e5a28667faf59a6e4414751b72bda65ecdbb176a839c1cb9b9e0"
