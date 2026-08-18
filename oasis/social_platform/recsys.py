@@ -61,6 +61,25 @@ u_items = {}
 date_score = []
 
 
+def _extract_trace_post_id(trace: Dict[str, Any]) -> Any | None:
+    """Safely extract a post_id from a trace row's serialized info payload."""
+    info = trace.get('info')
+    if info is None:
+        return None
+
+    if isinstance(info, dict):
+        return info.get('post_id')
+
+    try:
+        parsed_info = literal_eval(info)
+    except (ValueError, SyntaxError):
+        return None
+
+    if isinstance(parsed_info, dict):
+        return parsed_info.get('post_id')
+    return None
+
+
 def get_twhin_tokenizer():
     global twhin_tokenizer
     if twhin_tokenizer is None:
@@ -367,10 +386,13 @@ def get_like_post_id(user_id, action, trace_table):
         list: List of post IDs.
     """
     # Get post IDs from trace table for the given user and action
-    trace_post_ids = [
-        literal_eval(trace['info'])["post_id"] for trace in trace_table
-        if (trace['user_id'] == user_id and trace['action'] == action)
-    ]
+    trace_post_ids = []
+    for trace in trace_table:
+        if trace['user_id'] != user_id or trace['action'] != action:
+            continue
+        post_id = _extract_trace_post_id(trace)
+        if post_id is not None:
+            trace_post_ids.append(post_id)
     """Only take the last 5 liked posts, if not enough, pad with the most
     recently liked post. Only take IDs, not content, because calculating
     embeddings for all posts again is very time-consuming, especially when the
@@ -666,10 +688,13 @@ def get_trace_contents(user_id, action, post_table, trace_table):
         list: List of post contents.
     """
     # Get post IDs from trace table for the given user and action
-    trace_post_ids = [
-        trace['post_id'] for trace in trace_table
-        if (trace['user_id'] == user_id and trace['action'] == action)
-    ]
+    trace_post_ids = []
+    for trace in trace_table:
+        if trace['user_id'] != user_id or trace['action'] != action:
+            continue
+        post_id = _extract_trace_post_id(trace)
+        if post_id is not None:
+            trace_post_ids.append(post_id)
     # Fetch post contents from post table where post IDs match those in the
     # trace
     trace_contents = [
@@ -784,8 +809,10 @@ def rec_sys_personalized_with_trace(
                 swap_free_ids = [
                     post_id for post_id in post_ids
                     if post_id not in rec_post_ids and post_id not in [
-                        trace['post_id']
-                        for trace in trace_table if trace['user_id']
+                        trace_post_id for trace_post_id in (
+                            _extract_trace_post_id(trace)
+                            for trace in trace_table
+                        ) if trace_post_id is not None
                     ]
                 ]
                 rec_post_ids = swap_random_posts(rec_post_ids, swap_free_ids,
