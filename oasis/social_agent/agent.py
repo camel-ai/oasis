@@ -167,7 +167,7 @@ class SocialAgent(ChatAgent):
         # self.memory.write_record(MemoryRecord(user_msg,
         #                                       OpenAIBackendRole.USER))
 
-        openai_messages, num_tokens = self.memory.get_context()
+        openai_messages, _ = self.memory.get_context()
 
         openai_messages = ([{
             "role":
@@ -184,7 +184,7 @@ class SocialAgent(ChatAgent):
         # Camel can not stop updating the agents' memory after stop and astep
         # now.
         response = await self._aget_model_response(
-            openai_messages=openai_messages, num_tokens=num_tokens)
+            openai_messages=openai_messages)
         content = response.output_messages[0].content
         agent_log.info(
             f"Agent {self.social_agent_id} receive response: {content}")
@@ -206,7 +206,7 @@ class SocialAgent(ChatAgent):
             # Test memory should not be writed to memory.
             self.update_memory(message=user_msg, role=OpenAIBackendRole.SYSTEM)
 
-        openai_messages, num_tokens = self.memory.get_context()
+        openai_messages, _ = self.memory.get_context()
 
         openai_messages = ([{
             "role":
@@ -224,7 +224,7 @@ class SocialAgent(ChatAgent):
         # now.
 
         response = await self._aget_model_response(
-            openai_messages=openai_messages, num_tokens=num_tokens)
+            openai_messages=openai_messages)
 
         content = response.output_messages[0].content
 
