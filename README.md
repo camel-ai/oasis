@@ -272,8 +272,9 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 ### Latest Updates
 
-📢 Update the camel-ai version to 0.2.78 and update the dataset HuggingFace link.  - 📆 December 4, 2025
+📢 Update the camel-ai version to 0.2.90.  - 📆 August 19, 2026
 
+- Update the camel-ai version to 0.2.78 and update the dataset HuggingFace link.  - 📆 December 4, 2025
 - Add the report post action to mark inappropriate content. - 📆 June 8, 2025
 - Add features for creating group chats, sending messages in group chats, and leaving group chats. - 📆 June 6, 2025
 - Support Interview Action for asking agents specific questions and getting answers. - 📆 June 2, 2025
@@ -318,7 +319,13 @@ If you're keen on exploring new research opportunities or discoveries with our p
 
 ## 🌟 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=camel-ai/oasis&type=Date)](https://star-history.com/#camel-ai/oasis&Date)
+<a href="https://www.star-history.com/?type=date&repos=camel-ai%2Foasis">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=camel-ai/oasis&type=date&theme=dark&legend=top-left&sealed_token=w1Kva2kRIlGmgiRwmwmjPY-_U_1BJTCB1AY9JJLs5EfdwC0RFsbOuryIBUDzZvT4jqgtnIWkRzjEmEkpu2HK_HSaHAOxkzjY-rcaxToC8MnN8pMNYIBd7w" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=camel-ai/oasis&type=date&legend=top-left&sealed_token=w1Kva2kRIlGmgiRwmwmjPY-_U_1BJTCB1AY9JJLs5EfdwC0RFsbOuryIBUDzZvT4jqgtnIWkRzjEmEkpu2HK_HSaHAOxkzjY-rcaxToC8MnN8pMNYIBd7w" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=camel-ai/oasis&type=date&legend=top-left&sealed_token=w1Kva2kRIlGmgiRwmwmjPY-_U_1BJTCB1AY9JJLs5EfdwC0RFsbOuryIBUDzZvT4jqgtnIWkRzjEmEkpu2HK_HSaHAOxkzjY-rcaxToC8MnN8pMNYIBd7w" />
+ </picture>
+</a>
 
 ## 🔗 Citation
 
