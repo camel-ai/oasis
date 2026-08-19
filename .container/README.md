@@ -72,43 +72,6 @@ python -m pytest
 pre-commit run --all-files
 ```
 
-### Synchronize dependencies
-
-When `pyproject.toml` or `uv.lock` changes, update the container environment:
-
-```bash
-uv sync --locked
-```
-
-`uv sync --locked` installs both the OASIS package and the `dev` dependency
-group, including pytest, coverage, and pre-commit. Do not add `--no-dev` when
-you need the development tools.
-
-### Install an additional package
-
-For an experiment or one-off debugging session, either installer can be used
-inside the container:
-
-```bash
-# Uses uv's pip-compatible interface
-uv pip install rich
-
-# Also valid because .venv/bin is already on PATH
-pip install rich
-```
-
-These commands change only the current `.venv`; they do not update
-`pyproject.toml` or `uv.lock`. For a dependency that the project should keep,
-add it to the project instead, then commit the resulting lock-file update:
-
-```bash
-# Runtime dependency
-uv add rich
-
-# Development-only dependency
-uv add --dev rich
-```
-
 ## Save Your Progress
 
 Your local code is volume-mounted into the container. That means any changes you make inside the container are reflected in your local project folder — no need to worry about losing your work.

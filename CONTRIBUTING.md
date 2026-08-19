@@ -235,11 +235,9 @@ In line with this, we do have specific guidelines for code linting, formatting, 
 
 To get started with OASIS, follow these steps:
 
-```sh
-# Install uv first (macOS/Linux). Restart your shell if `uv` is not found.
-curl -LsSf https://astral.sh/uv/install.sh | sh
-uv --version
+Before continuing, install [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
+```sh
 # Clone github repo
 git clone https://github.com/camel-ai/oasis.git
 
