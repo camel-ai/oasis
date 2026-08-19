@@ -272,8 +272,9 @@ To discover how to create profiles for large-scale users, as well as how to visu
 
 ### Latest Updates
 
-📢 Update the camel-ai version to 0.2.90 and update the dataset HuggingFace link.  - 📆 December 4, 2025
+📢 Update the camel-ai version to 0.2.90.  - 📆 August 19, 2026
 
+- Update the camel-ai version to 0.2.78 and update the dataset HuggingFace link.  - 📆 December 4, 2025
 - Add the report post action to mark inappropriate content. - 📆 June 8, 2025
 - Add features for creating group chats, sending messages in group chats, and leaving group chats. - 📆 June 6, 2025
 - Support Interview Action for asking agents specific questions and getting answers. - 📆 June 2, 2025
