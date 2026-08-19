@@ -25,10 +25,15 @@ You can install OASIS in two ways:
     cd oasis
 
     uv sync
-    # Run project commands with: uv run <command>
+    source .venv/bin/activate
+
+    # Now run tutorial scripts normally, for example:
+    # python examples/quick_start.py
     ```
     On Windows, install uv with `winget install --id=astral-sh.uv -e`, then
-    reopen the terminal before running the commands above.
+    reopen the terminal before running the commands above. Activate the
+    environment with `.venv\Scripts\activate.bat` in Command Prompt or
+    `.venv\Scripts\Activate.ps1` in PowerShell.
   </Accordion>
 </AccordionGroup>
 

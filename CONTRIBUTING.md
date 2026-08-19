@@ -249,6 +249,11 @@ cd oasis
 # Install oasis from source (this creates and synchronizes .venv)
 uv sync
 
+# Activate the project environment before running Python scripts directly
+source .venv/bin/activate
+
+# For example: python examples/quick_start.py
+
 # The following command installs a pre-commit hook into the local git repo,
 # so every commit gets auto-formatted and linted.
 uv run pre-commit install
