@@ -31,7 +31,7 @@ dependencies = [
     "pandas==2.2.3",
     "igraph==0.11.6",
     "cairocffi==1.7.1",
-    "pillow==10.4.0",
+    "pillow==12.3.0",
     "unstructured==0.13.7",
     "sentence-transformers==3.0.0",
     "prance==23.6.21.0",
