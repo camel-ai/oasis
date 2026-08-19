@@ -242,32 +242,23 @@ git clone https://github.com/camel-ai/oasis.git
 # Change directory into project directory
 cd oasis
 
-# Install oasis from source (this will create the virtual environment if needed)
-poetry install
-
-# Activate oasis virtual environment
-eval $(poetry env activate)
+# Install oasis from source (this creates and synchronizes .venv)
+uv sync
 
 # The following command installs a pre-commit hook into the local git repo,
 # so every commit gets auto-formatted and linted.
-pre-commit install
+uv run pre-commit install
 
 # Run oasis's pre-commit before push
-pre-commit run --all-files
+uv run pre-commit run --all-files
 
 # Run oasis's unit tests
-pytest test
-
-# Exit the virtual environment
-deactivate
-
-# Alternative: You can also use 'poetry run' prefix without activating the environment
-# poetry run pytest test
+uv run pytest test
 ```
 
 These commands will install all the necessary dependencies for running the package, examples, linting, formatting, tests, and coverage.
 
-To verify that everything is set up correctly, run `pytest .` This will ensure that all tests pass successfully. ✅
+To verify that everything is set up correctly, run `uv run pytest .`. This will ensure that all tests pass successfully. ✅
 
 > \[!TIP\]
 > You need to config OPENAI API Keys as environment variables to pass all tests.
@@ -276,7 +267,7 @@ To verify that everything is set up correctly, run `pytest .` This will ensure t
 
 ### Update dependencies
 
-Whenever you add, update, or delete any dependencies in `pyproject.toml`, please run `poetry lock` to synchronize the dependencies with the lock file.
+Whenever you add, update, or delete any dependencies in `pyproject.toml`, run `uv lock` to synchronize `uv.lock`. Commit both files together.
 
 ### Coverage 📊
 
@@ -288,15 +279,15 @@ To include all source files into coverage:
 
 ```bash
 coverage erase
-coverage run --source=. -m pytest .
-coverage html
+uv run coverage run --source=. -m pytest .
+uv run coverage html
 # Open htmlcov/index.html
 ```
 
 To include only tested files:
 
 ```bash
-pytest --cov --cov-report=html
+uv run pytest --cov --cov-report=html
 ```
 
 The coverage report will be generated at `htmlcov/index.html`.
@@ -322,7 +313,7 @@ set OPENAI_API_KEY=<insert your OpenAI API key>
 To run all tests including those that use OpenAI API, use the following command:
 
 ```bash
-pytest .
+uv run pytest .
 ```
 
 ## Documentation 📚

@@ -54,14 +54,13 @@ Once running, you can access the container like this:
 docker compose exec oasis bash
 ```
 
-You’ll now be inside the oasis dev environment.
-
-From here, you can activate your virtual environment (if used) and run tests:
+You’ll now be inside the oasis dev environment. Dependencies are available in
+the project-managed uv environment:
 
 ```bash
 # Any other dev/test command
-pytest
-pre-commit run --all-files
+uv run pytest
+uv run pre-commit run --all-files
 ```
 
 ## Save Your Progress
