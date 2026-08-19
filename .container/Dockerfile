@@ -1,6 +1,6 @@
 FROM ghcr.io/astral-sh/uv:0.10.2 AS uv
 
-FROM python:3.13-bookworm
+FROM python:3.14-bookworm
 
 # Install common system tools and uv.
 RUN apt-get update && apt-get install -y --no-install-recommends git && \

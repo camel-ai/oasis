@@ -18,12 +18,17 @@ You can install OASIS in two ways:
   </Accordion>
   <Accordion icon="github" title="Option 2: Clone the repository (uv)">
     ```bash
+    # Install uv first (macOS/Linux)
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+
     git clone https://github.com/camel-ai/oasis.git
     cd oasis
 
     uv sync
     # Run project commands with: uv run <command>
     ```
+    On Windows, install uv with `winget install --id=astral-sh.uv -e`, then
+    reopen the terminal before running the commands above.
   </Accordion>
 </AccordionGroup>
 

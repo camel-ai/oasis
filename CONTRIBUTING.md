@@ -236,6 +236,10 @@ In line with this, we do have specific guidelines for code linting, formatting, 
 To get started with OASIS, follow these steps:
 
 ```sh
+# Install uv first (macOS/Linux). Restart your shell if `uv` is not found.
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv --version
+
 # Clone github repo
 git clone https://github.com/camel-ai/oasis.git
 
@@ -278,7 +282,7 @@ To generate a report showing the current code coverage, execute one of the follo
 To include all source files into coverage:
 
 ```bash
-coverage erase
+uv run coverage erase
 uv run coverage run --source=. -m pytest .
 uv run coverage html
 # Open htmlcov/index.html
