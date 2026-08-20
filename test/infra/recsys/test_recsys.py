@@ -11,11 +11,124 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-from oasis.social_platform.recsys import (get_like_post_id,
+from datetime import datetime, timedelta
+from unittest.mock import patch
+
+import numpy as np
+
+from oasis.social_platform.recsys import (calculate_hot_score,
+                                          calculate_like_similarity,
+                                          coarse_filtering, get_like_post_id,
+                                          normalize_similarity_adjustments,
                                           rec_sys_personalized,
                                           rec_sys_personalized_twh,
                                           rec_sys_random, rec_sys_reddit,
-                                          reset_globals)
+                                          reset_globals, swap_random_posts)
+
+
+def _trace(user_id, action, post_id):
+    return {
+        "user_id": user_id,
+        "action": action,
+        "info": str({"post_id": post_id}),
+    }
+
+
+def test_calculate_hot_score_increases_after_45000_seconds():
+    created_at = datetime(2024, 1, 1)
+
+    earlier_score = calculate_hot_score(10, 2, created_at)
+    later_score = calculate_hot_score(10, 2,
+                                      created_at + timedelta(seconds=45000))
+
+    assert later_score == earlier_score + 1
+
+
+def test_calculate_hot_score_respects_vote_direction():
+    reddit_epoch = datetime(2005, 12, 8, 7, 46, 43)
+
+    scores = (
+        calculate_hot_score(10, 0, reddit_epoch),
+        calculate_hot_score(0, 10, reddit_epoch),
+        calculate_hot_score(5, 5, reddit_epoch),
+    )
+
+    assert scores == (1.0, -1.0, 0.0)
+
+
+def test_coarse_filtering_keeps_items_within_scale():
+    elements, indices = coarse_filtering([10, 20, 30], 5)
+
+    assert (elements, list(indices)) == ([10, 20, 30], [0, 1, 2])
+
+
+def test_coarse_filtering_returns_items_at_sampled_indices():
+    with patch("oasis.social_platform.recsys.random.sample",
+               return_value=[4, 1, 3]):
+        elements, indices = coarse_filtering([10, 20, 30, 40, 50], 3)
+
+    assert (elements, indices) == ([50, 20, 40], [4, 1, 3])
+
+
+def test_get_like_post_id_pads_with_most_recent_match():
+    trace_table = [
+        _trace(1, "like_post", 101),
+        _trace(2, "like_post", 999),
+        _trace(1, "unlike_post", 888),
+        _trace(1, "like_post", 102),
+    ]
+
+    result = get_like_post_id(1, "like_post", trace_table)
+
+    assert result == [101, 102, 102, 102, 102]
+
+
+def test_get_like_post_id_returns_five_most_recent_matches():
+    trace_table = [
+        _trace(1, "like_post", post_id) for post_id in range(101, 108)
+    ]
+
+    result = get_like_post_id(1, "like_post", trace_table)
+
+    assert result == [103, 104, 105, 106, 107]
+
+
+def test_calculate_like_similarity_averages_liked_posts():
+    liked_vectors = np.array([[1.0, 0.0], [0.0, 1.0]])
+    target_vectors = np.array([[1.0, 0.0]])
+
+    result = calculate_like_similarity(liked_vectors, target_vectors)
+
+    np.testing.assert_allclose(result, [0.5])
+
+
+def test_normalize_similarity_adjustments_keeps_base_without_scores():
+    result = normalize_similarity_adjustments([], 0.4, 0.9, 0.1)
+
+    assert result == 0.4
+
+
+def test_normalize_similarity_adjustments_scales_to_score_range():
+    post_scores = [(1, 0.2), (2, 0.8)]
+
+    result = normalize_similarity_adjustments(post_scores, 0.5, 0.9, 0.3)
+
+    np.testing.assert_allclose(result, 0.68)
+
+
+def test_swap_random_posts_keeps_recommendations_at_zero_percent():
+    result = swap_random_posts([1, 2, 3], [4, 5, 6], swap_percent=0)
+
+    assert result == [1, 2, 3]
+
+
+def test_swap_random_posts_replaces_requested_fraction():
+    result = swap_random_posts([1, 2, 3, 4], [5, 6, 7, 8],
+                               swap_percent=0.5)
+
+    assert len(result) == 4
+    assert len(set(result) & {1, 2, 3, 4}) == 2
+    assert len(set(result) & {5, 6, 7, 8}) == 2
 
 
 def test_rec_sys_random_all_posts():
@@ -47,11 +160,10 @@ def test_get_like_post_id_exactly_five():
     # padded when fewer). Regression: the len==5 boundary previously fell
     # through to the empty-case placeholder [0], discarding the likes.
     action = "like_post"
-    trace_table = [{
-        "user_id": 1,
-        "action": action,
-        "info": str({"post_id": pid}),
-    } for pid in [101, 102, 103, 104, 105]]
+    trace_table = [
+        _trace(1, action, post_id)
+        for post_id in [101, 102, 103, 104, 105]
+    ]
 
     assert get_like_post_id(
         1, action, trace_table
@@ -199,13 +311,8 @@ def test_rec_sys_reddit_sample_posts():
     max_rec_post_len = 3  # Maximum recommendation length set to 3
 
     result = rec_sys_reddit(post_table, rec_matrix, max_rec_post_len)
-    # Validate that each user received 3 tweet IDs
-    for rec in result:
-        assert len(rec) == max_rec_post_len
-        # Validate that the recommended tweet IDs are indeed from the original
-        # list of tweet IDs
-        for post_id in rec:
-            assert post_id in ["3", "4", "1"]
+
+    assert result == [["3", "4", "1"], ["3", "4", "1"]]
 
 
 def test_rec_sys_personalized_sample_posts():
