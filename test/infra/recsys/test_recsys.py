@@ -53,7 +53,9 @@ def test_get_like_post_id_exactly_five():
         "info": str({"post_id": pid}),
     } for pid in [101, 102, 103, 104, 105]]
 
-    assert get_like_post_id(1, action, trace_table) == [101, 102, 103, 104, 105]
+    assert get_like_post_id(
+        1, action, trace_table
+    ) == [101, 102, 103, 104, 105]
 
 
 def test_rec_sys_personalized_all_posts():
