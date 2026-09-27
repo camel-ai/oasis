@@ -359,7 +359,7 @@ async def generate_controllable_agents(
             }},
             recsys_type="reddit",
         )
-        # controllable的agent_id全都在llm agent的agent_id的前面
+        # All controllable agent_ids come before LLM agent_ids
         agent = SocialAgent(agent_id=i,
                             user_info=user_info,
                             channel=channel,
@@ -378,7 +378,7 @@ async def generate_controllable_agents(
     for i in range(control_user_num):
         for j in range(control_user_num):
             agent = agent_graph.get_agent(i)
-            # controllable agent互相也全部关注
+            # All controllable agents follow each other
             if i != j:
                 user_id = agent_user_id_mapping[j]
                 await agent.env.action.follow(user_id)
@@ -407,7 +407,7 @@ async def gen_control_agents_with_data(
             },
             recsys_type="reddit",
         )
-        # controllable的agent_id全都在llm agent的agent_id的前面
+        # All controllable agent_ids come before LLM agent_ids
         agent = SocialAgent(
             agent_id=i,
             user_info=user_info,
