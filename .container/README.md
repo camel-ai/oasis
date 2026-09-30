@@ -35,7 +35,8 @@ This will:
 
 - Build the image oasis:localdev
 - Start the container oasis-localdev
-- Set up all necessary dependencies
+- Create a Python 3.14 development environment
+- Install the project and its development dependencies from `uv.lock`
 
 After the build is complete, you can verify the list of images and all running containers.
 
@@ -54,13 +55,20 @@ Once running, you can access the container like this:
 docker compose exec oasis bash
 ```
 
-You’ll now be inside the oasis dev environment.
+You’ll now be inside the OASIS development environment. The image includes
+uv, and the project environment lives at `/app/oasis/.venv`. Its `bin`
+directory is on `PATH`, so `python`, `pip`, and project tools use that
+environment by default.
 
-From here, you can activate your virtual environment (if used) and run tests:
+### Run commands
 
 ```bash
-# Any other dev/test command
-pytest
+# Run commands through uv (recommended)
+uv run pytest
+uv run pre-commit run --all-files
+
+# The virtual environment is already on PATH, so these are also valid
+python -m pytest
 pre-commit run --all-files
 ```
 

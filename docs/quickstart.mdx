@@ -16,13 +16,18 @@ You can install OASIS in two ways:
     pip install camel-oasis
     ```
   </Accordion>
-  <Accordion icon="github" title="Option 2: Clone the repository">
+  <Accordion icon="github" title="Option 2: Clone the repository (uv)">
+    Before continuing, install [uv](https://docs.astral.sh/uv/getting-started/installation/).
+
     ```bash
     git clone https://github.com/camel-ai/oasis.git
     cd oasis
 
-    pip install --upgrade pip setuptools
-    pip install -e . # This will install dependencies as specified in pyproject.toml
+    uv sync
+    source .venv/bin/activate
+
+    # Now run tutorial scripts normally, for example:
+    # python examples/quick_start.py
     ```
   </Accordion>
 </AccordionGroup>
