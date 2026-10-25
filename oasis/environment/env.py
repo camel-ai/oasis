@@ -12,10 +12,11 @@
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import asyncio
+import json
 import logging
 import os
 from datetime import datetime
-from typing import List, Union
+from typing import List, Union, Dict, Any
 
 from oasis.environment.env_action import LLMAction, ManualAction
 from oasis.social_agent.agent import SocialAgent
@@ -25,6 +26,7 @@ from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import (ActionType, DefaultPlatformType,
                                           RecsysType)
+from oasis.user_profile_agent.agent import PreferenceAgent
 
 # Create log directory if it doesn't exist
 log_dir = "./log"
@@ -53,6 +55,7 @@ class OasisEnv:
         platform: Union[DefaultPlatformType, Platform],
         database_path: str = None,
         semaphore: int = 128,
+        profile_update_enabled: bool = True,
     ) -> None:
         r"""Init the oasis environment.
 
@@ -114,12 +117,245 @@ class OasisEnv:
             raise ValueError(
                 f"Invalid platform: {platform}. You should pass a "
                 "DefaultPlatformType or a Platform instance.")
+        
+        # Initialize user profile management
+        self.user_profiles: Dict[int, Dict[str, Any]] = {}  # Store user profile data
+        self.user_profile_agent: PreferenceAgent = None  # User profile analysis agent
+        self.profile_update_enabled: bool = profile_update_enabled  # Whether to enable dynamic profile updates
+        self.user_profile_file: str = "user_profile.json"  # User profile storage file
 
     async def reset(self) -> None:
         r"""Start the platform and sign up the agents."""
         self.platform_task = asyncio.create_task(self.platform.running())
         self.agent_graph = await generate_custom_agents(
             channel=self.channel, agent_graph=self.agent_graph)
+        
+        # Initialize user profile agent and load existing profiles
+        await self._initialize_user_profile_system()
+    
+    async def _initialize_user_profile_system(self) -> None:
+        """Initialize user profile system"""
+        try:
+            # Initialize user profile analysis agent
+            # Need to pass in model, can get model configuration from the first agent
+            agents_list = self.agent_graph.get_agents()
+            if agents_list:
+                first_agent = agents_list[0][1]  # get_agents() returns [(agent_id, agent), ...]
+                self.user_profile_agent = PreferenceAgent(model=first_agent.model_backend)
+                env_log.info("User profile agent initialized successfully")
+            
+            # Load existing user profile data
+            await self._load_user_profiles()
+            env_log.info("User profile system initialized")
+        except Exception as e:
+            env_log.error(f"Failed to initialize user profile system: {e}")
+            self.profile_update_enabled = False
+    
+    async def _load_user_profiles(self) -> None:
+        """Load existing user profile data from file"""
+        try:
+            if os.path.exists(self.user_profile_file):
+                with open(self.user_profile_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                
+                # Compatible with new and old formats
+                if isinstance(data, dict) and "user_profiles" in data:
+                    # New format: data with timestamps
+                    raw_profiles = data["user_profiles"]
+                    self.user_profiles = {str(k): v for k, v in raw_profiles.items()}
+                    self._profile_update_count = data.get("update_count", 0)
+                    env_log.info(f"Loaded {len(self.user_profiles)} user profiles from {self.user_profile_file} (last updated: {data.get('last_updated', 'unknown')}, update #{self._profile_update_count})")
+                    env_log.info(f"Profile keys loaded: {list(self.user_profiles.keys())}")
+                else:
+                    # Old format: direct user profile data
+                    self.user_profiles = {str(k): v for k, v in data.items()}
+                    self._profile_update_count = 0
+                    env_log.info(f"Loaded {len(self.user_profiles)} user profiles from {self.user_profile_file} (legacy format)")
+                    env_log.info(f"Profile keys loaded: {list(self.user_profiles.keys())}")
+            else:
+                self.user_profiles = {}
+                self._profile_update_count = 0
+                env_log.info("No existing user profile file found, starting with empty profiles")
+        except Exception as e:
+            env_log.error(f"Failed to load user profiles: {e}")
+            self.user_profiles = {}
+            self._profile_update_count = 0
+    
+    async def _save_user_profiles(self) -> None:
+        """Save user profile data to file"""
+        try:
+            # Add update time field
+            from datetime import datetime
+            
+            profile_data_with_timestamp = {
+                "user_profiles": self.user_profiles,
+                "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "update_count": getattr(self, '_profile_update_count', 0) + 1
+            }
+            
+            # Record update count
+            self._profile_update_count = profile_data_with_timestamp["update_count"]
+            
+            with open(self.user_profile_file, 'w', encoding='utf-8') as f:
+                json.dump(profile_data_with_timestamp, f, ensure_ascii=False, indent=2)
+            env_log.info(f"Saved {len(self.user_profiles)} user profiles to {self.user_profile_file} at {profile_data_with_timestamp['last_updated']} (update #{profile_data_with_timestamp['update_count']})")
+        except Exception as e:
+            env_log.error(f"Failed to save user profiles: {e}")
+    
+    async def _collect_user_history(self, agent_id: int) -> Dict[str, Any]:
+        """Collect historical behavior data for specified user"""
+        try:
+            # Use database path from environment
+            import sqlite3
+            
+            db_path = self.platform.db_path
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            # Collect user's post and comment history
+            user_history = {
+                "user_id": agent_id,
+                "actions": {
+                    "create_post": [],
+                    "create_comment": [],
+                    "like_post": [],
+                    "sign_up": [],
+                    "refresh": [],
+                    "do_nothing": []
+                },
+                "time_distribution": {
+                    "morning": 0,
+                    "afternoon": 0, 
+                    "evening": 0,
+                    "night": 0
+                }
+            }
+            
+            # Query user's posts
+            try:
+                cursor.execute("SELECT content FROM post WHERE agent_id = ?", (agent_id,))
+                posts = cursor.fetchall()
+                user_history["actions"]["create_post"] = [post[0] for post in posts if post[0]]
+                env_log.info(f"Found {len(posts)} posts for agent {agent_id}")
+            except Exception as e:
+                env_log.warning(f"Failed to query posts for agent {agent_id}: {e}")
+            
+            # Query user's comments
+            try:
+                cursor.execute("SELECT content FROM comment WHERE agent_id = ?", (agent_id,))
+                comments = cursor.fetchall()
+                user_history["actions"]["create_comment"] = [comment[0] for comment in comments if comment[0]]
+                env_log.info(f"Found {len(comments)} comments for agent {agent_id}")
+            except Exception as e:
+                env_log.warning(f"Failed to query comments for agent {agent_id}: {e}")
+            
+            # Query user's operation history (from trace table)
+            try:
+                cursor.execute("""
+                    SELECT action_type, COUNT(*) as count 
+                    FROM trace 
+                    WHERE agent_id = ? 
+                    GROUP BY action_type
+                """, (agent_id,))
+                action_counts = cursor.fetchall()
+                for action_type, count in action_counts:
+                    if action_type in user_history["actions"]:
+                        # Only record count here, not specific content
+                        pass
+                env_log.info(f"Found {len(action_counts)} action types for agent {agent_id}")
+            except Exception as e:
+                env_log.warning(f"Failed to query action history for agent {agent_id}: {e}")
+            
+            conn.close()
+            env_log.info(f"Successfully collected history for agent {agent_id}")
+            return user_history
+            
+        except Exception as e:
+            env_log.error(f"Failed to collect user history for agent {agent_id}: {e}")
+            return {
+                "user_id": agent_id,
+                "actions": {"create_post": [], "create_comment": []},
+                "time_distribution": {"morning": 0, "afternoon": 0, "evening": 0, "night": 0}
+            }
+    
+    async def _update_user_profiles(self) -> None:
+        """Dynamically update all users' profile data"""
+        if not self.profile_update_enabled:
+            env_log.info("User profile update is disabled")
+            return
+            
+        if not self.user_profile_agent:
+            env_log.error("User profile agent is not initialized")
+            return
+        
+        try:
+            env_log.info("Starting dynamic user profile update...")
+            
+            # Get information for all agents
+            agents_list = self.agent_graph.get_agents()
+            env_log.info(f"Found {len(agents_list)} agents to update profiles for")
+            
+            agent_profile_dic = {
+                agent_id: agent.user_info.profile
+                for agent_id, agent in agents_list
+            }
+            
+            # Update user profile for each agent
+            updated_count = 0
+            for agent_id, agent in agents_list:
+                try:
+                    # Ensure agent_id is string type for consistency
+                    agent_id_str = str(agent_id)
+                    env_log.info(f"Processing profile update for agent {agent_id_str} (original: {agent_id}, type: {type(agent_id)})")
+                    
+                    # Collect user history data
+                    user_history = await self._collect_user_history(agent_id)
+                    env_log.info(f"Collected history for agent {agent_id_str}: {len(user_history.get('actions', {}).get('create_post', []))} posts, {len(user_history.get('actions', {}).get('create_comment', []))} comments")
+                    
+                    # Get previous user profile as previous_profile
+                    previous_profile = self.user_profiles.get(agent_id_str, None)
+                    env_log.info(f"Previous profile exists for agent {agent_id_str}: {previous_profile is not None}")
+                    
+                    # Call PreferenceAgent for profile analysis
+                    env_log.info(f"Calling PreferenceAgent.analyse for agent {agent_id_str}")
+                    new_user_profile = await self.user_profile_agent.analyse(
+                        (user_history, self.user_profiles.get(agent_id_str, {}), agent_profile_dic.get(agent_id)),
+                        previous_profile=previous_profile
+                    )
+                    
+                    # Check the returned result
+                    if new_user_profile is None:
+                        env_log.warning(f"PreferenceAgent returned None for agent {agent_id_str}")
+                        # Keep original profile data, don't overwrite with None
+                        continue
+                    
+                    # Update user profile data (using string type agent_id)
+                    env_log.info(f"Updating profile for agent {agent_id_str}. Current profiles: {list(self.user_profiles.keys())}")
+                    self.user_profiles[agent_id_str] = new_user_profile
+                    updated_count += 1
+                    
+                    env_log.info(f"Successfully updated user profile for agent {agent_id_str}. Total profiles now: {list(self.user_profiles.keys())}")
+                    
+                except Exception as e:
+                    env_log.error(f"Failed to update profile for agent {agent_id}: {e}")
+                    import traceback
+                    env_log.error(f"Traceback: {traceback.format_exc()}")
+                    # On failure, keep original profile data unchanged
+                    continue
+            
+            # Save updated user profile data
+            await self._save_user_profiles()
+            env_log.info(f"Saved {len(self.user_profiles)} user profiles to {self.user_profile_file}")
+            
+            if updated_count > 0:
+                env_log.info(f"Successfully updated {updated_count} user profiles")
+            else:
+                env_log.warning("No user profiles were successfully updated")
+            
+        except Exception as e:
+            env_log.error(f"Failed to update user profiles: {e}")
+            import traceback
+            env_log.error(f"Traceback: {traceback.format_exc()}")
 
     async def _perform_llm_action(self, agent):
         r"""Send the request to the llm model and execute the action.
@@ -192,10 +428,32 @@ class OasisEnv:
         # Execute all tasks concurrently
         await asyncio.gather(*tasks)
         env_log.info("performed all actions.")
+        
+        # After all operations are completed, dynamically update user profiles
+        await self._update_user_profiles()
+        
         # # Control some agents to perform actions
         # Update the clock
         if self.platform_type == DefaultPlatformType.TWITTER:
             self.platform.sandbox_clock.time_step += 1
+    
+    def enable_user_profile_update(self, enabled: bool = True) -> None:
+        """Enable or disable dynamic user profile updates"""
+        self.profile_update_enabled = enabled
+        env_log.info(f"User profile update {'enabled' if enabled else 'disabled'}")
+    
+    def set_user_profile_file(self, file_path: str) -> None:
+        """Set user profile storage file path"""
+        self.user_profile_file = file_path
+        env_log.info(f"User profile file set to: {file_path}")
+    
+    def get_user_profile(self, agent_id: int) -> Dict[str, Any]:
+        """Get user profile data for specified agent"""
+        return self.user_profiles.get(agent_id, {})
+    
+    def get_all_user_profiles(self) -> Dict[int, Dict[str, Any]]:
+        """Get profile data for all users"""
+        return self.user_profiles.copy()
 
     async def close(self) -> None:
         r"""Stop the platform and close the environment.
