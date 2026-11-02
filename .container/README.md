@@ -35,7 +35,8 @@ This will:
 
 - Build the image oasis:localdev
 - Start the container oasis-localdev
-- Set up all necessary dependencies
+- Create a Python 3.14 development environment
+- Install the project and its development dependencies from `uv.lock`
 
 After the build is complete, you can verify the list of images and all running containers.
 
@@ -54,13 +55,20 @@ Once running, you can access the container like this:
 docker compose exec oasis bash
 ```
 
-You’ll now be inside the oasis dev environment.
+You’ll now be inside the OASIS development environment. The image includes
+uv, and the project environment lives at `/app/oasis/.venv`. Its `bin`
+directory is on `PATH`, so `python`, `pip`, and project tools use that
+environment by default.
 
-From here, you can activate your virtual environment (if used) and run tests:
+### Run commands
 
 ```bash
-# Any other dev/test command
-pytest
+# Run commands through uv (recommended)
+uv run pytest
+uv run pre-commit run --all-files
+
+# The virtual environment is already on PATH, so these are also valid
+python -m pytest
 pre-commit run --all-files
 ```
 
@@ -85,12 +93,23 @@ docker compose down
 
 For users who only want to have a quick tryout on OASIS, we also provide the
 pre-built images on
-[our GitHub Container Registry](<>).
+[our GitHub Container Registry](https://github.com/orgs/camel-ai/packages/container/package/oasis).
 
 ## Pre-built Image (Optional)
 
-If you only want to try oasis without setting up the build:
+To try OASIS v0.2.6 without building the image locally:
 
 ```bash
-
+docker pull ghcr.io/camel-ai/oasis:v0.2.6
 ```
+
+From the `.container` directory, use the `.env` file configured above to
+start an interactive shell:
+
+```bash
+docker run --rm -it --env-file .env ghcr.io/camel-ai/oasis:v0.2.6 bash
+```
+
+API keys are supplied at runtime through `.env`; they are not included in the
+image. This command does not mount your local project, and changes made inside
+the container are removed when you exit.
