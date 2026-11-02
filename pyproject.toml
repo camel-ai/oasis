@@ -37,6 +37,9 @@ openapi-spec-validator = "0.7.1"
 slack_sdk = "3.31.0"
 neo4j = "5.23.0"
 camel-ai = "0.2.90"
+# camel-ai 0.2.90 imports symbols that only exist in openai>=1.100.0, but
+# declares openai>=1.86.0, so pin it here to keep `poetry install` working.
+openai = ">=1.100.0"
 requests_oauthlib = "2.0.0"
 mcp = "1.29.0"
 
