@@ -93,12 +93,23 @@ docker compose down
 
 For users who only want to have a quick tryout on OASIS, we also provide the
 pre-built images on
-[our GitHub Container Registry](<>).
+[our GitHub Container Registry](https://github.com/orgs/camel-ai/packages/container/package/oasis).
 
 ## Pre-built Image (Optional)
 
-If you only want to try oasis without setting up the build:
+To try OASIS v0.2.6 without building the image locally:
 
 ```bash
-
+docker pull ghcr.io/camel-ai/oasis:v0.2.6
 ```
+
+From the `.container` directory, use the `.env` file configured above to
+start an interactive shell:
+
+```bash
+docker run --rm -it --env-file .env ghcr.io/camel-ai/oasis:v0.2.6 bash
+```
+
+API keys are supplied at runtime through `.env`; they are not included in the
+image. This command does not mount your local project, and changes made inside
+the container are removed when you exit.
