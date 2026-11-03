@@ -721,6 +721,14 @@ def rec_sys_personalized_with_trace(
     if len(post_ids) <= max_rec_post_len:
         new_rec_matrix = [post_ids] * (len(rec_matrix) - 1)
     else:
+        # Pre-compute traced post IDs once outside the per-user loop (Fix: avoid
+        # redundant recomputation; trace_table does not change per user)
+        if swap_rate > 0:
+            traced_post_ids = {
+                literal_eval(trace['info']).get('post_id')
+                for trace in trace_table
+                if trace.get('user_id') is not None
+            }
         for idx in range(1, len(rec_matrix)):
             user_id = user_table[idx - 1]['user_id']
             user_bio = user_table[idx - 1]['bio']
@@ -783,10 +791,8 @@ def rec_sys_personalized_with_trace(
                 # swap the recommended posts with random posts
                 swap_free_ids = [
                     post_id for post_id in post_ids
-                    if post_id not in rec_post_ids and post_id not in [
-                        trace['post_id']
-                        for trace in trace_table if trace['user_id']
-                    ]
+                    if post_id not in rec_post_ids
+                    and post_id not in traced_post_ids
                 ]
                 rec_post_ids = swap_random_posts(rec_post_ids, swap_free_ids,
                                                  swap_rate)
