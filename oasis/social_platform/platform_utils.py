@@ -111,7 +111,9 @@ class PlatformUtils:
 
             elif post_type_result["type"] == "common":
                 post_content = content
-                # Get num_reports for common posts
+
+            if post_type_result["type"] != "repost":
+                # Common and quote posts have their own report counts.
                 self.db_cursor.execute(
                     "SELECT num_reports FROM post WHERE post_id = ?",
                     (post_id, ))
